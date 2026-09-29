@@ -178,8 +178,10 @@ Non-goals:
     nested all 24 "almost within" pairs of the US-0 summary, plus Happy Canyon of Santa Barbara in
     Central Coast: for example Sta. Rita Hills under Santa Ynez Valley, Creston District under Paso
     Robles, McMinnville under Willamette Valley, Suisun Valley under North Coast, and San Francisco
-    Bay under Central Coast. The tree report records `parent_basis` (`measured` or `legal_record`)
-    and `parent_inside` for every AVA whose parent is an AVA.
+    Bay under Central Coast. The tree report records `parent_basis` (`measured` or `legal_record`,
+    or `override` when the data file's `parent_overrides` puts it under an AVA that contains it by
+    neither arm) and `parent_inside` (its measured ratio, null if that pair was never measured) for
+    every AVA whose parent is an AVA.
   - If there is none: the umbrella SUBREGION or navigation node the data file names. Otherwise: the
     state.
   - Every other containing AVA becomes an `ALTERNATE_PARENT` edge, including one in another state's
@@ -860,7 +862,8 @@ Modelled on `stage-germany-weinbau.mjs`.
     AVA falls below it, the threshold or the buffer is revisited then, with the numbers in the tree
     report.
 - Every AVA is ≥ 99.5% inside its primary parent AVA, or ≥ 90% when its `parent_basis` is
-  `legal_record` (D7). Nested AVAs are wholly contained in law; the margin absorbs digitizing slivers.
+  `legal_record` (D7), unless the owner placed it there by `parent_overrides` (`parent_basis`
+  `override`; none today). Nested AVAs are wholly contained in law; the margin absorbs digitizing slivers.
 
 **States and the country.**
 

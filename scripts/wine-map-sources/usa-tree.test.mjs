@@ -321,3 +321,15 @@ test("an OVERLAPS edge to the place's own primary ancestor is dropped and listed
   }]);
   assert.deepEqual(tree().review.ancestor_overlaps, []);
 });
+
+test("a parent_overrides entry naming an AVA that does not contain the place builds, with basis \"override\"", () => {
+  const avas = [...AVAS, ava("big", "Big", 500, CA), ava("small", "Small", 40, CA)];
+  const config = { ...CONFIG, parent_overrides: { Small: "Big" } };
+  const t = buildUsaTree({ avas, pairs: [...PAIRS, pair("small", "big", 0.5, 0.04)], config });
+  const p = place(t, "Small");
+  assert.equal(p.parent_key, place(t, "Big").key);
+  assert.deepEqual([p.parent_basis, p.parent_inside], ["override", 0.5]);
+  // An override onto an AVA the pair file never measured against it still builds.
+  const t2 = buildUsaTree({ avas, pairs: PAIRS, config });
+  assert.deepEqual([place(t2, "Small").parent_basis, place(t2, "Small").parent_inside], ["override", null]);
+});

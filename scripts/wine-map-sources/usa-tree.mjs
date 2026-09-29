@@ -139,6 +139,7 @@ export function buildUsaTree({ avas, pairs, config }) {
     return null;
   };
   const containBasis = new Map(); // `${inner}>${outer}` -> { basis, ratio }
+  const insideRatio = new Map(); // `${inner}>${outer}` -> measured ratio, for every pair
 
   // 2. Containment and partial overlap (§8.3).
   const containers = new Map(avas.map((a) => [a.id, []]));
@@ -148,6 +149,8 @@ export function buildUsaTree({ avas, pairs, config }) {
     const a = byId.get(p.a);
     const b = byId.get(p.b);
     if (!a || !b) throw new Error(`pair names an unknown AVA: ${p.a} / ${p.b}`);
+    insideRatio.set(`${a.id}>${b.id}`, p.a_in_b);
+    insideRatio.set(`${b.id}>${a.id}`, p.b_in_a);
     const aBasis = nestBasis(a.id, b.id, p.a_in_b);
     const bBasis = nestBasis(b.id, a.id, p.b_in_a);
     for (const [inner, outer, ratio, basis] of [[a.id, b.id, p.a_in_b, aBasis], [b.id, a.id, p.b_in_a, bBasis]]) {
@@ -258,17 +261,28 @@ export function buildUsaTree({ avas, pairs, config }) {
       display: "outline", navigation_node: true, map_state: n.state,
     });
   }
+  // How a place sits in its primary parent AVA: the containment basis, or
+  // "override" when parent_overrides put it under an AVA that does not contain
+  // it by either arm (its measured ratio, or null when the pair was never
+  // measured). Null when the parent is a state or a navigation node.
+  const parentFit = (id) => {
+    const parent = primary.get(id);
+    if (parent.type !== "ava") return { basis: null, inside: null };
+    const k = `${id}>${parent.id}`;
+    const cb = containBasis.get(k);
+    return cb ? { basis: cb.basis, inside: cb.ratio } : { basis: "override", inside: insideRatio.get(k) ?? null };
+  };
   for (const a of avas) {
     if (!inWave(a.id)) continue;
     const r = resolve(a.id);
+    const fit = parentFit(a.id);
     const umbrella = umbrellaState.has(a.id);
     const [tier, minZoom, labelZoom] = umbrella ? UMBRELLA_ZOOMS : DEPTH_ZOOMS[Math.min(r.depth, DEPTH_ZOOMS.length - 1)];
     places.push({
       ...emptyPlace(), key: r.key, slug: r.slug, name: a.name,
       kind: umbrella ? "SUBREGION" : "APPELLATION",
       display_tier: tier, min_zoom: minZoom, label_min_zoom: labelZoom, parent_key: r.parentKey,
-      parent_basis: primary.get(a.id).type === "ava" ? containBasis.get(`${a.id}>${primary.get(a.id).id}`).basis : null,
-      parent_inside: primary.get(a.id).type === "ava" ? containBasis.get(`${a.id}>${primary.get(a.id).id}`).ratio : null,
+      parent_basis: fit.basis, parent_inside: fit.inside,
       is_appellation: true, appellation_system: "AVA",
       appellation_level: primary.get(a.id).type === "ava" ? "subregional" : "regional",
       display: a.area_km2 >= t.outlineKm2 ? "outline" : null,
