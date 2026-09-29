@@ -5,7 +5,7 @@ import test from "node:test";
 import { topLevelTransactionStatements } from "../migration-preflight.mjs";
 import { renderUs1Sql } from "./render-us1-sql.mjs";
 import { REF_QUERIES } from "./us1-queries.mjs";
-import { FORWARD_PATH, PREIMAGE_PATH, SPEC_PATH } from "./us1-spec-lib.mjs";
+import { FORWARD_PATH, PREIMAGE_PATH, REVERT_PATH, SPEC_PATH } from "./us1-spec-lib.mjs";
 
 const lf = (s) => s.replace(/\r\n/g, "\n");
 const json = async (p) => JSON.parse(await readFile(p, "utf8"));
@@ -25,4 +25,13 @@ test("the forward migration has no transaction statement (D24), carries every re
 
 test("a spec that contains its own dollar-quote tag is refused", () => {
   assert.throws(() => renderUs1Sql({ template: "x __US1_SPEC__", spec: { a: "$spec$" }, preimage: {} }), /\$spec\$/);
+});
+
+test("the committed revert is exactly the render, lives outside supabase/migrations, and has no transaction statement", async () => {
+  const want = renderUs1Sql({ template: lf(await readFile("scripts/usa-reference/us1-cleanup-revert.sql.template", "utf8")), spec: await json(SPEC_PATH), preimage: await json(PREIMAGE_PATH) });
+  const got = lf(await readFile(REVERT_PATH, "utf8"));
+  assert.equal(got, want);
+  assert.ok(!REVERT_PATH.startsWith("supabase/"), REVERT_PATH);
+  assert.deepEqual(topLevelTransactionStatements(got), []);
+  assert.ok(got.includes("delete from supabase_migrations.schema_migrations where version = v_spec ->> 'version'"));
 });
