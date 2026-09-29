@@ -6,6 +6,7 @@ import {
   RESULT_ROW_ORDER,
   TRAINING_COPY,
   bestLine,
+  chooserTitle,
   capReasonLine,
   clockTime,
   continueLine,
@@ -32,11 +33,13 @@ import {
   showAllRegionsLine,
   signatureLine,
   signaturesLine,
+  stackMore,
   stripLine,
   styleVerdictLine,
   tallyLine,
   tawnyAgeOption,
   typicalWinesHeading,
+  unmappedLine,
   vintageGuessLabel,
   youSaidLine,
   youSaidRegionLine,
@@ -136,6 +139,24 @@ describe("TRAINING_COPY (spec §9, verbatim)", () => {
       newTabHint: "(opens in a new tab)",
       notOnMap: "Not on the wine map yet",
       practiseBlind: "Practise blind in the training room →",
+      listTab: "List",
+      mapTab: "Map",
+      viewsLabel: "What it could be, as a list or a map",
+      mapLabel: "Map of the typical wines, coloured by how close each is to your note",
+      mapSrNote: "The list shows the same wines and numbers.",
+      closestOnMap: "Closest on the map",
+      legendLess: "Less close",
+      legendClosest: "Closest",
+      legendRuledOut: "Ruled out",
+      legendRelative: "Colours compare the wines with each other; the % is each wine's own closeness.",
+      legendApprox: "Wines outside the mapped countries sit at an approximate spot.",
+      fitClosest: "Fit to the closest",
+      mapStopped: "The map stopped working — the list has every wine.",
+      mapRetry: "Try the map again",
+      mapNeedsReload: "The map needs a page reload to load.",
+      mapReload: "Reload the page",
+      mapUpright: "Turn your phone upright to see the map.",
+      showList: "Show the list",
     });
   });
 
@@ -473,6 +494,26 @@ describe("the wine-map lines (training-room-map spec §9, R1)", () => {
     expect(typicalWinesHeading(1)).toBe("Typical wine");
     expect(typicalWinesHeading(2)).toBe("Typical wines");
     expect(typicalWinesHeading(9)).toBe("Typical wines");
+  });
+});
+
+describe("the likelihood map's lines (training-room-map spec §9, R2)", () => {
+  it("fills the three templates", () => {
+    expect(stackMore(2)).toBe("+2");
+    expect(stackMore(1)).toBe("+1");
+    expect(unmappedLine(18)).toBe("18 not on the wine map yet");
+    expect(unmappedLine(1)).toBe("1 not on the wine map yet");
+    expect(chooserTitle(3)).toBe("3 wines here");
+  });
+
+  it("no map string claims a probability (spec RM27, risk X1)", () => {
+    const mapKeys = [
+      "listTab", "mapTab", "viewsLabel", "mapLabel", "mapSrNote", "closestOnMap", "legendLess",
+      "legendClosest", "legendRuledOut", "legendRelative", "legendApprox", "fitClosest", "mapStopped",
+      "mapRetry", "mapNeedsReload", "mapReload", "mapUpright", "showList",
+    ] as const;
+    const lines = [...mapKeys.map((k) => TRAINING_COPY[k]), stackMore(2), unmappedLine(3), chooserTitle(3)];
+    for (const line of lines) expect(line, line).not.toMatch(/likel|chance|probab/i);
   });
 });
 

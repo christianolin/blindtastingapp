@@ -51,6 +51,21 @@ describe("GroupMapLink", () => {
     expect(html).toContain('rel="noopener"');
   });
 
+  it("names the region in English, as the explorer does by default, and keeps its key", () => {
+    // R1 review nit: the map's place names are local ("Vallée du Rhône"); the
+    // explorer shows English by default (localize-names.ts), so the link does too.
+    const rhone = renderToStaticMarkup(<GroupMapLink region={{ key: "france.rhone", name: "Vallée du Rhône" }} />);
+    expect(rhone).toContain("Rhône Valley on the wine map");
+    expect(rhone).toContain('href="/knowledge/map?place=france.rhone"');
+    expect(renderToStaticMarkup(<GroupMapLink region={{ key: "spain.andalucia", name: "Andalucía" }} />)).toContain(
+      "Andalusia on the wine map",
+    );
+    // A name with no English exonym is unchanged.
+    expect(renderToStaticMarkup(<GroupMapLink region={{ key: "italy.veneto", name: "Veneto" }} />)).toContain(
+      "Veneto on the wine map",
+    );
+  });
+
   it("reads 'Not on the wine map yet' with no link when the group has no map region", () => {
     const html = renderToStaticMarkup(<GroupMapLink region={null} />);
     expect(html).not.toContain("<a");
