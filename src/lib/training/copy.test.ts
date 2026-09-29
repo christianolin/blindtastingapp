@@ -33,17 +33,16 @@ import {
   showAllRegionsLine,
   signatureLine,
   signaturesLine,
-  stackMore,
   stripLine,
   styleVerdictLine,
   tallyLine,
   tawnyAgeOption,
   typicalWinesHeading,
-  unmappedLine,
   vintageGuessLabel,
   youSaidLine,
   youSaidRegionLine,
 } from "./copy";
+import { MAP_COPY, stackMore, unmappedLine } from "./map-copy";
 import { groupRanking } from "./groups";
 import type { CapReason, RankedCandidate } from "./types";
 
@@ -142,15 +141,6 @@ describe("TRAINING_COPY (spec §9, verbatim)", () => {
       listTab: "List",
       mapTab: "Map",
       viewsLabel: "What it could be, as a list or a map",
-      mapLabel: "Map of the typical wines, coloured by how close each is to your note",
-      mapSrNote: "The list shows the same wines and numbers.",
-      closestOnMap: "Closest on the map",
-      legendLess: "Less close",
-      legendClosest: "Closest",
-      legendRuledOut: "Ruled out",
-      legendRelative: "Colours compare the wines with each other; the % is each wine's own closeness.",
-      legendApprox: "Wines outside the mapped countries sit at an approximate spot.",
-      fitClosest: "Fit to the closest",
       mapStopped: "The map stopped working — the list has every wine.",
       mapRetry: "Try the map again",
       mapNeedsReload: "The map needs a page reload to load.",
@@ -498,6 +488,20 @@ describe("the wine-map lines (training-room-map spec §9, R1)", () => {
 });
 
 describe("the likelihood map's lines (training-room-map spec §9, R2)", () => {
+  it("MAP_COPY, verbatim (the map chunk's own lines)", () => {
+    expect(MAP_COPY).toEqual({
+      mapLabel: "Map of the typical wines, coloured by how close each is to your note",
+      mapSrNote: "The list shows the same wines and numbers.",
+      closestOnMap: "Closest on the map",
+      legendLess: "Less close",
+      legendClosest: "Closest",
+      legendRuledOut: "Ruled out",
+      legendRelative: "Colours compare the wines with each other; the % is each wine's own closeness.",
+      legendApprox: "Wines outside the mapped countries sit at an approximate spot.",
+      fitClosest: "Fit to the closest",
+    });
+  });
+
   it("fills the three templates", () => {
     expect(stackMore(2)).toBe("+2");
     expect(stackMore(1)).toBe("+1");
@@ -508,11 +512,16 @@ describe("the likelihood map's lines (training-room-map spec §9, R2)", () => {
 
   it("no map string claims a probability (spec RM27, risk X1)", () => {
     const mapKeys = [
-      "listTab", "mapTab", "viewsLabel", "mapLabel", "mapSrNote", "closestOnMap", "legendLess",
-      "legendClosest", "legendRuledOut", "legendRelative", "legendApprox", "fitClosest", "mapStopped",
-      "mapRetry", "mapNeedsReload", "mapReload", "mapUpright", "showList",
+      "listTab", "mapTab", "viewsLabel", "mapStopped", "mapRetry", "mapNeedsReload", "mapReload", "mapUpright",
+      "showList",
     ] as const;
-    const lines = [...mapKeys.map((k) => TRAINING_COPY[k]), stackMore(2), unmappedLine(3), chooserTitle(3)];
+    const lines = [
+      ...mapKeys.map((k) => TRAINING_COPY[k]),
+      ...Object.values(MAP_COPY),
+      stackMore(2),
+      unmappedLine(3),
+      chooserTitle(3),
+    ];
     for (const line of lines) expect(line, line).not.toMatch(/likel|chance|probab/i);
   });
 });

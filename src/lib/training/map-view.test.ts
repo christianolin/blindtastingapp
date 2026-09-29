@@ -25,13 +25,17 @@ import {
   fitSet,
   heatOf,
   hoverLabel,
+  spotText,
+  tooltipPosition,
   labelLayout,
   labelPaint,
   labelledPositions,
+  noAnswersYet,
   shouldAutoFit,
   trainingFeatures,
   unmappedCandidates,
 } from "./map-view";
+import { isBeforeAnswers } from "./panel";
 import type { CapReason, MapPoint, RankedCandidate, TrainingCandidate } from "./types";
 
 // The likelihood map's pure rules (training-room-map spec RM12-RM18, RM26, §11).
@@ -300,13 +304,75 @@ describe("a tap and a hover (RM15, RM18)", () => {
     const ids = chooserOrder(["arch-chablis", "arch-alsace-riesling", "arch-sancerre", "arch-chablis"], ranked);
     expect(ids.map((r) => r.candidate.id)).toEqual(["arch-alsace-riesling", "arch-sancerre", "arch-chablis"]);
   });
-  it("hoverLabel is the best hit's label text, +n for the other hits; null for none", () => {
-    expect(hoverLabel(["arch-sancerre", "arch-alsace-riesling", "arch-chablis"], ranked)).toBe(
+  // Screen distance from a pointer at (px, py), with 1° = 10 px, for the tests.
+  const from = (px: number, py: number) => (p: MapPoint) => Math.hypot(p.lon * 10 - px, -p.lat * 10 - py);
+
+  it("hoverLabel is the spot's own label text — a stack says +n for the others there; null for none", () => {
+    const onAlsace = from(73, -481);
+    expect(hoverLabel(["arch-sancerre", "arch-alsace-riesling", "arch-chablis"], ranked, onAlsace)).toBe(
       "Alsace Riesling 88 % +2",
     );
-    expect(hoverLabel(["arch-margaux"], ranked)).toBe("Margaux 80 %");
-    expect(hoverLabel(["arch-chablis"], ranked)).toBe("Chablis 10 %");
-    expect(hoverLabel([], ranked)).toBeNull();
+    // Any one of a stack's dots under the pointer reads as the whole spot.
+    expect(hoverLabel(["arch-chablis"], ranked, onAlsace)).toBe("Alsace Riesling 88 % +2");
+    expect(hoverLabel(["arch-margaux"], ranked, from(-7, -450))).toBe("Margaux 80 %");
+    expect(hoverLabel([], ranked, onAlsace)).toBeNull();
+  });
+
+  it("hoverLabel names the spot nearest the pointer, never a neighbour caught by the box (review R2-2)", () => {
+    // Pauillac and Saint-Julien a few px apart: the box catches both.
+    const named = (key: string, name: string, lon: number, lat: number): TrainingCandidate => ({
+      ...at("margaux", lon, lat),
+      id: `arch-${key}`,
+      name,
+    });
+    const PAUILLAC = named("pauillac", "A typical Pauillac", -0.75, 45.2);
+    const ST_JULIEN = named("st-julien", "A typical Saint-Julien", -0.74, 45.18);
+    const claret = [rc(PAUILLAC, 91), rc(ST_JULIEN, 88)];
+    const hits = ["arch-pauillac", "arch-st-julien"];
+    const onJulien = from(-7.4, -451.8);
+    expect(hoverLabel(hits, claret, onJulien)).toBe("Saint-Julien 88 %");
+    expect(hoverLabel(hits, claret, from(-7.5, -452))).toBe("Pauillac 91 %");
+    // A tie keeps the better-ranked spot.
+    expect(hoverLabel(hits, claret, () => 1)).toBe("Pauillac 91 %");
+  });
+
+  it("spotText: an unlabelled spot (all ruled out, or no number yet) is its best wine's text, +n", () => {
+    const ruledOut = [rc(ALSACE_RIESLING, 30, "colour"), rc(STACK_B, 20, "colour"), rc(MARGAUX, 80)];
+    expect(spotText({ lon: 7.3, lat: 48.1, source: "place" }, ruledOut)).toBe("Alsace Riesling 30 % +1");
+    expect(spotText({ lon: 0, lat: 0, source: "place" }, ruledOut)).toBeNull();
+  });
+});
+
+describe("tooltipPosition (RM15, review R2-5)", () => {
+  const tip = { width: 100, height: 24 };
+  const box = { width: 360, height: 485 };
+  it("centres above the pointer", () => {
+    expect(tooltipPosition({ x: 180, y: 200 }, tip, box)).toEqual({ left: 130, top: 166 });
+  });
+  it("stays inside the box at the left and right edges", () => {
+    expect(tooltipPosition({ x: 30, y: 200 }, tip, box).left).toBe(4);
+    expect(tooltipPosition({ x: 350, y: 200 }, tip, box).left).toBe(256);
+  });
+  it("goes below the pointer with no room above", () => {
+    expect(tooltipPosition({ x: 180, y: 12 }, tip, box).top).toBe(22);
+  });
+  it("a tip wider than the box starts at the edge", () => {
+    expect(tooltipPosition({ x: 50, y: 200 }, { width: 400, height: 24 }, box).left).toBe(4);
+  });
+});
+
+describe("noAnswersYet", () => {
+  it("agrees with panel.ts's isBeforeAnswers (restated so the chunk shares no first-load module)", () => {
+    const cases = [
+      [],
+      [rc(MARGAUX, null)],
+      [rc(MARGAUX, null), rc(CDP, 40)],
+      [rc(MARGAUX, null, "colour")],
+      [rc(MARGAUX, 90), rc(CDP, 10, "colour")],
+    ];
+    for (const ranked of cases) expect(noAnswersYet(ranked)).toBe(isBeforeAnswers(ranked));
+    expect(noAnswersYet([rc(MARGAUX, null)])).toBe(true);
+    expect(noAnswersYet([rc(MARGAUX, 5)])).toBe(false);
   });
 });
 

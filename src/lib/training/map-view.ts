@@ -14,7 +14,8 @@
 // the maplibre-gl and palette imports are types, erased from the bundle.
 import type { CircleLayerSpecification, SymbolLayerSpecification } from "maplibre-gl";
 import type { MapPalette } from "../wine-map/map-palette";
-import { CLOSE_WINDOW, percentLabel, shortName, stackMore } from "./copy";
+import { CLOSE_WINDOW, percentLabel, shortName } from "./copy";
+import { stackMore } from "./map-copy";
 import type { MapPoint, RankedCandidate, TrainingCandidate } from "./types";
 
 /** [west, south, east, north] in degrees. */
@@ -89,6 +90,13 @@ export function heatOf(closeness: number | null, top: number | null): number | n
   if (closeness === null) return null;
   if (top === null || top <= 0) return 0;
   return closeness / top;
+}
+
+/** Nothing answered yet: no wine has a number and none is ruled out. panel.ts's
+    isBeforeAnswers, restated here so the map's chunk imports nothing the
+    room's first load owns (spec §12); map-view.test.ts pins that they agree. */
+export function noAnswersYet(ranked: readonly RankedCandidate[]): boolean {
+  return ranked.every((r) => r.closeness === null && r.capped === null);
 }
 
 /** The best uncapped closeness in the ranking, or null when none has one. */
@@ -274,10 +282,66 @@ export function chooserOrder(hitIds: readonly string[], ranked: readonly RankedC
   return ranked.filter((r) => hit.has(r.candidate.id));
 }
 
-/** The hover tooltip (RM15): the best-ranked hit's own label text, "+n" for the other hits. */
-export function hoverLabel(hitIds: readonly string[], ranked: readonly RankedCandidate[]): string | null {
-  const hits = chooserOrder(hitIds, ranked);
-  return hits.length === 0 ? null : dotText(hits[0], hits.length - 1);
+/**
+ * What one spot says (RM15): its label when it carries one (its best-ranked
+ * uncapped wine with a number, "+n" for the others there); else its
+ * best-ranked wine's own text, "+n" for the others at exactly that spot.
+ * Null when no wine sits there.
+ */
+export function spotText(point: MapPoint, ranked: readonly RankedCandidate[]): string | null {
+  const key = spotKey(point);
+  const spot = labelledPositions(ranked).get(key);
+  if (spot) return spot.text;
+  const here = ranked.filter((r) => r.candidate.mapPoint !== null && spotKey(r.candidate.mapPoint) === key);
+  return here.length === 0 ? null : dotText(here[0], here.length - 1);
+}
+
+/**
+ * The hover tooltip (RM15): the text of the ONE spot under the pointer, the
+ * same text its label has. The hover box (±HIT_SLOP_PX.fine) can catch dots of
+ * neighbouring spots too (Pauillac and Saint-Julien a few px apart at z6), so
+ * the spot is the hit nearest the pointer (`distance` measures a dot's point
+ * on screen; a tie keeps the better-ranked), never a merge of every hit.
+ */
+export function hoverLabel(
+  hitIds: readonly string[],
+  ranked: readonly RankedCandidate[],
+  distance: (point: MapPoint) => number,
+): string | null {
+  let nearest: MapPoint | null = null;
+  let best = Infinity;
+  for (const r of chooserOrder(hitIds, ranked)) {
+    const p = r.candidate.mapPoint;
+    if (!p) continue;
+    const d = distance(p);
+    if (d < best) {
+      best = d;
+      nearest = p;
+    }
+  }
+  return nearest ? spotText(nearest, ranked) : null;
+}
+
+/** The gap between the tooltip and the map box's edges, and above the pointer, px. */
+const TOOLTIP_EDGE = 4;
+const TOOLTIP_LIFT = 10;
+
+/**
+ * Where the hover tooltip's top-left corner goes inside the map box (RM15):
+ * centred above the pointer, but clamped inside the box so a dot near an edge
+ * never has its name or % cut off by the box's overflow clip; below the
+ * pointer when there is no room above.
+ */
+export function tooltipPosition(
+  pointer: { x: number; y: number },
+  tip: { width: number; height: number },
+  box: { width: number; height: number },
+): { left: number; top: number } {
+  const maxLeft = Math.max(TOOLTIP_EDGE, box.width - tip.width - TOOLTIP_EDGE);
+  const left = Math.min(Math.max(pointer.x - tip.width / 2, TOOLTIP_EDGE), maxLeft);
+  const above = pointer.y - TOOLTIP_LIFT - tip.height;
+  const top = above >= TOOLTIP_EDGE ? above : Math.min(pointer.y + TOOLTIP_LIFT, box.height - tip.height - TOOLTIP_EDGE);
+  return { left, top: Math.max(TOOLTIP_EDGE, top) };
 }
 
 /** The typical wines with no dot at all (the legend's line, RM12). */

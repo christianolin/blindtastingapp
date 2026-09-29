@@ -17,8 +17,8 @@
 // closing and reopening and a new session started without a reload, resets
 // with the page, and is never written to browser storage. With
 // NEXT_PUBLIC_TRAINING_MAP=0 at build, no tablist renders and the room is R1.
-// Pointing at or focusing the Map tab warms the map's code and the basemap
-// style (RM24), both by dynamic import, so neither enters this first load.
+// Pointing at or focusing the Map tab warms the map's code and, from it, the
+// basemap style (RM24), by dynamic import, so neither enters this first load.
 import {
   useCallback,
   useEffect,
@@ -70,7 +70,6 @@ import type {
 } from "@/lib/training/types";
 import { aromasToPayload, emptyNoteState, noteToPayload } from "@/lib/wset/note-state";
 import type { AromaTerm, WineColour, WineStyle, WsetNoteState } from "@/lib/wset/types";
-import { themeOfRoot } from "@/lib/rendered-theme";
 import { cn } from "@/lib/utils";
 import { finishTrainingSession, loadTrainingAttempt } from "./actions";
 import { CandidatesPanel } from "./candidates-panel";
@@ -217,22 +216,21 @@ export function TrainingRoom({
 
   // List | Map (training-room-map spec RM19, RM22, RM24).
   const [mapState, mapDispatch] = useReducer(roomMapReducer, ROOM_MAP_START);
-  const warmed = useRef(false);
-  const warmMap = useCallback(() => {
-    if (warmed.current) return;
-    warmed.current = true;
-    // A rejected import stays rejected: opening Map then says to reload.
-    loadTrainingMap().catch(() => mapDispatch({ type: "chunkFailed" }));
-    import("@/lib/wine-map/basemap").then(
-      // One shared request per theme; a failed style fetch is the map's own to handle.
-      (m) => m.loadBasemapStyle(themeOfRoot(document.documentElement)).catch(() => {}),
+  // One import warms both: the map's code, then, from it, the basemap style
+  // (a second loader here cost the first load more than the style's head
+  // start was worth, spec §12). Idempotent, so every pointer-enter may call
+  // it: the bundler caches the import and loadBasemapStyle shares one request
+  // per theme. A rejected import stays rejected: opening Map then says to
+  // reload; a failed style fetch is the map's own to handle.
+  const warmMap = () => {
+    loadTrainingMap().then(
+      (m) => m.warmBasemap().catch(() => {}),
       () => mapDispatch({ type: "chunkFailed" }),
     );
-  }, []);
-  const roomMap = useMemo<RoomMap | null>(
-    () => (TRAINING_MAP_ENABLED ? { state: mapState, dispatch: mapDispatch, warm: warmMap } : null),
-    [mapState, warmMap],
-  );
+  };
+  const roomMap: RoomMap | null = TRAINING_MAP_ENABLED
+    ? { state: mapState, dispatch: mapDispatch, warm: warmMap }
+    : null;
 
   // Functional updates: the sheet's onChange and a Bubbles/Fortified tap can
   // land in the same tick, and neither may overwrite the other.

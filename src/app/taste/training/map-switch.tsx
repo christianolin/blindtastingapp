@@ -8,7 +8,6 @@
 // move AND select (two tabs: either arrow flips), Home/End go to the ends.
 // Pointing at or focusing Map warms its code and the basemap (RM24).
 // No state of its own and no browser storage: TrainingRoom owns the choice.
-import { useRef } from "react";
 import { TRAINING_COPY } from "@/lib/training/copy";
 import { cn } from "@/lib/utils";
 import type { CandidatesView } from "./room-map-state";
@@ -20,17 +19,10 @@ const VIEWS: readonly CandidatesView[] = ["list", "map"];
 
 /** The tab a key moves to and selects; null for any other key. */
 export function nextTab(key: string, current: CandidatesView): CandidatesView | null {
-  switch (key) {
-    case "ArrowLeft":
-    case "ArrowRight":
-      return current === "list" ? "map" : "list";
-    case "Home":
-      return "list";
-    case "End":
-      return "map";
-    default:
-      return null;
-  }
+  if (key === "Home") return "list";
+  if (key === "End") return "map";
+  if (key === "ArrowLeft" || key === "ArrowRight") return current === "list" ? "map" : "list";
+  return null;
 }
 
 /** The tab's and its panel's element ids under one per-instance base (useId):
@@ -55,7 +47,6 @@ export function MapSwitch({
   onWarm: () => void;
   className?: string;
 }) {
-  const tabs = useRef<Partial<Record<CandidatesView, HTMLButtonElement | null>>>({});
   return (
     <div
       role="tablist"
@@ -67,9 +58,6 @@ export function MapSwitch({
         return (
           <button
             key={v}
-            ref={(el) => {
-              tabs.current[v] = el;
-            }}
             type="button"
             role="tab"
             id={tabId(idBase, v)}
@@ -82,7 +70,7 @@ export function MapSwitch({
               if (!next) return;
               e.preventDefault();
               onSelect(next);
-              tabs.current[next]?.focus();
+              document.getElementById(tabId(idBase, next))?.focus();
             }}
             onPointerEnter={v === "map" ? onWarm : undefined}
             onFocus={v === "map" ? onWarm : undefined}

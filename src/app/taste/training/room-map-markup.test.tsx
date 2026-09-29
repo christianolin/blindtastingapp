@@ -5,15 +5,9 @@ import { groupRanking } from "@/lib/training/groups";
 import type { RankedCandidate, TrainingCandidate } from "@/lib/training/types";
 import { MAP_PALETTES } from "@/lib/wine-map/map-palette";
 import { emptyNoteState } from "@/lib/wset/note-state";
-import {
-  CandidatesPanel,
-  selectedMapIds,
-  targetAfterMapChange,
-  targetDetailId,
-  visibleTarget,
-  type PopoverTarget,
-} from "./candidates-panel";
-import { MapFallback, MapUpright } from "./map-fallback";
+import { CandidatesPanel } from "./candidates-panel";
+import { MapFallback } from "./map-fallback";
+import { selectedMapIds, targetDetailId, type MapTarget } from "./map-popover";
 import { MapSwitch, nextTab } from "./map-switch";
 import { ROOM_MAP_START, type RoomMap, type RoomMapState } from "./room-map-state";
 import { TrainingMapLegend } from "./training-map-legend";
@@ -113,54 +107,31 @@ describe("CandidatesPanel with the map switch (RM19)", () => {
   });
 });
 
-describe("the popover's target rules (RM18)", () => {
+describe("the map popover's target rules (RM18)", () => {
   const button = {} as HTMLElement;
-  const map = (ids: string[], chosen: string | null = null): PopoverTarget => ({
-    kind: "map",
+  const map = (ids: string[], chosen: string | null = null): MapTarget => ({
     ids,
     chosen,
     anchor: button,
     returnFocus: button,
   });
-  const row: PopoverTarget = { kind: "row", id: "a", anchor: button };
 
   it("one wine opens its detail; several open a chooser until one is chosen", () => {
-    expect(targetDetailId(row)).toBe("a");
     expect(targetDetailId(map(["a"]))).toBe("a");
     expect(targetDetailId(map(["a", "b", "c"]))).toBeNull();
     expect(targetDetailId(map(["a", "b", "c"], "b"))).toBe("b");
   });
 
-  it("the gold ring: every wine of an open chooser, then the chosen one; none for a row", () => {
+  it("the gold ring: every wine of an open chooser, then the chosen one; none when closed", () => {
     expect(selectedMapIds(map(["a", "b"]))).toEqual(["a", "b"]);
     expect(selectedMapIds(map(["a", "b"], "b"))).toEqual(["b"]);
-    expect(selectedMapIds(row)).toEqual([]);
     expect(selectedMapIds(null)).toEqual([]);
-  });
-
-  it("a row's popover shows only on List, a map's only on Map", () => {
-    expect(visibleTarget(row, false)).toBe(row);
-    expect(visibleTarget(row, true)).toBeNull();
-    const m = map(["a"]);
-    expect(visibleTarget(m, true)).toBe(m);
-    expect(visibleTarget(m, false)).toBeNull();
-  });
-
-  it("a view change, a stopped or remounted map, or crossing lg drops what can no longer show", () => {
-    // A map target's anchor is a point on a map that is gone (or remounted):
-    // it must not come back at the screen's corner when Map is chosen again.
-    expect(targetAfterMapChange(map(["a"]), false)).toBeNull();
-    expect(targetAfterMapChange(map(["a"]), true)).toBeNull();
-    // A row's popover survives only while the list is the view.
-    expect(targetAfterMapChange(row, false)).toBe(row);
-    expect(targetAfterMapChange(row, true)).toBeNull();
-    expect(targetAfterMapChange(null, false)).toBeNull();
   });
 });
 
 describe("the fallbacks (RM20, RM22)", () => {
   it("stopped: a status line and a retry", () => {
-    const html = renderToStaticMarkup(<MapFallback kind="stopped" onRetry={() => {}} />);
+    const html = renderToStaticMarkup(<MapFallback kind="stopped" onAction={() => {}} />);
     expect(html).toContain('role="status"');
     expect(html).toContain("The map stopped working — the list has every wine.");
     expect(html).toContain(">Try the map again</button>");
@@ -175,7 +146,7 @@ describe("the fallbacks (RM20, RM22)", () => {
   });
 
   it("a short screen: the upright note and Show the list", () => {
-    const html = renderToStaticMarkup(<MapUpright onShowList={() => {}} />);
+    const html = renderToStaticMarkup(<MapFallback kind="upright" onAction={() => {}} />);
     expect(html).toContain("Turn your phone upright to see the map.");
     expect(html).toContain(">Show the list</button>");
   });

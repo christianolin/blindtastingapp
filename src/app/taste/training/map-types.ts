@@ -1,10 +1,12 @@
 // The training room's likelihood map, as seen from outside its dynamic chunk
 // (training-room-map spec RM11, RM18): the props TrainingMap takes, what a
 // tap on a dot (or a "Closest on the map" button) asks the room to open, and
-// the map box's size classes. Types and constants only: the candidates panel,
+// the loading placeholder's box. Types and constants only: the candidates panel,
 // the phone sheet and the map slot import this without pulling MapLibre, the
 // basemap or the palette into the room's first load (RM24).
-import type { RankedCandidate } from "@/lib/training/types";
+import type { ComponentType, ReactNode, RefObject } from "react";
+import type { RankedCandidate, TrainingCandidate } from "@/lib/training/types";
+import type { WsetNoteState } from "@/lib/wset/types";
 
 /** A point on screen, for base-ui's Positioner (floating-ui's VirtualElement). */
 export type VirtualAnchor = {
@@ -12,7 +14,8 @@ export type VirtualAnchor = {
   contextElement?: Element;
 };
 
-/** What a dot, a spot's button or an unmapped name asks the room to open (RM18, RM25). */
+/** What a dot, a spot's button or an unmapped name opens (RM18, RM25): on the
+    laptop column the map's own popover, in the phone sheet the sheet's view. */
 export type MapOpenRequest = {
   /** The wines there, once each, in ranking order: one opens its detail, more a chooser. */
   ids: string[];
@@ -28,32 +31,49 @@ export type TrainingMapLayout = "column" | "sheet";
 export type TrainingMapProps = {
   ranked: readonly RankedCandidate[];
   layout: TrainingMapLayout;
-  /** The wines whose detail or chooser is open: their dots wear the gold ring. */
-  selectedIds: readonly string[];
-  onOpen: (request: MapOpenRequest) => void;
-  /** Any camera move (a gesture or a fit): the laptop popover's anchor would drift, so it closes. */
-  onMoveStart?: () => void;
-  /** A lost WebGL context, or a map that could not start: the room goes back to List (RM22). */
-  onStopped: () => void;
+  /** The laptop column only: what the map's own popover renders with. */
+  popover?: { ui: MapPopoverUi; note: WsetNoteState };
+  /** The sheet only: the wines whose detail or chooser the sheet shows, whose
+      dots wear the gold ring (the column's map rings what its popover shows). */
+  selectedIds?: readonly string[];
+  /** The sheet only: a dot or button asks the sheet to show a detail or chooser. */
+  onOpen?: (request: MapOpenRequest) => void;
+  /** A lost WebGL context, or a map that could not start (with its error):
+      the room goes back to List (RM22) — unless the error is MapLibre's own
+      lazily loaded chunk failing (a stale tab after a deploy, a flaky
+      connection), where a retry would hit the same rejected import, so the
+      room says to reload the page instead. */
+  onStopped: (error?: unknown) => void;
 };
 
-/** The map box (spec §6.2, §6.3): on the laptop column a height that keeps the
-    whole panel inside the aside with no scroll; in the sheet whatever the
-    sheet's 88dvh leaves. The loading placeholder uses the same classes by
-    breakpoint, since the column is lg+ and the sheet below lg. */
-export const MAP_BOX: Record<TrainingMapLayout, string> = {
-  column: "h-[clamp(240px,calc(100dvh-380px),520px)] w-full",
-  sheet: "min-h-0 w-full flex-1",
+/** candidates-panel.tsx's DetailPopover: the laptop column's one popover shell. */
+export type DetailPopoverProps = {
+  /** Where it points; null: closed. */
+  anchor: Element | VirtualAnchor | null;
+  /** The list row it belongs to (its own press toggles it); null for the map. */
+  ownerRow: HTMLElement | null;
+  /** Where focus goes back on close (fine pointer): the row, the map container or the button pressed. */
+  returnFocus: HTMLElement | null;
+  label: string | undefined;
+  /** For a swap inside the popup that keeps focus in it (the map's chooser). */
+  popupRef?: RefObject<HTMLDivElement | null>;
+  onClose: () => void;
+  children: ReactNode;
 };
-export const MAP_BOX_ANY = "w-full max-lg:min-h-0 max-lg:flex-1 lg:h-[clamp(240px,calc(100dvh-380px),520px)]";
 
-/** A screen point inside `container`, read when the popover asks (it closes on any camera move). */
-export function pointAnchor(container: HTMLElement, x: number, y: number): VirtualAnchor {
-  return {
-    getBoundingClientRect: () => {
-      const r = container.getBoundingClientRect();
-      return new DOMRect(r.left + x, r.top + y, 0, 0);
-    },
-    contextElement: container,
-  };
-}
+/**
+ * The list's own popover shell, chooser rows and detail, HANDED to the map by
+ * the laptop column rather than imported by the map's chunk (map-popover.tsx):
+ * a static import there made the bundler split the room's first-load chunks
+ * to share them with the chunk, which cost the first load more than the map's
+ * popover code it moved out (spec §12's budget). Same components, one copy.
+ */
+export type MapPopoverUi = {
+  Popover: ComponentType<DetailPopoverProps>;
+  Chooser: ComponentType<{ wines: RankedCandidate[]; onChoose: (id: string) => void }>;
+  Detail: ComponentType<{ candidate: TrainingCandidate; note: WsetNoteState }>;
+};
+
+/** The loading placeholder's box: training-map.tsx's MAP_BOX by breakpoint,
+    since the column is lg+ and the sheet below lg. Keep the two in step. */
+export const MAP_BOX_ANY = "w-full max-lg:min-h-[240px] max-lg:flex-1 lg:h-[clamp(240px,calc(100dvh-380px),520px)]";

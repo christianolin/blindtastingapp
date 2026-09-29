@@ -3,6 +3,7 @@
 // rows here; nothing in this file touches Supabase, React or server-only, so
 // vitest pins every rule. Runtime imports are relative only (vitest has no
 // `@/` alias).
+import { englishName } from "../wine-map/localize-names";
 import { catalogWineTitle } from "../wset/wine-title";
 import { isRegionalAppellation, lineageForParts } from "./archetype-view";
 import type { VintageKind } from "../supabase/database.types";
@@ -119,7 +120,10 @@ function inRange(v: number | null, limit: number): v is number {
  * The RPC's rows by archetype id (spec §5). A row without a home key is
  * unplaced whatever else it carries; a region needs its key and its name; a
  * point needs its key and a finite, in-range lon/lat, and is the home's own
- * ("place") when its key is the home key, else an ancestor's.
+ * ("place") when its key is the home key, else an ancestor's. The region is
+ * named as the explorer names it by default, in English ("Rhône Valley", not
+ * the map's local "Vallée du Rhône": localize-names.ts) — resolved here, on
+ * the server, so the dictionary stays out of the room's client bundle.
  */
 export function placeLinks(rows: readonly ArchetypePlaceRaw[]): Map<string, PlaceLink> {
   const out = new Map<string, PlaceLink>();
@@ -128,7 +132,7 @@ export function placeLinks(rows: readonly ArchetypePlaceRaw[]): Map<string, Plac
       out.set(r.archetype_id, UNPLACED);
       continue;
     }
-    const mapRegion = r.region_key && r.region_name ? { key: r.region_key, name: r.region_name } : null;
+    const mapRegion = r.region_key && r.region_name ? { key: r.region_key, name: englishName(r.region_name) } : null;
     const source: "place" | "ancestor" = r.point_key === r.place_key ? "place" : "ancestor";
     const mapPoint =
       r.point_key && inRange(r.point_lon, 180) && inRange(r.point_lat, 90)

@@ -14,17 +14,17 @@
 // tablist sits beside the heading: the list stays mounted (hidden) under Map,
 // so its open regions and Show all come back as they were, and the map
 // mounts only while Map is open, and only here at lg+ (the phone sheet owns
-// it below lg). A dot, a spot's button or an unmapped name opens the SAME
-// popover a row does (CandidateDetailPopover), anchored to the dot.
+// it below lg). A dot, a spot's button or an unmapped name opens the same
+// popover shell a row does (DetailPopover), rendered by the map's own chunk
+// and anchored to the dot.
 // Tokens only: the bars are --primary, a capped row --muted-foreground.
-import { useEffect, useId, useMemo, useRef, useState } from "react";
-import { ArrowLeft, ChevronDown } from "lucide-react";
+import { useEffect, useId, useRef, useState } from "react";
+import { ChevronDown } from "lucide-react";
 import { Popover as PopoverPrimitive } from "@base-ui/react/popover";
 import { Eyebrow } from "@/components/overview/eyebrow";
 import { finePointer } from "@/lib/fine-pointer";
 import {
   TRAINING_COPY,
-  chooserTitle,
   groupSubLine,
   lineageLine,
   percentLabel,
@@ -48,7 +48,7 @@ import { ArchetypeDetail } from "./archetype-detail";
 import { MapFallback } from "./map-fallback";
 import { GroupMapLink } from "./map-link";
 import { MapSwitch, panelId, tabId } from "./map-switch";
-import type { VirtualAnchor } from "./map-types";
+import type { DetailPopoverProps, MapPopoverUi } from "./map-types";
 import { RoomMapSlot } from "./room-map-slot";
 import type { RoomMap } from "./room-map-state";
 import { LG_QUERY, useMedia } from "./use-media";
@@ -222,48 +222,9 @@ export function ShowAllRegions({ view, onShowAll }: { view: RegionPanelView; onS
   );
 }
 
-/** What the laptop popover shows and where it is anchored (training-room-map
-    spec RM18): a list row's wine, or what the map opened — a dot, a spot's
-    "Closest on the map" button or an unmapped name — which is one wine's
-    detail, or a chooser of the wines at one spot until one is chosen. */
-export type PopoverTarget =
-  | { kind: "row"; id: string; anchor: HTMLElement }
-  | {
-      kind: "map";
-      ids: string[];
-      chosen: string | null;
-      anchor: Element | VirtualAnchor;
-      returnFocus: HTMLElement;
-    };
-
-/** The wine a target shows in full; null while it is a chooser. */
-export function targetDetailId(target: PopoverTarget): string | null {
-  if (target.kind === "row") return target.id;
-  return target.chosen ?? (target.ids.length === 1 ? target.ids[0] : null);
-}
-
-/** The dots that wear the gold ring: what the map opened, while it is open. */
-export function selectedMapIds(target: PopoverTarget | null): string[] {
-  if (!target || target.kind !== "map") return [];
-  return target.chosen ? [target.chosen] : target.ids;
-}
-
-/** A target the current view can still show: a row's popover needs the list,
-    a map's needs the map (the other view's anchor is hidden or gone). */
-export function visibleTarget(target: PopoverTarget | null, mapView: boolean): PopoverTarget | null {
-  if (!target) return null;
-  return (target.kind === "map") === mapView ? target : null;
-}
-
-/** What survives a change of the view, of the map's mount (it stopped, or a
-    retry remounted it) or of the lg breakpoint: a row's popover while the
-    list is the view, and never a map's — its anchor is a point on a map that
-    is gone or new, so kept it would come back at the screen's corner. */
-export function targetAfterMapChange(target: PopoverTarget | null, mapView: boolean): PopoverTarget | null {
-  return target?.kind === "row" && !mapView ? target : null;
-}
-
-/** "{n} wines here": the wines a tap hit, as the list's own rows, best first (RM18). */
+/** "{n} wines here": the wines a tap on a shared spot hit, as the list's own
+    rows, best first (training-room-map spec RM18). The phone sheet shows it in
+    place; the laptop map, inside its own DetailPopover. */
 export function MapChooser({ wines, onChoose }: { wines: RankedCandidate[]; onChoose: (id: string) => void }) {
   return (
     <ul className="flex flex-col">
@@ -277,60 +238,42 @@ export function MapChooser({ wines, onChoose }: { wines: RankedCandidate[]; onCh
 }
 
 /**
- * The laptop column's one popover (extracted for training-room-map spec
- * RM18): a list row's detail anchored to the row, as before, or what the map
- * opened, anchored to the dot's point (a virtual element) or the button
- * pressed. A row's own press toggles it (pressOnOwningRow); a map target has
- * no row, so any press outside closes it. On a fine pointer focus moves in,
- * and on close goes back to the row, the map container (tabIndex -1) or the
- * button — never to <body>.
+ * The laptop column's popover (training-room-map spec RM18): one shell for a
+ * list row's detail, anchored to the row, and for what the map opened, which
+ * the map's own chunk renders (map-popover.tsx, handed this shell through
+ * MAP_UI) anchored to the dot's point (a virtual element) or the button
+ * pressed — so the map's chooser and Back cost the room's first load nothing
+ * (spec §12). Open while `anchor` is set. A
+ * press on the owning row is the row's own toggle (pressOnOwningRow); the map
+ * has no row, so any press outside closes it. On a fine pointer focus moves
+ * in, and on close goes back to `returnFocus` — the row, the map container
+ * (tabIndex -1) or the button pressed, never <body>.
  */
-export function CandidateDetailPopover({
-  target,
-  lookup,
-  note,
-  onChoose,
-  onBack,
+export function DetailPopover({
+  anchor,
+  ownerRow,
+  returnFocus,
+  label,
+  popupRef,
   onClose,
-}: {
-  target: PopoverTarget | null;
-  lookup: (id: string) => RankedCandidate | null;
-  note: WsetNoteState;
-  /** A chooser row: show that wine. */
-  onChoose: (id: string) => void;
-  /** Back from a chosen wine to its chooser. */
-  onBack: () => void;
-  onClose: () => void;
-}) {
-  const popupRef = useRef<HTMLDivElement>(null);
-  // Why it last closed, and what it belonged to: kept outside `target`, which
-  // is already null by the time the focus goes back.
+  children,
+}: DetailPopoverProps) {
+  const ownRef = useRef<HTMLDivElement>(null);
+  const ref = popupRef ?? ownRef;
+  const open = anchor !== null;
+  // Why it last closed, and what it belonged to: kept outside the props, which
+  // are already cleared by the time the focus goes back.
   const closeReason = useRef<string | null>(null);
   const owner = useRef<{ row: HTMLElement | null; returnFocus: HTMLElement | null }>({ row: null, returnFocus: null });
   useEffect(() => {
-    if (!target) return;
+    if (!open) return;
     closeReason.current = null;
-    owner.current =
-      target.kind === "row"
-        ? { row: target.anchor, returnFocus: target.anchor }
-        : { row: null, returnFocus: target.returnFocus };
-  }, [target]);
-
-  const detailId = target ? targetDetailId(target) : null;
-  const detail = detailId ? lookup(detailId) : null;
-  const chooser =
-    target && target.kind === "map" && detailId === null
-      ? target.ids.map(lookup).filter((r): r is RankedCandidate => r !== null)
-      : null;
-  const canGoBack = target?.kind === "map" && target.chosen !== null && target.ids.length > 1;
-  // After a swap inside the popup, keep focus in it (fine pointer only).
-  const refocus = () => {
-    if (finePointer()) requestAnimationFrame(() => popupRef.current?.focus());
-  };
+    owner.current = { row: ownerRow, returnFocus };
+  }, [open, anchor, ownerRow, returnFocus]);
 
   return (
     <PopoverPrimitive.Root
-      open={detail !== null || chooser !== null}
+      open={open}
       onOpenChange={(next, details) => {
         if (next) return;
         // A press on the owning row is the row's to handle: its click, which
@@ -347,7 +290,7 @@ export function CandidateDetailPopover({
     >
       <PopoverPrimitive.Portal>
         <PopoverPrimitive.Positioner
-          anchor={target?.anchor ?? null}
+          anchor={anchor}
           positionMethod="fixed"
           side="left"
           align="start"
@@ -356,49 +299,24 @@ export function CandidateDetailPopover({
           className="z-50"
         >
           <PopoverPrimitive.Popup
-            ref={popupRef}
-            aria-label={chooser ? chooserTitle(chooser.length) : detail ? detail.candidate.name : undefined}
-            initialFocus={() => (finePointer() ? popupRef.current : false)}
+            ref={ref}
+            aria-label={label}
+            initialFocus={() => (finePointer() ? ref.current : false)}
             finalFocus={() =>
               detailReturnsFocus(closeReason.current, finePointer()) ? (owner.current.returnFocus ?? false) : false
             }
             className="max-h-[80vh] w-[560px] overflow-y-auto overscroll-contain rounded-2xl bg-background p-4 shadow-lg ring-1 ring-foreground/10 outline-hidden"
           >
-            {chooser ? (
-              <div className="flex flex-col gap-2">
-                <p className="px-3 font-heading text-[17px] font-semibold">{chooserTitle(chooser.length)}</p>
-                <MapChooser
-                  wines={chooser}
-                  onChoose={(id) => {
-                    onChoose(id);
-                    refocus();
-                  }}
-                />
-              </div>
-            ) : detail ? (
-              <div className="flex flex-col gap-2">
-                {canGoBack ? (
-                  <button
-                    type="button"
-                    aria-label={TRAINING_COPY.back}
-                    onClick={() => {
-                      onBack();
-                      refocus();
-                    }}
-                    className="-ml-2 inline-flex size-11 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring md:pointer-fine:size-8"
-                  >
-                    <ArrowLeft aria-hidden className="size-5" />
-                  </button>
-                ) : null}
-                <ArchetypeDetail candidate={detail.candidate} note={note} />
-              </div>
-            ) : null}
+            {children}
           </PopoverPrimitive.Popup>
         </PopoverPrimitive.Positioner>
       </PopoverPrimitive.Portal>
     </PopoverPrimitive.Root>
   );
 }
+
+/** What the laptop map's own popover renders with (map-types.ts's MapPopoverUi). */
+const MAP_UI: MapPopoverUi = { Popover: DetailPopover, Chooser: MapChooser, Detail: ArchetypeDetail };
 
 export function CandidatesPanel({
   groups,
@@ -415,27 +333,21 @@ export function CandidatesPanel({
 }) {
   const [showAll, setShowAll] = useState(false);
   const [expand, setExpand] = useState<ExpandState>({});
-  const [target, setTarget] = useState<PopoverTarget | null>(null);
+  // The list row whose popover is open. The map's own popover lives in the
+  // map (map-popover.tsx), so it goes with the map whenever the map unmounts
+  // (List chosen, a stop, a retry's remount, crossing lg) and never comes
+  // back anchored to a map that is gone.
+  const [detail, setDetail] = useState<{ id: string; anchor: HTMLElement } | null>(null);
   const idBase = useId();
   // Only the laptop column mounts the map here: below lg this aside is
   // display:none and the phone sheet owns the map (one WebGL context).
   const wide = useMedia(LG_QUERY, false);
   const view = regionPanelView(groups, showAll);
-  const byId = useMemo(() => new Map(ranked.map((r) => [r.candidate.id, r] as const)), [ranked]);
-  const lookup = (id: string) => byId.get(id) ?? findMember(groups, id);
   const mapView = roomMap?.state.view === "map";
-  // A change of view, of the map's mount (a stop, a retry's remount) or of lg
-  // drops what the new state cannot show, during render (React's "adjust
-  // state on a prop change"), so a stopped map's popover never reopens,
-  // anchored to a map that is gone, when Map is chosen again.
-  const mapKey = `${mapView}:${wide}:${roomMap?.state.attempt ?? 0}`;
-  const [seenMapKey, setSeenMapKey] = useState(mapKey);
-  if (seenMapKey !== mapKey) {
-    setSeenMapKey(mapKey);
-    setTarget((t) => targetAfterMapChange(t, mapView));
-  }
-  const shown = visibleTarget(target, mapView);
-  const openRowId = shown?.kind === "row" ? shown.id : null;
+  // A row's popover shows only on List: on Map its row is hidden.
+  const shown = mapView ? null : detail;
+  const open = shown ? findMember(groups, shown.id) : null;
+  const openRowId = open ? open.candidate.id : null;
 
   const list = (
     <>
@@ -450,10 +362,10 @@ export function CandidatesPanel({
         onOpen={(id, anchor) => {
           // The open popover's own row toggles it closed, as a trigger would.
           if (openRowId === id) {
-            setTarget(null);
+            setDetail(null);
             return;
           }
-          setTarget({ kind: "row", id, anchor });
+          setDetail({ id, anchor });
         }}
       />
       <ShowAllRegions view={view} onShowAll={() => setShowAll(true)} />
@@ -474,7 +386,11 @@ export function CandidatesPanel({
             <MapSwitch
               idBase={idBase}
               view={roomMap.state.view}
-              onSelect={(v) => roomMap.dispatch({ type: "select", view: v })}
+              onSelect={(v) => {
+                // A new view drops a row's popover: its row is about to hide.
+                setDetail(null);
+                roomMap.dispatch({ type: "select", view: v });
+              }}
               onWarm={roomMap.warm}
             />
           </div>
@@ -487,7 +403,7 @@ export function CandidatesPanel({
           >
             {roomMap.state.fault === "stopped" ? (
               <div className="px-1">
-                <MapFallback kind="stopped" onRetry={() => roomMap.dispatch({ type: "retry" })} />
+                <MapFallback kind="stopped" onAction={() => roomMap.dispatch({ type: "retry" })} />
               </div>
             ) : null}
             {list}
@@ -500,17 +416,7 @@ export function CandidatesPanel({
             className="flex flex-col gap-2 px-1 pb-1"
           >
             {mapView && wide ? (
-              <RoomMapSlot
-                roomMap={roomMap}
-                ranked={ranked}
-                layout="column"
-                selectedIds={selectedMapIds(shown)}
-                onOpen={(request) =>
-                  setTarget({ kind: "map", chosen: null, ...request })
-                }
-                // Any camera move: the dot's point would drift under the popover.
-                onMoveStart={() => setTarget((t) => (t?.kind === "map" ? null : t))}
-              />
+              <RoomMapSlot roomMap={roomMap} ranked={ranked} layout="column" popover={{ ui: MAP_UI, note }} />
             ) : null}
           </div>
         </>
@@ -523,14 +429,15 @@ export function CandidatesPanel({
         </>
       )}
 
-      <CandidateDetailPopover
-        target={shown}
-        lookup={lookup}
-        note={note}
-        onChoose={(id) => setTarget((t) => (t?.kind === "map" ? { ...t, chosen: id } : t))}
-        onBack={() => setTarget((t) => (t?.kind === "map" ? { ...t, chosen: null } : t))}
-        onClose={() => setTarget(null)}
-      />
+      <DetailPopover
+        anchor={open && shown ? shown.anchor : null}
+        ownerRow={shown?.anchor ?? null}
+        returnFocus={shown?.anchor ?? null}
+        label={open?.candidate.name}
+        onClose={() => setDetail(null)}
+      >
+        {open ? <ArchetypeDetail candidate={open.candidate} note={note} /> : null}
+      </DetailPopover>
     </section>
   );
 }

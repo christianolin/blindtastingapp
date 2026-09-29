@@ -21,7 +21,7 @@
 // returns to the same camera with no new WebGL context. Closing the sheet
 // unmounts the map; reopening remounts it and the tab stays Map (the choice
 // lives in TrainingRoom). A phone on its side gets the upright note instead.
-import { useId, useMemo, useState, type RefObject } from "react";
+import { useId, useState, type RefObject } from "react";
 import { ArrowLeft, X } from "lucide-react";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { finePointer } from "@/lib/fine-pointer";
@@ -32,7 +32,7 @@ import type { WsetNoteState } from "@/lib/wset/types";
 import { cn } from "@/lib/utils";
 import { ArchetypeDetail } from "./archetype-detail";
 import { MapChooser, RegionGroups, ShowAllRegions } from "./candidates-panel";
-import { MapFallback, MapUpright } from "./map-fallback";
+import { MapFallback } from "./map-fallback";
 import { MapSwitch, panelId, tabId } from "./map-switch";
 import type { MapOpenRequest } from "./map-types";
 import { RoomMapSlot } from "./room-map-slot";
@@ -79,30 +79,24 @@ export function CandidatesSheet({
   // its side gets the upright note (RM20).
   const wide = useMedia(LG_QUERY, false);
   const short = useMedia(SHORT_QUERY, false);
-  const byId = useMemo(() => new Map(ranked.map((r) => [r.candidate.id, r] as const)), [ranked]);
-  const lookup = (id: string) => byId.get(id) ?? findMember(groups, id);
+  // groups is the same ranking by region, so it holds every wine the map shows.
+  const lookup = (id: string) => findMember(groups, id);
   const detail = detailId ? lookup(detailId) : null;
   const chooser = chooserIds ? chooserIds.map(lookup).filter((r): r is RankedCandidate => r !== null) : null;
   const view = regionPanelView(groups, showAll);
   const mapView = roomMap?.state.view === "map";
   const overlay = detail !== null || chooser !== null;
 
-  const openFromMap = (request: MapOpenRequest) => {
-    if (request.ids.length === 1) {
-      setChooserIds(null);
-      setDetailId(request.ids[0]);
-    } else {
-      setDetailId(null);
-      setChooserIds(request.ids);
-    }
+  // One wine opens its detail; more open the chooser.
+  const openFromMap = ({ ids }: MapOpenRequest) => {
+    const one = ids.length === 1;
+    setChooserIds(one ? null : ids);
+    setDetailId(one ? ids[0] : null);
   };
   // Back: a wine chosen from a chooser returns to it; anything else to the list or map.
   const back = () => {
-    if (detail && chooser) setDetailId(null);
-    else {
-      setDetailId(null);
-      setChooserIds(null);
-    }
+    if (!(detail && chooser)) setChooserIds(null);
+    setDetailId(null);
   };
 
   const list = (
@@ -133,7 +127,7 @@ export function CandidatesSheet({
           <>
             {roomMap?.state.fault === "stopped" ? (
               <div className="px-1 pb-2">
-                <MapFallback kind="stopped" onRetry={() => roomMap.dispatch({ type: "retry" })} />
+                <MapFallback kind="stopped" onAction={() => roomMap.dispatch({ type: "retry" })} />
               </div>
             ) : null}
             {list}
@@ -150,7 +144,7 @@ export function CandidatesSheet({
           className={cn("flex min-h-0 flex-1 flex-col gap-2 px-3 pt-2", SAFE_BOTTOM, overlay && "invisible")}
         >
           {short ? (
-            <MapUpright onShowList={() => roomMap.dispatch({ type: "select", view: "list" })} />
+            <MapFallback kind="upright" onAction={() => roomMap.dispatch({ type: "select", view: "list" })} />
           ) : !wide ? (
             <RoomMapSlot
               roomMap={roomMap}

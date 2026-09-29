@@ -9,7 +9,8 @@
 // typical wines with no dot at all, each a real button opening its detail
 // (RM25). The swatches are the canvas's own colours — the palette's literal
 // hex, as the explorer's legend does — so they always match what is drawn.
-import { TRAINING_COPY, unmappedLine } from "@/lib/training/copy";
+import { TRAINING_COPY } from "@/lib/training/copy";
+import { MAP_COPY, unmappedLine } from "@/lib/training/map-copy";
 import type { MapPalette } from "@/lib/wine-map/map-palette";
 import type { TrainingCandidate } from "@/lib/training/types";
 import { cn } from "@/lib/utils";
@@ -40,7 +41,7 @@ export function TrainingMapLegend({
     <div className="flex flex-col gap-1.5 text-[11.5px] text-muted-foreground">
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
         <span className="flex items-center gap-2">
-          <span>{TRAINING_COPY.legendLess}</span>
+          <span>{MAP_COPY.legendLess}</span>
           <span
             aria-hidden
             className="h-2 w-[120px] rounded-full"
@@ -48,15 +49,15 @@ export function TrainingMapLegend({
               background: `linear-gradient(to right, ${stops.join(", ")})`,
             }}
           />
-          <span>{TRAINING_COPY.legendClosest}</span>
+          <span>{MAP_COPY.legendClosest}</span>
         </span>
         <span className="flex items-center gap-1.5">
           <span aria-hidden className="size-2.5 rounded-full border-[1.5px]" style={{ borderColor: capped }} />
-          <span>{TRAINING_COPY.legendRuledOut}</span>
+          <span>{MAP_COPY.legendRuledOut}</span>
         </span>
       </div>
-      <p>{TRAINING_COPY.legendRelative}</p>
-      {curated ? <p>{TRAINING_COPY.legendApprox}</p> : null}
+      <p>{MAP_COPY.legendRelative}</p>
+      {curated ? <p>{MAP_COPY.legendApprox}</p> : null}
       {unmapped.length > 0 ? (
         <p className="flex flex-wrap items-center gap-x-2">
           <span>{unmappedLine(unmapped.length)}</span>

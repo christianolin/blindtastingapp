@@ -126,20 +126,12 @@ export const TRAINING_COPY = {
   notOnMap: "Not on the wine map yet",
   practiseBlind: "Practise blind in the training room →",
   // the likelihood map (training-room-map spec §9 R2 — PROVISIONAL until the
-  // owner approves the table before the R2 deploy). No string claims a
-  // probability: the % is each wine's own closeness (spec RM27, risk X1).
+  // owner approves the table before the R2 deploy): the lines shown before or
+  // without the map. The map's own lines are map-copy.ts's (its chunk only).
+  // No string claims a probability (spec RM27, risk X1).
   listTab: "List",
   mapTab: "Map",
   viewsLabel: "What it could be, as a list or a map",
-  mapLabel: "Map of the typical wines, coloured by how close each is to your note",
-  mapSrNote: "The list shows the same wines and numbers.",
-  closestOnMap: "Closest on the map",
-  legendLess: "Less close",
-  legendClosest: "Closest",
-  legendRuledOut: "Ruled out",
-  legendRelative: "Colours compare the wines with each other; the % is each wine's own closeness.",
-  legendApprox: "Wines outside the mapped countries sit at an approximate spot.",
-  fitClosest: "Fit to the closest",
   mapStopped: "The map stopped working — the list has every wine.",
   mapRetry: "Try the map again",
   mapNeedsReload: "The map needs a page reload to load.",
@@ -161,16 +153,6 @@ export function regionOnMap(name: string): string {
 /** The explorer's heading over a place's typical wines (RM9): plural past one. */
 export function typicalWinesHeading(n: number): string {
   return n === 1 ? "Typical wine" : "Typical wines";
-}
-
-/** A shared spot's suffix on the map: "+2" when two more wines sit there (RM15). */
-export function stackMore(n: number): string {
-  return `+${n}`;
-}
-
-/** The legend's count of typical wines with no dot at all (hidden at 0). */
-export function unmappedLine(n: number): string {
-  return `${n} not on the wine map yet`;
 }
 
 /** The chooser a tap on a shared spot opens (RM18): "3 wines here". */

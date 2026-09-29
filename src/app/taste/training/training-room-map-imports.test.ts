@@ -49,15 +49,44 @@ describe("the likelihood map's chunk (RM11, RM24)", () => {
     );
   });
 
-  it("loadTrainingMap is used by the dynamic(…, { ssr: false }) call and the warm-up, and nowhere else", () => {
+  it("loadTrainingMap is used by the slot's React.lazy and the warm-up, and nowhere else", () => {
     const users = ALL.filter(
       ({ file, text }) => !isTest(file) && !file.endsWith("training-map-loader.ts") && /\bloadTrainingMap\b/.test(text),
     ).map((f) => f.file);
     expect(users.sort()).toEqual([`${ROOM}room-map-slot.tsx`, `${ROOM}training-room.tsx`]);
-    expect(read("room-map-slot.tsx")).toMatch(
-      /dynamic\(\(\) => loadTrainingMap\(\)\.then\(\(m\) => m\.TrainingMap\), \{\s*ssr: false,/,
-    );
-    expect(read("training-room.tsx")).toMatch(/loadTrainingMap\(\)\.catch\(/);
+    // React.lazy, not next/dynamic: next/dynamic's runtime alone cost the first
+    // load ~1 KB gzip (spec §12). No ssr: false needed — the view starts on List.
+    const slot = read("room-map-slot.tsx");
+    expect(slot).toMatch(/lazy\(\(\) => loadTrainingMap\(\)\.then\(\(m\) => \(\{ default: m\.TrainingMap \}\)\)\)/);
+    expect(slot).toMatch(/<Suspense fallback=\{<MapLoading \/>\}>/);
+    expect(imports(slot).map((i) => i.spec)).not.toContain("next/dynamic");
+    // The warm-up: one import, and the basemap style from the loaded chunk.
+    expect(read("training-room.tsx")).toMatch(/loadTrainingMap\(\)\.then\(\s*\(m\) => m\.warmBasemap\(\)/);
+  });
+
+  it("the map's chunk imports nothing the room's first load owns (spec §12)", () => {
+    // A shared module made the bundler split the room's first-load chunks, or
+    // pull the module out of the room's own, and grow the load. The laptop
+    // popover's shell, rows and detail are handed in (MAP_UI), not imported.
+    const FIRST_LOAD = /^\.\/(candidates-panel|candidates-sheet|archetype-detail|use-media|map-fallback|room-map-slot|room-map-state|map-switch|training-room)$|\/lib\/training\/panel$|\/lib\/chunk-load-error$/;
+    for (const file of ["training-map.tsx", "map-popover.tsx", "training-map-legend.tsx"]) {
+      const offenders = imports(read(file)).filter((i) => !i.typeOnly && FIRST_LOAD.test(i.spec));
+      expect(offenders, file).toEqual([]);
+    }
+    // map-popover and the legend ride in the chunk: only training-map imports them.
+    for (const mod of ["map-popover", "training-map-legend"]) {
+      const importers = ALL.filter(({ file, text }) => !isTest(file) && imports(text).some((i) => i.spec === `./${mod}`));
+      expect(importers.map((f) => f.file), mod).toEqual([`${ROOM}training-map.tsx`]);
+    }
+    // The map's own lines, too.
+    const copyUsers = ALL.filter(
+      ({ file, text }) => !isTest(file) && imports(text).some((i) => /(^|\/)map-copy$/.test(i.spec)),
+    ).map((f) => f.file);
+    expect(copyUsers.sort()).toEqual([
+      `${ROOM}training-map-legend.tsx`,
+      `${ROOM}training-map.tsx`,
+      "lib/training/map-view.ts",
+    ]);
   });
 
   it("TrainingMap is rendered only by the slot, and the slot only inside the Map view", () => {
@@ -71,7 +100,7 @@ describe("the likelihood map's chunk (RM11, RM24)", () => {
     const elseAt = sheet.indexOf("} else {", branch);
     expect(branch).toBeGreaterThan(-1);
     expect(sheet.indexOf("<RoomMapSlot")).toBeGreaterThan(elseAt);
-    expect(sheet).toMatch(/short \? \(\s*<MapUpright[\s\S]*?\) : !wide \? \(\s*<RoomMapSlot\b/);
+    expect(sheet).toMatch(/short \? \(\s*<MapFallback kind="upright"[\s\S]*?\) : !wide \? \(\s*<RoomMapSlot\b/);
   });
 
   it("no room file but training-map.tsx has a value import of maplibre-gl or react-map-gl", () => {
@@ -81,7 +110,7 @@ describe("the likelihood map's chunk (RM11, RM24)", () => {
     expect(offenders).toEqual([]);
   });
 
-  it("no room file outside the chunk statically imports basemap or map-palette (the warm-up uses import())", () => {
+  it("no room file outside the chunk statically imports basemap or map-palette (the warm-up goes through the chunk)", () => {
     const CHUNK = [`${ROOM}training-map.tsx`];
     const offenders = ALL.filter(({ file }) => file.startsWith(ROOM) && !CHUNK.includes(file) && !isTest(file))
       .filter(({ text }) =>
@@ -91,7 +120,6 @@ describe("the likelihood map's chunk (RM11, RM24)", () => {
       )
       .map((f) => f.file);
     expect(offenders).toEqual([]);
-    expect(read("training-room.tsx")).toMatch(/import\("@\/lib\/wine-map\/basemap"\)/);
   });
 });
 

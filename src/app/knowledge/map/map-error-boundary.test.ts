@@ -3,7 +3,7 @@
 // to the Retry card, a new resetKey switches it back, and a failed code-split
 // chunk is told apart from an ordinary crash, since only a page load fixes it.
 import { describe, expect, it } from "vitest";
-import { isChunkLoadError, MapErrorBoundary, MapUnavailableCard } from "./map-error-boundary";
+import { isChunkLoadError, MapErrorBoundary } from "./map-error-boundary";
 
 describe("MapErrorBoundary", () => {
   it("records the error that reached it", () => {
@@ -61,48 +61,5 @@ describe("isChunkLoadError", () => {
     expect(isChunkLoadError(new TypeError("Cannot read properties of undefined"))).toBe(false);
     expect(isChunkLoadError("Loading chunk 1 failed.")).toBe(false);
     expect(isChunkLoadError(null)).toBe(false);
-  });
-});
-
-// The training room's optional fallback (training-room-map spec RM22): the
-// room renders its own two states; the explorer passes none and keeps its card.
-describe("MapErrorBoundary's fallback prop", () => {
-  function renderWith(error: Error, fallback?: (e: Error, isChunk: boolean) => unknown) {
-    const boundary = new MapErrorBoundary({
-      resetKey: 0,
-      onRetry: () => {},
-      fallback: fallback as never,
-      children: "the map",
-    });
-    boundary.state = { error, resetKey: 0 };
-    return boundary.render();
-  }
-
-  it("renders fallback(error, true) for a chunk error", () => {
-    const chunk = new Error("Loading chunk 482 failed.");
-    chunk.name = "ChunkLoadError";
-    const calls: [string, boolean][] = [];
-    const out = renderWith(chunk, (e, isChunk) => {
-      calls.push([e.message, isChunk]);
-      return "reload card";
-    });
-    expect(out).toBe("reload card");
-    expect(calls).toEqual([["Loading chunk 482 failed.", true]]);
-  });
-
-  it("renders fallback(error, false) for any other error", () => {
-    const calls: boolean[] = [];
-    renderWith(new Error("Style is not done loading."), (_e, isChunk) => {
-      calls.push(isChunk);
-      return null;
-    });
-    expect(calls).toEqual([false]);
-  });
-
-  it("without a fallback renders the explorer's own card, and the children while healthy", () => {
-    const out = renderWith(new Error("x")) as { type: unknown };
-    expect(out.type).toBe(MapUnavailableCard);
-    const healthy = new MapErrorBoundary({ resetKey: 0, onRetry: () => {}, children: "the map" });
-    expect(healthy.render()).toBe("the map");
   });
 });

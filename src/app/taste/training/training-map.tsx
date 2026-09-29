@@ -6,8 +6,8 @@
 // three best spots (more from z7, and on hover). Never TileWineMap: no
 // pmtiles, no manifest, no shards, no explorer state — a basemap and one
 // GeoJSON source. Its own chunk, loaded only through ./training-map-loader
-// (next/dynamic, ssr: false), mounted only while the Map view is open, and
-// imported only from under src/app/taste/training/ (RM1).
+// (the slot's React.lazy, and the warm-up), mounted only while the Map view is
+// open, and imported only from under src/app/taste/training/ (RM1).
 //
 // Contracts it keeps:
 // - Theme (RM21, CLAUDE.md "never pass a changing mapStyle"): `mapStyle` is
@@ -25,21 +25,27 @@
 //   last changed, until the viewer first moves the map (a movestart carrying
 //   an originalEvent, the explorer's own test); then "Fit to the closest"
 //   appears and the camera never moves by itself. Reduced motion: instant.
-// - Failure (RM22): a lost WebGL context, or react-maplibre's constructor
-//   path (onError with target null — no WebGL), reports onStopped; any other
-//   error on a running map is logged and nothing else happens.
+// - Failure (RM22): a lost WebGL context, or react-maplibre's start-up path
+//   (onError with target null: no WebGL, or its own import("maplibre-gl")
+//   rejected — a stale tab after a deploy), reports onStopped with the error,
+//   and the slot tells a chunk error (only a reload helps) from a map that
+//   could not start; any other error on a running map is logged and nothing
+//   else happens.
+// - Its first-load cost (spec §12): the chunk imports no module the room's
+//   first load owns (panel.ts, use-media.ts, candidates-panel.tsx…) — a shared
+//   module made the bundler split it out of the room's own and grow the load.
 // - Gestures (RM20): no rotation or pitch; maplibre-gl.css supplies the
 //   canvas's touch-action: none.
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import MapGL, { NavigationControl, type MapRef } from "react-map-gl/maplibre";
 import type { Map as MaplibreMap, StyleSpecification } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 // Dark-theme dressing for MapLibre's own controls; must follow maplibre-gl.css.
 import "../../knowledge/map/map-chrome.css";
 import { Eyebrow } from "@/components/overview/eyebrow";
-import { useRenderedTheme } from "@/lib/rendered-theme";
+import { themeOfRoot, useRenderedTheme } from "@/lib/rendered-theme";
 import type { Theme } from "@/lib/theme";
-import { TRAINING_COPY } from "@/lib/training/copy";
+import { MAP_COPY } from "@/lib/training/map-copy";
 import {
   CAMERA_SETTLE_MS,
   DOT_LAYOUT,
@@ -57,13 +63,14 @@ import {
   hoverLabel,
   labelLayout,
   labelPaint,
+  noAnswersYet,
   shouldAutoFit,
+  tooltipPosition,
   trainingFeatures,
   unmappedCandidates,
   type Bbox,
   type DotCollection,
 } from "@/lib/training/map-view";
-import { isBeforeAnswers } from "@/lib/training/panel";
 import {
   BASEMAP_STYLE_URL,
   TRAINING_SOURCE_ID,
@@ -76,9 +83,9 @@ import {
 import { installHoverCursor } from "@/lib/wine-map/hover-cursor";
 import { MAP_PALETTES } from "@/lib/wine-map/map-palette";
 import { cn } from "@/lib/utils";
-import { MAP_BOX, pointAnchor, type MapOpenRequest, type TrainingMapProps } from "./map-types";
+import { MapDetailPopover, selectedMapIds, type MapTarget } from "./map-popover";
+import type { MapOpenRequest, TrainingMapLayout, TrainingMapProps, VirtualAnchor } from "./map-types";
 import { TrainingMapLegend } from "./training-map-legend";
-import { mediaMatches } from "./use-media";
 
 const DOTS_LAYER = "training-dots";
 const LABELS_LAYER = "training-labels";
@@ -87,6 +94,39 @@ const DEV = process.env.NODE_ENV !== "production";
 const TAP = "min-h-11 md:pointer-fine:min-h-0";
 
 type Target = { box: Bbox; maxZoom: number };
+
+/** The warm-up's basemap half (RM24): TrainingRoom calls it once this chunk
+    has loaded on intent (a pointer on, or focus in, the Map tab), so a first
+    open finds the style in module memory. One shared request per theme. */
+export function warmBasemap(): Promise<unknown> {
+  return loadBasemapStyle(themeOfRoot(document.documentElement));
+}
+
+/** Read once, at the moment it matters (a tap, a fit, the hover install). */
+function mediaMatches(query: string): boolean {
+  return typeof window.matchMedia === "function" && window.matchMedia(query).matches;
+}
+
+/** The map box (spec §6.2, §6.3): on the laptop column a height that keeps the
+    whole panel inside the aside with no scroll; in the sheet whatever the
+    sheet's 88dvh leaves, but never under 240 px (RM20 calls a map under 200 px
+    unusable; on an iPhone SE the rows under it scroll instead). map-types.ts's
+    MAP_BOX_ANY is the loading placeholder's copy of these, by breakpoint. */
+const MAP_BOX: Record<TrainingMapLayout, string> = {
+  column: "h-[clamp(240px,calc(100dvh-380px),520px)] w-full",
+  sheet: "min-h-[240px] w-full flex-1",
+};
+
+/** A screen point inside `container`, read when the popover asks (it closes on any camera move). */
+function pointAnchor(container: HTMLElement, x: number, y: number): VirtualAnchor {
+  return {
+    getBoundingClientRect: () => {
+      const r = container.getBoundingClientRect();
+      return new DOMRect(r.left + x, r.top + y, 0, 0);
+    },
+    contextElement: container,
+  };
+}
 
 function toBounds(box: Bbox): [[number, number], [number, number]] {
   return [
@@ -132,22 +172,36 @@ function ensureLayers(map: MaplibreMap, theme: Theme, data: DotCollection) {
   }
 }
 
-export function TrainingMap({ ranked, layout, selectedIds, onOpen, onMoveStart, onStopped }: TrainingMapProps) {
+const NONE: readonly string[] = [];
+
+export function TrainingMap({
+  ranked,
+  layout,
+  popover: popoverUi,
+  selectedIds: sheetSelected = NONE,
+  onOpen,
+  onStopped,
+}: TrainingMapProps) {
   const mapRef = useRef<MapRef>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const readyRef = useRef(false);
   const disposeHoverRef = useRef<(() => void) | null>(null);
 
   // The latest props, for listeners registered once in onLoad.
+  // --- The laptop popover (RM18): the map's own, so it goes with the map ----
+  const [popover, setPopover] = useState<MapTarget | null>(null);
+  const byId = useMemo(() => new Map(ranked.map((r) => [r.candidate.id, r] as const)), [ranked]);
+  // The column rings what its popover shows; the sheet, what the sheet shows.
+  const selectedIds = layout === "column" ? selectedMapIds(popover) : sheetSelected;
+
   const latest = useRef({
     ranked,
     selectedIds,
     onOpen,
-    onMoveStart,
     onStopped,
   });
   useEffect(() => {
-    latest.current = { ranked, selectedIds, onOpen, onMoveStart, onStopped };
+    latest.current = { ranked, selectedIds, onOpen, onStopped };
   });
 
   // --- Theme (RM21) ---------------------------------------------------------
@@ -290,8 +344,30 @@ export function TrainingMap({ ranked, layout, selectedIds, onOpen, onMoveStart, 
     x: number;
     y: number;
   } | null>(null);
+  // Placed once it has a size: centred above the pointer, clamped inside the
+  // map box (whose overflow clip would otherwise cut a name or % in half).
+  const tipRef = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const tip = tipRef.current;
+    const box = containerRef.current;
+    if (!tooltip || !tip || !box) return;
+    const { left, top } = tooltipPosition(
+      tooltip,
+      { width: tip.offsetWidth, height: tip.offsetHeight },
+      { width: box.clientWidth, height: box.clientHeight },
+    );
+    // Before paint, so it never shows at the box's corner first.
+    tip.style.transform = `translate(${left}px, ${top}px)`;
+  }, [tooltip]);
 
   // --- Open a detail or a chooser (RM18) -------------------------------------
+  const open = useCallback(
+    (request: MapOpenRequest) => {
+      if (layout === "column") setPopover({ ...request, chosen: null });
+      else latest.current.onOpen?.(request);
+    },
+    [layout],
+  );
   const openAt = useCallback((hitIds: readonly string[], returnFocus?: HTMLElement) => {
     const map = mapRef.current?.getMap();
     const container = containerRef.current;
@@ -311,8 +387,8 @@ export function TrainingMap({ ranked, layout, selectedIds, onOpen, onMoveStart, 
       anchor: inside ? pointAnchor(container, point.x, point.y) : (returnFocus ?? container),
       returnFocus: returnFocus ?? container,
     };
-    latest.current.onOpen(request);
-  }, []);
+    open(request);
+  }, [open]);
 
   useEffect(
     () => () => {
@@ -324,7 +400,7 @@ export function TrainingMap({ ranked, layout, selectedIds, onOpen, onMoveStart, 
     [],
   );
 
-  const before = isBeforeAnswers(ranked);
+  const before = noAnswersYet(ranked);
   const spots = useMemo(() => closestSpots(ranked), [ranked]);
   const unmapped = useMemo(() => unmappedCandidates(ranked.map((r) => r.candidate)), [ranked]);
   const curated = useMemo(() => ranked.some((r) => r.candidate.mapPoint?.source === "curated"), [ranked]);
@@ -335,10 +411,10 @@ export function TrainingMap({ ranked, layout, selectedIds, onOpen, onMoveStart, 
         ref={containerRef}
         tabIndex={-1}
         role="group"
-        aria-label={TRAINING_COPY.mapLabel}
+        aria-label={MAP_COPY.mapLabel}
         className={cn("relative overflow-hidden rounded-[10px] outline-none", MAP_BOX[layout])}
       >
-        <span className="sr-only">{TRAINING_COPY.mapSrNote}</span>
+        <span className="sr-only">{MAP_COPY.mapSrNote}</span>
         <MapGL
           ref={mapRef}
           mapStyle={mountStyle}
@@ -354,9 +430,11 @@ export function TrainingMap({ ranked, layout, selectedIds, onOpen, onMoveStart, 
           pitchWithRotate={false}
           fadeDuration={0}
           onError={(e) => {
-            // react-maplibre's constructor path (no WebGL) has no map: target null.
+            // react-maplibre's start-up path has no map: target null. Its own
+            // import("maplibre-gl") rejecting is a chunk error (only a reload
+            // helps), anything else a map that could not start: the slot tells.
             if ((e.target as unknown) == null) {
-              latest.current.onStopped();
+              latest.current.onStopped(e.error);
               return;
             }
             console.error("[training-map]", e.error);
@@ -413,7 +491,8 @@ export function TrainingMap({ ranked, layout, selectedIds, onOpen, onMoveStart, 
                 userMovedRef.current = true;
                 setUserMoved(true);
               }
-              latest.current.onMoveStart?.();
+              // Any camera move: the dot's point would drift under the popover.
+              setPopover(null);
             });
             if (mediaMatches("(hover: hover) and (pointer: fine)")) {
               disposeHoverRef.current = installHoverCursor(map, {
@@ -421,9 +500,14 @@ export function TrainingMap({ ranked, layout, selectedIds, onOpen, onMoveStart, 
                 isClickable: (hits) => hits.length > 0,
                 box: HIT_SLOP_PX.fine,
                 onHover: (hits, point) => {
+                  // The spot nearest the pointer, by its dot's point on screen.
                   const text = hoverLabel(
                     hits.map((f) => String(f.properties?.id ?? "")),
                     latest.current.ranked,
+                    (p) => {
+                      const at = map.project([p.lon, p.lat]);
+                      return Math.hypot(at.x - point.x, at.y - point.y);
+                    },
                   );
                   setTooltip((was) =>
                     text === null
@@ -458,46 +542,61 @@ export function TrainingMap({ ranked, layout, selectedIds, onOpen, onMoveStart, 
               TAP,
             )}
           >
-            {TRAINING_COPY.fitClosest}
+            {MAP_COPY.fitClosest}
           </button>
         ) : null}
         {tooltip ? (
           <div
+            ref={tipRef}
             aria-hidden
-            className="pointer-events-none absolute z-10 max-w-[220px] -translate-x-1/2 -translate-y-full rounded-md bg-popover px-2 py-1 text-[12px] font-semibold text-popover-foreground shadow-md ring-1 ring-foreground/10"
-            style={{ left: tooltip.x, top: tooltip.y - 10 }}
+            className="pointer-events-none absolute top-0 left-0 z-10 w-max max-w-[220px] rounded-md bg-popover px-2 py-1 text-[12px] font-semibold text-popover-foreground shadow-md ring-1 ring-foreground/10"
           >
             {tooltip.text}
           </div>
         ) : null}
       </div>
-      {spots.length > 0 ? (
-        <div className="flex flex-col gap-1">
-          <Eyebrow size="sm">{TRAINING_COPY.closestOnMap}</Eyebrow>
-          <div className="flex flex-wrap gap-1.5">
-            {spots.map((s) => (
-              <button
-                key={s.id}
-                type="button"
-                onClick={(e) => openAt(s.ids, e.currentTarget)}
-                className={cn(
-                  "rounded-full border border-border bg-background px-2.5 text-[12px] font-semibold text-foreground transition-colors hover:border-gold focus-visible:outline-2 focus-visible:outline-ring md:pointer-fine:py-0.5",
-                  TAP,
-                )}
-              >
-                {s.text}
-              </button>
-            ))}
+      {/* In the sheet, what sits under the map scrolls on its own, so the map
+          keeps its 240 px floor on a short phone (and with every name of an
+          unplaced wine listed); the map itself is never inside a scroller. */}
+      <div className={cn("flex flex-col gap-2", layout === "sheet" && "min-h-0 overflow-y-auto overscroll-contain")}>
+        {spots.length > 0 ? (
+          <div className="flex flex-col gap-1">
+            <Eyebrow size="sm">{MAP_COPY.closestOnMap}</Eyebrow>
+            <div className="flex flex-wrap gap-1.5">
+              {spots.map((s) => (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={(e) => openAt(s.ids, e.currentTarget)}
+                  className={cn(
+                    "rounded-full border border-border bg-background px-2.5 text-[12px] font-semibold text-foreground transition-colors hover:border-gold focus-visible:outline-2 focus-visible:outline-ring md:pointer-fine:py-0.5",
+                    TAP,
+                  )}
+                >
+                  {s.text}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        ) : null}
+        <TrainingMapLegend
+          palette={MAP_PALETTES[paintTheme]}
+          before={before}
+          curated={curated}
+          unmapped={unmapped}
+          onOpenUnmapped={(id, button) => open({ ids: [id], anchor: button, returnFocus: button })}
+        />
+      </div>
+      {layout === "column" && popoverUi ? (
+        <MapDetailPopover
+          ui={popoverUi.ui}
+          target={popover}
+          lookup={(id) => byId.get(id) ?? null}
+          note={popoverUi.note}
+          onChoose={(id) => setPopover((t) => (t ? { ...t, chosen: id } : t))}
+          onClose={() => setPopover(null)}
+        />
       ) : null}
-      <TrainingMapLegend
-        palette={MAP_PALETTES[paintTheme]}
-        before={before}
-        curated={curated}
-        unmapped={unmapped}
-        onOpenUnmapped={(id, button) => onOpen({ ids: [id], anchor: button, returnFocus: button })}
-      />
     </div>
   );
 }

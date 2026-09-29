@@ -12,7 +12,6 @@ import { ArrowUpRight } from "lucide-react";
 import { TRAINING_COPY, placeHref, regionOnMap } from "@/lib/training/copy";
 import type { MapPlaceRef } from "@/lib/training/types";
 import { cn } from "@/lib/utils";
-import { englishName } from "@/lib/wine-map/localize-names";
 
 // 44 px on touch, the row's own height on a laptop pointer.
 const TAP = "min-h-11 md:pointer-fine:min-h-0";
@@ -49,15 +48,16 @@ export function DetailMapLink({ placeKey }: { placeKey: string | null }) {
 }
 
 /** An expanded group's first row: its map region, or "Not on the wine map yet".
-    The region is named as the explorer names it by default, in English
-    ("Rhône Valley", not "Vallée du Rhône": localize-names.ts). */
+    Its name arrives in English, as the explorer names it by default
+    ("Rhône Valley", not "Vallée du Rhône"): pool-shape.ts's placeLinks
+    resolves it on the server, keeping the dictionary out of this bundle. */
 export function GroupMapLink({ region }: { region: MapPlaceRef | null }) {
   if (!region) {
     return <p className="px-3 py-1.5 text-[12px] text-muted-foreground">{TRAINING_COPY.notOnMap}</p>;
   }
   return (
     <NewTabLink href={placeHref(region.key)} className="px-3 text-[12.5px] font-semibold">
-      {regionOnMap(englishName(region.name))}
+      {regionOnMap(region.name)}
     </NewTabLink>
   );
 }

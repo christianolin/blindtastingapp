@@ -244,6 +244,18 @@ describe("placeLinks (training-room-map spec §5, RM3a)", () => {
     }
   });
 
+  it("names the region in English, as the explorer does by default, and keeps its key", () => {
+    // R1 review nit: the map's place names are local ("Vallée du Rhône"); the
+    // explorer shows English by default (localize-names.ts), so the room's
+    // group link does too. Resolved here, on the server, not in the client.
+    const regionOf = (region_key: string, region_name: string) =>
+      placeLinks([{ ...PAUILLAC_PLACE, region_key, region_name }]).get(ARCH_PAUILLAC)?.mapRegion;
+    expect(regionOf("france.rhone", "Vallée du Rhône")).toEqual({ key: "france.rhone", name: "Rhône Valley" });
+    expect(regionOf("spain.andalucia", "Andalucía")).toEqual({ key: "spain.andalucia", name: "Andalusia" });
+    // A name with no English exonym is unchanged.
+    expect(regionOf("italy.veneto", "Veneto")).toEqual({ key: "italy.veneto", name: "Veneto" });
+  });
+
   it("gives no region without both its key and its name", () => {
     expect(placeLinks([{ ...PAUILLAC_PLACE, region_name: null }]).get(ARCH_PAUILLAC)?.mapRegion).toBeNull();
     expect(placeLinks([{ ...PAUILLAC_PLACE, region_key: null }]).get(ARCH_PAUILLAC)?.mapRegion).toBeNull();
