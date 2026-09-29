@@ -7,6 +7,8 @@
 // opens its profile in a popover anchored to it, and pressed again closes it;
 // on a fine pointer focus moves into the popover and, closed with Escape,
 // comes back to the row (the Popover touch rule: never on touch).
+// An open region's first row links to the MAP region its wines sit in
+// (training-room-map spec RM8), never inside the region row's own <button>.
 // CandidateRow, RegionGroups and ShowAllRegions are shared with the phone sheet.
 // Tokens only: the bars are --primary, a capped row --muted-foreground.
 import { useRef, useState } from "react";
@@ -36,6 +38,7 @@ import type { RankedCandidate, RegionGroup } from "@/lib/training/types";
 import type { WsetNoteState } from "@/lib/wset/types";
 import { cn } from "@/lib/utils";
 import { ArchetypeDetail } from "./archetype-detail";
+import { GroupMapLink } from "./map-link";
 
 // 44 px on touch, the row's own height on a laptop pointer.
 const TAP = "min-h-11 md:pointer-fine:min-h-0";
@@ -165,6 +168,9 @@ export function RegionGroups({
                   <RegionRow group={group} expanded={expanded} onToggle={() => onToggle(group.key)} />
                   {expanded ? (
                     <ul className="ml-3 flex flex-col border-l border-border-light pl-1">
+                      <li className="flex flex-col">
+                        <GroupMapLink region={group.mapRegion} />
+                      </li>
                       {group.members.map((r) => (
                         <li key={r.candidate.id}>
                           <CandidateRow
