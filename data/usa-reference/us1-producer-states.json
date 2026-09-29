@@ -1,0 +1,412 @@
+{
+  "_note": "US-1 (spec §6.2 step 7): each producer now on the retired Walla Walla Valley pseudo-region is re-linked by id to the state of its winery address. One cited source per producer. Researched in-session, no API.",
+  "rule": "The state of the winery's own production address, as the winery or a trade body publishes it. A Milton-Freewater, OR winery is OR even if it pours in Walla Walla, WA. A tasting room alone does not count. Unsure, closed without a findable address, or an unidentifiable name: null, with a note.",
+  "researched_at": "2026-09-29",
+  "producers": [
+    {
+      "id": "4934de22-61b4-4aef-9393-3dac941d1ece",
+      "name": "1841 Cellars",
+      "state": null,
+      "winery_address": null,
+      "source_url": "https://www.trisaetum.com/18401-cellars/",
+      "source": "Trisaetum Winery, 18401 Cellars",
+      "note": "No winery named 1841 Cellars found. The nearest match is 18401 Cellars, a Trisaetum (Newberg, Oregon) label made from Walla Walla fruit, but the names differ and nothing ties this row to it. Unidentifiable: left unlinked."
+    },
+    {
+      "id": "c32f3806-1fb7-4bd1-b07a-f4251f43ef73",
+      "name": "Adamant Cellars",
+      "state": "WA",
+      "winery_address": "525 East Cessna Avenue, Walla Walla, WA 99362",
+      "source_url": "https://www.wallawallawine.com/wineries/",
+      "source": "Walla Walla Valley Wine Alliance, Wineries directory",
+      "note": null
+    },
+    {
+      "id": "0f5c5602-0ab9-410a-bacb-2feb27a2e423",
+      "name": "Aluve",
+      "state": "WA",
+      "winery_address": "100 Aluvé Lane, Walla Walla, WA 99362",
+      "source_url": "https://www.wallawallawine.com/wineries/",
+      "source": "Walla Walla Valley Wine Alliance, Wineries directory",
+      "note": null
+    },
+    {
+      "id": "8c8f8da2-385b-4b77-80b2-878707e4e708",
+      "name": "aMaurice Cellars",
+      "state": "WA",
+      "winery_address": "178 Vineyard Ln, Walla Walla, WA 99362",
+      "source_url": "https://wallawalla.org/wineries/walla-walla-eastside/amaurice-cellars/",
+      "source": "Visit Walla Walla, aMaurice Cellars",
+      "note": "Closed; the site is now Bledsoe | McDaniels, same address."
+    },
+    {
+      "id": "6e780c88-00ce-424b-be0f-ab065c61373a",
+      "name": "Amavi Cellars",
+      "state": "WA",
+      "winery_address": "3796 Peppers Bridge Road, Walla Walla, WA 99362",
+      "source_url": "https://www.wallawallawine.com/wineries/",
+      "source": "Walla Walla Valley Wine Alliance, Wineries directory",
+      "note": null
+    },
+    {
+      "id": "c2b04b9a-9d84-4d30-8c12-bbdd9161baec",
+      "name": "Ash Hollow",
+      "state": "WA",
+      "winery_address": "1460 F Street, Walla Walla, WA 99362",
+      "source_url": "https://americanwineryguide.com/wineries/ash-hollow-winery/",
+      "source": "American Winery Guide, Ash Hollow Winery",
+      "note": "Closed. The page gives no ZIP; 99362 is Walla Walla's. The former downtown tasting room was 14 N. Second Ave., Walla Walla, WA."
+    },
+    {
+      "id": "d3a15926-79a1-411f-b138-29274713f2b1",
+      "name": "Beresan",
+      "state": "WA",
+      "winery_address": "4169 Pepper Bridge Rd, Walla Walla, WA 99362",
+      "source_url": "https://wallawalla.travel/wineries/beresan-winery",
+      "source": "Walla Walla Travel, Beresan Winery",
+      "note": "Closed; the page omits the city, which is Walla Walla."
+    },
+    {
+      "id": "a3156156-bf13-4f03-83fe-6aec52e7c938",
+      "name": "Bledsoe Family Winery",
+      "state": "WA",
+      "winery_address": "3599 Peppers Bridge Road, Walla Walla, WA 99362",
+      "source_url": "https://www.wallawallawine.com/wineries/",
+      "source": "Walla Walla Valley Wine Alliance, Wineries directory",
+      "note": null
+    },
+    {
+      "id": "fd9a0d45-3751-49ac-ace1-cb03ad8bf7e3",
+      "name": "Bunchgrass",
+      "state": "WA",
+      "winery_address": "151 Bunchgrass Lane, Walla Walla, WA 99362",
+      "source_url": "https://americanwineryguide.com/wineries/bunchgrass-winery/",
+      "source": "American Winery Guide, Bunchgrass Winery",
+      "note": "Closed. The page gives no ZIP; 99362 is Walla Walla's."
+    },
+    {
+      "id": "b361bdde-8bd9-45de-a992-8eceb002883e",
+      "name": "Caprio Cellars",
+      "state": "WA",
+      "winery_address": "1603 Whiteley Road, Walla Walla, WA 99362",
+      "source_url": "https://www.wallawallawine.com/wineries/",
+      "source": "Walla Walla Valley Wine Alliance, Wineries directory",
+      "note": null
+    },
+    {
+      "id": "172d12f1-c0a2-4018-9f91-ef1034d2e261",
+      "name": "Cayuse",
+      "state": "OR",
+      "winery_address": "53863 Highway 332, Milton Freewater, OR 97862-6966",
+      "source_url": "https://www.bbb.org/us/or/milton-freewater/profile/wineries/cayuse-vineyards-llc-1296-1000043481",
+      "source": "Better Business Bureau, Cayuse Vineyards, LLC",
+      "note": "The Cayuse production studio is in Milton-Freewater, Oregon; the downtown tasting room and the PO box are in Walla Walla, WA (17 East Main Street; PO Box 1602)."
+    },
+    {
+      "id": "721a7de0-abe2-4f74-b2af-70122a7bf64a",
+      "name": "Cougar Crest",
+      "state": "WA",
+      "winery_address": "50 Frenchtown Rd, Walla Walla, WA 99362",
+      "source_url": "https://wallawalla.org/wineries/walla-walla-westside/cougar-crest-winery/",
+      "source": "Visit Walla Walla, Cougar Crest Winery",
+      "note": null
+    },
+    {
+      "id": "8a50b61f-bb7f-4809-827c-706b6b7489b2",
+      "name": "D'Anu",
+      "state": "OR",
+      "winery_address": "173 NE 3rd Avenue, Suite #107, Hillsboro, OR 97124",
+      "source_url": "https://danuwines.com/contact-us/",
+      "source": "D'Anu Wines, Contact Us",
+      "note": "An Oregon (Willamette area) producer that buys Oregon-side Walla Walla Valley fruit (Seven Hills Vineyard). The published address is its Hillsboro tasting room; the press reports its production facility in Aurora, Oregon. Every published location is in Oregon."
+    },
+    {
+      "id": "ee2fcb79-6fbf-430d-893e-b735d5ce7758",
+      "name": "Dave Harvey",
+      "state": null,
+      "winery_address": null,
+      "source_url": "https://www.nakedwines.com/winemakers/dave-harvey",
+      "source": "Naked Wines, Dave Harvey",
+      "note": "A Naked Wines winemaker label (Walla Walla Valley fruit); no winery address is published. Naked Wines says he makes wine in Eastern Washington, which names no facility. Left unlinked."
+    },
+    {
+      "id": "6a1f4925-c4b3-4558-98be-b9782e6cc770",
+      "name": "Doubleback",
+      "state": "WA",
+      "winery_address": "3853 Powerline Road, Walla Walla, WA 99362",
+      "source_url": "https://www.wallawallawine.com/wineries/",
+      "source": "Walla Walla Valley Wine Alliance, Wineries directory",
+      "note": null
+    },
+    {
+      "id": "546795b2-478c-4c7a-95c3-0ec224e80f17",
+      "name": "Dumas Station",
+      "state": "WA",
+      "winery_address": "36229 Highway 12, Dayton, WA 99328",
+      "source_url": "https://dumasstation.com/contact/",
+      "source": "Dumas Station Wines, Contact",
+      "note": null
+    },
+    {
+      "id": "e5a570d9-df4a-4ec4-8fdd-7d8db95d791b",
+      "name": "Echolands",
+      "state": "WA",
+      "winery_address": "3281 Mill Creek Road, Walla Walla, WA 99362",
+      "source_url": "https://www.wallawallawine.com/wineries/",
+      "source": "Walla Walla Valley Wine Alliance, Wineries directory",
+      "note": null
+    },
+    {
+      "id": "6ca7e1b3-829e-4501-aada-b755b606c879",
+      "name": "Elegante Cellars",
+      "state": "WA",
+      "winery_address": "839 C Street, Walla Walla, WA 99362",
+      "source_url": "https://www.wallawallawine.com/wineries/",
+      "source": "Walla Walla Valley Wine Alliance, Wineries directory",
+      "note": null
+    },
+    {
+      "id": "5671513b-998d-4d07-9b52-b0be689a9fce",
+      "name": "Elephant Seven",
+      "state": "WA",
+      "winery_address": "134 W Poplar St., Walla Walla, WA 99362",
+      "source_url": "https://www.oregonwinepress.com/directory-detail?directoryTitle=elephant-seven--231",
+      "source": "Oregon Wine Press, directory: Elephant Seven",
+      "note": "A downtown Walla Walla address; press describes it as a producer \"out of Walla Walla\" (owenbargreen.com, 2022). No Oregon location found."
+    },
+    {
+      "id": "3e766f7a-7417-4a8a-9002-92108edc6086",
+      "name": "Figgins",
+      "state": "WA",
+      "winery_address": "3917 Mill Creek Road, Walla Walla, WA 99362",
+      "source_url": "https://www.wallawallawine.com/wineries/",
+      "source": "Walla Walla Valley Wine Alliance, Wineries directory",
+      "note": null
+    },
+    {
+      "id": "5b672113-6150-463f-82be-241bd69698f4",
+      "name": "Five Star Cellars",
+      "state": "WA",
+      "winery_address": "840 C Street, Walla Walla, WA 99362",
+      "source_url": "https://www.wallawallawine.com/wineries/",
+      "source": "Walla Walla Valley Wine Alliance, Wineries directory",
+      "note": null
+    },
+    {
+      "id": "c648ad04-7379-4187-904b-8efe1cdb87c0",
+      "name": "Gifford Hirlinger",
+      "state": "WA",
+      "winery_address": "1450 Stateline Road, Walla Walla, WA 99362",
+      "source_url": "https://www.wallawallawine.com/wineries/",
+      "source": "Walla Walla Valley Wine Alliance, Wineries directory",
+      "note": null
+    },
+    {
+      "id": "2c7e6aef-439d-4da4-966a-1fe6bc11e349",
+      "name": "Hors Categorie",
+      "state": null,
+      "winery_address": null,
+      "source_url": "https://horscategorievineyards.com/contact/",
+      "source": "Hors Categorie Vineyards, Contact",
+      "note": "Christophe Baron's single-vineyard Syrah. The only published address is a mailing PO Box 1602, Walla Walla, WA 99362; the vineyard is on the North Fork of the Walla Walla River on the Oregon side, and no production address is published for this label. Sources disagree in effect: left unlinked."
+    },
+    {
+      "id": "f2f0c2ab-2a7c-4331-b84f-1976e6690eb2",
+      "name": "Horsepower",
+      "state": "OR",
+      "winery_address": "Milton-Freewater, OR 97862",
+      "source_url": "https://www.wallawallawine.com/winery/horsepower-vineyards/",
+      "source": "Walla Walla Valley Wine Alliance, Horsepower Vineyards",
+      "note": "The Alliance publishes no street; the estate is in The Rocks District of Milton-Freewater (Oregon)."
+    },
+    {
+      "id": "33f7c92d-7c89-4b2e-b720-d020b180bff8",
+      "name": "Kontos Cellars",
+      "state": "WA",
+      "winery_address": "10 N Second Ave., Walla Walla, WA 99362",
+      "source_url": "https://www.kontoscellars.com/about-us/",
+      "source": "Kontos Cellars, About Us",
+      "note": "The only address the winery publishes (downtown Walla Walla); no production address or Oregon location is published."
+    },
+    {
+      "id": "b39fd623-8a2b-49f9-b9be-2013c433ad79",
+      "name": "La Rata",
+      "state": "OR",
+      "winery_address": "Cayuse Vineyards wine studio, Milton-Freewater, OR 97862",
+      "source_url": "https://greatnorthwestwine.com/2018/05/04/deep-roots-in-wine-lead-elizabeth-bourcier-to-la-rata-in-walla-walla/",
+      "source": "Great Northwest Wine, Deep roots in wine lead Elizabeth Bourcier to La Rata in Walla Walla (2018)",
+      "note": "Made within the Cayuse wine studio in Milton-Freewater, Oregon (53863 Highway 332, per the Cayuse row); the article names no street. 97862 is Milton-Freewater's ZIP."
+    },
+    {
+      "id": "0d1bd239-c759-4786-931e-d99223cc37d7",
+      "name": "Leonetti",
+      "state": "WA",
+      "winery_address": "1278 Berney Drive, Walla Walla, WA 99362",
+      "source_url": "https://leonetticellar.com/connect/",
+      "source": "Leonetti Cellar, Connect",
+      "note": "The winery lists 1278 Berney Drive as its entrance and 1875 Foothills Lane, Walla Walla, WA 99362 as its mailbox."
+    },
+    {
+      "id": "f76011bc-3c0d-469a-8c8f-e853f0453c05",
+      "name": "Lullaby",
+      "state": "WA",
+      "winery_address": "274 Otto Street, Suite S, Port Townsend, WA 98368",
+      "source_url": "https://www.lullabywinery.com/",
+      "source": "Lullaby Winery, home page",
+      "note": "Moved its whole operation from Walla Walla to a production facility near Port Townsend, WA in 2013-14 (Great Northwest Wine, 2014-01-07). Still Washington."
+    },
+    {
+      "id": "220fd725-8a63-4cb6-a9a7-36e2a9618500",
+      "name": "MTR Productions",
+      "state": null,
+      "winery_address": null,
+      "source_url": "https://www.mtr-productions.com/",
+      "source": "MTR Productions, home page",
+      "note": "Matt Reynvaan's Syrah label from In The Rocks Vineyard (Oregon side). The site publishes no address, only a phone number; press says it comes \"out of Walla Walla\" but names no facility. Left unlinked."
+    },
+    {
+      "id": "fddb8a14-f4bd-45d2-b5af-5aab90164b75",
+      "name": "No Girls",
+      "state": "OR",
+      "winery_address": "Milton-Freewater, OR 97862",
+      "source_url": "https://www.wallawallawine.com/winery/no-girls-wines/",
+      "source": "Walla Walla Valley Wine Alliance, No Girls Wines",
+      "note": "The Alliance publishes no street; a Christophe Baron label from The Rocks District."
+    },
+    {
+      "id": "a67e2e41-b280-4190-b960-0c9ffa222c94",
+      "name": "Otis Kenyon",
+      "state": "OR",
+      "winery_address": "52746 Burris Lane, Milton-Freewater, OR 97862",
+      "source_url": "https://americanwineryguide.com/wineries/otis-kenyon-wines/",
+      "source": "American Winery Guide, Otis Kenyon Wines",
+      "note": "The page gives no ZIP; 97862 is Milton-Freewater's. Northwest Wine Report (2010) confirms the winery is in Oregon with tasting rooms in Washington (23 E Main St, Walla Walla, WA 99362; Woodinville, WA)."
+    },
+    {
+      "id": "00737e1f-7843-45a1-a048-ec1c8506416c",
+      "name": "Pambrun",
+      "state": null,
+      "winery_address": null,
+      "source_url": "https://www.wvv.com/about-pambrun-maison-bleue-wines/",
+      "source": "Willamette Valley Vineyards, Maison Bleue & Pambrun",
+      "note": "Owned by Willamette Valley Vineyards (Oregon); the vineyard is in SeVein on the Oregon side, the tasting room at 20 N. 2nd Avenue, Walla Walla, WA 99362. No production address is published (a shared Milton-Freewater facility was reported as still in design). Left unlinked."
+    },
+    {
+      "id": "cf44aeab-ca09-4962-9c3d-be2a3f2f0df8",
+      "name": "Pepper Bridge",
+      "state": "WA",
+      "winery_address": "1704 J B George Road, Walla Walla, WA 99362",
+      "source_url": "https://www.wallawallawine.com/wineries/",
+      "source": "Walla Walla Valley Wine Alliance, Wineries directory",
+      "note": null
+    },
+    {
+      "id": "68bf9299-17af-45fd-9ece-693e9eacfaa2",
+      "name": "Proper",
+      "state": null,
+      "winery_address": null,
+      "source_url": "https://rocksdistrict.com/wineries/proper-winery",
+      "source": "The Rocks District, Proper Winery",
+      "note": "Proper Wines: a micro-winery with no published production address. Its tasting rooms are in Washington (31 E Main St, Suite 216, Walla Walla, WA 99362; Seattle), its estate vineyard is in The Rocks District (Oregon). Left unlinked."
+    },
+    {
+      "id": "a4807111-9278-4479-8ff2-3e9d834cd77f",
+      "name": "Reynvaan",
+      "state": "WA",
+      "winery_address": "6309 Cottonwood Rd, Walla Walla, WA 99362",
+      "source_url": "https://rocksdistrict.com/wineries/reynvaan",
+      "source": "The Rocks District, Reynvaan Family Vineyards",
+      "note": "The page omits the state; Reynvaan's own site and the Washington State Wine Commission place it in Walla Walla, Washington (mailing PO Box 2133, Walla Walla, WA 99362)."
+    },
+    {
+      "id": "6d395f20-98c1-46b7-b75c-e305c55e5dac",
+      "name": "Rulo",
+      "state": "WA",
+      "winery_address": "3525 Pranger Road, Walla Walla, WA 99362",
+      "source_url": "https://rocksdistrict.com/wineries/rulo",
+      "source": "The Rocks District, Rulo Winery",
+      "note": null
+    },
+    {
+      "id": "a34741c1-6992-44ac-99fd-59bfbd23f41d",
+      "name": "Smoky Rose Cellars",
+      "state": "WA",
+      "winery_address": "2428 Heritage Rd, Walla Walla, WA 99362",
+      "source_url": "https://www.smokyrosecellars.com/Contact-Us",
+      "source": "Smoky Rose Cellars, Contact Us",
+      "note": null
+    },
+    {
+      "id": "022f22c6-c870-4b36-8b55-0fcfdd5df951",
+      "name": "Solemn Cellars",
+      "state": "WA",
+      "winery_address": "378 Girasol Rd, Walla Walla, WA 99362",
+      "source_url": "https://www.bbb.org/us/wa/walla-walla/profile/wineries/solemn-cellars-1296-1000077792",
+      "source": "Better Business Bureau, Solemn Cellars",
+      "note": null
+    },
+    {
+      "id": "4a889d96-12f7-4d53-a2a0-5d6e7601021f",
+      "name": "Spring Valley Vineyard",
+      "state": "WA",
+      "winery_address": "1663 Corkrum Road, Walla Walla, WA 99362",
+      "source_url": "https://www.springvalleyvineyard.com/contact_us",
+      "source": "Spring Valley Vineyard, Contact Us",
+      "note": "The winery; the downtown tasting room is 2 E. Rose St, Walla Walla, WA 99362."
+    },
+    {
+      "id": "dd33c92c-5da9-4400-9cdb-948b9ae24c89",
+      "name": "Tero Estates",
+      "state": "OR",
+      "winery_address": "52015 Seven Hills Rd, Milton-Freewater, OR 97862",
+      "source_url": "https://www.oregonwine.org/wineries/tero-estates-windrow-vineyard-tasting-room/",
+      "source": "Oregon Wine Board, TERO Estates Windrow Vineyard Tasting Room",
+      "note": "The estate (Windrow Vineyard) and winery are in Milton-Freewater, Oregon."
+    },
+    {
+      "id": "356014de-0238-4a40-b5ed-eea80357b80e",
+      "name": "Tertulia Cellars",
+      "state": "WA",
+      "winery_address": "1564 Whiteley Road, Walla Walla, WA 99362",
+      "source_url": "https://rocksdistrict.com/wineries/tertulia-cellars",
+      "source": "The Rocks District, Tertulia Cellars",
+      "note": "The page omits the state; Whiteley Road is in Walla Walla, WA. Tertulia also had a tasting room in Dundee, Oregon; both are now reported closed."
+    },
+    {
+      "id": "62bd8929-08d1-46ab-8312-f6a0f986be10",
+      "name": "Tulpen Cellars",
+      "state": "WA",
+      "winery_address": "3131 South 3rd Avenue, Walla Walla, WA 99362",
+      "source_url": "https://tulpencellars.com/",
+      "source": "Tulpen Cellars, home page",
+      "note": null
+    },
+    {
+      "id": "0245633f-296f-470c-a504-f978d7384039",
+      "name": "Walla Faces",
+      "state": "WA",
+      "winery_address": "216 East Main St., Walla Walla, WA 99362",
+      "source_url": "https://www.washingtontastingroom.com/news/walla-faces-opens-new-winery-tasting-room-and-art-gallery",
+      "source": "Washington Tasting Room, Walla Faces opens new winery, tasting room and art gallery",
+      "note": "The article places the 2,200 sq. ft. winery downstairs at 216 East Main; the page gives no ZIP (99362). Walla Faces later moved to 598 Piper Avenue at the Walla Walla airport; Washington either way."
+    },
+    {
+      "id": "c25609d0-24b0-4817-989d-e8d66bac42b7",
+      "name": "Whitman Cellars",
+      "state": "WA",
+      "winery_address": "1015 W Pine St, Walla Walla, WA 99362",
+      "source_url": "https://www.nataliemaclean.com/wineries/info/whitman-cellars/8939",
+      "source": "Natalie MacLean, Whitman Cellars",
+      "note": "Closed; the premises are now The Walls Vineyards, same address."
+    },
+    {
+      "id": "06a63571-9628-47ff-a2a5-b70c6c16fdd6",
+      "name": "Zerba Cellars",
+      "state": "OR",
+      "winery_address": "85530 Highway 11, Milton-Freewater, OR 97862",
+      "source_url": "https://zerbacellars.com/contact/",
+      "source": "Zerba Cellars, Contact",
+      "note": "The winery; its tasting rooms are in Dundee, OR and Woodinville, WA."
+    }
+  ]
+}
