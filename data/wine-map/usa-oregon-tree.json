@@ -1,0 +1,870 @@
+{
+  "_generated_by": "scripts/wine-map-sources/build-usa-tree-reports.mjs",
+  "_spec": "docs/superpowers/specs/2026-09-29-usa-wine-map-design.md §8.3",
+  "_inputs": {
+    "measurements_sha256": "72339AB6F6A804F831F00D6D8A27106CFC0BE2C5EE078B23EC41FAD4CB26BA42",
+    "config_sha256": "41D385B8CB6591A32B4C187857B93D77B0243228DA8980C6DA6AF7A42D175043",
+    "diff_sha256": "80DF4951FE4A9AE42B6999B90EFC1D797B3976A7921A9CF7A7994462AC1B75A2"
+  },
+  "state": "OR",
+  "state_key": "united-states.oregon",
+  "thresholds": {
+    "within": 0.995,
+    "overlapMin": 0.01,
+    "stateEdgeMin": 0.005,
+    "outlineKm2": 5000,
+    "containmentMin": 0.995,
+    "landShareReview": 0.5,
+    "nearWithinReview": 0.9
+  },
+  "counts": {
+    "places": 21,
+    "by_kind": {
+      "REGION": 1,
+      "APPELLATION": 18,
+      "SUBREGION": 2
+    },
+    "by_tier": {
+      "1": 1,
+      "2": 8,
+      "3": 10,
+      "4": 2
+    },
+    "outline": 2,
+    "edges": {
+      "ALTERNATE_PARENT": 3,
+      "OVERLAPS": 7
+    }
+  },
+  "places": [
+    {
+      "key": "united-states",
+      "slug": "united-states",
+      "name": "United States",
+      "kind": "COUNTRY",
+      "display_tier": 0,
+      "min_zoom": 1.5,
+      "label_min_zoom": 2,
+      "sort_order": 140,
+      "parent_key": null,
+      "breadcrumb": "United States",
+      "is_appellation": false,
+      "appellation_system": null,
+      "appellation_level": null,
+      "display": null,
+      "navigation_node": false,
+      "map_state": null,
+      "map_state_source": null,
+      "ucd_ava_id": null,
+      "cfr_section": null,
+      "area_km2": null,
+      "land_share": null,
+      "containment_share": null,
+      "state_shares": null
+    },
+    {
+      "key": "united-states.oregon",
+      "slug": "oregon",
+      "name": "Oregon",
+      "kind": "REGION",
+      "display_tier": 1,
+      "min_zoom": 4,
+      "label_min_zoom": 4,
+      "sort_order": 30,
+      "parent_key": "united-states",
+      "breadcrumb": "United States › Oregon",
+      "is_appellation": false,
+      "appellation_system": null,
+      "appellation_level": null,
+      "display": null,
+      "navigation_node": false,
+      "map_state": "OR",
+      "map_state_source": null,
+      "ucd_ava_id": null,
+      "cfr_section": null,
+      "area_km2": null,
+      "land_share": null,
+      "containment_share": null,
+      "state_shares": null
+    },
+    {
+      "key": "united-states.oregon.columbia-gorge",
+      "slug": "columbia-gorge",
+      "name": "Columbia Gorge",
+      "kind": "APPELLATION",
+      "display_tier": 2,
+      "min_zoom": 6,
+      "label_min_zoom": 6,
+      "sort_order": 10,
+      "parent_key": "united-states.oregon",
+      "breadcrumb": "United States › Oregon › Columbia Gorge",
+      "is_appellation": true,
+      "appellation_system": "AVA",
+      "appellation_level": "regional",
+      "display": null,
+      "navigation_node": false,
+      "map_state": "OR",
+      "map_state_source": "override",
+      "ucd_ava_id": "columbia_gorge",
+      "cfr_section": "9.178",
+      "area_km2": 786.101,
+      "land_share": 1,
+      "containment_share": 1,
+      "state_shares": {
+        "OR": 0.652023,
+        "WA": 0.347977
+      }
+    },
+    {
+      "key": "united-states.oregon.elkton-oregon",
+      "slug": "elkton-oregon",
+      "name": "Elkton Oregon",
+      "kind": "APPELLATION",
+      "display_tier": 2,
+      "min_zoom": 6,
+      "label_min_zoom": 6,
+      "sort_order": 20,
+      "parent_key": "united-states.oregon",
+      "breadcrumb": "United States › Oregon › Elkton Oregon",
+      "is_appellation": true,
+      "appellation_system": "AVA",
+      "appellation_level": "regional",
+      "display": null,
+      "navigation_node": false,
+      "map_state": "OR",
+      "map_state_source": "dominant",
+      "ucd_ava_id": "elkton_oregon",
+      "cfr_section": "9.229",
+      "area_km2": 298.124,
+      "land_share": 1,
+      "containment_share": 1,
+      "state_shares": {
+        "OR": 1
+      }
+    },
+    {
+      "key": "united-states.oregon.lower-long-tom",
+      "slug": "lower-long-tom",
+      "name": "Lower Long Tom",
+      "kind": "APPELLATION",
+      "display_tier": 2,
+      "min_zoom": 6,
+      "label_min_zoom": 6,
+      "sort_order": 30,
+      "parent_key": "united-states.oregon",
+      "breadcrumb": "United States › Oregon › Lower Long Tom",
+      "is_appellation": true,
+      "appellation_system": "AVA",
+      "appellation_level": "regional",
+      "display": null,
+      "navigation_node": false,
+      "map_state": "OR",
+      "map_state_source": "dominant",
+      "ucd_ava_id": "lower_long_tom",
+      "cfr_section": "9.281",
+      "area_km2": 116.627,
+      "land_share": 1,
+      "containment_share": 1,
+      "state_shares": {
+        "OR": 1
+      }
+    },
+    {
+      "key": "united-states.oregon.mcminnville",
+      "slug": "mcminnville",
+      "name": "McMinnville",
+      "kind": "APPELLATION",
+      "display_tier": 2,
+      "min_zoom": 6,
+      "label_min_zoom": 6,
+      "sort_order": 40,
+      "parent_key": "united-states.oregon",
+      "breadcrumb": "United States › Oregon › McMinnville",
+      "is_appellation": true,
+      "appellation_system": "AVA",
+      "appellation_level": "regional",
+      "display": null,
+      "navigation_node": false,
+      "map_state": "OR",
+      "map_state_source": "dominant",
+      "ucd_ava_id": "mcminnville",
+      "cfr_section": "9.181",
+      "area_km2": 148.545,
+      "land_share": 1,
+      "containment_share": 1,
+      "state_shares": {
+        "OR": 1
+      }
+    },
+    {
+      "key": "united-states.oregon.southern-oregon",
+      "slug": "southern-oregon",
+      "name": "Southern Oregon",
+      "kind": "SUBREGION",
+      "display_tier": 2,
+      "min_zoom": 5,
+      "label_min_zoom": 5,
+      "sort_order": 50,
+      "parent_key": "united-states.oregon",
+      "breadcrumb": "United States › Oregon › Southern Oregon",
+      "is_appellation": true,
+      "appellation_system": "AVA",
+      "appellation_level": "regional",
+      "display": "outline",
+      "navigation_node": false,
+      "map_state": "OR",
+      "map_state_source": "dominant",
+      "ucd_ava_id": "southern_oregon",
+      "cfr_section": "9.179",
+      "area_km2": 8130.316,
+      "land_share": 1,
+      "containment_share": 1,
+      "state_shares": {
+        "CA": 0.000047,
+        "OR": 0.999953
+      }
+    },
+    {
+      "key": "united-states.oregon.southern-oregon.rogue-valley",
+      "slug": "rogue-valley",
+      "name": "Rogue Valley",
+      "kind": "APPELLATION",
+      "display_tier": 3,
+      "min_zoom": 6,
+      "label_min_zoom": 7,
+      "sort_order": 10,
+      "parent_key": "united-states.oregon.southern-oregon",
+      "breadcrumb": "United States › Oregon › Southern Oregon › Rogue Valley",
+      "is_appellation": true,
+      "appellation_system": "AVA",
+      "appellation_level": "subregional",
+      "display": null,
+      "navigation_node": false,
+      "map_state": "OR",
+      "map_state_source": "dominant",
+      "ucd_ava_id": "rogue_valley",
+      "cfr_section": "9.132",
+      "area_km2": 4638.817,
+      "land_share": 1,
+      "containment_share": 1,
+      "state_shares": {
+        "CA": 0.000063,
+        "OR": 0.999937
+      }
+    },
+    {
+      "key": "united-states.oregon.southern-oregon.rogue-valley.applegate-valley",
+      "slug": "applegate-valley",
+      "name": "Applegate Valley",
+      "kind": "APPELLATION",
+      "display_tier": 4,
+      "min_zoom": 7,
+      "label_min_zoom": 9,
+      "sort_order": 10,
+      "parent_key": "united-states.oregon.southern-oregon.rogue-valley",
+      "breadcrumb": "United States › Oregon › Southern Oregon › Rogue Valley › Applegate Valley",
+      "is_appellation": true,
+      "appellation_system": "AVA",
+      "appellation_level": "subregional",
+      "display": null,
+      "navigation_node": false,
+      "map_state": "OR",
+      "map_state_source": "dominant",
+      "ucd_ava_id": "applegate_valley",
+      "cfr_section": "9.165",
+      "area_km2": 1089.696,
+      "land_share": 1,
+      "containment_share": 1,
+      "state_shares": {
+        "OR": 1
+      }
+    },
+    {
+      "key": "united-states.oregon.the-rocks-district-of-milton-freewater",
+      "slug": "the-rocks-district-of-milton-freewater",
+      "name": "The Rocks District of Milton-Freewater",
+      "kind": "APPELLATION",
+      "display_tier": 2,
+      "min_zoom": 6,
+      "label_min_zoom": 6,
+      "sort_order": 60,
+      "parent_key": "united-states.oregon",
+      "breadcrumb": "United States › Oregon › The Rocks District of Milton-Freewater",
+      "is_appellation": true,
+      "appellation_system": "AVA",
+      "appellation_level": "regional",
+      "display": null,
+      "navigation_node": false,
+      "map_state": "OR",
+      "map_state_source": "dominant",
+      "ucd_ava_id": "the_rocks_district_of_milton_freewater",
+      "cfr_section": "9.249",
+      "area_km2": 12.799,
+      "land_share": 1,
+      "containment_share": 1,
+      "state_shares": {
+        "OR": 1
+      }
+    },
+    {
+      "key": "united-states.oregon.umpqua-valley",
+      "slug": "umpqua-valley",
+      "name": "Umpqua Valley",
+      "kind": "APPELLATION",
+      "display_tier": 2,
+      "min_zoom": 6,
+      "label_min_zoom": 6,
+      "sort_order": 70,
+      "parent_key": "united-states.oregon",
+      "breadcrumb": "United States › Oregon › Umpqua Valley",
+      "is_appellation": true,
+      "appellation_system": "AVA",
+      "appellation_level": "regional",
+      "display": null,
+      "navigation_node": false,
+      "map_state": "OR",
+      "map_state_source": "dominant",
+      "ucd_ava_id": "umpqua_valley",
+      "cfr_section": "9.89",
+      "area_km2": 2811.096,
+      "land_share": 1,
+      "containment_share": 1,
+      "state_shares": {
+        "OR": 1
+      }
+    },
+    {
+      "key": "united-states.oregon.umpqua-valley.red-hill-douglas-county-oregon",
+      "slug": "red-hill-douglas-county-oregon",
+      "name": "Red Hill Douglas County, Oregon",
+      "kind": "APPELLATION",
+      "display_tier": 3,
+      "min_zoom": 6,
+      "label_min_zoom": 7,
+      "sort_order": 10,
+      "parent_key": "united-states.oregon.umpqua-valley",
+      "breadcrumb": "United States › Oregon › Umpqua Valley › Red Hill Douglas County, Oregon",
+      "is_appellation": true,
+      "appellation_system": "AVA",
+      "appellation_level": "subregional",
+      "display": null,
+      "navigation_node": false,
+      "map_state": "OR",
+      "map_state_source": "dominant",
+      "ucd_ava_id": "red_hill_douglas_county__oregon",
+      "cfr_section": "9.190",
+      "area_km2": 22.336,
+      "land_share": 1,
+      "containment_share": 1,
+      "state_shares": {
+        "OR": 1
+      }
+    },
+    {
+      "key": "united-states.oregon.willamette-valley",
+      "slug": "willamette-valley",
+      "name": "Willamette Valley",
+      "kind": "SUBREGION",
+      "display_tier": 2,
+      "min_zoom": 5,
+      "label_min_zoom": 5,
+      "sort_order": 80,
+      "parent_key": "united-states.oregon",
+      "breadcrumb": "United States › Oregon › Willamette Valley",
+      "is_appellation": true,
+      "appellation_system": "AVA",
+      "appellation_level": "regional",
+      "display": "outline",
+      "navigation_node": false,
+      "map_state": "OR",
+      "map_state_source": "dominant",
+      "ucd_ava_id": "willamette_valley",
+      "cfr_section": "9.90",
+      "area_km2": 14034.069,
+      "land_share": 1,
+      "containment_share": 1,
+      "state_shares": {
+        "OR": 1
+      }
+    },
+    {
+      "key": "united-states.oregon.willamette-valley.chehalem-mountains",
+      "slug": "chehalem-mountains",
+      "name": "Chehalem Mountains",
+      "kind": "APPELLATION",
+      "display_tier": 3,
+      "min_zoom": 6,
+      "label_min_zoom": 7,
+      "sort_order": 10,
+      "parent_key": "united-states.oregon.willamette-valley",
+      "breadcrumb": "United States › Oregon › Willamette Valley › Chehalem Mountains",
+      "is_appellation": true,
+      "appellation_system": "AVA",
+      "appellation_level": "subregional",
+      "display": null,
+      "navigation_node": false,
+      "map_state": "OR",
+      "map_state_source": "dominant",
+      "ucd_ava_id": "chehalem_mountains",
+      "cfr_section": "9.205",
+      "area_km2": 252.179,
+      "land_share": 1,
+      "containment_share": 1,
+      "state_shares": {
+        "OR": 1
+      }
+    },
+    {
+      "key": "united-states.oregon.willamette-valley.chehalem-mountains.ribbon-ridge",
+      "slug": "ribbon-ridge",
+      "name": "Ribbon Ridge",
+      "kind": "APPELLATION",
+      "display_tier": 4,
+      "min_zoom": 7,
+      "label_min_zoom": 9,
+      "sort_order": 10,
+      "parent_key": "united-states.oregon.willamette-valley.chehalem-mountains",
+      "breadcrumb": "United States › Oregon › Willamette Valley › Chehalem Mountains › Ribbon Ridge",
+      "is_appellation": true,
+      "appellation_system": "AVA",
+      "appellation_level": "subregional",
+      "display": null,
+      "navigation_node": false,
+      "map_state": "OR",
+      "map_state_source": "dominant",
+      "ucd_ava_id": "ribbon_ridge",
+      "cfr_section": "9.182",
+      "area_km2": 14.156,
+      "land_share": 1,
+      "containment_share": 1,
+      "state_shares": {
+        "OR": 1
+      }
+    },
+    {
+      "key": "united-states.oregon.willamette-valley.dundee-hills",
+      "slug": "dundee-hills",
+      "name": "Dundee Hills",
+      "kind": "APPELLATION",
+      "display_tier": 3,
+      "min_zoom": 6,
+      "label_min_zoom": 7,
+      "sort_order": 20,
+      "parent_key": "united-states.oregon.willamette-valley",
+      "breadcrumb": "United States › Oregon › Willamette Valley › Dundee Hills",
+      "is_appellation": true,
+      "appellation_system": "AVA",
+      "appellation_level": "subregional",
+      "display": null,
+      "navigation_node": false,
+      "map_state": "OR",
+      "map_state_source": "dominant",
+      "ucd_ava_id": "dundee_hills",
+      "cfr_section": "9.180",
+      "area_km2": 50.457,
+      "land_share": 1,
+      "containment_share": 1,
+      "state_shares": {
+        "OR": 1
+      }
+    },
+    {
+      "key": "united-states.oregon.willamette-valley.eola-amity-hills",
+      "slug": "eola-amity-hills",
+      "name": "Eola-Amity Hills",
+      "kind": "APPELLATION",
+      "display_tier": 3,
+      "min_zoom": 6,
+      "label_min_zoom": 7,
+      "sort_order": 30,
+      "parent_key": "united-states.oregon.willamette-valley",
+      "breadcrumb": "United States › Oregon › Willamette Valley › Eola-Amity Hills",
+      "is_appellation": true,
+      "appellation_system": "AVA",
+      "appellation_level": "subregional",
+      "display": null,
+      "navigation_node": false,
+      "map_state": "OR",
+      "map_state_source": "dominant",
+      "ucd_ava_id": "eola_amity_hills",
+      "cfr_section": "9.202",
+      "area_km2": 158.004,
+      "land_share": 1,
+      "containment_share": 1,
+      "state_shares": {
+        "OR": 1
+      }
+    },
+    {
+      "key": "united-states.oregon.willamette-valley.laurelwood-district",
+      "slug": "laurelwood-district",
+      "name": "Laurelwood District",
+      "kind": "APPELLATION",
+      "display_tier": 3,
+      "min_zoom": 6,
+      "label_min_zoom": 7,
+      "sort_order": 40,
+      "parent_key": "united-states.oregon.willamette-valley",
+      "breadcrumb": "United States › Oregon › Willamette Valley › Laurelwood District",
+      "is_appellation": true,
+      "appellation_system": "AVA",
+      "appellation_level": "subregional",
+      "display": null,
+      "navigation_node": false,
+      "map_state": "OR",
+      "map_state_source": "dominant",
+      "ucd_ava_id": "laurelwood_district",
+      "cfr_section": "9.269",
+      "area_km2": 135.164,
+      "land_share": 1,
+      "containment_share": 1,
+      "state_shares": {
+        "OR": 1
+      }
+    },
+    {
+      "key": "united-states.oregon.willamette-valley.mount-pisgah-polk-county-oregon",
+      "slug": "mount-pisgah-polk-county-oregon",
+      "name": "Mount Pisgah, Polk County, Oregon",
+      "kind": "APPELLATION",
+      "display_tier": 3,
+      "min_zoom": 6,
+      "label_min_zoom": 7,
+      "sort_order": 50,
+      "parent_key": "united-states.oregon.willamette-valley",
+      "breadcrumb": "United States › Oregon › Willamette Valley › Mount Pisgah, Polk County, Oregon",
+      "is_appellation": true,
+      "appellation_system": "AVA",
+      "appellation_level": "subregional",
+      "display": null,
+      "navigation_node": false,
+      "map_state": "OR",
+      "map_state_source": "dominant",
+      "ucd_ava_id": "mount_pisgah__polk_county__oregon",
+      "cfr_section": "9.284",
+      "area_km2": 22.935,
+      "land_share": 1,
+      "containment_share": 1,
+      "state_shares": {
+        "OR": 1
+      }
+    },
+    {
+      "key": "united-states.oregon.willamette-valley.tualatin-hills",
+      "slug": "tualatin-hills",
+      "name": "Tualatin Hills",
+      "kind": "APPELLATION",
+      "display_tier": 3,
+      "min_zoom": 6,
+      "label_min_zoom": 7,
+      "sort_order": 60,
+      "parent_key": "united-states.oregon.willamette-valley",
+      "breadcrumb": "United States › Oregon › Willamette Valley › Tualatin Hills",
+      "is_appellation": true,
+      "appellation_system": "AVA",
+      "appellation_level": "subregional",
+      "display": null,
+      "navigation_node": false,
+      "map_state": "OR",
+      "map_state_source": "dominant",
+      "ucd_ava_id": "tualatin_hills",
+      "cfr_section": "9.268",
+      "area_km2": 580.982,
+      "land_share": 1,
+      "containment_share": 1,
+      "state_shares": {
+        "OR": 1
+      }
+    },
+    {
+      "key": "united-states.oregon.willamette-valley.van-duzer-corridor",
+      "slug": "van-duzer-corridor",
+      "name": "Van Duzer Corridor",
+      "kind": "APPELLATION",
+      "display_tier": 3,
+      "min_zoom": 6,
+      "label_min_zoom": 7,
+      "sort_order": 70,
+      "parent_key": "united-states.oregon.willamette-valley",
+      "breadcrumb": "United States › Oregon › Willamette Valley › Van Duzer Corridor",
+      "is_appellation": true,
+      "appellation_system": "AVA",
+      "appellation_level": "subregional",
+      "display": null,
+      "navigation_node": false,
+      "map_state": "OR",
+      "map_state_source": "dominant",
+      "ucd_ava_id": "van_duzer_corridor",
+      "cfr_section": "9.265",
+      "area_km2": 227.693,
+      "land_share": 1,
+      "containment_share": 1,
+      "state_shares": {
+        "OR": 1
+      }
+    },
+    {
+      "key": "united-states.oregon.willamette-valley.yamhill-carlton",
+      "slug": "yamhill-carlton",
+      "name": "Yamhill-Carlton",
+      "kind": "APPELLATION",
+      "display_tier": 3,
+      "min_zoom": 6,
+      "label_min_zoom": 7,
+      "sort_order": 80,
+      "parent_key": "united-states.oregon.willamette-valley",
+      "breadcrumb": "United States › Oregon › Willamette Valley › Yamhill-Carlton",
+      "is_appellation": true,
+      "appellation_system": "AVA",
+      "appellation_level": "subregional",
+      "display": null,
+      "navigation_node": false,
+      "map_state": "OR",
+      "map_state_source": "dominant",
+      "ucd_ava_id": "yamhill_carlton",
+      "cfr_section": "9.183",
+      "area_km2": 232.506,
+      "land_share": 1,
+      "containment_share": 1,
+      "state_shares": {
+        "OR": 1
+      }
+    }
+  ],
+  "edges": [
+    {
+      "type": "ALTERNATE_PARENT",
+      "source_key": "united-states.oregon.columbia-gorge",
+      "target_key": "united-states.washington",
+      "basis": "state_share",
+      "share": 0.348
+    },
+    {
+      "type": "ALTERNATE_PARENT",
+      "source_key": "united-states.oregon.the-rocks-district-of-milton-freewater",
+      "target_key": "united-states.washington.columbia-valley",
+      "basis": "within"
+    },
+    {
+      "type": "ALTERNATE_PARENT",
+      "source_key": "united-states.oregon.the-rocks-district-of-milton-freewater",
+      "target_key": "united-states.washington.columbia-valley.walla-walla-valley",
+      "basis": "within"
+    },
+    {
+      "type": "OVERLAPS",
+      "source_key": "united-states.oregon.elkton-oregon",
+      "target_key": "united-states.oregon.southern-oregon",
+      "basis": "partial_overlap",
+      "ratio": 0.99
+    },
+    {
+      "type": "OVERLAPS",
+      "source_key": "united-states.oregon.elkton-oregon",
+      "target_key": "united-states.oregon.umpqua-valley",
+      "basis": "partial_overlap",
+      "ratio": 0.9906
+    },
+    {
+      "type": "OVERLAPS",
+      "source_key": "united-states.oregon.lower-long-tom",
+      "target_key": "united-states.oregon.willamette-valley",
+      "basis": "partial_overlap",
+      "ratio": 0.9932
+    },
+    {
+      "type": "OVERLAPS",
+      "source_key": "united-states.oregon.mcminnville",
+      "target_key": "united-states.oregon.willamette-valley",
+      "basis": "partial_overlap",
+      "ratio": 0.9809
+    },
+    {
+      "type": "OVERLAPS",
+      "source_key": "united-states.oregon.umpqua-valley",
+      "target_key": "united-states.oregon.southern-oregon",
+      "basis": "partial_overlap",
+      "ratio": 0.9827
+    },
+    {
+      "type": "OVERLAPS",
+      "source_key": "united-states.oregon.umpqua-valley.red-hill-douglas-county-oregon",
+      "target_key": "united-states.oregon.southern-oregon",
+      "basis": "partial_overlap",
+      "ratio": 0.6775
+    },
+    {
+      "type": "OVERLAPS",
+      "source_key": "united-states.oregon.willamette-valley.laurelwood-district",
+      "target_key": "united-states.oregon.willamette-valley.chehalem-mountains",
+      "basis": "partial_overlap",
+      "ratio": 0.9936
+    }
+  ],
+  "deferred": [
+    {
+      "ucd_ava_id": "snake_river_valley",
+      "name": "Snake River Valley",
+      "map_state": "ID",
+      "state_shares": {
+        "ID": 0.701023,
+        "OR": 0.298977
+      },
+      "reason": "dominant state ID is outside wave 1"
+    }
+  ],
+  "deferred_edges": [],
+  "ttb_only_pending": [],
+  "review": {
+    "within_disagreements": [
+      {
+        "key": "united-states.oregon.elkton-oregon",
+        "name": "Elkton Oregon",
+        "ucd_within_not_computed": [
+          "Southern Oregon",
+          "Umpqua Valley"
+        ],
+        "computed_not_in_ucd_within": [],
+        "ucd_contains_not_computed": [],
+        "unresolved_tokens": []
+      },
+      {
+        "key": "united-states.oregon.lower-long-tom",
+        "name": "Lower Long Tom",
+        "ucd_within_not_computed": [
+          "Willamette Valley"
+        ],
+        "computed_not_in_ucd_within": [],
+        "ucd_contains_not_computed": [],
+        "unresolved_tokens": []
+      },
+      {
+        "key": "united-states.oregon.mcminnville",
+        "name": "McMinnville",
+        "ucd_within_not_computed": [
+          "Willamette Valley"
+        ],
+        "computed_not_in_ucd_within": [],
+        "ucd_contains_not_computed": [],
+        "unresolved_tokens": []
+      },
+      {
+        "key": "united-states.oregon.southern-oregon",
+        "name": "Southern Oregon",
+        "ucd_within_not_computed": [],
+        "computed_not_in_ucd_within": [],
+        "ucd_contains_not_computed": [
+          "Elkton Oregon",
+          "Red Hill Douglas County, Oregon",
+          "Umpqua Valley"
+        ],
+        "unresolved_tokens": []
+      },
+      {
+        "key": "united-states.oregon.umpqua-valley",
+        "name": "Umpqua Valley",
+        "ucd_within_not_computed": [
+          "Southern Oregon"
+        ],
+        "computed_not_in_ucd_within": [],
+        "ucd_contains_not_computed": [
+          "Elkton Oregon"
+        ],
+        "unresolved_tokens": []
+      },
+      {
+        "key": "united-states.oregon.umpqua-valley.red-hill-douglas-county-oregon",
+        "name": "Red Hill Douglas County, Oregon",
+        "ucd_within_not_computed": [
+          "Southern Oregon"
+        ],
+        "computed_not_in_ucd_within": [],
+        "ucd_contains_not_computed": [],
+        "unresolved_tokens": []
+      },
+      {
+        "key": "united-states.oregon.willamette-valley",
+        "name": "Willamette Valley",
+        "ucd_within_not_computed": [],
+        "computed_not_in_ucd_within": [],
+        "ucd_contains_not_computed": [
+          "McMinnville"
+        ],
+        "unresolved_tokens": []
+      },
+      {
+        "key": "united-states.oregon.willamette-valley.chehalem-mountains",
+        "name": "Chehalem Mountains",
+        "ucd_within_not_computed": [],
+        "computed_not_in_ucd_within": [],
+        "ucd_contains_not_computed": [
+          "Laurelwood District"
+        ],
+        "unresolved_tokens": []
+      },
+      {
+        "key": "united-states.oregon.willamette-valley.laurelwood-district",
+        "name": "Laurelwood District",
+        "ucd_within_not_computed": [
+          "Chehalem Mountains"
+        ],
+        "computed_not_in_ucd_within": [],
+        "ucd_contains_not_computed": [],
+        "unresolved_tokens": []
+      }
+    ],
+    "low_land_share": [],
+    "low_containment": [],
+    "state_list_disagreements": [],
+    "near_within": [
+      {
+        "key": "united-states.oregon.elkton-oregon",
+        "name": "Elkton Oregon",
+        "container": "Southern Oregon",
+        "container_key": "united-states.oregon.southern-oregon",
+        "ratio": 0.99,
+        "ucd_says_within": true
+      },
+      {
+        "key": "united-states.oregon.elkton-oregon",
+        "name": "Elkton Oregon",
+        "container": "Umpqua Valley",
+        "container_key": "united-states.oregon.umpqua-valley",
+        "ratio": 0.9906,
+        "ucd_says_within": true
+      },
+      {
+        "key": "united-states.oregon.lower-long-tom",
+        "name": "Lower Long Tom",
+        "container": "Willamette Valley",
+        "container_key": "united-states.oregon.willamette-valley",
+        "ratio": 0.9932,
+        "ucd_says_within": true
+      },
+      {
+        "key": "united-states.oregon.mcminnville",
+        "name": "McMinnville",
+        "container": "Willamette Valley",
+        "container_key": "united-states.oregon.willamette-valley",
+        "ratio": 0.9809,
+        "ucd_says_within": true
+      },
+      {
+        "key": "united-states.oregon.umpqua-valley",
+        "name": "Umpqua Valley",
+        "container": "Southern Oregon",
+        "container_key": "united-states.oregon.southern-oregon",
+        "ratio": 0.9827,
+        "ucd_says_within": true
+      },
+      {
+        "key": "united-states.oregon.willamette-valley.laurelwood-district",
+        "name": "Laurelwood District",
+        "container": "Chehalem Mountains",
+        "container_key": "united-states.oregon.willamette-valley.chehalem-mountains",
+        "ratio": 0.9936,
+        "ucd_says_within": true
+      }
+    ]
+  }
+}

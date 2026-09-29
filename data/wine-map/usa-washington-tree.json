@@ -1,0 +1,758 @@
+{
+  "_generated_by": "scripts/wine-map-sources/build-usa-tree-reports.mjs",
+  "_spec": "docs/superpowers/specs/2026-09-29-usa-wine-map-design.md §8.3",
+  "_inputs": {
+    "measurements_sha256": "72339AB6F6A804F831F00D6D8A27106CFC0BE2C5EE078B23EC41FAD4CB26BA42",
+    "config_sha256": "41D385B8CB6591A32B4C187857B93D77B0243228DA8980C6DA6AF7A42D175043",
+    "diff_sha256": "80DF4951FE4A9AE42B6999B90EFC1D797B3976A7921A9CF7A7994462AC1B75A2"
+  },
+  "state": "WA",
+  "state_key": "united-states.washington",
+  "thresholds": {
+    "within": 0.995,
+    "overlapMin": 0.01,
+    "stateEdgeMin": 0.005,
+    "outlineKm2": 5000,
+    "containmentMin": 0.995,
+    "landShareReview": 0.5,
+    "nearWithinReview": 0.9
+  },
+  "counts": {
+    "places": 19,
+    "by_kind": {
+      "REGION": 1,
+      "SUBREGION": 2,
+      "APPELLATION": 16
+    },
+    "by_tier": {
+      "1": 1,
+      "2": 3,
+      "3": 12,
+      "4": 3
+    },
+    "outline": 2,
+    "edges": {
+      "ALTERNATE_PARENT": 4,
+      "OVERLAPS": 4
+    }
+  },
+  "places": [
+    {
+      "key": "united-states",
+      "slug": "united-states",
+      "name": "United States",
+      "kind": "COUNTRY",
+      "display_tier": 0,
+      "min_zoom": 1.5,
+      "label_min_zoom": 2,
+      "sort_order": 140,
+      "parent_key": null,
+      "breadcrumb": "United States",
+      "is_appellation": false,
+      "appellation_system": null,
+      "appellation_level": null,
+      "display": null,
+      "navigation_node": false,
+      "map_state": null,
+      "map_state_source": null,
+      "ucd_ava_id": null,
+      "cfr_section": null,
+      "area_km2": null,
+      "land_share": null,
+      "containment_share": null,
+      "state_shares": null
+    },
+    {
+      "key": "united-states.washington",
+      "slug": "washington",
+      "name": "Washington",
+      "kind": "REGION",
+      "display_tier": 1,
+      "min_zoom": 4,
+      "label_min_zoom": 4,
+      "sort_order": 40,
+      "parent_key": "united-states",
+      "breadcrumb": "United States › Washington",
+      "is_appellation": false,
+      "appellation_system": null,
+      "appellation_level": null,
+      "display": null,
+      "navigation_node": false,
+      "map_state": "WA",
+      "map_state_source": null,
+      "ucd_ava_id": null,
+      "cfr_section": null,
+      "area_km2": null,
+      "land_share": null,
+      "containment_share": null,
+      "state_shares": null
+    },
+    {
+      "key": "united-states.washington.columbia-valley",
+      "slug": "columbia-valley",
+      "name": "Columbia Valley",
+      "kind": "SUBREGION",
+      "display_tier": 2,
+      "min_zoom": 5,
+      "label_min_zoom": 5,
+      "sort_order": 10,
+      "parent_key": "united-states.washington",
+      "breadcrumb": "United States › Washington › Columbia Valley",
+      "is_appellation": true,
+      "appellation_system": "AVA",
+      "appellation_level": "regional",
+      "display": "outline",
+      "navigation_node": false,
+      "map_state": "WA",
+      "map_state_source": "dominant",
+      "ucd_ava_id": "columbia_valley",
+      "cfr_section": "9.74",
+      "area_km2": 46744.617,
+      "land_share": 1,
+      "containment_share": 1,
+      "state_shares": {
+        "OR": 0.224048,
+        "WA": 0.775952
+      }
+    },
+    {
+      "key": "united-states.washington.columbia-valley.ancient-lakes-of-columbia-valley",
+      "slug": "ancient-lakes-of-columbia-valley",
+      "name": "Ancient Lakes of Columbia Valley",
+      "kind": "APPELLATION",
+      "display_tier": 3,
+      "min_zoom": 6,
+      "label_min_zoom": 7,
+      "sort_order": 10,
+      "parent_key": "united-states.washington.columbia-valley",
+      "breadcrumb": "United States › Washington › Columbia Valley › Ancient Lakes of Columbia Valley",
+      "is_appellation": true,
+      "appellation_system": "AVA",
+      "appellation_level": "subregional",
+      "display": null,
+      "navigation_node": false,
+      "map_state": "WA",
+      "map_state_source": "dominant",
+      "ucd_ava_id": "ancient_lakes_of_columbia_valley",
+      "cfr_section": "9.227",
+      "area_km2": 685.923,
+      "land_share": 1,
+      "containment_share": 1,
+      "state_shares": {
+        "WA": 1
+      }
+    },
+    {
+      "key": "united-states.washington.columbia-valley.candy-mountain",
+      "slug": "candy-mountain",
+      "name": "Candy Mountain",
+      "kind": "APPELLATION",
+      "display_tier": 3,
+      "min_zoom": 6,
+      "label_min_zoom": 7,
+      "sort_order": 20,
+      "parent_key": "united-states.washington.columbia-valley",
+      "breadcrumb": "United States › Washington › Columbia Valley › Candy Mountain",
+      "is_appellation": true,
+      "appellation_system": "AVA",
+      "appellation_level": "subregional",
+      "display": null,
+      "navigation_node": false,
+      "map_state": "WA",
+      "map_state_source": "dominant",
+      "ucd_ava_id": "candy_mountain",
+      "cfr_section": "9.272",
+      "area_km2": 3.654,
+      "land_share": 1,
+      "containment_share": 1,
+      "state_shares": {
+        "WA": 1
+      }
+    },
+    {
+      "key": "united-states.washington.columbia-valley.horse-heaven-hills",
+      "slug": "horse-heaven-hills",
+      "name": "Horse Heaven Hills",
+      "kind": "APPELLATION",
+      "display_tier": 3,
+      "min_zoom": 6,
+      "label_min_zoom": 7,
+      "sort_order": 30,
+      "parent_key": "united-states.washington.columbia-valley",
+      "breadcrumb": "United States › Washington › Columbia Valley › Horse Heaven Hills",
+      "is_appellation": true,
+      "appellation_system": "AVA",
+      "appellation_level": "subregional",
+      "display": null,
+      "navigation_node": false,
+      "map_state": "WA",
+      "map_state_source": "dominant",
+      "ucd_ava_id": "horse_heaven_hills",
+      "cfr_section": "9.188",
+      "area_km2": 2325.747,
+      "land_share": 1,
+      "containment_share": 1,
+      "state_shares": {
+        "OR": 0.023489,
+        "WA": 0.976511
+      }
+    },
+    {
+      "key": "united-states.washington.columbia-valley.naches-heights",
+      "slug": "naches-heights",
+      "name": "Naches Heights",
+      "kind": "APPELLATION",
+      "display_tier": 3,
+      "min_zoom": 6,
+      "label_min_zoom": 7,
+      "sort_order": 40,
+      "parent_key": "united-states.washington.columbia-valley",
+      "breadcrumb": "United States › Washington › Columbia Valley › Naches Heights",
+      "is_appellation": true,
+      "appellation_system": "AVA",
+      "appellation_level": "subregional",
+      "display": null,
+      "navigation_node": false,
+      "map_state": "WA",
+      "map_state_source": "dominant",
+      "ucd_ava_id": "naches_heights",
+      "cfr_section": "9.222",
+      "area_km2": 52.907,
+      "land_share": 1,
+      "containment_share": 1,
+      "state_shares": {
+        "WA": 1
+      }
+    },
+    {
+      "key": "united-states.washington.columbia-valley.rattlesnake-hills",
+      "slug": "rattlesnake-hills",
+      "name": "Rattlesnake Hills",
+      "kind": "APPELLATION",
+      "display_tier": 3,
+      "min_zoom": 6,
+      "label_min_zoom": 7,
+      "sort_order": 50,
+      "parent_key": "united-states.washington.columbia-valley",
+      "breadcrumb": "United States › Washington › Columbia Valley › Rattlesnake Hills",
+      "is_appellation": true,
+      "appellation_system": "AVA",
+      "appellation_level": "subregional",
+      "display": null,
+      "navigation_node": false,
+      "map_state": "WA",
+      "map_state_source": "dominant",
+      "ucd_ava_id": "rattlesnake_hills",
+      "cfr_section": "9.193",
+      "area_km2": 302.471,
+      "land_share": 1,
+      "containment_share": 1,
+      "state_shares": {
+        "WA": 1
+      }
+    },
+    {
+      "key": "united-states.washington.columbia-valley.rocky-reach",
+      "slug": "rocky-reach",
+      "name": "Rocky Reach",
+      "kind": "APPELLATION",
+      "display_tier": 3,
+      "min_zoom": 6,
+      "label_min_zoom": 7,
+      "sort_order": 60,
+      "parent_key": "united-states.washington.columbia-valley",
+      "breadcrumb": "United States › Washington › Columbia Valley › Rocky Reach",
+      "is_appellation": true,
+      "appellation_system": "AVA",
+      "appellation_level": "subregional",
+      "display": null,
+      "navigation_node": false,
+      "map_state": "WA",
+      "map_state_source": "dominant",
+      "ucd_ava_id": "rocky_reach",
+      "cfr_section": "9.287",
+      "area_km2": 131.185,
+      "land_share": 1,
+      "containment_share": 1,
+      "state_shares": {
+        "WA": 1
+      }
+    },
+    {
+      "key": "united-states.washington.columbia-valley.royal-slope",
+      "slug": "royal-slope",
+      "name": "Royal Slope",
+      "kind": "APPELLATION",
+      "display_tier": 3,
+      "min_zoom": 6,
+      "label_min_zoom": 7,
+      "sort_order": 70,
+      "parent_key": "united-states.washington.columbia-valley",
+      "breadcrumb": "United States › Washington › Columbia Valley › Royal Slope",
+      "is_appellation": true,
+      "appellation_system": "AVA",
+      "appellation_level": "subregional",
+      "display": null,
+      "navigation_node": false,
+      "map_state": "WA",
+      "map_state_source": "dominant",
+      "ucd_ava_id": "royal_slope",
+      "cfr_section": "9.271",
+      "area_km2": 632.699,
+      "land_share": 1,
+      "containment_share": 1,
+      "state_shares": {
+        "WA": 1
+      }
+    },
+    {
+      "key": "united-states.washington.columbia-valley.the-burn-of-columbia-valley",
+      "slug": "the-burn-of-columbia-valley",
+      "name": "The Burn of Columbia Valley",
+      "kind": "APPELLATION",
+      "display_tier": 3,
+      "min_zoom": 6,
+      "label_min_zoom": 7,
+      "sort_order": 80,
+      "parent_key": "united-states.washington.columbia-valley",
+      "breadcrumb": "United States › Washington › Columbia Valley › The Burn of Columbia Valley",
+      "is_appellation": true,
+      "appellation_system": "AVA",
+      "appellation_level": "subregional",
+      "display": null,
+      "navigation_node": false,
+      "map_state": "WA",
+      "map_state_source": "dominant",
+      "ucd_ava_id": "the_burn_of_columbia_valley",
+      "cfr_section": "9.276",
+      "area_km2": 52.912,
+      "land_share": 1,
+      "containment_share": 1,
+      "state_shares": {
+        "OR": 0.382118,
+        "WA": 0.617882
+      }
+    },
+    {
+      "key": "united-states.washington.columbia-valley.wahluke-slope",
+      "slug": "wahluke-slope",
+      "name": "Wahluke Slope",
+      "kind": "APPELLATION",
+      "display_tier": 3,
+      "min_zoom": 6,
+      "label_min_zoom": 7,
+      "sort_order": 90,
+      "parent_key": "united-states.washington.columbia-valley",
+      "breadcrumb": "United States › Washington › Columbia Valley › Wahluke Slope",
+      "is_appellation": true,
+      "appellation_system": "AVA",
+      "appellation_level": "subregional",
+      "display": null,
+      "navigation_node": false,
+      "map_state": "WA",
+      "map_state_source": "dominant",
+      "ucd_ava_id": "wahluke_slope",
+      "cfr_section": "9.192",
+      "area_km2": 326.173,
+      "land_share": 1,
+      "containment_share": 1,
+      "state_shares": {
+        "WA": 1
+      }
+    },
+    {
+      "key": "united-states.washington.columbia-valley.walla-walla-valley",
+      "slug": "walla-walla-valley",
+      "name": "Walla Walla Valley",
+      "kind": "APPELLATION",
+      "display_tier": 3,
+      "min_zoom": 6,
+      "label_min_zoom": 7,
+      "sort_order": 100,
+      "parent_key": "united-states.washington.columbia-valley",
+      "breadcrumb": "United States › Washington › Columbia Valley › Walla Walla Valley",
+      "is_appellation": true,
+      "appellation_system": "AVA",
+      "appellation_level": "subregional",
+      "display": null,
+      "navigation_node": false,
+      "map_state": "WA",
+      "map_state_source": "dominant",
+      "ucd_ava_id": "walla_walla_valley",
+      "cfr_section": "9.91",
+      "area_km2": 1314.215,
+      "land_share": 1,
+      "containment_share": 1,
+      "state_shares": {
+        "OR": 0.310107,
+        "WA": 0.689893
+      }
+    },
+    {
+      "key": "united-states.washington.columbia-valley.white-bluffs",
+      "slug": "white-bluffs",
+      "name": "White Bluffs",
+      "kind": "APPELLATION",
+      "display_tier": 3,
+      "min_zoom": 6,
+      "label_min_zoom": 7,
+      "sort_order": 110,
+      "parent_key": "united-states.washington.columbia-valley",
+      "breadcrumb": "United States › Washington › Columbia Valley › White Bluffs",
+      "is_appellation": true,
+      "appellation_system": "AVA",
+      "appellation_level": "subregional",
+      "display": null,
+      "navigation_node": false,
+      "map_state": "WA",
+      "map_state_source": "dominant",
+      "ucd_ava_id": "white_bluffs",
+      "cfr_section": "9.275",
+      "area_km2": 380.648,
+      "land_share": 1,
+      "containment_share": 1,
+      "state_shares": {
+        "WA": 1
+      }
+    },
+    {
+      "key": "united-states.washington.columbia-valley.yakima-valley",
+      "slug": "yakima-valley",
+      "name": "Yakima Valley",
+      "kind": "APPELLATION",
+      "display_tier": 3,
+      "min_zoom": 6,
+      "label_min_zoom": 7,
+      "sort_order": 120,
+      "parent_key": "united-states.washington.columbia-valley",
+      "breadcrumb": "United States › Washington › Columbia Valley › Yakima Valley",
+      "is_appellation": true,
+      "appellation_system": "AVA",
+      "appellation_level": "subregional",
+      "display": null,
+      "navigation_node": false,
+      "map_state": "WA",
+      "map_state_source": "dominant",
+      "ucd_ava_id": "yakima_valley",
+      "cfr_section": "9.69",
+      "area_km2": 2828.27,
+      "land_share": 1,
+      "containment_share": 1,
+      "state_shares": {
+        "WA": 1
+      }
+    },
+    {
+      "key": "united-states.washington.columbia-valley.yakima-valley.goose-gap",
+      "slug": "goose-gap",
+      "name": "Goose Gap",
+      "kind": "APPELLATION",
+      "display_tier": 4,
+      "min_zoom": 7,
+      "label_min_zoom": 9,
+      "sort_order": 10,
+      "parent_key": "united-states.washington.columbia-valley.yakima-valley",
+      "breadcrumb": "United States › Washington › Columbia Valley › Yakima Valley › Goose Gap",
+      "is_appellation": true,
+      "appellation_system": "AVA",
+      "appellation_level": "subregional",
+      "display": null,
+      "navigation_node": false,
+      "map_state": "WA",
+      "map_state_source": "dominant",
+      "ucd_ava_id": "goose_gap",
+      "cfr_section": "9.277",
+      "area_km2": 32.525,
+      "land_share": 1,
+      "containment_share": 1,
+      "state_shares": {
+        "WA": 1
+      }
+    },
+    {
+      "key": "united-states.washington.columbia-valley.yakima-valley.red-mountain",
+      "slug": "red-mountain",
+      "name": "Red Mountain",
+      "kind": "APPELLATION",
+      "display_tier": 4,
+      "min_zoom": 7,
+      "label_min_zoom": 9,
+      "sort_order": 20,
+      "parent_key": "united-states.washington.columbia-valley.yakima-valley",
+      "breadcrumb": "United States › Washington › Columbia Valley › Yakima Valley › Red Mountain",
+      "is_appellation": true,
+      "appellation_system": "AVA",
+      "appellation_level": "subregional",
+      "display": null,
+      "navigation_node": false,
+      "map_state": "WA",
+      "map_state_source": "dominant",
+      "ucd_ava_id": "red_mountain",
+      "cfr_section": "9.167",
+      "area_km2": 18.335,
+      "land_share": 1,
+      "containment_share": 1,
+      "state_shares": {
+        "WA": 1
+      }
+    },
+    {
+      "key": "united-states.washington.columbia-valley.yakima-valley.snipes-mountain",
+      "slug": "snipes-mountain",
+      "name": "Snipes Mountain",
+      "kind": "APPELLATION",
+      "display_tier": 4,
+      "min_zoom": 7,
+      "label_min_zoom": 9,
+      "sort_order": 30,
+      "parent_key": "united-states.washington.columbia-valley.yakima-valley",
+      "breadcrumb": "United States › Washington › Columbia Valley › Yakima Valley › Snipes Mountain",
+      "is_appellation": true,
+      "appellation_system": "AVA",
+      "appellation_level": "subregional",
+      "display": null,
+      "navigation_node": false,
+      "map_state": "WA",
+      "map_state_source": "dominant",
+      "ucd_ava_id": "snipes_mountain",
+      "cfr_section": "9.213",
+      "area_km2": 16.179,
+      "land_share": 1,
+      "containment_share": 1,
+      "state_shares": {
+        "WA": 1
+      }
+    },
+    {
+      "key": "united-states.washington.lake-chelan",
+      "slug": "lake-chelan",
+      "name": "Lake Chelan",
+      "kind": "APPELLATION",
+      "display_tier": 2,
+      "min_zoom": 6,
+      "label_min_zoom": 6,
+      "sort_order": 20,
+      "parent_key": "united-states.washington",
+      "breadcrumb": "United States › Washington › Lake Chelan",
+      "is_appellation": true,
+      "appellation_system": "AVA",
+      "appellation_level": "regional",
+      "display": null,
+      "navigation_node": false,
+      "map_state": "WA",
+      "map_state_source": "dominant",
+      "ucd_ava_id": "lake_chelan",
+      "cfr_section": "9.215",
+      "area_km2": 130.726,
+      "land_share": 1,
+      "containment_share": 1,
+      "state_shares": {
+        "WA": 1
+      }
+    },
+    {
+      "key": "united-states.washington.puget-sound",
+      "slug": "puget-sound",
+      "name": "Puget Sound",
+      "kind": "SUBREGION",
+      "display_tier": 2,
+      "min_zoom": 5,
+      "label_min_zoom": 5,
+      "sort_order": 30,
+      "parent_key": "united-states.washington",
+      "breadcrumb": "United States › Washington › Puget Sound",
+      "is_appellation": true,
+      "appellation_system": "AVA",
+      "appellation_level": "regional",
+      "display": "outline",
+      "navigation_node": false,
+      "map_state": "WA",
+      "map_state_source": "dominant",
+      "ucd_ava_id": "puget_sound",
+      "cfr_section": "9.151",
+      "area_km2": 18091.022,
+      "land_share": 0.634984,
+      "containment_share": 1,
+      "state_shares": {
+        "WA": 1
+      }
+    }
+  ],
+  "edges": [
+    {
+      "type": "ALTERNATE_PARENT",
+      "source_key": "united-states.washington.columbia-valley",
+      "target_key": "united-states.oregon",
+      "basis": "state_share",
+      "share": 0.224
+    },
+    {
+      "type": "ALTERNATE_PARENT",
+      "source_key": "united-states.washington.columbia-valley.horse-heaven-hills",
+      "target_key": "united-states.oregon",
+      "basis": "state_share",
+      "share": 0.0235
+    },
+    {
+      "type": "ALTERNATE_PARENT",
+      "source_key": "united-states.washington.columbia-valley.the-burn-of-columbia-valley",
+      "target_key": "united-states.oregon",
+      "basis": "state_share",
+      "share": 0.3821
+    },
+    {
+      "type": "ALTERNATE_PARENT",
+      "source_key": "united-states.washington.columbia-valley.walla-walla-valley",
+      "target_key": "united-states.oregon",
+      "basis": "state_share",
+      "share": 0.3101
+    },
+    {
+      "type": "OVERLAPS",
+      "source_key": "united-states.washington.columbia-valley.candy-mountain",
+      "target_key": "united-states.washington.columbia-valley.yakima-valley",
+      "basis": "partial_overlap",
+      "ratio": 0.8931
+    },
+    {
+      "type": "OVERLAPS",
+      "source_key": "united-states.washington.columbia-valley.candy-mountain",
+      "target_key": "united-states.washington.columbia-valley.yakima-valley.goose-gap",
+      "basis": "partial_overlap",
+      "ratio": 0.0134
+    },
+    {
+      "type": "OVERLAPS",
+      "source_key": "united-states.washington.columbia-valley.rattlesnake-hills",
+      "target_key": "united-states.washington.columbia-valley.yakima-valley",
+      "basis": "partial_overlap",
+      "ratio": 0.9945
+    },
+    {
+      "type": "OVERLAPS",
+      "source_key": "united-states.washington.lake-chelan",
+      "target_key": "united-states.washington.columbia-valley",
+      "basis": "partial_overlap",
+      "ratio": 0.9572
+    }
+  ],
+  "deferred": [
+    {
+      "ucd_ava_id": "lewis_clark_valley",
+      "name": "Lewis-Clark Valley",
+      "map_state": "ID",
+      "state_shares": {
+        "ID": 0.682942,
+        "WA": 0.317058
+      },
+      "reason": "dominant state ID is outside wave 1"
+    }
+  ],
+  "deferred_edges": [],
+  "ttb_only_pending": [
+    {
+      "name": "Beverly, Washington",
+      "states": [
+        "WA"
+      ],
+      "cfr": "9.297",
+      "established": "2024-10-29"
+    },
+    {
+      "name": "Columbia Hills",
+      "states": [
+        "WA"
+      ],
+      "cfr": "9.301",
+      "established": "2026-08-17"
+    }
+  ],
+  "review": {
+    "within_disagreements": [
+      {
+        "key": "united-states.washington.columbia-valley.candy-mountain",
+        "name": "Candy Mountain",
+        "ucd_within_not_computed": [
+          "Yakima Valley"
+        ],
+        "computed_not_in_ucd_within": [],
+        "ucd_contains_not_computed": [],
+        "unresolved_tokens": []
+      },
+      {
+        "key": "united-states.washington.columbia-valley.rattlesnake-hills",
+        "name": "Rattlesnake Hills",
+        "ucd_within_not_computed": [
+          "Yakima Valley"
+        ],
+        "computed_not_in_ucd_within": [],
+        "ucd_contains_not_computed": [],
+        "unresolved_tokens": []
+      },
+      {
+        "key": "united-states.washington.columbia-valley.yakima-valley",
+        "name": "Yakima Valley",
+        "ucd_within_not_computed": [],
+        "computed_not_in_ucd_within": [],
+        "ucd_contains_not_computed": [
+          "Rattlesnake Hills"
+        ],
+        "unresolved_tokens": []
+      },
+      {
+        "key": "united-states.washington.lake-chelan",
+        "name": "Lake Chelan",
+        "ucd_within_not_computed": [
+          "Columbia Valley"
+        ],
+        "computed_not_in_ucd_within": [],
+        "ucd_contains_not_computed": [],
+        "unresolved_tokens": []
+      }
+    ],
+    "low_land_share": [],
+    "low_containment": [],
+    "state_list_disagreements": [
+      {
+        "key": "united-states.washington.columbia-valley.horse-heaven-hills",
+        "name": "Horse Heaven Hills",
+        "ucd_states": [
+          "WA"
+        ],
+        "measured_states": [
+          "OR",
+          "WA"
+        ]
+      },
+      {
+        "key": "united-states.washington.columbia-valley.the-burn-of-columbia-valley",
+        "name": "The Burn of Columbia Valley",
+        "ucd_states": [
+          "WA"
+        ],
+        "measured_states": [
+          "OR",
+          "WA"
+        ]
+      }
+    ],
+    "near_within": [
+      {
+        "key": "united-states.washington.columbia-valley.rattlesnake-hills",
+        "name": "Rattlesnake Hills",
+        "container": "Yakima Valley",
+        "container_key": "united-states.washington.columbia-valley.yakima-valley",
+        "ratio": 0.9945,
+        "ucd_says_within": true
+      },
+      {
+        "key": "united-states.washington.lake-chelan",
+        "name": "Lake Chelan",
+        "container": "Columbia Valley",
+        "container_key": "united-states.washington.columbia-valley",
+        "ratio": 0.9572,
+        "ucd_says_within": true
+      }
+    ]
+  }
+}
