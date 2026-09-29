@@ -2,7 +2,7 @@
   "_generated_by": "scripts/wine-map-sources/usa-ava-diff.mjs",
   "_inputs": {
     "data/wine-map/usa-ava-ttb-list.json": "C745F493AE24E0777F1177E3056785942B6C14160AA54D348F8520220B660A87",
-    "data/wine-map/usa-ava-diff-notes.json": "3A468E0A9E3329DFA3AFA7C40DFB7F12B0F625F01104D9723AC466CDE5D696A7",
+    "data/wine-map/usa-ava-diff-notes.json": "945D28663ED9C8CFAE26F35B6722BE977E81AFCA70BF27046FDC1870F71DEAB4",
     "data/wine-map/usa-california-ava.geojson": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
     "data/wine-map/usa-washington-ava.geojson": "0D55D546E37CC1288DD24AEEC5DC1F303D295F72BC7A0DC6F213BB6F2DA22297",
     "data/wine-map/usa-oregon-ava.geojson": "BF05463C00EB9D62EFFBF8A3608B10FFA798B0F84DC2B34699C49AB30863C732",

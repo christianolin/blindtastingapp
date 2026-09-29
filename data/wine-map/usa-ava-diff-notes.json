@@ -8,6 +8,6 @@
   "matched_notes": {
     "comptche": "UC Davis carries no cfr_index for Comptche; it matched TTB's Comptche (27 CFR 9.292) by name alone.",
     "crystal_springs_of_napa_valley": "UC Davis's name has a trailing space (\"Crystal Springs of Napa Valley \"); the tree uses TTB's legal name.",
-    "mount_pisgah_polk_county_oregon": "27 CFR 9.284's heading is \"Mount Pisgah, Polk County, Oregon\" (as UC Davis spells it); TTB's list page writes \"Mt. Pisgah, Polk County, Oregon\". The legal name (the CFR heading) is used."
+    "mount_pisgah__polk_county__oregon": "27 CFR 9.284's heading is \"Mount Pisgah, Polk County, Oregon\" (as UC Davis spells it); TTB's list page writes \"Mt. Pisgah, Polk County, Oregon\". The legal name (the CFR heading) is used."
   }
 }
