@@ -31,6 +31,9 @@ export type ArchetypeView = {
   style: WineStyle;
   /** The map place's name; null when the archetype has none (training-room D9). */
   placeName: string | null;
+  /** Its canonical key, for a `?place=` link (training-room-map spec RM10b).
+      Optional: only fetchArchetype sets it; the room and the editor never need it. */
+  placeKey?: string | null;
   /** "Pauillac · Bordeaux, France · Cabernet Sauvignon, Merlot" (D11), so no
       appellation is a bare word. */
   lineage: string;

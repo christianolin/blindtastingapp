@@ -40,7 +40,7 @@ function archetypeClient(overrides?: {
         data: "archetype" in (overrides ?? {}) ? overrides?.archetype : ARCHETYPE,
         error: null,
       }),
-      wine_places: () => ({ data: { name: "Chablis" }, error: null }),
+      wine_places: () => ({ data: { name: "Chablis", canonical_key: "france.bourgogne.chablis" }, error: null }),
       grapes: () => ({ data: [{ id: "g1", name: "Chardonnay" }], error: null }),
       countries: () => ({ data: { name: "France" }, error: null }),
       regions: () => ({ data: { name: overrides?.names?.region ?? "Bourgogne" }, error: null }),
@@ -98,6 +98,7 @@ describe("fetchArchetype", () => {
       colour: "WHITE",
       style: "STILL",
       placeName: "Chablis",
+      placeKey: "france.bourgogne.chablis",
       lineage: lineageForParts({
         country: { id: "c1", name: "France" },
         region: { id: "r1", name: "Bourgogne" },
@@ -123,6 +124,7 @@ describe("fetchArchetype", () => {
 
     expect(calls.queries.some((q) => q.table === "wine_places")).toBe(false);
     expect(view?.placeName).toBeNull();
+    expect(view?.placeKey).toBeNull();
     expect(view?.lineage).not.toBe("");
   });
 

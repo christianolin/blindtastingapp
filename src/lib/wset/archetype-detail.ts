@@ -45,10 +45,10 @@ export async function fetchArchetype(
     (v): v is string => Boolean(v),
   );
   // D9: an archetype may have no map place; then no place is asked for.
-  const noPlace = Promise.resolve({ data: null as { name: string } | null });
+  const noPlace = Promise.resolve({ data: null as { name: string; canonical_key: string } | null });
   const [placeRes, grapesRes, linkRes, countryRes, regionRes, appellationRes] = await Promise.all([
     row.wine_place_id
-      ? supabase.from("wine_places").select("name").eq("id", row.wine_place_id).maybeSingle()
+      ? supabase.from("wine_places").select("name, canonical_key").eq("id", row.wine_place_id).maybeSingle()
       : noPlace,
     grapeIds.length
       ? supabase.from("grapes").select("id, name").in("id", grapeIds)
@@ -98,6 +98,7 @@ export async function fetchArchetype(
     colour: row.colour,
     style: row.style,
     placeName: placeRes.data?.name ?? null,
+    placeKey: placeRes.data?.canonical_key ?? null,
     lineage,
     grapes,
     description: row.description,

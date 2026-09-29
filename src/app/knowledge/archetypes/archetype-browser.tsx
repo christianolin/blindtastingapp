@@ -55,6 +55,7 @@ export function ArchetypeBrowser({ items }: { items: ArchetypeCard[] }) {
           id={open.id}
           name={open.name}
           onClose={() => setOpen(null)}
+          mapLink
         />
       ) : null}
     </>

@@ -91,6 +91,7 @@ import {
 import type { CameraTarget } from "./tile-wine-map";
 import type { ArchetypeListItem } from "@/lib/wset/queries";
 import { ArchetypeModal } from "@/components/wset/archetype-modal";
+import { typicalWinesHeading } from "@/lib/training/copy";
 import { PHONE_QUERY, useIsPhone } from "@/lib/use-is-phone";
 import { useIsWide } from "@/lib/use-is-wide";
 import { initialSidePanel, sidePanelReducer } from "@/lib/wine-map/side-panel";
@@ -942,7 +943,7 @@ export function TileWineMapExplorer({
         <div>
           <p className="mb-1.5 flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
             <Wine className="size-3.5" />
-            Typical wine
+            {typicalWinesHeading(archetypes.length)}
           </p>
           <div className="flex flex-col gap-1.5">
             {archetypes.map((a) => (
