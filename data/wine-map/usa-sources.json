@@ -1,0 +1,83 @@
+{
+  "_note": "Raw downloads for the USA map (spec 2026-09-29 §5). The files live under .tiles-build/usa/ and never enter git; each is identified by its commit and checked by size and sha256 (uppercase hex). Written by scripts/wine-map-sources/fetch-ucd-ava.mjs.",
+  "sources": [
+    {
+      "set": "ne",
+      "name": "ne_50m_admin_0_countries_lakes.geojson",
+      "repo": "nvkelso/natural-earth-vector",
+      "commit": "ca96624a56bd078437bca8184e78163e5039ad19",
+      "path": "geojson/ne_50m_admin_0_countries_lakes.geojson",
+      "url": "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/ca96624a56bd078437bca8184e78163e5039ad19/geojson/ne_50m_admin_0_countries_lakes.geojson",
+      "licence": "Public domain (Natural Earth)",
+      "bytes": 3138521,
+      "sha256": "B4C14911C7EEC4A5D920B90294DE6C16FDB078425B2CAA6974A38A0B261F9667",
+      "retrieved_at": "2026-09-29T17:22:02.151Z",
+      "local_path": ".tiles-build/usa/ne/ca96624a56bd078437bca8184e78163e5039ad19/ne_50m_admin_0_countries_lakes.geojson"
+    },
+    {
+      "set": "ne",
+      "name": "ne_50m_admin_1_states_provinces_lakes.geojson",
+      "repo": "nvkelso/natural-earth-vector",
+      "commit": "ca96624a56bd078437bca8184e78163e5039ad19",
+      "path": "geojson/ne_50m_admin_1_states_provinces_lakes.geojson",
+      "url": "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/ca96624a56bd078437bca8184e78163e5039ad19/geojson/ne_50m_admin_1_states_provinces_lakes.geojson",
+      "licence": "Public domain (Natural Earth)",
+      "bytes": 2357849,
+      "sha256": "B92C3F709B691240F6320E5CD7FADE78CEDFA3B91ECFF14CECD3DE0616C764B9",
+      "retrieved_at": "2026-09-29T17:22:02.634Z",
+      "local_path": ".tiles-build/usa/ne/ca96624a56bd078437bca8184e78163e5039ad19/ne_50m_admin_1_states_provinces_lakes.geojson"
+    },
+    {
+      "set": "ucd",
+      "name": "CA_avas.geojson",
+      "repo": "UCDavisLibrary/ava",
+      "commit": "355f7da3cd6c4020fff736b7517a4a669fed7730",
+      "path": "avas_by_state/CA_avas.geojson",
+      "url": "https://raw.githubusercontent.com/UCDavisLibrary/ava/355f7da3cd6c4020fff736b7517a4a669fed7730/avas_by_state/CA_avas.geojson",
+      "licence": "CC0-1.0 (American Viticultural Areas Digitizing Project)",
+      "bytes": 16129799,
+      "sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+      "retrieved_at": "2026-09-29T17:21:58.060Z",
+      "local_path": ".tiles-build/usa/ucd/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson"
+    },
+    {
+      "set": "ucd",
+      "name": "NY_avas.geojson",
+      "repo": "UCDavisLibrary/ava",
+      "commit": "355f7da3cd6c4020fff736b7517a4a669fed7730",
+      "path": "avas_by_state/NY_avas.geojson",
+      "url": "https://raw.githubusercontent.com/UCDavisLibrary/ava/355f7da3cd6c4020fff736b7517a4a669fed7730/avas_by_state/NY_avas.geojson",
+      "licence": "CC0-1.0 (American Viticultural Areas Digitizing Project)",
+      "bytes": 1525079,
+      "sha256": "8BE8F4D385229441461D67FA33A24B169C227DA5C44BC67B717368FC3BAA8E66",
+      "retrieved_at": "2026-09-29T17:22:01.223Z",
+      "local_path": ".tiles-build/usa/ucd/355f7da3cd6c4020fff736b7517a4a669fed7730/NY_avas.geojson"
+    },
+    {
+      "set": "ucd",
+      "name": "OR_avas.geojson",
+      "repo": "UCDavisLibrary/ava",
+      "commit": "355f7da3cd6c4020fff736b7517a4a669fed7730",
+      "path": "avas_by_state/OR_avas.geojson",
+      "url": "https://raw.githubusercontent.com/UCDavisLibrary/ava/355f7da3cd6c4020fff736b7517a4a669fed7730/avas_by_state/OR_avas.geojson",
+      "licence": "CC0-1.0 (American Viticultural Areas Digitizing Project)",
+      "bytes": 7128533,
+      "sha256": "37AF8C156A0A55584C39890606D16A8EBA753E604531E1577CAE1DCAA0A32B55",
+      "retrieved_at": "2026-09-29T17:22:00.734Z",
+      "local_path": ".tiles-build/usa/ucd/355f7da3cd6c4020fff736b7517a4a669fed7730/OR_avas.geojson"
+    },
+    {
+      "set": "ucd",
+      "name": "WA_avas.geojson",
+      "repo": "UCDavisLibrary/ava",
+      "commit": "355f7da3cd6c4020fff736b7517a4a669fed7730",
+      "path": "avas_by_state/WA_avas.geojson",
+      "url": "https://raw.githubusercontent.com/UCDavisLibrary/ava/355f7da3cd6c4020fff736b7517a4a669fed7730/avas_by_state/WA_avas.geojson",
+      "licence": "CC0-1.0 (American Viticultural Areas Digitizing Project)",
+      "bytes": 3728958,
+      "sha256": "A66B99F05BFB83CB408294134546CD20D8CBCDB96BA9D2DC5A6F02DA41AE2363",
+      "retrieved_at": "2026-09-29T17:21:59.201Z",
+      "local_path": ".tiles-build/usa/ucd/355f7da3cd6c4020fff736b7517a4a669fed7730/WA_avas.geojson"
+    }
+  ]
+}
