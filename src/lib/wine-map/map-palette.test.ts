@@ -100,6 +100,10 @@ function colorLeaves(p: MapPalette): string[] {
     p.selectedRing,
     p.selectedCasing,
     ...Object.values(p.label),
+    ...p.heat.stops,
+    p.heat.capped,
+    p.heat.neutral,
+    p.heat.casing,
   ];
 }
 
@@ -326,4 +330,73 @@ describe("districtColor", () => {
       }
     }
   });
+});
+
+// The training room's likelihood dots (training-room-map spec RM13, RM14,
+// §11): lightness and size both carry heat, and a ruled-out wine is a ring,
+// so the ramp must read by lightness alone, away from the ground.
+describe("the heat ramp (training room)", () => {
+  const grounds = [
+    ["light", light, POSITRON_LAND],
+    ["dark", dark, DARK_MATTER_LAND],
+  ] as const;
+
+  it("is keyed alike in both tables, four stops each", () => {
+    expect(Object.keys(dark.heat).sort()).toEqual(Object.keys(light.heat).sort());
+    expect(light.heat.stops).toHaveLength(4);
+    expect(dark.heat.stops).toHaveLength(4);
+  });
+
+  it("pins the measured values; light's hottest stop is the brand bordeaux", () => {
+    expect(light.heat).toEqual({
+      stops: ["#A7813A", "#A95834", "#8C2D3C", "#5C1A2B"],
+      capped: "#8A8580",
+      neutral: "#8A7A6A",
+      casing: "#FFFDF7",
+    });
+    expect(dark.heat).toEqual({
+      stops: ["#8E6A42", "#BF7253", "#E88A92", "#F7D6AE"],
+      capped: "#8A847D",
+      neutral: "#978A7D",
+      casing: "#120E0C",
+    });
+  });
+
+  for (const [name, p, land] of grounds) {
+    describe(name, () => {
+      it("every stop, the capped ring and the neutral dot clear 3:1 on the land", () => {
+        for (const c of [...p.heat.stops, p.heat.capped, p.heat.neutral]) {
+          expect(contrast(c, land), c).toBeGreaterThanOrEqual(3);
+        }
+      });
+
+      it("the hottest stop clears 3:1 against the coldest", () => {
+        expect(contrast(p.heat.stops[3], p.heat.stops[0])).toBeGreaterThanOrEqual(3);
+      });
+
+      it("OKLab lightness moves away from the ground at every step, by at least 0.07", () => {
+        const direction = oklab(land)[0] > 0.5 ? -1 : 1;
+        const ls = [land, ...p.heat.stops].map((c) => oklab(c)[0]);
+        for (let i = 1; i < ls.length; i += 1) {
+          expect(direction * (ls[i] - ls[i - 1]), `step ${i}`).toBeGreaterThanOrEqual(0.07);
+        }
+      });
+
+      it("adjacent stops are at least 0.09 apart (OKLab ΔE)", () => {
+        for (let i = 1; i < 4; i += 1) {
+          expect(deltaE(p.heat.stops[i], p.heat.stops[i - 1]), `stop ${i}`).toBeGreaterThanOrEqual(0.09);
+        }
+      });
+
+      it("the ring and the neutral dot are not mistaken for the coldest stop", () => {
+        expect(deltaE(p.heat.capped, p.heat.stops[0])).toBeGreaterThanOrEqual(0.08);
+        expect(deltaE(p.heat.neutral, p.heat.stops[0])).toBeGreaterThanOrEqual(0.07);
+      });
+
+      it("the casing reads as ground, and is the theme's selectedCasing", () => {
+        expect(contrast(p.heat.casing, land)).toBeLessThanOrEqual(1.2);
+        expect(p.heat.casing).toBe(p.selectedCasing);
+      });
+    });
+  }
 });

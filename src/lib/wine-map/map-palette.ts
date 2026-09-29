@@ -49,6 +49,20 @@ export type MapPalette = {
     distant: string;
     halo: string;
   };
+  /** The training room's likelihood dots (training-room-map spec RM13,
+      RM14): four stops from least close to closest (heat 0.5 / 0.75 / 0.9 /
+      1), a ruled-out wine's hollow ring, a dot with no number yet, and the
+      keyline that cuts overlapping dots apart (the theme's selectedCasing).
+      The ramp runs away from the ground like the classification ramp:
+      darker toward bordeaux on Positron, brighter toward cream on Dark
+      Matter. Kept LAST in each table: a collaborator also edits this file,
+      and the block is merged in by hand after theirs (spec §13). */
+  heat: {
+    stops: readonly [string, string, string, string];
+    capped: string;
+    neutral: string;
+    casing: string;
+  };
 };
 
 // The grounds each table was measured against, read from the Carto style JSONs
@@ -256,6 +270,14 @@ export const MAP_PALETTES: Record<Theme, MapPalette> = {
       distant: "#7a666f",
       halo: "#FFFDF7",
     },
+    // On Positron #fafaf8: stops 3.44 / 4.86 / 7.86 / 12.27:1, the hottest
+    // the brand bordeaux; capped 3.50:1, neutral 3.96:1.
+    heat: {
+      stops: ["#A7813A", "#A95834", "#8C2D3C", "#5C1A2B"],
+      capped: "#8A8580",
+      neutral: "#8A7A6A",
+      casing: "#FFFDF7",
+    },
   },
   dark: {
     regions: DARK_REGIONS,
@@ -282,6 +304,14 @@ export const MAP_PALETTES: Record<Theme, MapPalette> = {
       // Still the quiet tier: 4.03:1 on its halo (light's is 3.47:1).
       distant: "#978A7D",
       halo: "#120E0C",
+    },
+    // On Dark Matter #0e0e0e: stops 3.94 / 5.28 / 7.80 / 13.96:1, the
+    // hottest a cream; capped 5.22:1, neutral 5.74:1.
+    heat: {
+      stops: ["#8E6A42", "#BF7253", "#E88A92", "#F7D6AE"],
+      capped: "#8A847D",
+      neutral: "#978A7D",
+      casing: "#120E0C",
     },
   },
 };
