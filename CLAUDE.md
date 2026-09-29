@@ -1241,6 +1241,40 @@ a raw subquery, regardless of which two tables look involved at a glance.
   refuses) — clear those attempts' picks first. The device draft carries
   `pickedRegionId` / `pickedGrapeId`; a draft from before them reads with both
   null, and Continue gives a picked typical wine its region (`normalizeCall`).
+- **Aroma lexicon v2** (2026-09-29, migration
+  `20260929090000_aroma_lexicon_v2.sql`, data only; spec, lexicon review and
+  the typical-wine votes in `data/training/aroma-lexicon-v2-2026-09-29.json`).
+  `wset_aroma_terms` went 144 → 150 terms, PRIMARY/SECONDARY/TERTIARY
+  69/25/50 → 73/24/53, still 18 groups. Owner decisions: "just having apple
+  is too vague" (apple is renamed green apple, and red apple is added beside
+  it), "i dont think dried or cooked fruit should be in primary aromas"
+  (both leave Fruit ripeness, which keeps unripe fruit, ripe fruit and jammy: "Keep
+  jammy"), and smoked meat plus olives ("Black and green olive"). Renamed in
+  place, same ids: Yeast toast → toasted bread (Oak and White wine toast
+  stay `toast`), flint → flint / struck match, saltiness → saline. Added:
+  lime zest, pomegranate, black olive, green olive, ginger (PRIMARY Spice;
+  the TERTIARY White wine ginger stays), smoked meat, truffle (Red wine AND
+  White wine), black tea, beeswax. Removed: dried fruit, cooked fruit,
+  kerosene (petrol), graham cracker (biscuit), cooked red plum (cooked
+  plum). The two saved notes that held dried fruit now hold raisin (TERTIARY
+  Red wine, the owner's call), and cooked red plum became cooked plum. 42
+  typical-wine aroma changes rode along (red apple on the riper whites,
+  smoked meat and black olive in the northern Rhône, truffle, black tea,
+  ginger, lime zest, beeswax, the dried-fruit rows remapped, Tawny Port's
+  invisible orange peel dropped); `wine_archetype_aromas` 1100 → 1125. New
+  terms sit right after their anchor (found by origin, group and term) and
+  everything above shifts up one, so `sort_order` is unique but gappy
+  (1..156). Every lexicon label is keyed by the English term, so a new or
+  renamed term needs `TERMS_DA` (`src/lib/wset/i18n.ts`), an `ICON_META`
+  entry plus `public/emoji/<slug>.svg` (`aroma-icons.mjs`; the test's
+  `LEXICON` mirror too) and, for a tertiary Red/White wine term, a picker
+  sub-cluster (`aroma-picker.tsx`). Red apple took the literal red-apple
+  emoji, so ripe fruit moved to the fruit bowl dried fruit left behind.
+  `scripts/training-room.test.mjs` no longer replays
+  `20260925130000_archetypes_batch_1.sql` once v2 is live (batch 1 names
+  the old terms; never edit it). Remember `wine_archetype_aromas.term_id`
+  cascades on delete and `wset_note_aromas.term_id` refuses it: a lexicon
+  removal must move both first and assert zero references before deleting.
 - **Levels and achievements** (2026-09-27, spec
   `docs/superpowers/specs/2026-09-27-levels-and-achievements-design.md`,
   migration `20260927160000_levels_and_achievements.sql`). XP is an
