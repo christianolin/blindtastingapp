@@ -35,6 +35,7 @@ import {
   type SheetPadding,
 } from "@/lib/wine-map/camera-fit";
 import { latchRampedRegions } from "@/lib/wine-map/fill-palette";
+import { legendClassOf } from "@/lib/wine-map/legend-classes";
 import {
   AREA_PALETTE_ZOOM,
   selectedLabelLayout,
@@ -975,13 +976,8 @@ export function TileWineMap({
       // Legend rows appear only for classes actually in view: Burgundy shows
       // village/premier/grand, Champagne its rated villages, Alsace its
       // grand-cru vineyards.
-      const cls =
-        typeof p.classification === "string" && p.classification
-          ? p.classification
-          : typeof p.level === "string"
-            ? p.level
-            : null;
-      if (cls === "grand_cru" || cls === "premier_cru" || cls === "communal") {
+      const cls = legendClassOf(p);
+      if (cls) {
         classifications.add(cls);
         if (region) {
           let levels = levelsByRegion.get(region);
