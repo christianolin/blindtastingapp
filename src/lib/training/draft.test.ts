@@ -7,6 +7,7 @@ import {
   draftKey,
   newSessionKey,
   readDraft,
+  withKnownTerms,
   writeDraft,
 } from "./draft";
 import type { TrainingDraft } from "./types";
@@ -158,5 +159,30 @@ describe("draftClearedBy (the storage listener)", () => {
     expect(draftClearedBy({ key: draftKey(USER), newValue: "{}" }, USER)).toBe(false);
     expect(draftClearedBy({ key: draftKey("other"), newValue: null }, USER)).toBe(false);
     expect(draftClearedBy({ key: "blindr-theme", newValue: null }, USER)).toBe(false);
+  });
+});
+
+describe("withKnownTerms (a draft saved before a lexicon change)", () => {
+  it("drops nose and palate terms the lexicon no longer has, keeping the rest", () => {
+    const d = draft({
+      note: { ...emptyNoteState(), tannin: "HIGH", noseTermIds: ["t1", "gone"], palateTermIds: ["gone", "t2"] },
+    });
+    const s = fakeStorage();
+    writeDraft(d, s.get);
+    const restored = readDraft(USER, s.get);
+    expect(restored?.note.noseTermIds).toEqual(["t1", "gone"]);
+    const known = withKnownTerms(restored!, new Set(["t1", "t2"]));
+    expect(known.note.noseTermIds).toEqual(["t1"]);
+    expect(known.note.palateTermIds).toEqual(["t2"]);
+    expect(known.note.tannin).toBe("HIGH");
+    expect(known.sessionKey).toBe(d.sessionKey);
+  });
+  it("leaves a nose that held only a removed term empty, so it no longer counts as done", () => {
+    const d = draft({ note: { ...emptyNoteState(), noseTermIds: ["gone"] } });
+    expect(withKnownTerms(d, new Set(["t1"])).note.noseTermIds).toEqual([]);
+  });
+  it("returns the same draft when every term is still known", () => {
+    const d = draft();
+    expect(withKnownTerms(d, new Set(["t1"]))).toBe(d);
   });
 });

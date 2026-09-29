@@ -38,7 +38,14 @@ import {
   normalizeCall,
 } from "@/lib/training/call";
 import { TRAINING_COPY, clockTime, continueLine, sessionsLine, sheetTitle } from "@/lib/training/copy";
-import { clearDraft, draftClearedBy, newSessionKey, readDraft, writeDraft } from "@/lib/training/draft";
+import {
+  clearDraft,
+  draftClearedBy,
+  newSessionKey,
+  readDraft,
+  withKnownTerms,
+  writeDraft,
+} from "@/lib/training/draft";
 import { groupRanking } from "@/lib/training/groups";
 import { rankCandidates, snapshotRanking } from "@/lib/training/match";
 import { anotherGlassPlan } from "@/lib/training/result-math";
@@ -248,11 +255,13 @@ export function TrainingRoom({
 
   // A draft from before the region step names a typical wine but no region:
   // normalizeCall gives the wine its region (and drops a pick that left the pool,
-  // or a grape merged away since the draft was saved).
+  // or a grape merged away since the draft was saved), and withKnownTerms drops
+  // an aroma term the lexicon has removed since (the finish would be refused).
   function continueSession() {
     if (!stored) return;
     setError(null);
-    setSession({ ...stored, ...normalizeCall(stored, candidates, grapes.map((g) => g.id)) });
+    const known = withKnownTerms(stored, new Set(terms.map((t) => t.id)));
+    setSession({ ...known, ...normalizeCall(known, candidates, grapes.map((g) => g.id)) });
     enterView("session");
   }
 

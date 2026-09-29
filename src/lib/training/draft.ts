@@ -107,6 +107,21 @@ export function readDraft(
   };
 }
 
+/**
+ * The draft's note without any nose or palate term the lexicon no longer has.
+ * A draft saved before a term was removed (aroma lexicon v2 deleted five)
+ * would otherwise keep an id the picker cannot show or clear, that still
+ * counts towards "Selected · N" and the section's progress, and that the
+ * finish sends into wset_note_aromas, where its foreign key refuses the whole
+ * session. Returns the same draft when nothing was dropped.
+ */
+export function withKnownTerms(d: TrainingDraft, knownTermIds: ReadonlySet<string>): TrainingDraft {
+  const nose = d.note.noseTermIds.filter((id) => knownTermIds.has(id));
+  const palate = d.note.palateTermIds.filter((id) => knownTermIds.has(id));
+  if (nose.length === d.note.noseTermIds.length && palate.length === d.note.palateTermIds.length) return d;
+  return { ...d, note: { ...d.note, noseTermIds: nose, palateTermIds: palate } };
+}
+
 /** Stores the draft under its user's key. False when it could not be saved. */
 export function writeDraft(
   d: TrainingDraft,
