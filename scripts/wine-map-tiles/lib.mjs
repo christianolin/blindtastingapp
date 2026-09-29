@@ -64,6 +64,75 @@ export function assertMultiCountryArchive(rows) {
   }
 }
 
+// Per-country coverage windows (spec 2026-09-29 D17). validate.mjs used ONE box
+// for every archive (-18..19 lon, 32..56 lat); the United States cannot fit in
+// it, and widening it to -125 would stop it catching a stray European shard.
+// Two checks replace it: each archive's pmtiles header must sit inside the
+// union of its own countries' boxes, and every expected label point inside ITS
+// OWN country's box (country = first key segment). The second is what still
+// catches a Paris label on a united-states.* key once the world archive spans
+// -125.5..19. The five European countries keep exactly the old box, so nothing
+// tightens. A country with no entry throws: add its window in the same change
+// that verifies its first place.
+const EUROPE_WINDOW = Object.freeze({ minLon: -18, minLat: 32, maxLon: 19, maxLat: 56 });
+export const COVERAGE_BOXES = Object.freeze({
+  france: EUROPE_WINDOW,
+  italy: EUROPE_WINDOW,
+  spain: EUROPE_WINDOW,
+  germany: EUROPE_WINDOW,
+  portugal: EUROPE_WINDOW,
+  // The lower 48, padded. Alaska and Hawaii are out of scope.
+  "united-states": Object.freeze({ minLon: -125.5, minLat: 24, maxLon: -66.5, maxLat: 49.5 }),
+});
+
+export function countryOfKey(canonicalKey) {
+  return canonicalKey.split(".")[0];
+}
+
+export function coverageBoxFor(countries) {
+  const list = [...countries];
+  if (list.length === 0) throw new Error("coverageBoxFor needs at least one country");
+  const boxes = list.map((country) => {
+    // Object.hasOwn, not COVERAGE_BOXES[country]: "constructor" must not
+    // resolve to Object.prototype.constructor and pass as a box.
+    if (!Object.hasOwn(COVERAGE_BOXES, country)) {
+      throw new Error(
+        `No coverage box for country "${country}" (add it to COVERAGE_BOXES in scripts/wine-map-tiles/lib.mjs)`,
+      );
+    }
+    return COVERAGE_BOXES[country];
+  });
+  return {
+    minLon: Math.min(...boxes.map((b) => b.minLon)),
+    minLat: Math.min(...boxes.map((b) => b.minLat)),
+    maxLon: Math.max(...boxes.map((b) => b.maxLon)),
+    maxLat: Math.max(...boxes.map((b) => b.maxLat)),
+  };
+}
+
+export function boundsInside(bounds, box) {
+  return (
+    bounds.minLon >= box.minLon && bounds.maxLon <= box.maxLon &&
+    bounds.minLat >= box.minLat && bounds.maxLat <= box.maxLat
+  );
+}
+
+/** The countries an archive holds: first key segments of its expected rows. */
+export function archiveCountries(release, ids) {
+  return [...new Set(
+    release.expected.filter(({ id }) => ids.has(id)).map(({ key }) => countryOfKey(key)),
+  )].sort();
+}
+
+/** Every expected row whose label point lies outside its own country's box. */
+export function featureOutsideCoverage(release) {
+  return release.expected.filter(({ key, label_lon: lon, label_lat: lat }) =>
+    !boundsInside(
+      { minLon: lon, maxLon: lon, minLat: lat, maxLat: lat },
+      coverageBoxFor([countryOfKey(key)]),
+    ));
+}
+
 export const WORLD_TARGET = { minZoom: 0, maxZoom: 7 };
 export const SHARD_TARGET = { minZoom: 4, maxZoom: 16 };
 export const BUCKET = "wine-map-tiles";
