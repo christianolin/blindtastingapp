@@ -34,6 +34,11 @@
 -- right after its anchor (found by origin, group and term, since mushroom,
 -- cinnamon and others repeat across groups) and everything above shifts up by
 -- one; the removed terms leave gaps. sort_order ends 1..156, unique.
+-- Rollout: apply this right AFTER the app deploy that ships lexicon v2, never
+-- before it. That app also reads the old terms (aroma-icons.mjs LEGACY_SLUG,
+-- i18n TERMS_DA, marked TRANSITION ONLY); the app before it has no icon or
+-- Danish label for the renamed and new terms.
+--
 -- Order: renames, new terms, saved notes, typical wines, then the removals,
 -- each only once nothing references it (wine_archetype_aromas cascades, so a
 -- stray link would vanish silently; wset_note_aromas would refuse the delete).

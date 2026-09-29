@@ -48,6 +48,8 @@ const TERTIARY_SUBGROUP: Record<string, string> = {
   "dried cranberry": "Dried & cooked fruit",
   "cooked blackberry": "Dried & cooked fruit",
   kirsch: "Dried & cooked fruit",
+  // TRANSITION ONLY: a term aroma lexicon v2 removes; drop with aroma-icons.mjs's LEGACY_SLUG.
+  "cooked red plum": "Dried & cooked fruit",
   // Red wine — earth & forest
   leather: "Earth & forest",
   earth: "Earth & forest",
@@ -85,6 +87,7 @@ const WHITE_TERTIARY_SUBGROUP: Record<string, string> = {
   toast: "Nut, spice & toast",
   // White wine — petrol, honey & earth
   petrol: "Petrol, honey & earth",
+  kerosene: "Petrol, honey & earth", // TRANSITION ONLY, as "cooked red plum" above
   honey: "Petrol, honey & earth",
   beeswax: "Petrol, honey & earth",
   caramel: "Petrol, honey & earth",

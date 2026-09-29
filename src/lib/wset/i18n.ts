@@ -207,6 +207,14 @@ const TERMS_DA: Record<string, string> = {
   almond: "mandel", hazelnut: "hasselnød", honey: "honning",
   beeswax: "bivoks", nutty: "nøddeagtig", hay: "hø",
   "dried apple": "tørret æble", "dried banana": "tørret banan",
+  // TRANSITION ONLY: the old terms aroma lexicon v2 (20260929090000) renames
+  // or removes, for the window where this app is live and the migration is
+  // not yet. Remove once v2 is confirmed live (with aroma-icons.mjs's
+  // LEGACY_SLUG and aroma-picker.tsx's legacy sub-clusters).
+  apple: "æble", flint: "flint", saltiness: "saltethed",
+  "graham cracker": "grahamskiks", "dried fruit": "tørret frugt",
+  "cooked fruit": "kogt frugt", kerosene: "kerosen",
+  "cooked red plum": "kogt rød blomme",
   // deliberately oxidised
   marzipan: "marcipan", walnut: "valnød", toffee: "toffee",
 };
