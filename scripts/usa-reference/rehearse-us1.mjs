@@ -6,12 +6,16 @@
 //   forward - live mode, then the applier's history row;
 //   in use  - the revert refuses while a new AVA row carries a wine;
 //   revert  - restores the starting snapshot exactly.
+// Around forward and revert it also takes check-us1-live.mjs's scoring
+// snapshot: after the forward it must equal expectedScoringAfter(before),
+// after the revert the before-snapshot itself.
 // Usage: node scripts/usa-reference/rehearse-us1.mjs
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import pg from "pg";
 import { topLevelTransactionStatements } from "../migration-preflight.mjs";
 import { REF_QUERIES } from "./us1-queries.mjs";
+import { expectedScoringAfter, scoringSnapshot } from "./us1-scoring-snapshot.mjs";
 import { FORWARD_PATH, REVERT_PATH, SPEC_PATH, US1_REVERT_VERSION, US1_VERSION } from "./us1-spec-lib.mjs";
 
 const NAPA_ARCHETYPE = "75e4e467-3929-4844-bbc4-ffe8b12523a1"; // "A typical Napa Cabernet Sauvignon"
@@ -57,6 +61,7 @@ try {
   assert.equal(s0.regions.length, 28);
   assert.equal(s0.appellations.length, 240);
   assert.deepEqual(s0.history, []);
+  const sc0 = await scoringSnapshot(c);
 
   await c.query("savepoint drift");
   await c.query("update wine_archetypes set appellation_id = $1 where id = $2", [sloCoastLoser, NAPA_ARCHETYPE]);
@@ -80,6 +85,12 @@ try {
   assert.equal(s1.catalog_wine_edits, s0.catalog_wine_edits, "no catalog wine moved, so no audit row");
   assert.deepEqual(s1.references.guesses, s0.references.guesses, "guesses never move");
   console.log(`forward: ${s1.regions.length} regions, ${s1.appellations.length} appellations`);
+  const sc1 = await scoringSnapshot(c);
+  assert.deepEqual(sc1, expectedScoringAfter(sc0, spec), "scoring: the post-apply check's comparison holds after the forward");
+  assert.deepEqual(sc1.guesses, sc0.guesses);
+  assert.deepEqual(sc1.leaderboards, sc0.leaderboards);
+  assert.deepEqual(sc1.user_totals, sc0.user_totals);
+  console.log(`scoring: ${sc1.guesses.length} guesses, ${Object.keys(sc1.leaderboards).length} leaderboards unchanged; catalog wines as expected`);
 
   await c.query("savepoint inuse");
   await c.query("update wine_archetypes set appellation_id = $1 where id = $2", [spec.new_rows.find((r) => r.region === "California").id, NAPA_ARCHETYPE]);
@@ -92,6 +103,7 @@ try {
   const s2 = await snapshot();
   assert.deepEqual(withoutHistory(s2), withoutHistory(s0), "the revert restores the snapshot exactly");
   assert.deepEqual(s2.history, [US1_REVERT_VERSION]);
+  assert.deepEqual(await scoringSnapshot(c), sc0, "scoring: the revert restores the before-snapshot exactly");
   console.log("REHEARSAL OK: forward, replay, drift, in-use and revert all hold; everything rolled back");
 } finally {
   await c.query("rollback").catch(() => {});

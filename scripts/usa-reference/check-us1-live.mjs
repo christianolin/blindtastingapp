@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { withReadOnly } from "../wine-map-sources/read-only-client.mjs";
 import { REF_QUERIES } from "./us1-queries.mjs";
-import { scoringSnapshot } from "./us1-scoring-snapshot.mjs";
+import { expectedScoringAfter, scoringSnapshot } from "./us1-scoring-snapshot.mjs";
 import { SPEC_PATH, US1_VERSION } from "./us1-spec-lib.mjs";
 
 const spec = JSON.parse(await readFile(SPEC_PATH, "utf8"));
@@ -24,6 +24,8 @@ await withReadOnly(async (c) => {
   assert.deepEqual(apps.filter((a) => forbidden.has(a.name)).map((a) => a.name), [], "no US state or county row ends in \" AVA\"");
   const appIds = apps.map((a) => a.id);
   for (const [t, sql] of REF_QUERIES) assert.deepEqual((await c.query(sql, [regions, appIds])).rows[0].refs, spec.post.references[t], t);
-  if (before) assert.deepEqual(await scoringSnapshot(c), before, "scoring outputs unchanged");
+  // Not a bare deepEqual with `before`: US-1 renames and re-points some US rows on
+  // purpose (expectedScoringAfter), and every other difference is a failure.
+  if (before) assert.deepEqual(await scoringSnapshot(c), expectedScoringAfter(before, spec), "scoring outputs unchanged (after the spec's own renames, merges and moves)");
   console.log("US-1 LIVE CHECK OK");
 });
