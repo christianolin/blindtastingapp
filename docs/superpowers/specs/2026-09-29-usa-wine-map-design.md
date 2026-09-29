@@ -170,8 +170,16 @@ Non-goals:
   - An AVA whose dominant state is outside wave 1 waits for that state's wave (likely Snake River
     Valley and Lewis-Clark Valley, for Idaho; Lake Erie is decided by the computation).
   - Reason: the shard is the second key segment and keys lock, so a place cannot live in two shards.
-- **D7 Primary parent = the smallest AVA that contains the place geometrically AND is keyed under
-  the same state.**
+- **D7 Primary parent = the smallest AVA that contains the place AND is keyed under the same
+  state.**
+  - "Contains" (owner decision 2026-09-29, **"Legal record + >=90% inside"**): the place measures
+    ≥ 99.5% inside the container, **or** UC Davis's `within` names the container and ≥ 90% of the
+    place measures inside it. The second arm lets the legal record overrule a digitizing sliver. It
+    nested all 24 "almost within" pairs of the US-0 summary, plus Happy Canyon of Santa Barbara in
+    Central Coast: for example Sta. Rita Hills under Santa Ynez Valley, Creston District under Paso
+    Robles, McMinnville under Willamette Valley, Suisun Valley under North Coast, and San Francisco
+    Bay under Central Coast. The tree report records `parent_basis` (`measured` or `legal_record`)
+    and `parent_inside` for every AVA whose parent is an AVA.
   - If there is none: the umbrella SUBREGION or navigation node the data file names. Otherwise: the
     state.
   - Every other containing AVA becomes an `ALTERNATE_PARENT` edge, including one in another state's
@@ -182,8 +190,9 @@ Non-goals:
   - Reason: Russian River Valley is within North Coast, Northern Sonoma and Sonoma Coast (UC Davis
     `within`), and the tree is single-parent. A wholly-Oregon AVA must not appear only under
     Washington (§22, F7/C2).
-  - UC Davis `within`/`contains` are **not trusted**: the Russian River file lists Alexander Valley
-    under `contains`. Containment is recomputed in PostGIS, and the text is only cross-checked.
+  - UC Davis `within`/`contains` never decide on their own: the Russian River file lists Alexander
+    Valley under `contains`. Containment is recomputed in PostGIS; `within` counts only together
+    with ≥ 90% measured inside, and `contains` is only cross-checked.
 - **D8 Overlap is legal; nothing is ever trimmed.**
   - `trim-sibling-overlaps.mjs` never runs on `united-states.*`.
   - Burgundy's ">50% overlap ⇒ `DUAL_LABEL`" rule is not applied.
@@ -297,6 +306,12 @@ Non-goals:
       boundary everything under Central Valley would get a null `group_name`.
     - Picking it in the tree would not move the camera.
   - Its article says in its first sentence that it is a grouping on this map, not an AVA.
+  - Members (owner decision 2026-09-29, **"Move those two under California"**): the AVAs in no
+    umbrella AVA whose every county is a Central Valley county, minus Tehachapi Mountains and
+    Squaw Valley-Miramonte, which sit directly under California (`exclude` in
+    `usa-tree-config.json`). With D7's legal-record arm, Suisun Valley nests under North Coast. The
+    node holds 11 members: Capay Valley, Clarksburg, Diablo Grande, Dunnigan Hills, Lodi, Madera,
+    Paulsell Valley, River Junction, Salado Creek, Tracy Hills, Winters Highlands.
 - **D26 The "United States" chip frames all four states.**
   - `countryCameraBox` gains an option to keep every shard. The explorer uses it for countries in a
     `CHIP_FIT_ALL_SHARDS` set, which holds `united-states` only. The chip therefore frames the lower
@@ -446,7 +461,8 @@ child's tier must be ≥ its parent's) allows these tiers.
 - Its member list is curated in the data file by county.
 - Its outline is derived from those members (D25).
 - Other AVAs outside every umbrella (e.g. Antelope Valley of the California High Desert, Trinity
-  Lakes, Seiad Valley) sit directly under California.
+  Lakes, Seiad Valley, and by the owner's decision Tehachapi Mountains and Squaw Valley-Miramonte)
+  sit directly under California.
 
 ---
 
@@ -549,7 +565,7 @@ the same state as its map place, before any taster sees both. It also has to pre
 shortlist change (§10.3): the state shortlists must be compared against clean region rows, with the
 two pseudo-regions gone.
 
-### 6.2 Operations (one migration, `…4747_usa_reference_cleanup.sql`)
+### 6.2 Operations (one migration, `20260929214747_usa_reference_cleanup.sql`, rendered from `data/usa-reference/us1-spec.json`)
 
 The rename/merge table is generated in-session from the §5.4 diff and the US-0 dominance table. It
 is pasted into the migration as a literal `jsonb` spec, the way
@@ -587,7 +603,7 @@ The table as read on 2026-09-29:
 4. **Legal-name corrections** (renames). The exact strings come from the UC Davis `name` field:
    - Oak Knoll District AVA → Oak Knoll District of Napa Valley AVA;
    - Moon Mountain District AVA → Moon Mountain District Sonoma County AVA;
-   - Mt. Pisgah Polk County Oregon AVA → Mt. Pisgah, Polk County, Oregon AVA;
+   - Mt. Pisgah Polk County Oregon AVA → Mount Pisgah, Polk County, Oregon AVA (UC Davis's name field and 27 CFR 9.284's heading; approved in the copy list);
    - Red Hill Douglas County Oregon AVA → Red Hill Douglas County, Oregon AVA;
    - The Hamptons (Long Island) AVA → The Hamptons, Long Island AVA.
 5. **Cross-state AVAs go to one row under the map state (D14)**, per the US-0 dominance table:
@@ -596,11 +612,13 @@ The table as read on 2026-09-29:
      lies wholly in Oregon.
    - **Walla Walla Valley:** the kept row (after step 3) is re-parented from the pseudo-region to
      the dominant state.
-   - **Lake Erie:** if New York is dominant, the Ohio row is **moved by id** to New York. Otherwise
-     it is left alone for Ohio's wave. No new Lake Erie row is ever created.
+   - **Lake Erie:** US-0 found Ohio dominant (OH 75.3%, NY 17.5%, PA 7.2%), so the Ohio row is left
+     alone for Ohio's wave. No new Lake Erie row is ever created.
    - **Snake River Valley and Lewis-Clark Valley** keep their rows until Idaho's wave decides them,
      since their dominant state is not in wave 1.
 6. **Columbia Gorge is an owner decision before US-1.**
+   - **Answered 2026-09-29: "Oregon"** (option (a), a `state_override`). All three rows merge into
+     Oregon's `c367f0ce-…`, and the Phelps Creek wine and record keep reading Oregon.
    - It has three rows: the pseudo-region's, Oregon's and Washington's. Its only references are one
      catalog wine and one CLOSED answer key, both Phelps Creek Vineyards (Hood River, **Oregon**).
    - If US-0 finds it Oregon-dominant, all three rows merge into Oregon's, and nothing on record
@@ -619,6 +637,8 @@ The table as read on 2026-09-29:
      Milton-Freewater producers go to Oregon, Walla Walla city producers to Washington); a producer
      whose state is unsure gets `region_id = null`. The list is committed in the migration's spec
      block.
+   - The research is committed as `data/usa-reference/us1-producer-states.json`, with one cited source
+     (winery address) per producer, and reaches the migration through `us1-spec.json`.
    - Merge `region_grapes` (3 rows) into the dominant state's set without duplicates.
    - Assert that every other region FK (the §3 list) and `label_lookups.region_id` is zero.
    - Delete the empty region row.
@@ -714,8 +734,11 @@ The table as read on 2026-09-29:
 - **Pre-image and reverse migration** (§16): `data/usa-reference/preimage-<version>.json` holds
   every touched row's id, name and region, and every referencing row's id with its before-state FK
   columns. It holds ids and FK columns only, no content. The reverse migration
-  `…4747_usa_reference_cleanup_revert.sql` is written and `--dry`-rehearsed before the forward
-  migration applies.
+  `scripts/usa-reference/20260929224747_usa_reference_cleanup_revert.sql` lives outside
+  `supabase/migrations/`, because a replay would otherwise undo US-1 right after applying it. It
+  deletes US-1's history row when it runs. `scripts/usa-reference/rehearse-us1.mjs` rehearses it
+  together with the forward migration in one rolled-back transaction, before the forward migration
+  applies.
 
 ---
 
@@ -836,8 +859,8 @@ Modelled on `stage-germany-weinbau.mjs`.
   - US-0 reports the measured shares for every AVA before the 99.5% threshold is fixed. If a real
     AVA falls below it, the threshold or the buffer is revisited then, with the numbers in the tree
     report.
-- Every AVA is ≥ 99.5% inside its primary parent AVA. Nested AVAs are wholly contained in law; the
-  0.5% absorbs digitizing slivers.
+- Every AVA is ≥ 99.5% inside its primary parent AVA, or ≥ 90% when its `parent_basis` is
+  `legal_record` (D7). Nested AVAs are wholly contained in law; the margin absorbs digitizing slivers.
 
 **States and the country.**
 
@@ -860,7 +883,8 @@ the inputs to the pure `usa-tree.mjs`:
 
 - **Map state** = the legal state holding the largest land share (D6), unless `state_override`
   says otherwise.
-- **`within(a, b)`** = area(a ∩ b) ≥ 99.5% of area(a).
+- **`within(a, b)`** = area(a ∩ b) ≥ 99.5% of area(a), or ≥ 90% when UC Davis's `within` for a
+  names b (D7).
 - **Primary parent** = the smallest-area AVA with `within` **that has the same map state**.
   Otherwise, the umbrella SUBREGION or navigation node the data file names. Otherwise, the state
   (D7).
@@ -871,8 +895,12 @@ the inputs to the pure `usa-tree.mjs`:
 - **`OVERLAPS(a, b)`**, stored once with `source` = the smaller place, when their intersection is
   > 1% of the smaller one's area and neither is `within` the other. Below 1% is digitizing noise and
   gets no edge.
+- An OVERLAPS pair where one side is the other's primary ancestor stores no edge. It is listed
+  under `review.ancestor_overlaps` (US-0 after the owner's decisions: Red Hill Douglas County,
+  Oregon in Southern Oregon, 67.75%).
 - The UC Davis `within`/`contains` text is compared to the computed result. Every disagreement is
-  listed in the report for review, and is never used to decide.
+  listed in the report for review. `within` decides only through D7's legal-record arm (with ≥ 90%
+  measured inside); `contains` never decides.
 
 **Output.** The report is committed per state as `data/wine-map/usa-<state>-tree.json`. It holds
 keys, parents, edges, land shares and dominance shares, and it is the review evidence for the
@@ -1165,8 +1193,7 @@ The DRAFT-boundary window is therefore minutes, not days, and never holds an own
 
 **US-1: scoring-reference cleanup.**
 
-- **Gate:** the owner has answered the Columbia Gorge question (§6.2 step 6) and accepted the
-  visible renames (§18).
+- **Gate (met 2026-09-29):** Columbia Gorge = Oregon; the renames were approved as listed.
 - **Work:** the §6 migration, its reverse, the pre-image, the fixture hand-edit, the script guard,
   the producer state list and the wine-identity unit cases.
 - **Acceptance:**
@@ -1439,7 +1466,8 @@ flight on GitHub or live today (§3). Rules:
 - **One inline-geometry migration per state** (Portugal's pattern): megabytes of SQL, and no
   dry-run checks against live before commit.
 - **Counties as a navigation layer**: it cuts across AVAs and needs edges everywhere (D5).
-- **Trusting UC Davis `within`/`contains`**: shown wrong for Russian River Valley.
+- **Trusting UC Davis `within`/`contains` on their own**: shown wrong for Russian River Valley.
+  (`within` now decides only together with ≥ 90% measured inside, D7.)
 - **Trimming overlaps, or `DUAL_LABEL`, for US AVAs**: overlap is lawful there (D8).
 - **Widening the single coverage box to −125**: it stops catching a stray European shard (D17).
 - **"Containment wins over dominant state"** for keys (feasibility review item 7's first fix): it
@@ -1562,3 +1590,16 @@ was verified before it was accepted.
 - **Live read-only queries** on 2026-09-29 (scratchpad `usa-spec-ro*.mjs`, `usa-feas-ro*.mjs`,
   `usa-rev-ro1.mjs`).
 - **GitHub API metadata** for UCDavisLibrary/ava and nvkelso/natural-earth-vector.
+
+## 24. Owner decisions after US-0 (2026-09-29)
+
+| Question | Answer (verbatim) | Where it lands |
+|---|---|---|
+| Nesting of "almost within" pairs | "Legal record + >=90% inside" | D7, §8.2, §8.3; `usa-tree.mjs` `withinLegalRecord` |
+| Tehachapi Mountains and Squaw Valley-Miramonte in Central Valley | "Move those two under California" | D25, §4; `usa-tree-config.json` `exclude` |
+| US-1 renames, merges and additions | "Approve as listed" | §6.2; `data/usa-reference/us1-copy-list.md` is binding |
+| Columbia Gorge's state | "Oregon" | §6.2 step 6; `state_overrides` |
+| Pushes | "Yes, ship phases as they pass" | the main session pushes and applies |
+
+A consequence the plan settled, not the owner: an OVERLAPS edge between a place and its own primary
+ancestor is not stored (§8.3).
