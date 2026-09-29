@@ -15,10 +15,20 @@
 // Hills 2%); a share in a state TTB does not list is that artifact. It gets no
 // edge and no say in the map state, and is listed under
 // review.state_list_disagreements (`withheld_states`).
+//
+// Nesting (owner, 2026-09-29, "Legal record + >=90% inside"): a is within b
+// when a measures >= `within` (99.5%) inside b, or when UC Davis's `within`
+// names b and a measures >= `withinLegalRecord` (90%) inside it. The second
+// arm is the only place UC Davis's text decides anything; `contains` is only
+// compared.
 import { foldAvaName, placeSlug } from "./usa-ava-lib.mjs";
 
 export const DEFAULT_THRESHOLDS = Object.freeze({
   within: 0.995,
+  // Owner decision 2026-09-29 ("Legal record + >=90% inside"): an AVA also
+  // nests in a container UC Davis's `within` names when at least this much
+  // of it measures inside; a digitizing sliver no longer overrules the law.
+  withinLegalRecord: 0.9,
   overlapMin: 0.01,
   stateEdgeMin: 0.005,
   outlineKm2: 5000,
@@ -43,7 +53,7 @@ const round4 = (n) => Math.round(n * 1e4) / 1e4;
 function emptyPlace() {
   return {
     key: null, slug: null, name: null, kind: null, display_tier: null, min_zoom: null,
-    label_min_zoom: null, sort_order: null, parent_key: null, breadcrumb: null,
+    label_min_zoom: null, sort_order: null, parent_key: null, parent_basis: null, parent_inside: null, breadcrumb: null,
     is_appellation: false, appellation_system: null, appellation_level: null,
     display: null, navigation_node: false, map_state: null, map_state_source: null,
     ucd_ava_id: null, cfr_section: null, area_km2: null, land_share: null,
@@ -119,6 +129,17 @@ export function buildUsaTree({ avas, pairs, config }) {
   };
   const inWave = (id) => isWaveState(mapState.get(id));
 
+  const resolveToken = (token) => (byId.has(token) ? token : idByFold.get(foldAvaName(token)) ?? null);
+  const ucdSaysWithin = (inner, outer) => byId.get(inner).ucd_within.some((token) => resolveToken(token) === outer);
+  // "measured" (>= within), "legal_record" (>= withinLegalRecord and UC Davis
+  // names the container), or null (not within).
+  const nestBasis = (inner, outer, ratio) => {
+    if (ratio >= t.within) return "measured";
+    if (ratio >= t.withinLegalRecord && ucdSaysWithin(inner, outer)) return "legal_record";
+    return null;
+  };
+  const containBasis = new Map(); // `${inner}>${outer}` -> { basis, ratio }
+
   // 2. Containment and partial overlap (§8.3).
   const containers = new Map(avas.map((a) => [a.id, []]));
   const overlaps = [];
@@ -127,17 +148,21 @@ export function buildUsaTree({ avas, pairs, config }) {
     const a = byId.get(p.a);
     const b = byId.get(p.b);
     if (!a || !b) throw new Error(`pair names an unknown AVA: ${p.a} / ${p.b}`);
-    const aInB = p.a_in_b >= t.within;
-    const bInA = p.b_in_a >= t.within;
-    for (const [inner, outer, ratio] of [[a.id, b.id, p.a_in_b], [b.id, a.id, p.b_in_a]]) {
-      if (ratio >= t.nearWithinReview && ratio < t.within) nearWithin.push({ inner, outer, ratio });
+    const aBasis = nestBasis(a.id, b.id, p.a_in_b);
+    const bBasis = nestBasis(b.id, a.id, p.b_in_a);
+    for (const [inner, outer, ratio, basis] of [[a.id, b.id, p.a_in_b, aBasis], [b.id, a.id, p.b_in_a, bBasis]]) {
+      if (basis === null && ratio >= t.nearWithinReview) nearWithin.push({ inner, outer, ratio });
     }
-    if (aInB && bInA) {
+    if (aBasis && bBasis) {
       throw new Error(`${a.name} and ${b.name} contain each other (${p.a_in_b}, ${p.b_in_a}); nearly identical outlines need an owner decision`);
     }
-    if (aInB) containers.get(a.id).push(b.id);
-    else if (bInA) containers.get(b.id).push(a.id);
-    else {
+    if (aBasis) {
+      containers.get(a.id).push(b.id);
+      containBasis.set(`${a.id}>${b.id}`, { basis: aBasis, ratio: p.a_in_b });
+    } else if (bBasis) {
+      containers.get(b.id).push(a.id);
+      containBasis.set(`${b.id}>${a.id}`, { basis: bBasis, ratio: p.b_in_a });
+    } else {
       const aSmaller = a.area_km2 < b.area_km2 || (a.area_km2 === b.area_km2 && a.name < b.name);
       const ratio = aSmaller ? p.a_in_b : p.b_in_a;
       if (ratio > t.overlapMin) overlaps.push({ source: aSmaller ? a.id : b.id, target: aSmaller ? b.id : a.id, ratio });
@@ -240,6 +265,8 @@ export function buildUsaTree({ avas, pairs, config }) {
       ...emptyPlace(), key: r.key, slug: r.slug, name: a.name,
       kind: umbrella ? "SUBREGION" : "APPELLATION",
       display_tier: tier, min_zoom: minZoom, label_min_zoom: labelZoom, parent_key: r.parentKey,
+      parent_basis: primary.get(a.id).type === "ava" ? containBasis.get(`${a.id}>${primary.get(a.id).id}`).basis : null,
+      parent_inside: primary.get(a.id).type === "ava" ? containBasis.get(`${a.id}>${primary.get(a.id).id}`).ratio : null,
       is_appellation: true, appellation_system: "AVA",
       appellation_level: primary.get(a.id).type === "ava" ? "subregional" : "regional",
       display: a.area_km2 >= t.outlineKm2 ? "outline" : null,
@@ -300,7 +327,9 @@ export function buildUsaTree({ avas, pairs, config }) {
     const onChain = new Set(resolved.get(a.id).chain);
     for (const c of containers.get(a.id)) {
       if (onChain.has(c)) continue;
-      if (inWave(c)) edges.push({ type: "ALTERNATE_PARENT", source_key: keyOf(a.id), target_key: keyOf(c), basis: "within" });
+      const cb = containBasis.get(`${a.id}>${c}`);
+      const extra = cb.basis === "legal_record" ? { basis: "within_legal_record", ratio: round4(cb.ratio) } : { basis: "within" };
+      if (inWave(c)) edges.push({ type: "ALTERNATE_PARENT", source_key: keyOf(a.id), target_key: keyOf(c), ...extra });
       else deferredEdges.push({ type: "ALTERNATE_PARENT", source: a.name, target: nameOf(c), reason: `${nameOf(c)} is keyed under ${mapState.get(c)}, outside wave 1` });
     }
     for (const [code, share] of Object.entries(a.state_shares)) {
@@ -323,7 +352,6 @@ export function buildUsaTree({ avas, pairs, config }) {
   const deferred = avas.filter((a) => !inWave(a.id))
     .map((a) => ({ ucd_ava_id: a.id, name: a.name, map_state: mapState.get(a.id), legal_states: [...legalOf.get(a.id)].sort(), state_shares: a.state_shares, reason: `dominant state ${mapState.get(a.id)} is outside wave 1` }))
     .sort((x, y) => x.name.localeCompare(y.name));
-  const resolveToken = (token) => (byId.has(token) ? token : idByFold.get(foldAvaName(token)) ?? null);
   const withinDisagreements = [];
   const stateListDisagreements = [];
   for (const a of avas) {
@@ -379,6 +407,18 @@ export function buildUsaTree({ avas, pairs, config }) {
         ratio: round4(ratio),
         ucd_says_within: byId.get(inner).ucd_within.some((token) => resolveToken(token) === outer),
       }))
+      .sort((x, y) => x.key.localeCompare(y.key) || x.container.localeCompare(y.container)),
+    legal_record_nests: [...containBasis.entries()]
+      .filter(([k, v]) => v.basis === "legal_record" && inWave(k.split(">")[0]))
+      .map(([k, v]) => {
+        const [inner, outer] = k.split(">");
+        const p = primary.get(inner);
+        return {
+          key: keyOf(inner), name: nameOf(inner), container: nameOf(outer),
+          container_key: inWave(outer) ? keyOf(outer) : null, ratio: round4(v.ratio),
+          primary: p.type === "ava" && p.id === outer,
+        };
+      })
       .sort((x, y) => x.key.localeCompare(y.key) || x.container.localeCompare(y.container)),
   };
   return { places: ordered, edges, deferred, deferred_edges: deferredEdges, review, thresholds: t };

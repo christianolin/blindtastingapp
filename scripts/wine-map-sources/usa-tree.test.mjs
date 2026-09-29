@@ -181,7 +181,7 @@ test("every place's tier is at or below its parent's, and every label reveals by
   assert.equal(new Set(t.places.map((p) => p.key)).size, t.places.length);
 });
 
-test("UC Davis within/contains are compared, never used", () => {
+test("UC Davis within decides only with >= 90% inside; contains is compared, never used", () => {
   const t = tree();
   const rrv = t.review.within_disagreements.find((r) => r.name === "Russian River Valley");
   assert.deepEqual(rrv.ucd_contains_not_computed, ["Knights Valley"]);
@@ -201,19 +201,34 @@ test("near-duplicate outlines, slug collisions, bad names and orphan nodes stop 
   assert.throws(() => buildUsaTree({ avas: AVAS, pairs: PAIRS, config: noMembers }), /has no member/);
 });
 
-test("an almost-within pair is listed for review and still placed as not within", () => {
-  const avas = AVAS.map((a) => (a.id === "seiad" ? { ...a, ucd_within: ["North Coast"] } : a));
-  const t = buildUsaTree({ avas, pairs: [...PAIRS, pair("north_coast", "seiad", 0.0007, 0.97)], config: CONFIG });
-  assert.equal(place(t, "Seiad Valley").parent_key, "united-states.california");
-  assert.deepEqual(t.review.near_within, [{
-    key: "united-states.california.seiad-valley",
-    name: "Seiad Valley",
-    container: "North Coast",
-    container_key: "united-states.california.north-coast",
-    ratio: 0.97,
-    ucd_says_within: true,
+test("owner rule 2026-09-29: UC Davis 'within' plus at least 90% inside nests; either alone does not", () => {
+  const avas = AVAS.map((a) => (a.id === "seiad" ? { ...a, ucd_within: ["North Coast"] } : a)).concat([
+    ava("potter", "Potter Valley", 110, CA),
+    ava("far", "Far Hills", 50, CA, { ucd_within: ["North Coast"] }),
+  ]);
+  const pairs = [...PAIRS,
+    pair("north_coast", "seiad", 0.0007, 0.97),
+    pair("north_coast", "potter", 0.001, 0.93),
+    pair("north_coast", "far", 0.0004, 0.85)];
+  const t = buildUsaTree({ avas, pairs, config: CONFIG });
+  const seiad = place(t, "Seiad Valley");
+  assert.equal(seiad.key, "united-states.california.north-coast.seiad-valley");
+  assert.equal(seiad.parent_key, "united-states.california.north-coast");
+  assert.equal(seiad.appellation_level, "subregional");
+  assert.deepEqual([seiad.display_tier, seiad.min_zoom, seiad.label_min_zoom], [3, 6, 7]);
+  assert.deepEqual([seiad.parent_basis, seiad.parent_inside], ["legal_record", 0.97]);
+  assert.ok(!t.edges.some((e) => e.source_key === seiad.key && e.type === "OVERLAPS"));
+  assert.equal(place(t, "Potter Valley").parent_key, "united-states.california", "93% but UC Davis silent");
+  assert.equal(place(t, "Far Hills").parent_key, "united-states.california", "UC Davis says within but only 85%");
+  assert.deepEqual(t.review.legal_record_nests, [{
+    key: "united-states.california.north-coast.seiad-valley", name: "Seiad Valley",
+    container: "North Coast", container_key: "united-states.california.north-coast", ratio: 0.97, primary: true,
   }]);
-  assert.deepEqual(tree().review.near_within, []);
+  assert.deepEqual(t.review.near_within.map((r) => [r.name, r.container, r.ucd_says_within]), [["Potter Valley", "North Coast", false]]);
+  const oak = place(t, "Oakville");
+  assert.deepEqual([oak.parent_basis, oak.parent_inside], ["measured", 1]);
+  assert.deepEqual([place(t, "Napa Valley").parent_basis, place(t, "Napa Valley").parent_inside], ["measured", 1]);
+  assert.deepEqual([place(t, "North Coast").parent_basis, place(t, "North Coast").parent_inside], [null, null]);
 });
 
 test("a measured share in a state TTB does not list is a state-line artifact: no edge, no say in the map state", () => {
@@ -252,4 +267,24 @@ test("legal states: an override outside them, no land in them, or a stale multi-
   assert.throws(() => buildUsaTree({ avas: stale, pairs: PAIRS, config: CONFIG }), /re-measure/);
   const none = AVAS.map((a) => (a.id === "seiad" ? { ...a, legal_states: [] } : a));
   assert.throws(() => buildUsaTree({ avas: none, pairs: PAIRS, config: CONFIG }), /no legal state list/);
+});
+
+test("a legal-record container in another state is an ALTERNATE_PARENT, never the primary parent", () => {
+  const avas = [...AVAS, ava("bench", "Milton Bench", 20, { OR: 1 }, { ucd_within: ["Walla Walla Valley"] })];
+  const t = buildUsaTree({ avas, pairs: [...PAIRS, pair("bench", "walla_walla", 0.93, 0.01)], config: CONFIG });
+  const p = place(t, "Milton Bench");
+  assert.equal(p.parent_key, "united-states.oregon");
+  assert.deepEqual([p.parent_basis, p.parent_inside], [null, null]);
+  assert.deepEqual(t.edges.filter((e) => e.source_key === p.key), [{
+    type: "ALTERNATE_PARENT", source_key: p.key,
+    target_key: "united-states.washington.columbia-valley.walla-walla-valley",
+    basis: "within_legal_record", ratio: 0.93,
+  }]);
+  assert.deepEqual(t.review.legal_record_nests.filter((r) => r.name === "Milton Bench").map((r) => r.primary), [false]);
+});
+
+test("two AVAs that UC Davis puts within each other, both at >= 90%, stop the build", () => {
+  const avas = AVAS.map((a) => (a.id === "napa" ? { ...a, ucd_within: ["Sonoma Valley"] }
+    : a.id === "sonoma_valley" ? { ...a, ucd_within: ["Napa Valley"] } : a));
+  assert.throws(() => buildUsaTree({ avas, pairs: [...PAIRS, pair("napa", "sonoma_valley", 0.95, 0.92)], config: CONFIG }), /contain each other/);
 });
