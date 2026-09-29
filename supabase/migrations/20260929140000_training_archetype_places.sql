@@ -83,6 +83,8 @@ declare
   v_region int;
   v_point int;
   v_ancestor int;
+  v_claims text := current_setting('request.jwt.claims', true);
+  v_uid uuid := auth.uid();
 begin
   if not exists (
     select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
@@ -107,7 +109,10 @@ begin
 
   select count(*), count(wine_place_id) into v_total, v_placed from public.wine_archetypes;
 
-  -- As a signed-in reader (the room's caller), not as the owner.
+  -- As a signed-in reader (the room's caller), not as the owner. The fake
+  -- claims are put back right after: `reset role` does not reset them, and
+  -- left behind they would make auth.uid() the zero UUID for every later
+  -- statement in the applier's transaction (an audit trigger would stamp it).
   perform set_config('request.jwt.claims',
     '{"sub":"00000000-0000-0000-0000-000000000000","role":"authenticated"}', true);
   set local role authenticated;
@@ -116,6 +121,10 @@ begin
     into v_rows, v_key, v_region, v_point, v_ancestor
     from public.training_archetype_places();
   reset role;
+  perform set_config('request.jwt.claims', coalesce(v_claims, ''), true);
+  if auth.uid() is distinct from v_uid then
+    raise exception 'training_archetype_places: auth.uid() is % after the check, was %', auth.uid(), v_uid;
+  end if;
 
   if v_rows <> v_total then
     raise exception 'training_archetype_places: % rows as authenticated, % archetypes', v_rows, v_total;

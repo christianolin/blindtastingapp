@@ -1175,6 +1175,20 @@ async function regionPlacementsLive() {
   ).rows[0].live;
 }
 
+// Every file in TRAINING_ROOM_APPLY runs as the owner, as the applier runs it:
+// none may leave a signed-in caller behind (R1a's own assert once left the zero
+// UUID in request.jwt.claims, and audit triggers stamped it as the editor).
+test("the migrations under test leave the owner's session with no auth.uid()", async () => {
+  await withRollback(async () => {
+    const after = (
+      await client.query(
+        "select auth.uid() as uid, current_user as role, nullif(current_setting('request.jwt.claims', true), '') as claims",
+      )
+    ).rows[0];
+    assert.deepEqual(after, { uid: null, role: (await client.query("select session_user as r")).rows[0].r, claims: null });
+  });
+});
+
 test("training_archetype_places: one row per archetype as a signed-in reader, authenticated only", async (t) => {
   await withRollback(async () => {
     await asOwner();
@@ -1221,11 +1235,14 @@ test("training_archetype_places: one row per archetype as a signed-in reader, au
       await client.query(
         `select a.name, t.place_key, t.region_key, t.region_name, t.point_key
            from training_archetype_places() t join wine_archetypes a on a.id = t.archetype_id
-          where a.name in ('A typical Prosecco', 'A typical Montepulciano d''Abruzzo', 'A typical Napa Cabernet Sauvignon')
+          where a.name in ('A typical Prosecco', 'A typical Montepulciano d''Abruzzo', 'A typical Mendoza Malbec')
           order by a.name`,
       )
     ).rows;
+    // The unplaced pick is Mendoza, not Napa: the USA wave (spec §13) re-homes
+    // Napa, and this test must not break when it does.
     assert.deepEqual(picks, [
+      { name: "A typical Mendoza Malbec", place_key: null, region_key: null, region_name: null, point_key: null },
       {
         name: "A typical Montepulciano d'Abruzzo",
         place_key: "italy.abruzzo.montepulciano-d-abruzzo",
@@ -1233,7 +1250,6 @@ test("training_archetype_places: one row per archetype as a signed-in reader, au
         region_name: "Abruzzo",
         point_key: "italy.abruzzo",
       },
-      { name: "A typical Napa Cabernet Sauvignon", place_key: null, region_key: null, region_name: null, point_key: null },
       {
         name: "A typical Prosecco",
         place_key: "italy.veneto.prosecco",
