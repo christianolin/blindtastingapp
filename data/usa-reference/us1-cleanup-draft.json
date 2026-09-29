@@ -1,0 +1,1202 @@
+{
+  "_note": "DRAFT for the owner (spec §6.2). Read-only; nothing has changed. US-1 builds its migration from this after the owner's OK.",
+  "read_at": "2026-09-29T17:36:30.338Z",
+  "counts": {
+    "regions": 28,
+    "appellations": 240,
+    "ava_suffixed": 210
+  },
+  "steps": {
+    "1_state_suffix": [
+      {
+        "id": "ef4ebc71-aadf-4792-abae-300698f7b09f",
+        "region": "California",
+        "old": "California AVA",
+        "new": "California"
+      },
+      {
+        "id": "8e8a932a-e736-4ea2-a38c-2953e991a484",
+        "region": "Oregon",
+        "old": "Oregon AVA",
+        "new": "Oregon"
+      },
+      {
+        "id": "2ed0739c-c62d-41d4-b859-6e63832f0e1c",
+        "region": "Washington",
+        "old": "Washington AVA",
+        "new": "Washington"
+      },
+      {
+        "id": "a78e9474-d8ea-4a3a-9b0e-faeca900ae9d",
+        "region": "Texas",
+        "old": "Texas AVA",
+        "new": "Texas"
+      },
+      {
+        "id": "6c7d93e8-7433-4c5c-bbd6-58973b7b2f70",
+        "region": "Virginia",
+        "old": "Virginia AVA",
+        "new": "Virginia"
+      },
+      {
+        "id": "ed3101f9-3655-40ee-846c-740bda073d06",
+        "region": "Pennsylvania",
+        "old": "Pennsylvania AVA",
+        "new": "Pennsylvania"
+      }
+    ],
+    "2_county_suffix": [
+      {
+        "id": "81248917-fff9-460f-83dc-c7ec2b21570d",
+        "region": "California",
+        "old": "Amador County AVA",
+        "new": "Amador County"
+      },
+      {
+        "id": "5ebae99c-bfde-4304-9cc5-8fc809673347",
+        "region": "California",
+        "old": "Calaveras County AVA",
+        "new": "Calaveras County"
+      },
+      {
+        "id": "02a91253-bc9c-42a0-a155-7e666f1cd098",
+        "region": "California",
+        "old": "Contra Costa County AVA",
+        "new": "Contra Costa County"
+      },
+      {
+        "id": "36566615-7eef-44c7-b424-3cf93d3e567b",
+        "region": "California",
+        "old": "El Dorado County AVA",
+        "new": "El Dorado County"
+      },
+      {
+        "id": "8db5a669-e0f8-4fb4-826e-2570cef7ccfb",
+        "region": "California",
+        "old": "Lake County AVA",
+        "new": "Lake County"
+      },
+      {
+        "id": "0e700550-38bc-418f-8572-e3c569bfef33",
+        "region": "California",
+        "old": "Marin County AVA",
+        "new": "Marin County"
+      },
+      {
+        "id": "73b69b39-310d-415b-835a-53412e5a4727",
+        "region": "California",
+        "old": "Mendocino County AVA",
+        "new": "Mendocino County"
+      },
+      {
+        "id": "8487b285-2f9d-4fcd-85f3-47e564e4e3b5",
+        "region": "California",
+        "old": "Monterey County AVA",
+        "new": "Monterey County"
+      },
+      {
+        "id": "8044e3e0-749e-4669-8df9-3322c26b039b",
+        "region": "California",
+        "old": "Napa County AVA",
+        "new": "Napa County"
+      },
+      {
+        "id": "ead61f5a-635d-4513-907a-b7d0ba953026",
+        "region": "California",
+        "old": "San Benito County AVA",
+        "new": "San Benito County"
+      },
+      {
+        "id": "e1441fc5-229f-466d-b476-0f7491e43d2a",
+        "region": "California",
+        "old": "San Luis Obispo County AVA",
+        "new": "San Luis Obispo County"
+      },
+      {
+        "id": "c2f9884a-232d-45ea-aab3-60a6367867af",
+        "region": "California",
+        "old": "Santa Barbara County AVA",
+        "new": "Santa Barbara County"
+      },
+      {
+        "id": "c4659dd0-28a8-4951-93f5-e44e40766726",
+        "region": "California",
+        "old": "Santa Cruz County AVA",
+        "new": "Santa Cruz County"
+      },
+      {
+        "id": "8788b352-944c-45ca-804e-767aaca79b1c",
+        "region": "California",
+        "old": "Sonoma County AVA",
+        "new": "Sonoma County"
+      },
+      {
+        "id": "67223d52-3c15-49a6-8ef5-d7895386976f",
+        "region": "California",
+        "old": "Yolo County AVA",
+        "new": "Yolo County"
+      }
+    ],
+    "3_merges": [
+      {
+        "loser": {
+          "id": "0dbd26e3-3162-481b-8f79-417e4be03847",
+          "region": "California",
+          "name": "Santa Benito County AVA"
+        },
+        "kept": {
+          "id": "ead61f5a-635d-4513-907a-b7d0ba953026",
+          "region": "California",
+          "name": "San Benito County AVA"
+        },
+        "why": "a typo of San Benito County"
+      },
+      {
+        "loser": {
+          "id": "e605bdd1-d67f-45d8-a12f-27dadcf2d1ce",
+          "region": "California",
+          "name": "SLO Coast AVA"
+        },
+        "kept": {
+          "id": "24dc65f1-2b95-42bc-934f-576e1b1c8838",
+          "region": "California",
+          "name": "San Luis Obispo Coast AVA"
+        },
+        "why": "TTB's legal name is San Luis Obispo Coast"
+      },
+      {
+        "loser": {
+          "id": "8def02e3-9054-4f39-bc32-364e4da5ca8f",
+          "region": "California",
+          "name": "Sonoma"
+        },
+        "kept": {
+          "id": "8788b352-944c-45ca-804e-767aaca79b1c",
+          "region": "California",
+          "name": "Sonoma County AVA"
+        },
+        "why": "the same county, unsuffixed"
+      },
+      {
+        "loser": {
+          "id": "c27f9b10-8b46-4e71-a590-a3184d883d0b",
+          "region": "Washington",
+          "name": "Walla Walla Valley"
+        },
+        "kept": {
+          "id": "be3fd8ac-0b9e-4055-a6b6-e937dac8ed0f",
+          "region": "Walla Walla Valley",
+          "name": "Walla Walla Valley AVA"
+        },
+        "why": "one row per AVA"
+      }
+    ],
+    "4_legal_names": [
+      {
+        "id": "d77376e0-77d9-4aca-af89-9c5eae6908b4",
+        "region": "California",
+        "old": "Oak Knoll District AVA",
+        "new": "Oak Knoll District of Napa Valley AVA"
+      },
+      {
+        "id": "14b43913-d67a-4c8e-aa54-29837852981a",
+        "region": "California",
+        "old": "Moon Mountain District AVA",
+        "new": "Moon Mountain District Sonoma County AVA"
+      },
+      {
+        "id": "512980d3-2b8b-482e-92ff-e8f627a8fe3c",
+        "region": "Oregon",
+        "old": "Mt. Pisgah Polk County Oregon AVA",
+        "new": "Mount Pisgah, Polk County, Oregon AVA"
+      },
+      {
+        "id": "29918d5a-9e77-4351-ba60-4a9eb407d7c7",
+        "region": "Oregon",
+        "old": "Red Hill Douglas County Oregon AVA",
+        "new": "Red Hill Douglas County, Oregon AVA"
+      },
+      {
+        "id": "b0e1b43f-e96b-45fd-b8d6-43ba02eb8a8f",
+        "region": "New York",
+        "old": "The Hamptons (Long Island) AVA",
+        "new": "The Hamptons, Long Island AVA"
+      }
+    ],
+    "5_cross_state": [
+      {
+        "ava": "Columbia Valley",
+        "map_state": "WA",
+        "kept": "52b4e94c-44ce-435f-a68d-5bf1c13050dd",
+        "losers": [
+          "30a8e06f-c9a7-4e5d-ae43-819f8048fe54"
+        ]
+      },
+      {
+        "ava": "The Rocks District of Milton-Freewater",
+        "map_state": "OR",
+        "kept": "c1c1d9d0-aa74-44ab-97b5-bd31a067fa0f",
+        "losers": [
+          "41694564-7601-454a-a28b-220962248568"
+        ]
+      },
+      {
+        "ava": "Walla Walla Valley",
+        "map_state": "WA",
+        "move": "be3fd8ac-0b9e-4055-a6b6-e937dac8ed0f",
+        "to_region": "Washington",
+        "to_region_id": "1e5608bb-976a-4007-b575-33e0ee391154"
+      },
+      {
+        "ava": "Lake Erie",
+        "map_state": "OH",
+        "action": "left for Ohio's wave (not moved)"
+      },
+      {
+        "ava": "Snake River Valley",
+        "map_state": "ID",
+        "action": "kept until Idaho's wave decides it"
+      },
+      {
+        "ava": "Lewis-Clark Valley",
+        "map_state": "ID",
+        "action": "kept until Idaho's wave decides it"
+      }
+    ],
+    "6_columbia_gorge": {
+      "ava": "Columbia Gorge",
+      "map_state": "OR",
+      "owner_answer": "Oregon (2026-09-29): a state_override applied to map and scoring alike (§6.2 step 6, option a)",
+      "kept": "c367f0ce-84c1-4f16-a228-aba53fda736e",
+      "losers": [
+        "46451c0f-3bb2-42c4-8d30-c5ac3ea86461",
+        "254e0e57-4b21-4172-9568-8a8bbeaa3fee"
+      ]
+    },
+    "7_pseudo_regions": {
+      "Walla Walla Valley": {
+        "region_id": "2368600a-1fbd-4a50-b521-aba384b54722",
+        "producers": [
+          {
+            "id": "4934de22-61b4-4aef-9393-3dac941d1ece",
+            "name": "1841 Cellars",
+            "state": null,
+            "status": "winery state to be researched in US-1 (§6.2 step 7)"
+          },
+          {
+            "id": "c32f3806-1fb7-4bd1-b07a-f4251f43ef73",
+            "name": "Adamant Cellars",
+            "state": null,
+            "status": "winery state to be researched in US-1 (§6.2 step 7)"
+          },
+          {
+            "id": "0f5c5602-0ab9-410a-bacb-2feb27a2e423",
+            "name": "Aluve",
+            "state": null,
+            "status": "winery state to be researched in US-1 (§6.2 step 7)"
+          },
+          {
+            "id": "8c8f8da2-385b-4b77-80b2-878707e4e708",
+            "name": "aMaurice Cellars",
+            "state": null,
+            "status": "winery state to be researched in US-1 (§6.2 step 7)"
+          },
+          {
+            "id": "6e780c88-00ce-424b-be0f-ab065c61373a",
+            "name": "Amavi Cellars",
+            "state": null,
+            "status": "winery state to be researched in US-1 (§6.2 step 7)"
+          },
+          {
+            "id": "c2b04b9a-9d84-4d30-8c12-bbdd9161baec",
+            "name": "Ash Hollow",
+            "state": null,
+            "status": "winery state to be researched in US-1 (§6.2 step 7)"
+          },
+          {
+            "id": "d3a15926-79a1-411f-b138-29274713f2b1",
+            "name": "Beresan",
+            "state": null,
+            "status": "winery state to be researched in US-1 (§6.2 step 7)"
+          },
+          {
+            "id": "a3156156-bf13-4f03-83fe-6aec52e7c938",
+            "name": "Bledsoe Family Winery",
+            "state": null,
+            "status": "winery state to be researched in US-1 (§6.2 step 7)"
+          },
+          {
+            "id": "fd9a0d45-3751-49ac-ace1-cb03ad8bf7e3",
+            "name": "Bunchgrass",
+            "state": null,
+            "status": "winery state to be researched in US-1 (§6.2 step 7)"
+          },
+          {
+            "id": "b361bdde-8bd9-45de-a992-8eceb002883e",
+            "name": "Caprio Cellars",
+            "state": null,
+            "status": "winery state to be researched in US-1 (§6.2 step 7)"
+          },
+          {
+            "id": "172d12f1-c0a2-4018-9f91-ef1034d2e261",
+            "name": "Cayuse",
+            "state": null,
+            "status": "winery state to be researched in US-1 (§6.2 step 7)"
+          },
+          {
+            "id": "721a7de0-abe2-4f74-b2af-70122a7bf64a",
+            "name": "Cougar Crest",
+            "state": null,
+            "status": "winery state to be researched in US-1 (§6.2 step 7)"
+          },
+          {
+            "id": "8a50b61f-bb7f-4809-827c-706b6b7489b2",
+            "name": "D'Anu",
+            "state": null,
+            "status": "winery state to be researched in US-1 (§6.2 step 7)"
+          },
+          {
+            "id": "ee2fcb79-6fbf-430d-893e-b735d5ce7758",
+            "name": "Dave Harvey",
+            "state": null,
+            "status": "winery state to be researched in US-1 (§6.2 step 7)"
+          },
+          {
+            "id": "6a1f4925-c4b3-4558-98be-b9782e6cc770",
+            "name": "Doubleback",
+            "state": null,
+            "status": "winery state to be researched in US-1 (§6.2 step 7)"
+          },
+          {
+            "id": "546795b2-478c-4c7a-95c3-0ec224e80f17",
+            "name": "Dumas Station",
+            "state": null,
+            "status": "winery state to be researched in US-1 (§6.2 step 7)"
+          },
+          {
+            "id": "e5a570d9-df4a-4ec4-8fdd-7d8db95d791b",
+            "name": "Echolands",
+            "state": null,
+            "status": "winery state to be researched in US-1 (§6.2 step 7)"
+          },
+          {
+            "id": "6ca7e1b3-829e-4501-aada-b755b606c879",
+            "name": "Elegante Cellars",
+            "state": null,
+            "status": "winery state to be researched in US-1 (§6.2 step 7)"
+          },
+          {
+            "id": "5671513b-998d-4d07-9b52-b0be689a9fce",
+            "name": "Elephant Seven",
+            "state": null,
+            "status": "winery state to be researched in US-1 (§6.2 step 7)"
+          },
+          {
+            "id": "3e766f7a-7417-4a8a-9002-92108edc6086",
+            "name": "Figgins",
+            "state": null,
+            "status": "winery state to be researched in US-1 (§6.2 step 7)"
+          },
+          {
+            "id": "5b672113-6150-463f-82be-241bd69698f4",
+            "name": "Five Star Cellars",
+            "state": null,
+            "status": "winery state to be researched in US-1 (§6.2 step 7)"
+          },
+          {
+            "id": "c648ad04-7379-4187-904b-8efe1cdb87c0",
+            "name": "Gifford Hirlinger",
+            "state": null,
+            "status": "winery state to be researched in US-1 (§6.2 step 7)"
+          },
+          {
+            "id": "2c7e6aef-439d-4da4-966a-1fe6bc11e349",
+            "name": "Hors Categorie",
+            "state": null,
+            "status": "winery state to be researched in US-1 (§6.2 step 7)"
+          },
+          {
+            "id": "f2f0c2ab-2a7c-4331-b84f-1976e6690eb2",
+            "name": "Horsepower",
+            "state": null,
+            "status": "winery state to be researched in US-1 (§6.2 step 7)"
+          },
+          {
+            "id": "33f7c92d-7c89-4b2e-b720-d020b180bff8",
+            "name": "Kontos Cellars",
+            "state": null,
+            "status": "winery state to be researched in US-1 (§6.2 step 7)"
+          },
+          {
+            "id": "b39fd623-8a2b-49f9-b9be-2013c433ad79",
+            "name": "La Rata",
+            "state": null,
+            "status": "winery state to be researched in US-1 (§6.2 step 7)"
+          },
+          {
+            "id": "0d1bd239-c759-4786-931e-d99223cc37d7",
+            "name": "Leonetti",
+            "state": null,
+            "status": "winery state to be researched in US-1 (§6.2 step 7)"
+          },
+          {
+            "id": "f76011bc-3c0d-469a-8c8f-e853f0453c05",
+            "name": "Lullaby",
+            "state": null,
+            "status": "winery state to be researched in US-1 (§6.2 step 7)"
+          },
+          {
+            "id": "220fd725-8a63-4cb6-a9a7-36e2a9618500",
+            "name": "MTR Productions",
+            "state": null,
+            "status": "winery state to be researched in US-1 (§6.2 step 7)"
+          },
+          {
+            "id": "fddb8a14-f4bd-45d2-b5af-5aab90164b75",
+            "name": "No Girls",
+            "state": null,
+            "status": "winery state to be researched in US-1 (§6.2 step 7)"
+          },
+          {
+            "id": "a67e2e41-b280-4190-b960-0c9ffa222c94",
+            "name": "Otis Kenyon",
+            "state": null,
+            "status": "winery state to be researched in US-1 (§6.2 step 7)"
+          },
+          {
+            "id": "00737e1f-7843-45a1-a048-ec1c8506416c",
+            "name": "Pambrun",
+            "state": null,
+            "status": "winery state to be researched in US-1 (§6.2 step 7)"
+          },
+          {
+            "id": "cf44aeab-ca09-4962-9c3d-be2a3f2f0df8",
+            "name": "Pepper Bridge",
+            "state": null,
+            "status": "winery state to be researched in US-1 (§6.2 step 7)"
+          },
+          {
+            "id": "68bf9299-17af-45fd-9ece-693e9eacfaa2",
+            "name": "Proper",
+            "state": null,
+            "status": "winery state to be researched in US-1 (§6.2 step 7)"
+          },
+          {
+            "id": "a4807111-9278-4479-8ff2-3e9d834cd77f",
+            "name": "Reynvaan",
+            "state": null,
+            "status": "winery state to be researched in US-1 (§6.2 step 7)"
+          },
+          {
+            "id": "6d395f20-98c1-46b7-b75c-e305c55e5dac",
+            "name": "Rulo",
+            "state": null,
+            "status": "winery state to be researched in US-1 (§6.2 step 7)"
+          },
+          {
+            "id": "a34741c1-6992-44ac-99fd-59bfbd23f41d",
+            "name": "Smoky Rose Cellars",
+            "state": null,
+            "status": "winery state to be researched in US-1 (§6.2 step 7)"
+          },
+          {
+            "id": "022f22c6-c870-4b36-8b55-0fcfdd5df951",
+            "name": "Solemn Cellars",
+            "state": null,
+            "status": "winery state to be researched in US-1 (§6.2 step 7)"
+          },
+          {
+            "id": "4a889d96-12f7-4d53-a2a0-5d6e7601021f",
+            "name": "Spring Valley Vineyard",
+            "state": null,
+            "status": "winery state to be researched in US-1 (§6.2 step 7)"
+          },
+          {
+            "id": "dd33c92c-5da9-4400-9cdb-948b9ae24c89",
+            "name": "Tero Estates",
+            "state": null,
+            "status": "winery state to be researched in US-1 (§6.2 step 7)"
+          },
+          {
+            "id": "356014de-0238-4a40-b5ed-eea80357b80e",
+            "name": "Tertulia Cellars",
+            "state": null,
+            "status": "winery state to be researched in US-1 (§6.2 step 7)"
+          },
+          {
+            "id": "62bd8929-08d1-46ab-8312-f6a0f986be10",
+            "name": "Tulpen Cellars",
+            "state": null,
+            "status": "winery state to be researched in US-1 (§6.2 step 7)"
+          },
+          {
+            "id": "0245633f-296f-470c-a504-f978d7384039",
+            "name": "Walla Faces",
+            "state": null,
+            "status": "winery state to be researched in US-1 (§6.2 step 7)"
+          },
+          {
+            "id": "c25609d0-24b0-4817-989d-e8d66bac42b7",
+            "name": "Whitman Cellars",
+            "state": null,
+            "status": "winery state to be researched in US-1 (§6.2 step 7)"
+          },
+          {
+            "id": "06a63571-9628-47ff-a2a5-b70c6c16fdd6",
+            "name": "Zerba Cellars",
+            "state": null,
+            "status": "winery state to be researched in US-1 (§6.2 step 7)"
+          }
+        ],
+        "region_grapes": [
+          {
+            "grape_id": "a7d2fbd0-15e8-4ebb-ab62-2613ed4bf26e",
+            "name": "Cabernet Sauvignon",
+            "role": "PRINCIPAL"
+          },
+          {
+            "grape_id": "32e7d602-05d9-4ba0-aa96-04a26c7d55d6",
+            "name": "Merlot",
+            "role": "ACCESSORY"
+          },
+          {
+            "grape_id": "bbb53fb9-1842-4a4c-8fb6-de9869115cec",
+            "name": "Syrah",
+            "role": "ACCESSORY"
+          }
+        ]
+      },
+      "Columbia Gorge": {
+        "region_id": "127ce314-1088-4962-b44f-255be4554df2",
+        "producers": [],
+        "region_grapes": []
+      }
+    },
+    "8_missing_avas": [
+      {
+        "name": "Antelope Valley of the California High Desert AVA",
+        "region": "California",
+        "cfr": "9.219"
+      },
+      {
+        "name": "Benmore Valley AVA",
+        "region": "California",
+        "cfr": "9.138"
+      },
+      {
+        "name": "Beverly, Washington AVA",
+        "region": "Washington",
+        "cfr": "9.297"
+      },
+      {
+        "name": "Big Valley District-Lake County AVA",
+        "region": "California",
+        "cfr": "9.232"
+      },
+      {
+        "name": "Candy Mountain AVA",
+        "region": "Washington",
+        "cfr": "9.272"
+      },
+      {
+        "name": "Champlain Valley of New York AVA",
+        "region": "New York",
+        "cfr": "9.258"
+      },
+      {
+        "name": "Columbia Hills AVA",
+        "region": "Washington",
+        "cfr": "9.301"
+      },
+      {
+        "name": "Comptche AVA",
+        "region": "California",
+        "cfr": "9.292"
+      },
+      {
+        "name": "Contra Costa AVA",
+        "region": "California",
+        "cfr": "9.291"
+      },
+      {
+        "name": "Cosumnes River AVA",
+        "region": "California",
+        "cfr": "9.198"
+      },
+      {
+        "name": "Covelo AVA",
+        "region": "California",
+        "cfr": "9.187"
+      },
+      {
+        "name": "Crystal Springs of Napa Valley AVA",
+        "region": "California",
+        "cfr": "9.296"
+      },
+      {
+        "name": "Diablo Grande AVA",
+        "region": "California",
+        "cfr": "9.156"
+      },
+      {
+        "name": "Dos Rios AVA",
+        "region": "California",
+        "cfr": "9.175"
+      },
+      {
+        "name": "Guenoc Valley AVA",
+        "region": "California",
+        "cfr": "9.26"
+      },
+      {
+        "name": "Hudson River Region AVA",
+        "region": "New York",
+        "cfr": "9.47"
+      },
+      {
+        "name": "Inwood Valley AVA",
+        "region": "California",
+        "cfr": "9.226"
+      },
+      {
+        "name": "Jahant AVA",
+        "region": "California",
+        "cfr": "9.199"
+      },
+      {
+        "name": "Kelsey Bench-Lake County AVA",
+        "region": "California",
+        "cfr": "9.233"
+      },
+      {
+        "name": "Lamorinda AVA",
+        "region": "California",
+        "cfr": "9.254"
+      },
+      {
+        "name": "Laurelwood District AVA",
+        "region": "Oregon",
+        "cfr": "9.269"
+      },
+      {
+        "name": "Leona Valley AVA",
+        "region": "California",
+        "cfr": "9.212"
+      },
+      {
+        "name": "Long Valley-Lake County AVA",
+        "region": "California",
+        "cfr": "9.289"
+      },
+      {
+        "name": "Lower Long Tom AVA",
+        "region": "Oregon",
+        "cfr": "9.281"
+      },
+      {
+        "name": "Malibu-Newton Canyon AVA",
+        "region": "California",
+        "cfr": "9.152"
+      },
+      {
+        "name": "Northern Sonoma AVA",
+        "region": "California",
+        "cfr": "9.70"
+      },
+      {
+        "name": "Pacheco Pass AVA",
+        "region": "California",
+        "cfr": "9.88"
+      },
+      {
+        "name": "Palos Verdes Peninsula AVA",
+        "region": "California",
+        "cfr": "9.274"
+      },
+      {
+        "name": "Paulsell Valley AVA",
+        "region": "California",
+        "cfr": "9.285"
+      },
+      {
+        "name": "Ramona Valley AVA",
+        "region": "California",
+        "cfr": "9.191"
+      },
+      {
+        "name": "Rocky Reach AVA",
+        "region": "Washington",
+        "cfr": "9.287"
+      },
+      {
+        "name": "Saddle Rock-Malibu AVA",
+        "region": "California",
+        "cfr": "9.203"
+      },
+      {
+        "name": "Salado Creek AVA",
+        "region": "California",
+        "cfr": "9.163"
+      },
+      {
+        "name": "San Juan Creek AVA",
+        "region": "California",
+        "cfr": "9.245"
+      },
+      {
+        "name": "San Luis Rey AVA",
+        "region": "California",
+        "cfr": "9.295"
+      },
+      {
+        "name": "San Pasqual Valley AVA",
+        "region": "California",
+        "cfr": "9.25"
+      },
+      {
+        "name": "San Ysidro District AVA",
+        "region": "California",
+        "cfr": "9.130"
+      },
+      {
+        "name": "Seiad Valley AVA",
+        "region": "California",
+        "cfr": "9.148"
+      },
+      {
+        "name": "Sierra Pelona Valley AVA",
+        "region": "California",
+        "cfr": "9.218"
+      },
+      {
+        "name": "Sloughhouse AVA",
+        "region": "California",
+        "cfr": "9.201"
+      },
+      {
+        "name": "Squaw Valley-Miramonte AVA",
+        "region": "California",
+        "cfr": "9.251"
+      },
+      {
+        "name": "Tehachapi Mountains AVA",
+        "region": "California",
+        "cfr": "9.273"
+      },
+      {
+        "name": "The Burn of Columbia Valley AVA",
+        "region": "Washington",
+        "cfr": "9.276"
+      },
+      {
+        "name": "Tracy Hills AVA",
+        "region": "California",
+        "cfr": "9.204"
+      },
+      {
+        "name": "Trinity Lakes AVA",
+        "region": "California",
+        "cfr": "9.184"
+      },
+      {
+        "name": "Upper Hudson AVA",
+        "region": "New York",
+        "cfr": "9.264"
+      },
+      {
+        "name": "Upper Lake Valley AVA",
+        "region": "California",
+        "cfr": "9.286"
+      },
+      {
+        "name": "West Sonoma Coast AVA",
+        "region": "California",
+        "cfr": "9.283"
+      },
+      {
+        "name": "Winters Highlands AVA",
+        "region": "California",
+        "cfr": "9.290"
+      },
+      {
+        "name": "Yucaipa Valley AVA",
+        "region": "California",
+        "cfr": "9.293"
+      }
+    ]
+  },
+  "unmatched_ava_rows": [],
+  "references": [
+    {
+      "id": "02a91253-bc9c-42a0-a155-7e666f1cd098",
+      "catalog_wines": 0,
+      "catalog_wines_unidentified": 0,
+      "wine_answers": 0,
+      "guesses": 0,
+      "wine_archetypes": 0,
+      "name": "Contra Costa County AVA",
+      "region": "California"
+    },
+    {
+      "id": "0dbd26e3-3162-481b-8f79-417e4be03847",
+      "catalog_wines": 0,
+      "catalog_wines_unidentified": 0,
+      "wine_answers": 0,
+      "guesses": 0,
+      "wine_archetypes": 0,
+      "name": "Santa Benito County AVA",
+      "region": "California"
+    },
+    {
+      "id": "0e700550-38bc-418f-8572-e3c569bfef33",
+      "catalog_wines": 0,
+      "catalog_wines_unidentified": 0,
+      "wine_answers": 0,
+      "guesses": 0,
+      "wine_archetypes": 0,
+      "name": "Marin County AVA",
+      "region": "California"
+    },
+    {
+      "id": "14b43913-d67a-4c8e-aa54-29837852981a",
+      "catalog_wines": 0,
+      "catalog_wines_unidentified": 0,
+      "wine_answers": 0,
+      "guesses": 0,
+      "wine_archetypes": 0,
+      "name": "Moon Mountain District AVA",
+      "region": "California"
+    },
+    {
+      "id": "24dc65f1-2b95-42bc-934f-576e1b1c8838",
+      "catalog_wines": 0,
+      "catalog_wines_unidentified": 0,
+      "wine_answers": 0,
+      "guesses": 0,
+      "wine_archetypes": 0,
+      "name": "San Luis Obispo Coast AVA",
+      "region": "California"
+    },
+    {
+      "id": "254e0e57-4b21-4172-9568-8a8bbeaa3fee",
+      "catalog_wines": 0,
+      "catalog_wines_unidentified": 0,
+      "wine_answers": 0,
+      "guesses": 0,
+      "wine_archetypes": 0,
+      "name": "Columbia Gorge AVA",
+      "region": "Columbia Gorge"
+    },
+    {
+      "id": "29918d5a-9e77-4351-ba60-4a9eb407d7c7",
+      "catalog_wines": 0,
+      "catalog_wines_unidentified": 0,
+      "wine_answers": 0,
+      "guesses": 0,
+      "wine_archetypes": 0,
+      "name": "Red Hill Douglas County Oregon AVA",
+      "region": "Oregon"
+    },
+    {
+      "id": "2ed0739c-c62d-41d4-b859-6e63832f0e1c",
+      "catalog_wines": 0,
+      "catalog_wines_unidentified": 0,
+      "wine_answers": 0,
+      "guesses": 0,
+      "wine_archetypes": 0,
+      "name": "Washington AVA",
+      "region": "Washington"
+    },
+    {
+      "id": "30a8e06f-c9a7-4e5d-ae43-819f8048fe54",
+      "catalog_wines": 0,
+      "catalog_wines_unidentified": 0,
+      "wine_answers": 0,
+      "guesses": 0,
+      "wine_archetypes": 0,
+      "name": "Columbia Valley AVA",
+      "region": "Oregon"
+    },
+    {
+      "id": "36566615-7eef-44c7-b424-3cf93d3e567b",
+      "catalog_wines": 0,
+      "catalog_wines_unidentified": 0,
+      "wine_answers": 0,
+      "guesses": 0,
+      "wine_archetypes": 0,
+      "name": "El Dorado County AVA",
+      "region": "California"
+    },
+    {
+      "id": "41694564-7601-454a-a28b-220962248568",
+      "catalog_wines": 0,
+      "catalog_wines_unidentified": 0,
+      "wine_answers": 0,
+      "guesses": 0,
+      "wine_archetypes": 0,
+      "name": "The Rocks District of Milton-Freewater AVA",
+      "region": "Washington"
+    },
+    {
+      "id": "46451c0f-3bb2-42c4-8d30-c5ac3ea86461",
+      "catalog_wines": 0,
+      "catalog_wines_unidentified": 0,
+      "wine_answers": 0,
+      "guesses": 0,
+      "wine_archetypes": 0,
+      "name": "Columbia Gorge AVA",
+      "region": "Washington"
+    },
+    {
+      "id": "512980d3-2b8b-482e-92ff-e8f627a8fe3c",
+      "catalog_wines": 0,
+      "catalog_wines_unidentified": 0,
+      "wine_answers": 0,
+      "guesses": 0,
+      "wine_archetypes": 0,
+      "name": "Mt. Pisgah Polk County Oregon AVA",
+      "region": "Oregon"
+    },
+    {
+      "id": "5ebae99c-bfde-4304-9cc5-8fc809673347",
+      "catalog_wines": 0,
+      "catalog_wines_unidentified": 0,
+      "wine_answers": 0,
+      "guesses": 0,
+      "wine_archetypes": 0,
+      "name": "Calaveras County AVA",
+      "region": "California"
+    },
+    {
+      "id": "67223d52-3c15-49a6-8ef5-d7895386976f",
+      "catalog_wines": 0,
+      "catalog_wines_unidentified": 0,
+      "wine_answers": 0,
+      "guesses": 0,
+      "wine_archetypes": 0,
+      "name": "Yolo County AVA",
+      "region": "California"
+    },
+    {
+      "id": "6c7d93e8-7433-4c5c-bbd6-58973b7b2f70",
+      "catalog_wines": 0,
+      "catalog_wines_unidentified": 0,
+      "wine_answers": 0,
+      "guesses": 0,
+      "wine_archetypes": 0,
+      "name": "Virginia AVA",
+      "region": "Virginia"
+    },
+    {
+      "id": "73b69b39-310d-415b-835a-53412e5a4727",
+      "catalog_wines": 0,
+      "catalog_wines_unidentified": 0,
+      "wine_answers": 0,
+      "guesses": 0,
+      "wine_archetypes": 0,
+      "name": "Mendocino County AVA",
+      "region": "California"
+    },
+    {
+      "id": "8044e3e0-749e-4669-8df9-3322c26b039b",
+      "catalog_wines": 0,
+      "catalog_wines_unidentified": 0,
+      "wine_answers": 0,
+      "guesses": 0,
+      "wine_archetypes": 0,
+      "name": "Napa County AVA",
+      "region": "California"
+    },
+    {
+      "id": "81248917-fff9-460f-83dc-c7ec2b21570d",
+      "catalog_wines": 0,
+      "catalog_wines_unidentified": 0,
+      "wine_answers": 0,
+      "guesses": 0,
+      "wine_archetypes": 0,
+      "name": "Amador County AVA",
+      "region": "California"
+    },
+    {
+      "id": "8487b285-2f9d-4fcd-85f3-47e564e4e3b5",
+      "catalog_wines": 0,
+      "catalog_wines_unidentified": 0,
+      "wine_answers": 0,
+      "guesses": 0,
+      "wine_archetypes": 0,
+      "name": "Monterey County AVA",
+      "region": "California"
+    },
+    {
+      "id": "8788b352-944c-45ca-804e-767aaca79b1c",
+      "catalog_wines": 0,
+      "catalog_wines_unidentified": 0,
+      "wine_answers": 0,
+      "guesses": 0,
+      "wine_archetypes": 0,
+      "name": "Sonoma County AVA",
+      "region": "California"
+    },
+    {
+      "id": "8db5a669-e0f8-4fb4-826e-2570cef7ccfb",
+      "catalog_wines": 0,
+      "catalog_wines_unidentified": 0,
+      "wine_answers": 0,
+      "guesses": 0,
+      "wine_archetypes": 0,
+      "name": "Lake County AVA",
+      "region": "California"
+    },
+    {
+      "id": "8def02e3-9054-4f39-bc32-364e4da5ca8f",
+      "catalog_wines": 0,
+      "catalog_wines_unidentified": 0,
+      "wine_answers": 0,
+      "guesses": 0,
+      "wine_archetypes": 0,
+      "name": "Sonoma",
+      "region": "California"
+    },
+    {
+      "id": "8e8a932a-e736-4ea2-a38c-2953e991a484",
+      "catalog_wines": 0,
+      "catalog_wines_unidentified": 0,
+      "wine_answers": 0,
+      "guesses": 0,
+      "wine_archetypes": 0,
+      "name": "Oregon AVA",
+      "region": "Oregon"
+    },
+    {
+      "id": "a78e9474-d8ea-4a3a-9b0e-faeca900ae9d",
+      "catalog_wines": 0,
+      "catalog_wines_unidentified": 0,
+      "wine_answers": 0,
+      "guesses": 0,
+      "wine_archetypes": 0,
+      "name": "Texas AVA",
+      "region": "Texas"
+    },
+    {
+      "id": "b0e1b43f-e96b-45fd-b8d6-43ba02eb8a8f",
+      "catalog_wines": 0,
+      "catalog_wines_unidentified": 0,
+      "wine_answers": 0,
+      "guesses": 0,
+      "wine_archetypes": 0,
+      "name": "The Hamptons (Long Island) AVA",
+      "region": "New York"
+    },
+    {
+      "id": "be3fd8ac-0b9e-4055-a6b6-e937dac8ed0f",
+      "catalog_wines": 0,
+      "catalog_wines_unidentified": 0,
+      "wine_answers": 0,
+      "guesses": 0,
+      "wine_archetypes": 0,
+      "name": "Walla Walla Valley AVA",
+      "region": "Walla Walla Valley"
+    },
+    {
+      "id": "c27f9b10-8b46-4e71-a590-a3184d883d0b",
+      "catalog_wines": 0,
+      "catalog_wines_unidentified": 0,
+      "wine_answers": 0,
+      "guesses": 0,
+      "wine_archetypes": 0,
+      "name": "Walla Walla Valley",
+      "region": "Washington"
+    },
+    {
+      "id": "c2f9884a-232d-45ea-aab3-60a6367867af",
+      "catalog_wines": 0,
+      "catalog_wines_unidentified": 0,
+      "wine_answers": 0,
+      "guesses": 1,
+      "wine_archetypes": 0,
+      "name": "Santa Barbara County AVA",
+      "region": "California"
+    },
+    {
+      "id": "c367f0ce-84c1-4f16-a228-aba53fda736e",
+      "catalog_wines": 1,
+      "catalog_wines_unidentified": 0,
+      "wine_answers": 1,
+      "guesses": 0,
+      "wine_archetypes": 0,
+      "name": "Columbia Gorge AVA",
+      "region": "Oregon"
+    },
+    {
+      "id": "c4659dd0-28a8-4951-93f5-e44e40766726",
+      "catalog_wines": 0,
+      "catalog_wines_unidentified": 0,
+      "wine_answers": 0,
+      "guesses": 0,
+      "wine_archetypes": 0,
+      "name": "Santa Cruz County AVA",
+      "region": "California"
+    },
+    {
+      "id": "d77376e0-77d9-4aca-af89-9c5eae6908b4",
+      "catalog_wines": 0,
+      "catalog_wines_unidentified": 0,
+      "wine_answers": 0,
+      "guesses": 0,
+      "wine_archetypes": 0,
+      "name": "Oak Knoll District AVA",
+      "region": "California"
+    },
+    {
+      "id": "e1441fc5-229f-466d-b476-0f7491e43d2a",
+      "catalog_wines": 0,
+      "catalog_wines_unidentified": 0,
+      "wine_answers": 0,
+      "guesses": 0,
+      "wine_archetypes": 0,
+      "name": "San Luis Obispo County AVA",
+      "region": "California"
+    },
+    {
+      "id": "e605bdd1-d67f-45d8-a12f-27dadcf2d1ce",
+      "catalog_wines": 0,
+      "catalog_wines_unidentified": 0,
+      "wine_answers": 0,
+      "guesses": 0,
+      "wine_archetypes": 0,
+      "name": "SLO Coast AVA",
+      "region": "California"
+    },
+    {
+      "id": "ead61f5a-635d-4513-907a-b7d0ba953026",
+      "catalog_wines": 0,
+      "catalog_wines_unidentified": 0,
+      "wine_answers": 0,
+      "guesses": 0,
+      "wine_archetypes": 0,
+      "name": "San Benito County AVA",
+      "region": "California"
+    },
+    {
+      "id": "ed3101f9-3655-40ee-846c-740bda073d06",
+      "catalog_wines": 0,
+      "catalog_wines_unidentified": 0,
+      "wine_answers": 0,
+      "guesses": 0,
+      "wine_archetypes": 0,
+      "name": "Pennsylvania AVA",
+      "region": "Pennsylvania"
+    },
+    {
+      "id": "ef4ebc71-aadf-4792-abae-300698f7b09f",
+      "catalog_wines": 1,
+      "catalog_wines_unidentified": 0,
+      "wine_answers": 0,
+      "guesses": 0,
+      "wine_archetypes": 0,
+      "name": "California AVA",
+      "region": "California"
+    }
+  ],
+  "flags": []
+}

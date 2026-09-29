@@ -1,0 +1,422 @@
+{
+  "_note": "Draft pre-image (spec §6.4): ids and FK columns only, no content. US-1 regenerates it on the apply day as preimage-<version>.json.",
+  "read_at": "2026-09-29T17:36:29.986Z",
+  "touched_appellations": [
+    {
+      "id": "02a91253-bc9c-42a0-a155-7e666f1cd098",
+      "name": "Contra Costa County AVA",
+      "region_id": "18d52236-681f-4a5a-ba98-cd0639210fb3"
+    },
+    {
+      "id": "0dbd26e3-3162-481b-8f79-417e4be03847",
+      "name": "Santa Benito County AVA",
+      "region_id": "18d52236-681f-4a5a-ba98-cd0639210fb3"
+    },
+    {
+      "id": "0e700550-38bc-418f-8572-e3c569bfef33",
+      "name": "Marin County AVA",
+      "region_id": "18d52236-681f-4a5a-ba98-cd0639210fb3"
+    },
+    {
+      "id": "14b43913-d67a-4c8e-aa54-29837852981a",
+      "name": "Moon Mountain District AVA",
+      "region_id": "18d52236-681f-4a5a-ba98-cd0639210fb3"
+    },
+    {
+      "id": "24dc65f1-2b95-42bc-934f-576e1b1c8838",
+      "name": "San Luis Obispo Coast AVA",
+      "region_id": "18d52236-681f-4a5a-ba98-cd0639210fb3"
+    },
+    {
+      "id": "254e0e57-4b21-4172-9568-8a8bbeaa3fee",
+      "name": "Columbia Gorge AVA",
+      "region_id": "127ce314-1088-4962-b44f-255be4554df2"
+    },
+    {
+      "id": "29918d5a-9e77-4351-ba60-4a9eb407d7c7",
+      "name": "Red Hill Douglas County Oregon AVA",
+      "region_id": "8a6c9c90-31af-455f-ab0f-ca02c3d1bda4"
+    },
+    {
+      "id": "2ed0739c-c62d-41d4-b859-6e63832f0e1c",
+      "name": "Washington AVA",
+      "region_id": "1e5608bb-976a-4007-b575-33e0ee391154"
+    },
+    {
+      "id": "30a8e06f-c9a7-4e5d-ae43-819f8048fe54",
+      "name": "Columbia Valley AVA",
+      "region_id": "8a6c9c90-31af-455f-ab0f-ca02c3d1bda4"
+    },
+    {
+      "id": "36566615-7eef-44c7-b424-3cf93d3e567b",
+      "name": "El Dorado County AVA",
+      "region_id": "18d52236-681f-4a5a-ba98-cd0639210fb3"
+    },
+    {
+      "id": "41694564-7601-454a-a28b-220962248568",
+      "name": "The Rocks District of Milton-Freewater AVA",
+      "region_id": "1e5608bb-976a-4007-b575-33e0ee391154"
+    },
+    {
+      "id": "46451c0f-3bb2-42c4-8d30-c5ac3ea86461",
+      "name": "Columbia Gorge AVA",
+      "region_id": "1e5608bb-976a-4007-b575-33e0ee391154"
+    },
+    {
+      "id": "512980d3-2b8b-482e-92ff-e8f627a8fe3c",
+      "name": "Mt. Pisgah Polk County Oregon AVA",
+      "region_id": "8a6c9c90-31af-455f-ab0f-ca02c3d1bda4"
+    },
+    {
+      "id": "5ebae99c-bfde-4304-9cc5-8fc809673347",
+      "name": "Calaveras County AVA",
+      "region_id": "18d52236-681f-4a5a-ba98-cd0639210fb3"
+    },
+    {
+      "id": "67223d52-3c15-49a6-8ef5-d7895386976f",
+      "name": "Yolo County AVA",
+      "region_id": "18d52236-681f-4a5a-ba98-cd0639210fb3"
+    },
+    {
+      "id": "6c7d93e8-7433-4c5c-bbd6-58973b7b2f70",
+      "name": "Virginia AVA",
+      "region_id": "8cb57454-4e3d-44b3-9c71-2a49e0facc73"
+    },
+    {
+      "id": "73b69b39-310d-415b-835a-53412e5a4727",
+      "name": "Mendocino County AVA",
+      "region_id": "18d52236-681f-4a5a-ba98-cd0639210fb3"
+    },
+    {
+      "id": "8044e3e0-749e-4669-8df9-3322c26b039b",
+      "name": "Napa County AVA",
+      "region_id": "18d52236-681f-4a5a-ba98-cd0639210fb3"
+    },
+    {
+      "id": "81248917-fff9-460f-83dc-c7ec2b21570d",
+      "name": "Amador County AVA",
+      "region_id": "18d52236-681f-4a5a-ba98-cd0639210fb3"
+    },
+    {
+      "id": "8487b285-2f9d-4fcd-85f3-47e564e4e3b5",
+      "name": "Monterey County AVA",
+      "region_id": "18d52236-681f-4a5a-ba98-cd0639210fb3"
+    },
+    {
+      "id": "8788b352-944c-45ca-804e-767aaca79b1c",
+      "name": "Sonoma County AVA",
+      "region_id": "18d52236-681f-4a5a-ba98-cd0639210fb3"
+    },
+    {
+      "id": "8db5a669-e0f8-4fb4-826e-2570cef7ccfb",
+      "name": "Lake County AVA",
+      "region_id": "18d52236-681f-4a5a-ba98-cd0639210fb3"
+    },
+    {
+      "id": "8def02e3-9054-4f39-bc32-364e4da5ca8f",
+      "name": "Sonoma",
+      "region_id": "18d52236-681f-4a5a-ba98-cd0639210fb3"
+    },
+    {
+      "id": "8e8a932a-e736-4ea2-a38c-2953e991a484",
+      "name": "Oregon AVA",
+      "region_id": "8a6c9c90-31af-455f-ab0f-ca02c3d1bda4"
+    },
+    {
+      "id": "a78e9474-d8ea-4a3a-9b0e-faeca900ae9d",
+      "name": "Texas AVA",
+      "region_id": "df65efd6-c643-4be7-bfab-b13fed1f6ca5"
+    },
+    {
+      "id": "b0e1b43f-e96b-45fd-b8d6-43ba02eb8a8f",
+      "name": "The Hamptons (Long Island) AVA",
+      "region_id": "0a35f1d4-2baa-4b32-9815-231ce6bf79dd"
+    },
+    {
+      "id": "be3fd8ac-0b9e-4055-a6b6-e937dac8ed0f",
+      "name": "Walla Walla Valley AVA",
+      "region_id": "2368600a-1fbd-4a50-b521-aba384b54722"
+    },
+    {
+      "id": "c27f9b10-8b46-4e71-a590-a3184d883d0b",
+      "name": "Walla Walla Valley",
+      "region_id": "1e5608bb-976a-4007-b575-33e0ee391154"
+    },
+    {
+      "id": "c2f9884a-232d-45ea-aab3-60a6367867af",
+      "name": "Santa Barbara County AVA",
+      "region_id": "18d52236-681f-4a5a-ba98-cd0639210fb3"
+    },
+    {
+      "id": "c367f0ce-84c1-4f16-a228-aba53fda736e",
+      "name": "Columbia Gorge AVA",
+      "region_id": "8a6c9c90-31af-455f-ab0f-ca02c3d1bda4"
+    },
+    {
+      "id": "c4659dd0-28a8-4951-93f5-e44e40766726",
+      "name": "Santa Cruz County AVA",
+      "region_id": "18d52236-681f-4a5a-ba98-cd0639210fb3"
+    },
+    {
+      "id": "d77376e0-77d9-4aca-af89-9c5eae6908b4",
+      "name": "Oak Knoll District AVA",
+      "region_id": "18d52236-681f-4a5a-ba98-cd0639210fb3"
+    },
+    {
+      "id": "e1441fc5-229f-466d-b476-0f7491e43d2a",
+      "name": "San Luis Obispo County AVA",
+      "region_id": "18d52236-681f-4a5a-ba98-cd0639210fb3"
+    },
+    {
+      "id": "e605bdd1-d67f-45d8-a12f-27dadcf2d1ce",
+      "name": "SLO Coast AVA",
+      "region_id": "18d52236-681f-4a5a-ba98-cd0639210fb3"
+    },
+    {
+      "id": "ead61f5a-635d-4513-907a-b7d0ba953026",
+      "name": "San Benito County AVA",
+      "region_id": "18d52236-681f-4a5a-ba98-cd0639210fb3"
+    },
+    {
+      "id": "ed3101f9-3655-40ee-846c-740bda073d06",
+      "name": "Pennsylvania AVA",
+      "region_id": "78f86390-17b4-4bd1-83c4-c83fdba13006"
+    },
+    {
+      "id": "ef4ebc71-aadf-4792-abae-300698f7b09f",
+      "name": "California AVA",
+      "region_id": "18d52236-681f-4a5a-ba98-cd0639210fb3"
+    }
+  ],
+  "touched_regions": [
+    {
+      "id": "127ce314-1088-4962-b44f-255be4554df2",
+      "name": "Columbia Gorge"
+    },
+    {
+      "id": "2368600a-1fbd-4a50-b521-aba384b54722",
+      "name": "Walla Walla Valley"
+    }
+  ],
+  "references": {
+    "catalog_wines": [],
+    "catalog_wines_unidentified": [],
+    "wine_answers": [],
+    "guesses": [],
+    "wine_archetypes": [],
+    "label_lookups": [],
+    "appellations": [
+      {
+        "id": "254e0e57-4b21-4172-9568-8a8bbeaa3fee",
+        "region_id": "127ce314-1088-4962-b44f-255be4554df2"
+      },
+      {
+        "id": "be3fd8ac-0b9e-4055-a6b6-e937dac8ed0f",
+        "region_id": "2368600a-1fbd-4a50-b521-aba384b54722"
+      }
+    ],
+    "producers": [
+      {
+        "id": "00737e1f-7843-45a1-a048-ec1c8506416c",
+        "region_id": "2368600a-1fbd-4a50-b521-aba384b54722"
+      },
+      {
+        "id": "022f22c6-c870-4b36-8b55-0fcfdd5df951",
+        "region_id": "2368600a-1fbd-4a50-b521-aba384b54722"
+      },
+      {
+        "id": "0245633f-296f-470c-a504-f978d7384039",
+        "region_id": "2368600a-1fbd-4a50-b521-aba384b54722"
+      },
+      {
+        "id": "06a63571-9628-47ff-a2a5-b70c6c16fdd6",
+        "region_id": "2368600a-1fbd-4a50-b521-aba384b54722"
+      },
+      {
+        "id": "0d1bd239-c759-4786-931e-d99223cc37d7",
+        "region_id": "2368600a-1fbd-4a50-b521-aba384b54722"
+      },
+      {
+        "id": "0f5c5602-0ab9-410a-bacb-2feb27a2e423",
+        "region_id": "2368600a-1fbd-4a50-b521-aba384b54722"
+      },
+      {
+        "id": "172d12f1-c0a2-4018-9f91-ef1034d2e261",
+        "region_id": "2368600a-1fbd-4a50-b521-aba384b54722"
+      },
+      {
+        "id": "220fd725-8a63-4cb6-a9a7-36e2a9618500",
+        "region_id": "2368600a-1fbd-4a50-b521-aba384b54722"
+      },
+      {
+        "id": "2c7e6aef-439d-4da4-966a-1fe6bc11e349",
+        "region_id": "2368600a-1fbd-4a50-b521-aba384b54722"
+      },
+      {
+        "id": "33f7c92d-7c89-4b2e-b720-d020b180bff8",
+        "region_id": "2368600a-1fbd-4a50-b521-aba384b54722"
+      },
+      {
+        "id": "356014de-0238-4a40-b5ed-eea80357b80e",
+        "region_id": "2368600a-1fbd-4a50-b521-aba384b54722"
+      },
+      {
+        "id": "3e766f7a-7417-4a8a-9002-92108edc6086",
+        "region_id": "2368600a-1fbd-4a50-b521-aba384b54722"
+      },
+      {
+        "id": "4934de22-61b4-4aef-9393-3dac941d1ece",
+        "region_id": "2368600a-1fbd-4a50-b521-aba384b54722"
+      },
+      {
+        "id": "4a889d96-12f7-4d53-a2a0-5d6e7601021f",
+        "region_id": "2368600a-1fbd-4a50-b521-aba384b54722"
+      },
+      {
+        "id": "546795b2-478c-4c7a-95c3-0ec224e80f17",
+        "region_id": "2368600a-1fbd-4a50-b521-aba384b54722"
+      },
+      {
+        "id": "5671513b-998d-4d07-9b52-b0be689a9fce",
+        "region_id": "2368600a-1fbd-4a50-b521-aba384b54722"
+      },
+      {
+        "id": "5b672113-6150-463f-82be-241bd69698f4",
+        "region_id": "2368600a-1fbd-4a50-b521-aba384b54722"
+      },
+      {
+        "id": "62bd8929-08d1-46ab-8312-f6a0f986be10",
+        "region_id": "2368600a-1fbd-4a50-b521-aba384b54722"
+      },
+      {
+        "id": "68bf9299-17af-45fd-9ece-693e9eacfaa2",
+        "region_id": "2368600a-1fbd-4a50-b521-aba384b54722"
+      },
+      {
+        "id": "6a1f4925-c4b3-4558-98be-b9782e6cc770",
+        "region_id": "2368600a-1fbd-4a50-b521-aba384b54722"
+      },
+      {
+        "id": "6ca7e1b3-829e-4501-aada-b755b606c879",
+        "region_id": "2368600a-1fbd-4a50-b521-aba384b54722"
+      },
+      {
+        "id": "6d395f20-98c1-46b7-b75c-e305c55e5dac",
+        "region_id": "2368600a-1fbd-4a50-b521-aba384b54722"
+      },
+      {
+        "id": "6e780c88-00ce-424b-be0f-ab065c61373a",
+        "region_id": "2368600a-1fbd-4a50-b521-aba384b54722"
+      },
+      {
+        "id": "721a7de0-abe2-4f74-b2af-70122a7bf64a",
+        "region_id": "2368600a-1fbd-4a50-b521-aba384b54722"
+      },
+      {
+        "id": "8a50b61f-bb7f-4809-827c-706b6b7489b2",
+        "region_id": "2368600a-1fbd-4a50-b521-aba384b54722"
+      },
+      {
+        "id": "8c8f8da2-385b-4b77-80b2-878707e4e708",
+        "region_id": "2368600a-1fbd-4a50-b521-aba384b54722"
+      },
+      {
+        "id": "a3156156-bf13-4f03-83fe-6aec52e7c938",
+        "region_id": "2368600a-1fbd-4a50-b521-aba384b54722"
+      },
+      {
+        "id": "a34741c1-6992-44ac-99fd-59bfbd23f41d",
+        "region_id": "2368600a-1fbd-4a50-b521-aba384b54722"
+      },
+      {
+        "id": "a4807111-9278-4479-8ff2-3e9d834cd77f",
+        "region_id": "2368600a-1fbd-4a50-b521-aba384b54722"
+      },
+      {
+        "id": "a67e2e41-b280-4190-b960-0c9ffa222c94",
+        "region_id": "2368600a-1fbd-4a50-b521-aba384b54722"
+      },
+      {
+        "id": "b361bdde-8bd9-45de-a992-8eceb002883e",
+        "region_id": "2368600a-1fbd-4a50-b521-aba384b54722"
+      },
+      {
+        "id": "b39fd623-8a2b-49f9-b9be-2013c433ad79",
+        "region_id": "2368600a-1fbd-4a50-b521-aba384b54722"
+      },
+      {
+        "id": "c25609d0-24b0-4817-989d-e8d66bac42b7",
+        "region_id": "2368600a-1fbd-4a50-b521-aba384b54722"
+      },
+      {
+        "id": "c2b04b9a-9d84-4d30-8c12-bbdd9161baec",
+        "region_id": "2368600a-1fbd-4a50-b521-aba384b54722"
+      },
+      {
+        "id": "c32f3806-1fb7-4bd1-b07a-f4251f43ef73",
+        "region_id": "2368600a-1fbd-4a50-b521-aba384b54722"
+      },
+      {
+        "id": "c648ad04-7379-4187-904b-8efe1cdb87c0",
+        "region_id": "2368600a-1fbd-4a50-b521-aba384b54722"
+      },
+      {
+        "id": "cf44aeab-ca09-4962-9c3d-be2a3f2f0df8",
+        "region_id": "2368600a-1fbd-4a50-b521-aba384b54722"
+      },
+      {
+        "id": "d3a15926-79a1-411f-b138-29274713f2b1",
+        "region_id": "2368600a-1fbd-4a50-b521-aba384b54722"
+      },
+      {
+        "id": "dd33c92c-5da9-4400-9cdb-948b9ae24c89",
+        "region_id": "2368600a-1fbd-4a50-b521-aba384b54722"
+      },
+      {
+        "id": "e5a570d9-df4a-4ec4-8fdd-7d8db95d791b",
+        "region_id": "2368600a-1fbd-4a50-b521-aba384b54722"
+      },
+      {
+        "id": "ee2fcb79-6fbf-430d-893e-b735d5ce7758",
+        "region_id": "2368600a-1fbd-4a50-b521-aba384b54722"
+      },
+      {
+        "id": "f2f0c2ab-2a7c-4331-b84f-1976e6690eb2",
+        "region_id": "2368600a-1fbd-4a50-b521-aba384b54722"
+      },
+      {
+        "id": "f76011bc-3c0d-469a-8c8f-e853f0453c05",
+        "region_id": "2368600a-1fbd-4a50-b521-aba384b54722"
+      },
+      {
+        "id": "fd9a0d45-3751-49ac-ace1-cb03ad8bf7e3",
+        "region_id": "2368600a-1fbd-4a50-b521-aba384b54722"
+      },
+      {
+        "id": "fddb8a14-f4bd-45d2-b5af-5aab90164b75",
+        "region_id": "2368600a-1fbd-4a50-b521-aba384b54722"
+      }
+    ],
+    "region_grapes": [
+      {
+        "region_id": "2368600a-1fbd-4a50-b521-aba384b54722",
+        "grape_id": "32e7d602-05d9-4ba0-aa96-04a26c7d55d6",
+        "role": "ACCESSORY"
+      },
+      {
+        "region_id": "2368600a-1fbd-4a50-b521-aba384b54722",
+        "grape_id": "a7d2fbd0-15e8-4ebb-ab62-2613ed4bf26e",
+        "role": "PRINCIPAL"
+      },
+      {
+        "region_id": "2368600a-1fbd-4a50-b521-aba384b54722",
+        "grape_id": "bbb53fb9-1842-4a4c-8fb6-de9869115cec",
+        "role": "ACCESSORY"
+      }
+    ],
+    "profile_favourite_regions": [],
+    "training_attempts": [],
+    "type_designations": [],
+    "wine_identity_drafts": []
+  }
+}
