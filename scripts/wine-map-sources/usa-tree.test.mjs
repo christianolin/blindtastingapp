@@ -288,3 +288,17 @@ test("two AVAs that UC Davis puts within each other, both at >= 90%, stop the bu
     : a.id === "sonoma_valley" ? { ...a, ucd_within: ["Napa Valley"] } : a));
   assert.throws(() => buildUsaTree({ avas, pairs: [...PAIRS, pair("napa", "sonoma_valley", 0.95, 0.92)], config: CONFIG }), /contain each other/);
 });
+
+test("a navigation node's exclude list keeps a county match out (owner 2026-09-29)", () => {
+  const node = { ...CONFIG.navigation_nodes[0], counties: [...CONFIG.navigation_nodes[0].counties, "Kern"], exclude: ["Tehachapi Mountains"] };
+  const config = { ...CONFIG, navigation_nodes: [node] };
+  const avas = [...AVAS,
+    ava("teha", "Tehachapi Mountains", 235, CA, { counties: ["Kern"] }),
+    ava("kern_flats", "Kern Flats", 40, CA, { counties: ["Kern"] })];
+  const t = buildUsaTree({ avas, pairs: PAIRS, config });
+  assert.equal(place(t, "Tehachapi Mountains").parent_key, "united-states.california");
+  assert.equal(place(t, "Tehachapi Mountains").key, "united-states.california.tehachapi-mountains");
+  assert.equal(place(t, "Kern Flats").parent_key, "united-states.california.central-valley");
+  assert.throws(() => buildUsaTree({ avas, pairs: PAIRS, config: { ...config, navigation_nodes: [{ ...node, exclude: ["Nowhere"] }] } }),
+    /navigation_nodes\[central-valley\]\.exclude: no AVA named "Nowhere"/);
+});

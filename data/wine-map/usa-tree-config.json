@@ -19,8 +19,10 @@
       "slug": "central-valley",
       "name": "Central Valley",
       "member_rule": "counties",
-      "note": "A grouping on this map, not an AVA (D25). Members: AVAs in no umbrella AVA whose every listed county is below. Draft for the owner.",
-      "counties": ["Butte", "Colusa", "Fresno", "Glenn", "Kern", "Kings", "Madera", "Merced", "Sacramento", "San Joaquin", "Solano", "Stanislaus", "Sutter", "Tulare", "Yolo", "Yuba"]
+      "note": "A grouping on this map, not an AVA (D25). Members: AVAs in no umbrella AVA whose every listed county is below, minus `exclude`.",
+      "counties": ["Butte", "Colusa", "Fresno", "Glenn", "Kern", "Kings", "Madera", "Merced", "Sacramento", "San Joaquin", "Solano", "Stanislaus", "Sutter", "Tulare", "Yolo", "Yuba"],
+      "exclude": ["Tehachapi Mountains", "Squaw Valley-Miramonte"],
+      "exclude_owner_answer": "Move those two under California (2026-09-29)"
     }
   ],
   "state_overrides": {
@@ -35,6 +37,7 @@
   "parent_overrides": {},
   "thresholds": {
     "within": 0.995,
+    "withinLegalRecord": 0.9,
     "overlapMin": 0.01,
     "stateEdgeMin": 0.005,
     "outlineKm2": 5000,

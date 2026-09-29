@@ -175,7 +175,9 @@ export function buildUsaTree({ avas, pairs, config }) {
     for (const name of names) umbrellaState.set(idForName(name, "umbrellas"), code);
   }
   const navNodes = config.navigation_nodes ?? [];
+  for (const n of navNodes) for (const name of n.exclude ?? []) idForName(name, `navigation_nodes[${n.slug}].exclude`);
   const navOf = (a, state) => navNodes.find((n) => n.state === state && n.member_rule === "counties"
+    && !(n.exclude ?? []).includes(a.name)
     && a.counties.length > 0
     && a.counties.every((c) => n.counties.map(countyKey).includes(countyKey(c))));
   const parentOverrides = config.parent_overrides ?? {};
