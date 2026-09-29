@@ -1241,6 +1241,53 @@ a raw subquery, regardless of which two tables look involved at a glance.
   refuses) — clear those attempts' picks first. The device draft carries
   `pickedRegionId` / `pickedGrapeId`; a draft from before them reads with both
   null, and Continue gives a picked typical wine its region (`normalizeCall`).
+- **Training room on the wine map, R1** (2026-09-29, spec
+  `docs/superpowers/specs/2026-09-29-training-room-map-design.md`, plan
+  `docs/superpowers/plans/2026-09-29-training-room-map-r1.md`; R2, the
+  likelihood map, is not built yet). **Training room only** (RM1): no
+  likelihood, room map or matcher output in a tasting, a lobby or the play
+  page. Links both ways: a typical wine's detail in the room (laptop popover
+  and phone sheet, `ArchetypeDetail`) ends with "See it on the wine map" — a
+  NEW TAB (owner O1) to `/knowledge/map?place=<home key>` (`placeHref`,
+  `src/app/taste/training/map-link.tsx`) — or plain "Not on the wine map
+  yet"; an expanded region group's first row (its own `<li>`, never inside
+  the region row's `<button>`) names the MAP region its wines sit in
+  ("Veneto on the wine map" under Prosecco; `groupMapRegion`: the region
+  most members name, ties by key). `ArchetypeLinks`
+  (`src/components/wset/archetype-links.tsx`) puts "Practise blind in the
+  training room →" under `ArchetypeModal` and `/knowledge/archetypes/[id]` —
+  it never names the wine, a pre-selected wine would defeat a blind
+  session — and, from the Library only (`ArchetypeModal mapLink`), a
+  same-tab "See it on the wine map". The archetype page's "← Map" goes to
+  `?place=` (`fetchArchetype` returns `placeKey`). The explorer's heading
+  reads "Typical wines" past one (`typicalWinesHeading`). All this copy is
+  provisional until the owner approves spec §9. The room's one map read is
+  `training_archetype_places()` (SECURITY INVOKER, STABLE; EXECUTE for
+  `authenticated` only, revoked from PUBLIC, `anon` and `service_role`):
+  per archetype its home key, its REGION (the nearest place up
+  `primary_parent_id`, itself included, whose `kind` is `REGION` — never
+  parse `canonical_key`) and the nearest current VALIDATED `label_point`
+  (Montepulciano d'Abruzzo's comes from `italy.abruzzo`). `readTrainingPool`
+  starts it in its FIRST `Promise.all`, and it is the one pool read that
+  **fails soft**: on an error it logs `training pool: map places` once and
+  every wine reads "Not on the wine map yet" while the room still ranks,
+  scores and saves; every other pool read still fails the page.
+  `scripts/training-room-map/check-rpc.mjs` calls it through PostgREST as a
+  demo person (the pre-deploy check). **Standing rule (RM9a, from R1b):**
+  every placed typical wine outside `france.bourgogne` also has a
+  `wine_archetype_placements` row at its REGION ancestor, with its own
+  `sort_order`, so a region page lists the typical wines beneath it (Bordeaux
+  9, Rhône 7, Loire 5, …; Bourgogne keeps its seven curated ones). R1b
+  (`…_training_region_placements.sql`) wrote it as a literal 50-row list, so
+  `scripts/training-room-map/rollback-r1b.sql` deletes exactly those pairs
+  and never a curator's own. `scripts/training/archetype-batch.mjs` emits
+  the placement for every new batch, and `scripts/training-room.test.mjs`'s
+  drift guard fails when a placed wine lacks it — an editor re-home
+  (`updateArchetype` leaves placements alone) or a migration that places an
+  archetype without it (the USA wave: Napa → its California REGION); the fix
+  is a placement add in `/admin/archetypes`. Nothing here writes
+  `wine_places` or `wine_place_boundaries` (no neighbour refresh, no tiles
+  run) or recreates a shared map function.
 - **Aroma lexicon v2** (2026-09-29, migration
   `20260929090000_aroma_lexicon_v2.sql`, data only; spec, lexicon review and
   the typical-wine votes in `data/training/aroma-lexicon-v2-2026-09-29.json`).
