@@ -61,9 +61,16 @@ jobs:
         env:
           DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      # Logged on every run, promote or not, so a promote=false dispatch shows
+      # the version it built.
+      - name: Release version
+        run: node -p "require('./.tiles-build/release.json').version"
       - name: Promote release
         if: inputs.promote
-        run: node scripts/wine-map-tiles/promote.mjs
+        # Promote THIS run's release. With no argument promote.mjs picks the
+        # newest VALIDATED release, which with two people publishing may be
+        # someone else's (spec 2026-09-29 §7, §17.3).
+        run: node scripts/wine-map-tiles/promote.mjs "$(node -p "require('./.tiles-build/release.json').version")"
         env:
           DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
