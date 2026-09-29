@@ -10,6 +10,7 @@ test("defaults: repo is the cwd, the old source, no write, not bare, the old ver
     bare: false,
     version: "20260915110000",
     name: "place_profiles_iberia",
+    prelude: null,
   });
 });
 
@@ -42,4 +43,10 @@ test("--bare emits no transaction statement; the default keeps begin/commit", ()
     assert.doesNotMatch(line, /^\s*(begin|commit|rollback)\s*;/i);
   }
   assert.deepEqual(transactionLines(false), { open: ["begin;", ""], close: ["commit;"] });
+});
+
+test("--prelude takes a file and defaults to null", () => {
+  assert.equal(genArgs([], {}, "C:/r").prelude, null);
+  assert.equal(genArgs(["--prelude", "supabase/migrations/x.sql"], {}, "C:/r").prelude, "supabase/migrations/x.sql");
+  assert.throws(() => genArgs(["--prelude"], {}, "C:/r"), /--prelude needs a value/);
 });

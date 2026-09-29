@@ -17,6 +17,9 @@
 //        --version <YYYYMMDDHHMMSS> --name <migration_name>
 //        [--source <data file>]   default data/wine-map/place-profiles.json
 //        [--bare]                 no begin;/commit; (every US run passes it)
+//        [--prelude <file>]       run that SQL first, inside a transaction that
+//                                 is always rolled back (e.g. a catalog migration
+//                                 not applied yet); every check sees its state
 //   The repo is BLINDR_REPO, else the current directory.
 //
 // Re-runnable. Content already live is skipped, so the data file describes every
@@ -24,13 +27,14 @@
 import { readFile, writeFile } from "node:fs/promises";
 import pg from "pg";
 import { genArgs, transactionLines } from "./gen-place-profiles-args.mjs";
+import { articleInsertLines } from "./gen-place-profiles-sql.mjs";
 
 // The data file is the source of truth for ALL place content, including the
 // part already applied. So a later run has to emit only what is not live yet,
 // or it would try to insert the lot a second time -- and the version/name move
 // with each batch. Both are arguments rather than constants for that reason.
 const {
-  repo: REPO, source: SOURCE, write: WRITE, bare: BARE, version: VERSION, name: NAME,
+  repo: REPO, source: SOURCE, write: WRITE, bare: BARE, version: VERSION, name: NAME, prelude: PRELUDE,
 } = genArgs(process.argv.slice(2));
 
 const STYLE_KINDS = new Set(["RED", "WHITE", "ROSE", "SPARKLING", "SWEET", "FORTIFIED"]);
@@ -50,6 +54,11 @@ const client = new pg.Client({
   ssl: { rejectUnauthorized: false },
 });
 await client.connect();
+if (PRELUDE) {
+  await client.query("begin");
+  await client.query(await readFile(`${REPO}/${PRELUDE}`, "utf8"));
+  console.log(`prelude ${PRELUDE} applied inside a transaction that is rolled back`);
+}
 
 const problems = [];
 
@@ -98,6 +107,9 @@ for (const [key, p] of Object.entries(places)) {
       if (!a[f] || a[f].trim().length < 40) problems.push(`${key}: article.${f} missing or too short`);
     }
     if (!Array.isArray(a.key_facts) || a.key_facts.length < 3) problems.push(`${key}: needs 3+ key facts`);
+    for (const f of ["grape_varieties", "wine_styles"]) {
+      if (a[f] !== undefined && (!a[f] || a[f].trim().length < 40)) problems.push(`${key}: article.${f} too short`);
+    }
   }
 }
 
@@ -126,6 +138,7 @@ for (const r of existing) {
   }
 }
 
+if (PRELUDE) await client.query("rollback");
 await client.end();
 
 if (problems.length) {
@@ -184,13 +197,7 @@ if (grapesToAdd.length) {
 
 for (const [key, p] of Object.entries(places)) {
   lines.push(`-- ${key}`);
-  if (p.article) {
-    const a = p.article;
-    const facts = a.key_facts.map((f) => sq(f)).join(", ");
-    lines.push(`insert into public.wine_place_articles (wine_place_id, description, climate, soils, key_facts, editorial_status)`);
-    lines.push(`select id, ${sq(a.description)}, ${sq(a.climate)}, ${sq(a.soils)}, array[${facts}]::text[], 'PUBLISHED'`);
-    lines.push(`  from public.wine_places where canonical_key = ${sq(key)};`);
-  }
+  if (p.article) lines.push(...articleInsertLines(key, p.article));
   (p.styles ?? []).forEach((s, i) => {
     lines.push(`insert into public.wine_place_styles (wine_place_id, style, sort_order, editorial_status)`);
     lines.push(`select id, '${s}', ${i}, 'PUBLISHED' from public.wine_places where canonical_key = ${sq(key)};`);

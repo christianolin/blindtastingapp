@@ -7,7 +7,9 @@
 // generated migration never applies the other's content). --bare leaves out
 // begin;/commit; (D24): the owner's applier owns the transaction, and a commit
 // inside the file would commit a --dry rehearsal partway. The default output is
-// unchanged.
+// unchanged. --prelude <file> runs that SQL inside a transaction the generator
+// always rolls back, so a knowledge migration can be generated for places a
+// not-yet-applied catalog migration creates. Default unchanged.
 export const DEFAULT_SOURCE = "data/wine-map/place-profiles.json";
 
 export function genArgs(argv, env = process.env, cwd = process.cwd()) {
@@ -25,6 +27,7 @@ export function genArgs(argv, env = process.env, cwd = process.cwd()) {
     bare: argv.includes("--bare"),
     version: arg("--version", "20260915110000"),
     name: arg("--name", "place_profiles_iberia"),
+    prelude: arg("--prelude", null),
   };
 }
 
