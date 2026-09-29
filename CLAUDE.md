@@ -1995,6 +1995,28 @@ a raw subquery, regardless of which two tables look involved at a glance.
     so a `--dry` rehearsal is a real one. `--check` runs the pre-flight alone.
   - Reverting this is safe only until the first US boundary is VALIDATED live;
     after that it is one-way.
+- **US scoring rows (US-1, 2026-09-29, migration
+  `20260929214747_usa_reference_cleanup.sql`, applied live; spec §6).** The
+  US `regions`/`appellations` rows the guess ladder and add-wine use were
+  cleaned in place by id, as the owner approved the copy list
+  (`data/usa-reference/us1-copy-list.md`): states and counties carry no false
+  " AVA" (`Napa County`, `California`…), each of California, Oregon,
+  Washington and New York has its self-named "Just the region" row, four
+  duplicates were merged (every reference re-pointed first; no guess ever
+  moved), five names follow 27 CFR 9 (`Oak Knoll District of Napa Valley AVA`),
+  and 50 missing AVAs were added. A cross-state AVA is ONE row under the state
+  the map keys it: Walla Walla Valley and Columbia Valley under Washington,
+  The Rocks District and Columbia Gorge under Oregon (Columbia Gorge by owner
+  decision). The pseudo-regions "Walla Walla Valley" and "Columbia Gorge" are
+  gone; their producers are linked by each winery's own state
+  (`data/usa-reference/us1-producer-states.json`, one cited source each; six
+  left unlinked for want of an address). Lake Erie, Snake River Valley and
+  Lewis-Clark Valley wait for their own states' waves.
+  `scripts/add-appellation-designations.mjs` now skips US rows, so it can never
+  re-add the suffixes. The revert is
+  `scripts/usa-reference/20260929224747_usa_reference_cleanup_revert.sql`
+  (kept outside `supabase/migrations/` so a replay cannot undo US-1); it
+  refuses once any of the 50 new rows is in use.
 - **Wine map performance** (2026-09-20; specs
   `docs/superpowers/specs/2026-09-20-wine-map-performance.md` and
   `2026-09-20-wine-map-data-latency.md`; the measured profile behind them is
