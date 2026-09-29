@@ -7,8 +7,7 @@
 import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { ICON_META, LEGACY_SLUG, iconForTerm, slugForTerm } from "./aroma-icons.mjs";
-import { translateTerm } from "./i18n";
+import { ICON_META, iconForTerm, slugForTerm } from "./aroma-icons.mjs";
 
 type IconMeta = { set: string; icon: string; color?: string };
 // The .mjs literal infers per-key shapes; widen it to one indexable record.
@@ -92,54 +91,5 @@ describe("aroma icons", () => {
     for (const slug of Object.keys(META)) {
       expect(existsSync(`${dir}${slug}.svg`), `missing public/emoji/${slug}.svg`).toBe(true);
     }
-  });
-});
-
-// TRANSITION ONLY (aroma lexicon v2): the app deploys before the migration, so
-// the live lexicon's old terms must keep an icon and a Danish label until v2
-// is live. Delete this block with LEGACY_SLUG and i18n's legacy entries.
-const LEGACY_TERMS = [
-  "apple",
-  "flint",
-  "saltiness",
-  "graham cracker",
-  "dried fruit",
-  "cooked fruit",
-  "kerosene",
-  "cooked red plum",
-];
-
-describe("aroma icons across the lexicon v2 deploy", () => {
-  it("every old v1 term borrows a v2 glyph, never the wine fallback", () => {
-    for (const term of LEGACY_TERMS) {
-      const icon = iconForTerm(term, "");
-      expect(icon, `"${term}" fell back to wine`).not.toBe("wine");
-      expect(META[icon], `"${term}" -> "${icon}" has no ICON_META entry`).toBeTruthy();
-    }
-    expect(iconForTerm("apple", "")).toBe("green-apple");
-    expect(iconForTerm("flint", "")).toBe("flint-struck-match");
-    expect(iconForTerm("saltiness", "")).toBe("saline");
-  });
-
-  it("aliases only old slugs: none is also an ICON_META key", () => {
-    for (const [from, to] of Object.entries(LEGACY_SLUG as Record<string, string>)) {
-      expect(META[from], `"${from}" is both an alias and an entry`).toBeUndefined();
-      expect(META[to], `"${from}" aliases the missing "${to}"`).toBeTruthy();
-    }
-    expect(Object.keys(LEGACY_SLUG).sort()).toEqual(LEGACY_TERMS.map(slugForTerm).sort());
-  });
-
-  it("every old v1 term keeps its Danish label", () => {
-    // "flint" is also the Danish word, so the labels are spelled out.
-    expect(LEGACY_TERMS.map((t) => translateTerm(t, "da"))).toEqual([
-      "æble",
-      "flint",
-      "saltethed",
-      "grahamskiks",
-      "tørret frugt",
-      "kogt frugt",
-      "kerosen",
-      "kogt rød blomme",
-    ]);
   });
 });

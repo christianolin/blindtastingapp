@@ -1275,16 +1275,13 @@ a raw subquery, regardless of which two tables look involved at a glance.
   the old terms; never edit it). Remember `wine_archetype_aromas.term_id`
   cascades on delete and `wset_note_aromas.term_id` refuses it: a lexicon
   removal must move both first and assert zero references before deleting.
-  **Rollout order: the app first, then this migration right after, never the
-  other way round.** This app reads both lexicons for the window between
-  them: `aroma-icons.mjs`'s `LEGACY_SLUG` gives each old term (apple, flint,
-  saltiness, graham cracker, dried fruit, cooked fruit, kerosene, cooked red
-  plum) a v2 glyph, `TERMS_DA` keeps their Danish labels and the picker keeps
-  their tertiary sub-clusters, all marked TRANSITION ONLY. The app still
-  deployed before it has no v2 icons or labels, so the migration applied
-  first would show wine-glass fallbacks and English labels for every renamed
-  and new term until the app caught up. Remove the TRANSITION ONLY entries
-  (and their test block in `aroma-icons.test.ts`) once v2 is confirmed live.
+  Shipped 2026-09-29 app first, then the migration straight after: for that
+  window the app carried temporary aliases for the old terms (a `LEGACY_SLUG`
+  icon map, their Danish labels and picker sub-clusters), removed once v2 was
+  confirmed live. A future lexicon rename or removal needs the same order:
+  an app that reads the old and the new labels, then the migration, then the
+  cleanup — the app before the migration has no icon or Danish label for a
+  new term, and the app after it none for an old one.
   A training-room device draft saved before the migration can still hold a
   removed term id: Continue drops any nose/palate id the lexicon no longer
   has (`withKnownTerms`, `src/lib/training/draft.ts`), since the finish would

@@ -264,26 +264,5 @@ export function slugForTerm(term) {
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function iconForTerm(term, _family) {
   const slug = slugForTerm(term);
-  if (ICON_META[slug]) return slug;
-  const legacy = LEGACY_SLUG[slug];
-  return legacy && ICON_META[legacy] ? legacy : "wine";
+  return ICON_META[slug] ? slug : "wine";
 }
-
-// TRANSITION ONLY (aroma lexicon v2, 20260929090000). The app ships before the
-// migration, so for that window the live lexicon still names the old terms.
-// Each old slug borrows a v2 glyph instead of falling back to the wine glass:
-// a renamed term its new name's, a removed term its merge target's (graham
-// cracker keeps its own old slice, now toasted bread's). Aliases, not ICON_META
-// entries, so no glyph is listed twice. Remove once v2 is confirmed live, with
-// i18n.ts's and aroma-picker.tsx's TRANSITION ONLY entries.
-/** @type {Record<string, string>} */
-export const LEGACY_SLUG = {
-  apple: "green-apple",
-  flint: "flint-struck-match",
-  saltiness: "saline",
-  "graham-cracker": "toasted-bread",
-  "dried-fruit": "raisin",
-  "cooked-fruit": "cooked-plum",
-  kerosene: "petrol",
-  "cooked-red-plum": "cooked-plum",
-};
