@@ -179,9 +179,9 @@ const TERMS_DA: Record<string, string> = {
   saline: "saltholdig", candy: "slik", "wet wool": "våd uld",
   // yeast
   biscuit: "kiks", bread: "brød", "toasted bread": "ristet brød",
-  // Oak and White wine keep "toast"; it shares the Danish word with Yeast's
-  // toasted bread, as the old Yeast toast did.
-  toast: "ristet brød", pastry: "bagværk", brioche: "brioche",
+  // Oak and White wine keep "toast", also "toast" in Danish (owner, 2026-09-29),
+  // so it no longer reads like Yeast's toasted bread ("ristet brød").
+  toast: "toast", pastry: "bagværk", brioche: "brioche",
   "bread dough": "brøddej", cheese: "ost", yogurt: "yoghurt",
   acetaldehyde: "acetaldehyd",
   // malolactic
