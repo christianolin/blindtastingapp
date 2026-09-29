@@ -59,3 +59,55 @@ test("state edges only to a state TTB lists: no Oregon parent for Washington-onl
   const oregonParents = wa.edges.filter((e) => e.target_key === "united-states.oregon").map((e) => e.source_key.split(".").at(-1)).sort();
   assert.deepEqual(oregonParents, ["columbia-valley", "walla-walla-valley"]);
 });
+
+const allReports = async () => Promise.all(Object.values(STATE_FILES).map(async (s) => JSON.parse(await readFile(reportPath(s), "utf8"))));
+
+test("owner 2026-09-29: the 25 legal-record pairs nest; nothing is left almost-within", async () => {
+  const reports = await allReports();
+  const nests = reports.flatMap((r) => r.review.legal_record_nests);
+  assert.equal(nests.length, 25);
+  assert.deepEqual(reports.flatMap((r) => r.review.near_within), []);
+  const places = reports.flatMap((r) => r.places);
+  const keyOf = (n) => places.find((p) => p.name === n)?.key;
+  assert.equal(keyOf("Sta. Rita Hills"), "united-states.california.central-coast.santa-ynez-valley.sta-rita-hills");
+  assert.equal(keyOf("Creston District"), "united-states.california.central-coast.paso-robles.creston-district");
+  assert.equal(keyOf("McMinnville"), "united-states.oregon.willamette-valley.mcminnville");
+  assert.equal(keyOf("Suisun Valley"), "united-states.california.north-coast.suisun-valley");
+  assert.equal(keyOf("San Francisco Bay"), "united-states.california.central-coast.san-francisco-bay");
+  assert.equal(keyOf("Santa Clara Valley"), "united-states.california.central-coast.san-francisco-bay.santa-clara-valley");
+  assert.equal(keyOf("Lake Chelan"), "united-states.washington.columbia-valley.lake-chelan");
+  assert.equal(keyOf("Elkton Oregon"), "united-states.oregon.southern-oregon.umpqua-valley.elkton-oregon");
+  for (const p of places.filter((x) => x.parent_basis === "legal_record")) {
+    assert.ok(p.parent_inside >= 0.9 && p.parent_inside < 0.995, `${p.key} ${p.parent_inside}`);
+  }
+  for (const p of places.filter((x) => x.parent_basis === "measured")) assert.ok(p.parent_inside >= 0.995, p.key);
+  assert.equal(places.filter((x) => x.parent_basis === "legal_record").length, 21);
+});
+
+test("owner 2026-09-29: Central Valley holds 11 members; Tehachapi Mountains and Squaw Valley-Miramonte sit under California", async () => {
+  const ca = JSON.parse(await readFile(reportPath("california"), "utf8"));
+  const members = ca.places.filter((p) => p.parent_key === "united-states.california.central-valley").map((p) => p.name).sort();
+  assert.deepEqual(members, ["Capay Valley", "Clarksburg", "Diablo Grande", "Dunnigan Hills", "Lodi", "Madera",
+    "Paulsell Valley", "River Junction", "Salado Creek", "Tracy Hills", "Winters Highlands"]);
+  for (const n of ["Tehachapi Mountains", "Squaw Valley-Miramonte"]) {
+    assert.equal(ca.places.find((p) => p.name === n).parent_key, "united-states.california", n);
+  }
+});
+
+test("no OVERLAPS edge joins a place to its own ancestor; Red Hill's is listed for review", async () => {
+  const reports = await allReports();
+  for (const r of reports) {
+    const byKey = new Map(r.places.map((p) => [p.key, p]));
+    const ancestors = (k) => { const out = []; let p = byKey.get(k); while (p?.parent_key) { out.push(p.parent_key); p = byKey.get(p.parent_key); } return out; };
+    for (const e of r.edges.filter((x) => x.type === "OVERLAPS")) {
+      assert.ok(!ancestors(e.source_key).includes(e.target_key) && !ancestors(e.target_key).includes(e.source_key), `${e.source_key} ~ ${e.target_key}`);
+    }
+  }
+  assert.deepEqual(reports.flatMap((r) => r.review.ancestor_overlaps).map((x) => [x.name, x.ancestor, x.ratio]),
+    [["Red Hill Douglas County, Oregon", "Southern Oregon", 0.6775]]);
+});
+
+test("counts per state after the owner's decisions", async () => {
+  const got = Object.fromEntries((await allReports()).map((r) => [r.state, [r.counts.places, r.counts.edges.ALTERNATE_PARENT ?? 0, r.counts.edges.OVERLAPS ?? 0, r.counts.outline]]));
+  assert.deepEqual(got, { CA: [156, 2, 27, 6], WA: [19, 2, 2, 2], OR: [21, 3, 0, 2], NY: [11, 0, 0, 2] });
+});

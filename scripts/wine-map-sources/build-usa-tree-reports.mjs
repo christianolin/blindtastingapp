@@ -166,19 +166,29 @@ export function summaryMarkdown(tree, reports) {
   const pending = [...new Map(Object.values(reports).flatMap((r) => r.ttb_only_pending).map((t) => [t.name, t])).values()]
     .sort((a, b) => a.name.localeCompare(b.name));
   L.push(...listOrNone(pending.map((t) => `- ${t.name} (${t.states.join(", ")}; 27 CFR ${t.cfr ?? "section unknown"})`)));
-  L.push("", `## Almost within (${pct(tree.thresholds.nearWithinReview)} to ${pct(tree.thresholds.within)}): placed as NOT within`, "");
-  L.push("A pair here got an OVERLAPS edge, not a parent. Where UC Davis also says \"within\", the gap is most likely a digitizing sliver: a `parent_overrides` entry, or a lower `within`, would move the place under its container (keys change, so this is an owner decision).", "");
-  if (tree.review.near_within.length === 0) L.push("- none");
+  L.push("", `## Nested by the legal record (UC Davis "within" and at least ${pct(tree.thresholds.withinLegalRecord)} inside)`, "");
+  L.push("Owner decision 2026-09-29 (\"Legal record + >=90% inside\"): an AVA nests in a container UC Davis's `within` names when at least 90% of it measures inside, so a digitizing sliver no longer overrules the law. \"Primary\" means the container is the place's parent; otherwise it is a higher ancestor or an ALTERNATE_PARENT.", "");
+  if (tree.review.legal_record_nests.length === 0) L.push("- none");
   else {
-    L.push("| AVA | Placed at | Container | Measured inside | UC Davis says within |", "|---|---|---|---:|---|");
-    for (const r of tree.review.near_within) {
-      L.push(`| ${r.name} | \`${r.key}\` | ${r.container} | ${(r.ratio * 100).toFixed(2)}% | ${r.ucd_says_within ? "yes" : "no"} |`);
+    L.push("| AVA | Now at | Container | Measured inside | Primary |", "|---|---|---|---:|---|");
+    for (const r of tree.review.legal_record_nests) {
+      L.push(`| ${r.name} | \`${r.key}\` | ${r.container} | ${(r.ratio * 100).toFixed(2)}% | ${r.primary ? "yes" : "no"} |`);
     }
   }
+  L.push("", `## Almost within (${pct(tree.thresholds.nearWithinReview)} to ${pct(tree.thresholds.within)}), UC Davis silent: placed as NOT within`, "");
+  L.push("A pair here got an OVERLAPS edge, not a parent: UC Davis's `within` does not name the container, so the legal-record rule does not apply.", "");
+  if (tree.review.near_within.length === 0) L.push("- none");
+  else {
+    L.push("| AVA | Placed at | Container | Measured inside |", "|---|---|---|---:|");
+    for (const r of tree.review.near_within) L.push(`| ${r.name} | \`${r.key}\` | ${r.container} | ${(r.ratio * 100).toFixed(2)}% |`);
+  }
+  L.push("", "## Overlaps with a place's own ancestor (no edge stored)", "");
+  L.push("The tree already nests the place under this ancestor through a smaller AVA, so an OVERLAPS edge would contradict it. Listed so the digitizing gap is visible.", "");
+  L.push(...listOrNone(tree.review.ancestor_overlaps.map((r) => `- ${r.name} in ${r.ancestor}: ${(r.ratio * 100).toFixed(2)}% measured inside (\`${r.key}\`)`)));
   L.push("", "## For review", "");
   L.push(`- Land share under ${pct(tree.thresholds.landShareReview)}: ${tree.review.low_land_share.map((r) => `${r.key} ${pct(r.land_share)}`).join("; ") || "none"}`);
   L.push(`- State containment under ${pct(tree.thresholds.containmentMin)} (spec §8.2: the threshold is fixed only after these numbers are seen): ${tree.review.low_containment.map((r) => `${r.key} ${pct(r.containment_share)}`).join("; ") || "none"}`);
-  L.push(`- UC Davis \`within\`/\`contains\` disagreements: ${tree.review.within_disagreements.length} (listed in each state's report; never used to decide)`);
+  L.push(`- UC Davis \`within\`/\`contains\` disagreements: ${tree.review.within_disagreements.length} (listed in each state's report; \`within\` decides only with at least ${pct(tree.thresholds.withinLegalRecord)} measured inside)`);
   L.push(`- Map state where the largest measured share lies outside the legal states (would have been keyed wrongly without the TTB gate): ${tree.review.state_list_disagreements.filter((r) => r.measured_dominant !== r.map_state && !r.legal_states.includes(r.measured_dominant)).map((r) => `${r.name} (measured ${r.measured_dominant}, keyed ${r.map_state})`).join("; ") || "none"}`);
   L.push(`- UC Davis state lists that disagree with TTB's: ${tree.review.state_list_disagreements.filter((r) => r.ucd_states.join(",") !== r.legal_states.join(",")).map((r) => `${r.name} (UC Davis ${r.ucd_states.join("/")}, TTB ${r.legal_states.join("/")})`).join("; ") || "none"}`);
   L.push(`- AVAs whose legal states come from UC Davis because TTB does not name them: ${tree.places.filter((p) => p.legal_source === "ucd").map((p) => p.name).join("; ") || "none"}`);
