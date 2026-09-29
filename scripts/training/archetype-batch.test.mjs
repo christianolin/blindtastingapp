@@ -185,3 +185,25 @@ test("the migration SQL quotes, guards and counts from the file", () => {
   assert.ok(withRows.indexOf("insert into public.regions") < withRows.indexOf("insert into public.appellations"));
   assert.ok(withRows.indexOf("insert into public.appellations") < withRows.indexOf("create temp table _batch_archetypes"));
 });
+
+test("the migration SQL also places each new archetype at its REGION ancestor (training-room-map RM9a)", () => {
+  const sql = batchMigrationSql(batchOf(entry({ placeCanonicalKey: "france.bordeaux.haut-medoc.margaux" })), {
+    file: "data/training/test.json",
+    generatedOn: "2026-09-29",
+  });
+  assert.ok(sql.includes("  pg_temp._batch_resolved, pg_temp._batch_new, pg_temp._batch_region;\n"));
+  assert.ok(sql.includes("create temp table _batch_region on commit drop as\n"));
+  // The same REGION walk as training_archetype_places: nearest kind = 'REGION', self included.
+  assert.ok(sql.includes("    select id, canonical_key, depth from chain where kind = 'REGION' order by depth limit 1\n"));
+  // Not when the home IS the region, and never under france.bourgogne (its curated representatives).
+  assert.ok(sql.includes(" where r.depth > 0 and r.canonical_key <> 'france.bourgogne';\n"));
+  assert.ok(sql.includes("select archetype_id, place_id, sort_order from _batch_region\n"));
+  // The home placement first, then the region's, both before the post-state asserts.
+  const home = sql.indexOf("select a.id, a.wine_place_id, a.sort_order");
+  const region = sql.indexOf("select archetype_id, place_id, sort_order from _batch_region");
+  const post = sql.indexOf("-- Post-state, same transaction.");
+  assert.ok(home > 0 && home < region && region < post);
+  // The post-state counts the region placement, and still requires the home one.
+  assert.ok(sql.includes("                  else 1 + (select count(*) from _batch_region r where r.archetype_id = n.id) end\n"));
+  assert.ok(sql.includes("where p.archetype_id = n.id and p.wine_place_id = a.wine_place_id));\n"));
+});

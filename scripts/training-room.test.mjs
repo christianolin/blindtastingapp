@@ -866,7 +866,8 @@ test("the batch-1 migration lands every archetype with its links, and a second a
                   where l.archetype_id = a.id and l.signature and l.kind = 'NOSE') signatures,
                 (select array_agg(td.name) from wine_archetype_designations d
                    join type_designations td on td.id = d.type_designation_id where d.archetype_id = a.id) designations,
-                (select count(*)::int from wine_archetype_placements p where p.archetype_id = a.id) placements,
+                (select array_agg(pp.canonical_key order by pp.canonical_key) from wine_archetype_placements p
+                   join wine_places pp on pp.id = p.wine_place_id where p.archetype_id = a.id) placements,
                 a.typical_age_low, a.typical_age_high, a.sat -> 'tannin' tannin
            from wine_archetypes a
            join countries c on c.id = a.country_id
@@ -885,7 +886,10 @@ test("the batch-1 migration lands every archetype with its links, and a second a
       place: "france.bordeaux.haut-medoc.pauillac",
       signatures: ["blackcurrant", "cedar"],
       designations: ["Grand Cru Classé"],
-      placements: 1,
+      // Its home, and from R1b (training-room-map spec RM9) its region's page too.
+      placements: (await regionPlacementsLive())
+        ? ["france.bordeaux", "france.bordeaux.haut-medoc.pauillac"]
+        : ["france.bordeaux.haut-medoc.pauillac"],
       typical_age_low: 8,
       typical_age_high: 30,
       tannin: ["MEDIUM_PLUS", "HIGH"],
@@ -1241,5 +1245,48 @@ test("training_archetype_places: one row per archetype as a signed-in reader, au
     await client.query("select set_config('request.jwt.claims', $1, true)", [JSON.stringify({ role: "anon" })]);
     await client.query("set local role anon");
     await expectError(() => client.query("select * from training_archetype_places()"), "42501");
+  });
+});
+
+test("RM9a: every placed typical wine outside france.bourgogne also sits on its REGION's page", async (t) => {
+  await withRollback(async () => {
+    await asOwner();
+    if (!(await regionPlacementsLive())) {
+      t.skip("R1b is neither live nor in TRAINING_ROOM_APPLY");
+      return;
+    }
+    const missing = (
+      await client.query(
+        `with recursive chain as (
+           select a.id as archetype_id, p.id as place_id, p.canonical_key, p.kind, p.primary_parent_id, 0 as depth
+             from wine_archetypes a join wine_places p on p.id = a.wine_place_id
+           union all
+           select c.archetype_id, p.id, p.canonical_key, p.kind, p.primary_parent_id, c.depth + 1
+             from chain c join wine_places p on p.id = c.primary_parent_id where c.depth < 8
+         ), reg as (
+           select distinct on (archetype_id) archetype_id, place_id, canonical_key
+             from chain where kind = 'REGION' order by archetype_id, depth
+         )
+         select a.name, r.canonical_key region
+           from reg r join wine_archetypes a on a.id = r.archetype_id
+          where r.canonical_key <> 'france.bourgogne'
+            and not exists (select 1 from wine_archetype_placements x
+                             where x.archetype_id = r.archetype_id and x.wine_place_id = r.place_id)
+          order by a.name`,
+      )
+    ).rows;
+    assert.deepEqual(
+      missing,
+      [],
+      "typical wines missing their REGION placement (an editor re-home, or a batch/migration that skipped it): " +
+        "add each one at its region in /admin/archetypes",
+    );
+    const bourgogne = (
+      await client.query(
+        `select count(*)::int n from wine_archetype_placements x
+           join wine_places p on p.id = x.wine_place_id where p.canonical_key = 'france.bourgogne'`,
+      )
+    ).rows[0].n;
+    assert.equal(bourgogne, 7, "Bourgogne keeps its seven curated typical wines");
   });
 });
