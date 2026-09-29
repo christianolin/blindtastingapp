@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
+import { topLevelTransactionStatements } from "../migration-preflight.mjs";
 import { loadTrees, us2Wave } from "./us2-wave.mjs";
 import { validateUsaProfiles, reviewMarkdown, migrationIsCurrent } from "./usa-knowledge.mjs";
 
@@ -85,4 +86,11 @@ test("the committed US knowledge file meets the US rule", async () => {
   const source = JSON.parse(await readFile("data/wine-map/place-profiles-usa.json", "utf8"));
   assert.deepEqual(validateUsaProfiles(source, wave), []);
   assert.deepEqual(source.new_grapes.map((g) => g.name), ["Petite Sirah"]);
+});
+
+test("the knowledge migration is current with the data file (Review Focus 3)", async () => {
+  const source = JSON.parse(await readFile("data/wine-map/place-profiles-usa.json", "utf8"));
+  const sql = await readFile("supabase/migrations/20260930094747_usa_us2_knowledge.sql", "utf8");
+  assert.deepEqual(migrationIsCurrent(source, sql.replace(/\r\n/g, "\n")), []);
+  assert.deepEqual(topLevelTransactionStatements(sql), []);
 });
