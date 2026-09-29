@@ -1257,3 +1257,46 @@ describe("a prefix-named designation row never agrees until renamed to the suffi
     expect(missingWineFields(d, { now: NOW })).not.toContain("appellation");
   });
 });
+
+describe("US cross-state AVAs after US-1 (spec §6.4): the region follows the one kept row", () => {
+  // The first producer the US-1 research placed in Oregon (Milton-Freewater), or
+  // a stand-in when the research placed none there.
+  const research = JSON.parse(readFileSync(path.join(process.cwd(), "data/usa-reference/us1-producer-states.json"), "utf8")) as { producers: { name: string; state: string | null }[] };
+  const MILTON_FREEWATER_PRODUCER = research.producers.find((p) => p.state === "OR")?.name ?? "Milton Bench Cellars";
+  const usa = (): ReferenceSnapshot => ({
+    countries: [{ id: "us", name: "United States" }],
+    regions: [{ id: "wa", name: "Washington", country_id: "us" }, { id: "or", name: "Oregon", country_id: "us" }],
+    appellations: [
+      { id: "rocks", name: "The Rocks District of Milton-Freewater AVA", region_id: "or" },
+      { id: "gorge", name: "Columbia Gorge AVA", region_id: "or" },
+      { id: "wwv", name: "Walla Walla Valley AVA", region_id: "wa" },
+      { id: "cv", name: "Columbia Valley AVA", region_id: "wa" },
+      { id: "wa-self", name: "Washington", region_id: "wa" },
+      { id: "or-self", name: "Oregon", region_id: "or" },
+    ],
+    none: [],
+    grapes: [{ id: "syr", name: "Syrah" }, { id: "pn", name: "Pinot Noir" }],
+    type_designations: [],
+    producers: [
+      { id: "mf", name: MILTON_FREEWATER_PRODUCER, region_id: "or" },
+      { id: "pc", name: "Phelps Creek Vineyards", region_id: null },
+    ],
+  });
+  const us = { noGeographicIndication: false, country: "United States", designation: null, wineName: null };
+  it("a Rocks District label from a Milton-Freewater producer lands in Oregon, even when the read guessed Washington", async () => {
+    const d = await resolve("vin-de-france.json", {
+      ...us, producer: MILTON_FREEWATER_PRODUCER, appellation: "The Rocks District of Milton-Freewater", region: "Washington",
+      grapes: [{ name: "Syrah", percentage: null }],
+      rawText: `${MILTON_FREEWATER_PRODUCER.toUpperCase()} · SYRAH · THE ROCKS DISTRICT OF MILTON-FREEWATER · 2021`,
+    }, usa());
+    expect([d.countryId, d.regionId, d.appellationId]).toEqual(["us", "or", "rocks"]);
+  });
+  it("a Columbia Gorge label from a Hood River producer lands in Oregon", async () => {
+    const d = await resolve("vin-de-france.json", {
+      ...us, producer: "Phelps Creek Vineyards", appellation: "Columbia Gorge", region: "Washington",
+      grapes: [{ name: "Pinot Noir", percentage: null }],
+      rawText: "PHELPS CREEK VINEYARDS · PINOT NOIR · COLUMBIA GORGE · 2019",
+    }, usa());
+    expect([d.countryId, d.regionId, d.appellationId]).toEqual(["us", "or", "gorge"]);
+  });
+});

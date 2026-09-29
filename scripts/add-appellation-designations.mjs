@@ -1,4 +1,9 @@
 #!/usr/bin/env node
+// HISTORICAL (US-1, 2026-09-29): this ran once, in July 2026. Its allowlist
+// put a false " AVA" on 21 United States county and state rows, which US-1
+// (supabase/migrations/20260929214747_usa_reference_cleanup.sql) removed. It
+// now skips every United States row, so a rerun cannot put them back.
+//
 // Appends the real-world geographic designation (AOP, DOCG, DOC, IGT, AVA,
 // etc.) to the end of an appellation's name where LWIN records one — e.g.
 // "Barolo" -> "Barolo DOCG", "Napa Valley" -> "Napa Valley AVA", and the
@@ -24,6 +29,7 @@
 //   NEXT_PUBLIC_SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... node scripts/add-appellation-designations.mjs <path-to-LWINdatabase.xlsx> [--dry-run]
 import xlsx from "xlsx";
 import { createClient } from "@supabase/supabase-js";
+import { isUsCountry } from "./usa-reference/us-country-guard.mjs";
 
 const [, , xlsxPathArg, ...rest] = process.argv;
 const dryRun = rest.includes("--dry-run");
@@ -148,8 +154,9 @@ const rows = xlsx.utils.sheet_to_json(sheet, { defval: null });
 console.log(`Read ${rows.length} rows`);
 
 const liveRows = rows.filter(
-  (r) => r.STATUS === "Live" && r.COUNTRY && r.COUNTRY !== "NA" && r.REGION && r.REGION !== "NA",
+  (r) => r.STATUS === "Live" && r.COUNTRY && r.COUNTRY !== "NA" && r.REGION && r.REGION !== "NA" && !isUsCountry(r.COUNTRY),
 );
+console.log(`Skipping ${rows.filter((r) => isUsCountry(r.COUNTRY)).length} United States rows (US-1 guard)`);
 
 // Two kinds of group: specific site/sub_region appellations, and
 // region-level (both NA) — mirrors import-lwin.mjs's own candidate logic.
