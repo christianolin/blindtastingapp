@@ -11,6 +11,14 @@ export type Range = [string, string];
 
 export type Named = { id: string; name: string };
 
+/** A wine-map place by its canonical key and display name (training-room-map
+    spec §5). The key is opaque: never split it for hierarchy (CLAUDE.md). */
+export type MapPlaceRef = { key: string; name: string };
+
+/** Where a typical wine's dot sits (spec RM12): its home place's label point,
+    else the nearest ancestor's; "curated" is R2's display-only point (RM23). */
+export type MapPoint = { lon: number; lat: number; source: "place" | "ancestor" | "curated" };
+
 /** One archetype as the room sees it (spec §4.6): the scoring identity as
     reference FKs with their display names, the SAT ranges and the aromas. */
 export type TrainingCandidate = {
@@ -34,7 +42,12 @@ export type TrainingCandidate = {
     kind: "NOSE" | "PALATE";
     signature: boolean;
   }[];
+  /** The home map place's key (`?place=` deep link); null: not on the wine map. */
   placeCanonicalKey: string | null;
+  /** The REGION the home sits in, itself included (spec RM4); null when unplaced. */
+  mapRegion: MapPlaceRef | null;
+  /** The nearest label point up the home's chain (spec RM12); null when none. */
+  mapPoint: MapPoint | null;
   qualityLow: number | null;
   qualityHigh: number | null;
 };
@@ -69,6 +82,9 @@ export type RegionGroup = {
   capped: CapReason | null;
   best: RankedCandidate;
   members: RankedCandidate[];
+  /** The map region its members sit in (spec RM5): the one most members name,
+      ties by key; null when no member is on the map. */
+  mapRegion: MapPlaceRef | null;
 };
 
 /** What Your call has picked (addendum R5): a region, optionally a grape, or a

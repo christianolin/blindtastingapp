@@ -5,12 +5,13 @@ import { TRAINING_COPY } from "./copy";
 import {
   findMember,
   groupExpanded,
+  groupMapRegion,
   groupRanking,
   regionPanelView,
   toggleGroup,
 } from "./groups";
 import { rankCandidates } from "./match";
-import type { CapReason, RankedCandidate, RegionGroup } from "./types";
+import type { CapReason, MapPlaceRef, RankedCandidate, RegionGroup } from "./types";
 
 // The ranking grouped by region (region-guess addendum R1-R3). Every list
 // below is in rankCandidates' own order (spec §5.8): uncapped numbers desc,
@@ -41,6 +42,45 @@ const SCORED = [
   rc("champagne", 12, "colour"),
   rc("sancerre", null, "colour"),
 ];
+
+/** A fixture wine sitting in the given map region (the fixture is all unplaced). */
+function placed(key: string, closeness: number | null, region: MapPlaceRef | null): RankedCandidate {
+  const r = rc(key, closeness);
+  return { ...r, candidate: { ...r.candidate, mapRegion: region } };
+}
+const BORDEAUX: MapPlaceRef = { key: "france.bordeaux", name: "Bordeaux" };
+const LOIRE: MapPlaceRef = { key: "france.loire", name: "Loire" };
+
+describe("groupMapRegion (training-room-map spec RM5)", () => {
+  it("is the region every member names", () => {
+    expect(groupMapRegion([placed("margaux", 91, BORDEAUX), placed("sauternes", 15, BORDEAUX)])).toEqual(BORDEAUX);
+  });
+
+  it("is the region most members name when they disagree", () => {
+    expect(
+      groupMapRegion([placed("margaux", 91, LOIRE), placed("sauternes", 15, BORDEAUX), placed("bandol", 5, BORDEAUX)]),
+    ).toEqual(BORDEAUX);
+  });
+
+  it("breaks a tie by key, whatever the ranking order", () => {
+    expect(groupMapRegion([placed("margaux", 91, LOIRE), placed("sauternes", 15, BORDEAUX)])).toEqual(BORDEAUX);
+    expect(groupMapRegion([placed("margaux", 91, BORDEAUX), placed("sauternes", 15, LOIRE)])).toEqual(BORDEAUX);
+  });
+
+  it("skips unplaced members, and is null when none is on the map", () => {
+    expect(groupMapRegion([placed("margaux", 91, null), placed("sauternes", 15, LOIRE)])).toEqual(LOIRE);
+    expect(groupMapRegion([placed("margaux", 91, null)])).toBeNull();
+    expect(groupMapRegion([])).toBeNull();
+  });
+
+  it("groupRanking puts it on each group", () => {
+    const groups = groupRanking([placed("margaux", 91, BORDEAUX), placed("sauternes", 15, BORDEAUX), rc("vosne", 88)]);
+    expect(groups.map((g) => [g.region.name, g.mapRegion])).toEqual([
+      ["Bordeaux", BORDEAUX],
+      ["Bourgogne", null],
+    ]);
+  });
+});
 
 describe("groupRanking", () => {
   it("groups by region, stands each at its best member and keeps members in ranking order", () => {

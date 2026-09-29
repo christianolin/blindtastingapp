@@ -28,6 +28,8 @@ function candidate(id: string, name: string, country: string, region = "Somewher
     sat: {},
     aromas: [],
     placeCanonicalKey: null,
+    mapRegion: null,
+    mapPoint: null,
     qualityLow: null,
     qualityHigh: null,
   };

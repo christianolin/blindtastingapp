@@ -48,6 +48,8 @@ export function lineageForParts(p: LineageParts): string {
     sat: {},
     aromas: [],
     placeCanonicalKey: null,
+    mapRegion: null,
+    mapPoint: null,
     qualityLow: null,
     qualityHigh: null,
   });

@@ -42,6 +42,8 @@ function candidate(colour: WineColour, style: WineStyle): TrainingCandidate {
     sat: {},
     aromas: [],
     placeCanonicalKey: null,
+    mapRegion: null,
+    mapPoint: null,
     qualityLow: null,
     qualityHigh: null,
   };

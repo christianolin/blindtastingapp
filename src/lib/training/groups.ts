@@ -7,7 +7,7 @@
 // imports only, so vitest pins it.
 import { TRAINING_COPY } from "./copy";
 import { PANEL_LIMIT, isBeforeAnswers } from "./panel";
-import type { RankedCandidate, RegionGroup } from "./types";
+import type { MapPlaceRef, RankedCandidate, RegionGroup } from "./types";
 
 function bucket(g: RegionGroup): number {
   if (g.capped !== null) return 2;
@@ -38,6 +38,27 @@ function compareGroups(x: RegionGroup, y: RegionGroup): number {
 }
 
 /**
+ * A group's map region (training-room-map spec RM5): the one most members sit
+ * in, ties by key; null when no member is on the map. Live, every placed
+ * group's members agree; this only has to be deterministic when they do not.
+ */
+export function groupMapRegion(members: readonly RankedCandidate[]): MapPlaceRef | null {
+  const votes = new Map<string, { ref: MapPlaceRef; n: number }>();
+  for (const m of members) {
+    const ref = m.candidate.mapRegion;
+    if (!ref) continue;
+    const v = votes.get(ref.key);
+    if (v) v.n += 1;
+    else votes.set(ref.key, { ref, n: 1 });
+  }
+  let best: { ref: MapPlaceRef; n: number } | null = null;
+  for (const v of votes.values()) {
+    if (!best || v.n > best.n || (v.n === best.n && v.ref.key < best.ref.key)) best = v;
+  }
+  return best ? { key: best.ref.key, name: best.ref.name } : null;
+}
+
+/**
  * rankCandidates' output (spec §5.8 order) as region groups (R1, R2). Members
  * keep the ranking's order, so a group's first uncapped member is its best —
  * the ranking puts every uncapped number before the uncapped nulls and every
@@ -62,6 +83,7 @@ export function groupRanking(ranked: readonly RankedCandidate[]): RegionGroup[] 
       capped: best.capped,
       best,
       members: list,
+      mapRegion: groupMapRegion(list),
     });
   }
   return groups.sort(compareGroups);

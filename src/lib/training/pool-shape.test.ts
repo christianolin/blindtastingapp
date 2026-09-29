@@ -8,12 +8,14 @@ import {
   historyOrFilter,
   pageOf,
   parseSnapshot,
+  placeLinks,
   shapeAttemptRow,
   shapeCandidates,
   tallyRows,
   vintageColumns,
   vintageFromColumns,
   wineDisplay,
+  type ArchetypePlaceRaw,
   type AttemptRaw,
   type CatalogDisplayRaw,
   type PoolRaw,
@@ -23,6 +25,25 @@ import { lineageForParts } from "./archetype-view";
 
 const ARCH_PAUILLAC = "00000000-0000-4000-8000-00000000a001";
 const ARCH_BOURGOGNE = "00000000-0000-4000-8000-00000000a002";
+// training_archetype_places() rows (training-room-map spec §4.1).
+const PAUILLAC_PLACE: ArchetypePlaceRaw = {
+  archetype_id: ARCH_PAUILLAC,
+  place_key: "france.bordeaux.haut-medoc.pauillac",
+  region_key: "france.bordeaux",
+  region_name: "Bordeaux",
+  point_key: "france.bordeaux.haut-medoc.pauillac",
+  point_lon: -0.7708,
+  point_lat: 45.1971,
+};
+const NO_PLACE: ArchetypePlaceRaw = {
+  archetype_id: ARCH_BOURGOGNE,
+  place_key: null,
+  region_key: null,
+  region_name: null,
+  point_key: null,
+  point_lon: null,
+  point_lat: null,
+};
 const WINE_OLD = "00000000-0000-4000-8000-00000000b001";
 const WINE_NEW = "00000000-0000-4000-8000-00000000b002";
 const WINE_HIDDEN = "00000000-0000-4000-8000-00000000b003";
@@ -104,7 +125,7 @@ function pool(overrides: Partial<PoolRaw> = {}): PoolRaw {
         { id: "d-grand", name: "Grand Cru Classé" },
       ],
     },
-    placeKeys: [{ id: "place-pauillac", canonical_key: "france.bordeaux.haut-medoc.pauillac" }],
+    placeLinks: placeLinks([PAUILLAC_PLACE, NO_PLACE]),
     ...overrides,
   };
 }
@@ -176,6 +197,65 @@ const NO_POINTS = {
   vintage: null,
 };
 
+describe("placeLinks (training-room-map spec §5, RM3a)", () => {
+  it("maps a row to the home key, its REGION and the home's own point", () => {
+    expect(placeLinks([PAUILLAC_PLACE]).get(ARCH_PAUILLAC)).toEqual({
+      placeCanonicalKey: "france.bordeaux.haut-medoc.pauillac",
+      mapRegion: { key: "france.bordeaux", name: "Bordeaux" },
+      mapPoint: { lon: -0.7708, lat: 45.1971, source: "place" },
+    });
+  });
+
+  it("marks a point from further up the chain as an ancestor's", () => {
+    const row: ArchetypePlaceRaw = {
+      archetype_id: "a-mda",
+      place_key: "italy.abruzzo.montepulciano-d-abruzzo",
+      region_key: "italy.abruzzo",
+      region_name: "Abruzzo",
+      point_key: "italy.abruzzo",
+      point_lon: 13.8523,
+      point_lat: 42.2926,
+    };
+    expect(placeLinks([row]).get("a-mda")?.mapPoint).toEqual({ lon: 13.8523, lat: 42.2926, source: "ancestor" });
+  });
+
+  it("leaves an unplaced archetype with all three null, whatever else its row carries", () => {
+    const stray = { ...NO_PLACE, region_key: "france.bordeaux", region_name: "Bordeaux", point_key: "x", point_lon: 1, point_lat: 1 };
+    const unplaced = { placeCanonicalKey: null, mapRegion: null, mapPoint: null };
+    expect(placeLinks([NO_PLACE]).get(ARCH_BOURGOGNE)).toEqual(unplaced);
+    expect(placeLinks([stray]).get(ARCH_BOURGOGNE)).toEqual(unplaced);
+  });
+
+  it("gives no point for a NaN, infinite or out-of-range coordinate, and keeps the key and region", () => {
+    for (const bad of [
+      { point_lon: Number.NaN },
+      { point_lat: Number.POSITIVE_INFINITY },
+      { point_lon: 180.5 },
+      { point_lat: -90.01 },
+      { point_lon: null },
+      { point_key: null },
+    ]) {
+      const link = placeLinks([{ ...PAUILLAC_PLACE, ...bad }]).get(ARCH_PAUILLAC);
+      expect(link?.mapPoint).toBeNull();
+      expect(link?.placeCanonicalKey).toBe("france.bordeaux.haut-medoc.pauillac");
+      expect(link?.mapRegion).toEqual({ key: "france.bordeaux", name: "Bordeaux" });
+    }
+  });
+
+  it("gives no region without both its key and its name", () => {
+    expect(placeLinks([{ ...PAUILLAC_PLACE, region_name: null }]).get(ARCH_PAUILLAC)?.mapRegion).toBeNull();
+    expect(placeLinks([{ ...PAUILLAC_PLACE, region_key: null }]).get(ARCH_PAUILLAC)?.mapRegion).toBeNull();
+  });
+
+  it("the fail-soft path: no rows leaves every candidate off the wine map", () => {
+    const shaped = shapeCandidates(pool({ placeLinks: placeLinks([]) }));
+    expect(shaped).toHaveLength(2);
+    for (const c of shaped) {
+      expect(c).toMatchObject({ placeCanonicalKey: null, mapRegion: null, mapPoint: null });
+    }
+  });
+});
+
 describe("shapeCandidates", () => {
   it("orders by sort_order and names every reference", () => {
     const [first, second] = shapeCandidates(pool());
@@ -193,6 +273,8 @@ describe("shapeCandidates", () => {
       secondaryGrape: { id: "me", name: "Merlot" },
       typicalAge: [8, 25],
       placeCanonicalKey: "france.bordeaux.haut-medoc.pauillac",
+      mapRegion: { key: "france.bordeaux", name: "Bordeaux" },
+      mapPoint: { lon: -0.7708, lat: 45.1971, source: "place" },
       qualityLow: 88,
       qualityHigh: 96,
     });
@@ -204,6 +286,8 @@ describe("shapeCandidates", () => {
     expect(bourgogne.secondaryGrape).toBeNull();
     expect(bourgogne.typicalAge).toBeNull();
     expect(bourgogne.placeCanonicalKey).toBeNull();
+    expect(bourgogne.mapRegion).toBeNull();
+    expect(bourgogne.mapPoint).toBeNull();
     expect(bourgogne.aromas).toEqual([]);
     expect(bourgogne.designations).toEqual([]);
   });

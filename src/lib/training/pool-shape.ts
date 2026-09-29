@@ -66,8 +66,54 @@ export type PoolRaw = {
     /** In type_designations.sort_order — the order a candidate lists them. */
     typeDesignations: Named[];
   };
-  placeKeys: { id: string; canonical_key: string }[];
+  /** By archetype id, from placeLinks(); an empty map (the RPC's fail-soft
+      path, spec RM3a) leaves every candidate off the wine map. */
+  placeLinks: ReadonlyMap<string, PlaceLink>;
 };
+
+/** One row of training_archetype_places() (training-room-map spec §4.1, RM3). */
+export type ArchetypePlaceRaw = {
+  archetype_id: string;
+  place_key: string | null;
+  region_key: string | null;
+  region_name: string | null;
+  point_key: string | null;
+  point_lon: number | null;
+  point_lat: number | null;
+};
+
+/** A candidate's wine-map fields, as TrainingCandidate carries them. */
+export type PlaceLink = Pick<TrainingCandidate, "placeCanonicalKey" | "mapRegion" | "mapPoint">;
+
+export const UNPLACED: PlaceLink = { placeCanonicalKey: null, mapRegion: null, mapPoint: null };
+
+function inRange(v: number | null, limit: number): v is number {
+  return typeof v === "number" && Number.isFinite(v) && Math.abs(v) <= limit;
+}
+
+/**
+ * The RPC's rows by archetype id (spec §5). A row without a home key is
+ * unplaced whatever else it carries; a region needs its key and its name; a
+ * point needs its key and a finite, in-range lon/lat, and is the home's own
+ * ("place") when its key is the home key, else an ancestor's.
+ */
+export function placeLinks(rows: readonly ArchetypePlaceRaw[]): Map<string, PlaceLink> {
+  const out = new Map<string, PlaceLink>();
+  for (const r of rows) {
+    if (!r.place_key) {
+      out.set(r.archetype_id, UNPLACED);
+      continue;
+    }
+    const mapRegion = r.region_key && r.region_name ? { key: r.region_key, name: r.region_name } : null;
+    const source: "place" | "ancestor" = r.point_key === r.place_key ? "place" : "ancestor";
+    const mapPoint =
+      r.point_key && inRange(r.point_lon, 180) && inRange(r.point_lat, 90)
+        ? { lon: r.point_lon, lat: r.point_lat, source }
+        : null;
+    out.set(r.archetype_id, { placeCanonicalKey: r.place_key, mapRegion, mapPoint });
+  }
+  return out;
+}
 
 function groupBy<T>(rows: readonly T[], key: (row: T) => string): Map<string, T[]> {
   const out = new Map<string, T[]>();
@@ -114,7 +160,6 @@ export function shapeCandidates(raw: PoolRaw): TrainingCandidate[] {
   const designationById = index(raw.names.typeDesignations);
   const designationRank = new Map(raw.names.typeDesignations.map((d, i) => [d.id, i] as const));
   const termById = new Map(raw.terms.map((t) => [t.id, t] as const));
-  const placeKey = new Map(raw.placeKeys.map((p) => [p.id, p.canonical_key] as const));
   const aromasOf = groupBy(raw.aromas, (a) => a.archetype_id);
   const designationsOf = groupBy(raw.designations, (d) => d.archetype_id);
 
@@ -158,7 +203,7 @@ export function shapeCandidates(raw: PoolRaw): TrainingCandidate[] {
           : null,
       sat: cleanSat(a.sat),
       aromas,
-      placeCanonicalKey: a.wine_place_id ? (placeKey.get(a.wine_place_id) ?? null) : null,
+      ...(raw.placeLinks.get(a.id) ?? UNPLACED),
       qualityLow: a.quality_low,
       qualityHigh: a.quality_high,
     });

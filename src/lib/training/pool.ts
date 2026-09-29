@@ -24,6 +24,7 @@ import {
   finalWineId,
   historyOrFilter,
   pageOf,
+  placeLinks,
   shapeAttemptRow,
   shapeCandidates,
   tallyRows,
@@ -31,6 +32,7 @@ import {
   type AromaTermRaw,
   type ArchetypeAromaRaw,
   type ArchetypeDesignationRaw,
+  type ArchetypePlaceRaw,
   type ArchetypeRaw,
   type AttemptRaw,
   type CatalogDisplayRaw,
@@ -77,6 +79,26 @@ async function readByIds<T>(
   return rows;
 }
 
+// The one pool read that fails SOFT (training-room-map spec RM3a): it serves
+// the map links only, never the ranking, so a failure here (a PostgREST schema
+// cache that has not reloaded, a lock during a neighbour's DDL, an RLS change
+// on wine_places or its boundaries) leaves every wine "Not on the wine map yet"
+// and the room still ranks, scores and saves. One console.error names it. The
+// pool is ~100 archetypes, far under PostgREST's 1000-row answer.
+async function readArchetypePlaces(supabase: Client): Promise<ArchetypePlaceRaw[]> {
+  try {
+    const { data, error } = await supabase.rpc("training_archetype_places");
+    if (error) {
+      console.error("training pool: map places", error);
+      return [];
+    }
+    return (data ?? []) as ArchetypePlaceRaw[];
+  } catch (error) {
+    console.error("training pool: map places", error);
+    return [];
+  }
+}
+
 const ARCHETYPE_COLUMNS: string =
   "id, name, description, colour, style, country_id, region_id, appellation_id, " +
   "primary_grape_id, secondary_grape_id, typical_age_low, typical_age_high, sat, " +
@@ -84,7 +106,7 @@ const ARCHETYPE_COLUMNS: string =
 
 /** Every archetype as a TrainingCandidate (spec §4.6). One read per table, joined in TS. */
 export const readTrainingPool = cache(async (supabase: Client): Promise<TrainingCandidate[]> => {
-  const [archetypesRaw, aromasRaw, termsRaw, designationsRaw] = await Promise.all([
+  const [archetypesRaw, aromasRaw, termsRaw, designationsRaw, placeRows] = await Promise.all([
     readAll("archetypes", (from, to) =>
       supabase.from("wine_archetypes").select(ARCHETYPE_COLUMNS).order("sort_order").order("id").range(from, to),
     ),
@@ -108,13 +130,15 @@ export const readTrainingPool = cache(async (supabase: Client): Promise<Training
         .order("type_designation_id")
         .range(from, to),
     ),
+    // First round, beside the archetypes: no extra round trip (spec RM3).
+    readArchetypePlaces(supabase),
   ]);
   const archetypes = archetypesRaw as unknown as ArchetypeRaw[];
   const designations = designationsRaw as unknown as ArchetypeDesignationRaw[];
   const ids = (pick: (a: ArchetypeRaw) => string | null) =>
     archetypes.map(pick).filter((id): id is string => id !== null);
 
-  const [countries, regions, appellations, grapes, typeDesignations, places] = await Promise.all([
+  const [countries, regions, appellations, grapes, typeDesignations] = await Promise.all([
     readByIds("countries", ids((a) => a.country_id), (chunk) =>
       supabase.from("countries").select("id, name").in("id", chunk),
     ),
@@ -130,11 +154,6 @@ export const readTrainingPool = cache(async (supabase: Client): Promise<Training
     readByIds("type designations", designations.map((d) => d.type_designation_id), (chunk) =>
       supabase.from("type_designations").select("id, name, sort_order").in("id", chunk),
     ),
-    // Only non-null place ids: a map place is optional (D9) — in batch 1, 69
-    // of the 87 archetypes have one and 18 do not.
-    readByIds("map places", ids((a) => a.wine_place_id), (chunk) =>
-      supabase.from("wine_places").select("id, canonical_key").in("id", chunk),
-    ),
   ]);
 
   const orderedDesignations: Named[] = [...typeDesignations]
@@ -147,7 +166,9 @@ export const readTrainingPool = cache(async (supabase: Client): Promise<Training
     terms: termsRaw as unknown as AromaTermRaw[],
     designations,
     names: { countries, regions, appellations, grapes, typeDesignations: orderedDesignations },
-    placeKeys: places,
+    // A map place is optional (D9): on 2026-09-29, 84 of the 102 archetypes
+    // have one and 18 do not.
+    placeLinks: placeLinks(placeRows),
   });
 });
 

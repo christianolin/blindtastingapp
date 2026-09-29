@@ -518,6 +518,8 @@ function toCandidate(s: Seed): TrainingCandidate {
     sat: s.sat,
     aromas: [...s.nose.map(link("NOSE")), ...s.palate.map(link("PALATE"))],
     placeCanonicalKey: null,
+    mapRegion: null,
+    mapPoint: null,
     qualityLow: null,
     qualityHigh: null,
   };

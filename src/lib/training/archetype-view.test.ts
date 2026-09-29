@@ -26,6 +26,8 @@ const pauillac: TrainingCandidate = {
     { termId: "t-cassis", term: "blackcurrant", group: "Black fruit", kind: "PALATE", signature: false },
   ],
   placeCanonicalKey: "france.bordeaux.haut-medoc.pauillac",
+  mapRegion: { key: "france.bordeaux", name: "Bordeaux" },
+  mapPoint: { lon: -0.7708, lat: 45.1971, source: "place" },
   qualityLow: 89,
   qualityHigh: 98,
 };
@@ -40,6 +42,8 @@ const bourgogne: TrainingCandidate = {
   secondaryGrape: null,
   aromas: [],
   placeCanonicalKey: null,
+  mapRegion: null,
+  mapPoint: null,
 };
 
 describe("candidateToArchetypeView", () => {
