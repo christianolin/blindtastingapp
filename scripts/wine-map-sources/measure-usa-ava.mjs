@@ -10,6 +10,14 @@
 // Erie, the Finger Lakes) counts toward neither state. The 0.05° buffer is
 // check-only, for §8.2's containment share.
 //
+// `state_shares` are raw measurements against the Natural Earth 1:50m state
+// line, which is several km off along the Columbia River: they include false
+// shares (Oregon land inside Washington-only AVAs). usa-tree.mjs uses a share
+// only in a state TTB lists for the AVA. `containment_share` here is taken
+// over the states measured at 0.5% or more (`containment_states`); the tree
+// uses it only when that set is the AVA's legal set, and otherwise takes the
+// single legal state's buffered share, which is the same formula.
+//
 // Heavy (pairwise intersections of about 220 outlines): run it once, off-peak.
 // Usage: node scripts/wine-map-sources/measure-usa-ava.mjs
 import assert from "node:assert/strict";

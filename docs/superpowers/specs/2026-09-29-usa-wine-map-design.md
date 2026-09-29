@@ -160,6 +160,13 @@ Non-goals:
   - Exception: an **owner-approved override** recorded in the data file (`state_override`, with the
     owner's words), which applies to the map and the scoring row alike.
   - Every other state holding ≥ 0.5% of the AVA's land area gets an `ALTERNATE_PARENT` edge.
+  - **Only a legal state counts** (US-0 review fix, 2026-09-29). A legal state is one TTB lists for
+    the AVA (`data/wine-map/usa-ava-ttb-list.json`; UC Davis's own list only for an AVA TTB does
+    not name). "Dominant" is the largest land share among the legal states, a state edge needs a
+    legal state, and an override must name one. Reason: the NE 1:50m state line sits several km off
+    the Columbia River, so it measures Oregon land inside Washington-only AVAs (The Burn of Columbia
+    Valley 38%, Horse Heaven Hills 2%). Those shares are withheld and listed for review
+    (`review.state_list_disagreements[].withheld_states`), never used.
   - An AVA whose dominant state is outside wave 1 waits for that state's wave (likely Snake River
     Valley and Lewis-Clark Valley, for Idaho; Lake Erie is decided by the computation).
   - Reason: the shard is the second key segment and keys lock, so a place cannot live in two shards.
@@ -815,7 +822,8 @@ Modelled on `stage-germany-weinbau.mjs`.
 - **State containment is measured on land, and is water-aware.** For each AVA, the share is
   `area(AVA ∩ keyed-state outline, buffered 0.05°) / area(AVA ∩ union of all lower-48 state
   outlines, buffered 0.05°)`. It must be ≥ 99.5% unless the AVA is cross-state. For a cross-state
-  AVA, the union of its states must reach ≥ 99.5%.
+  AVA, the union of its states must reach ≥ 99.5%. "Cross-state" and "its states" mean its legal
+  (TTB) states (D6), never the states the 1:50m line happens to measure.
   - Water inside an AVA (Puget Sound, San Francisco Bay, Long Island Sound, Lake Erie, the Finger
     Lakes) therefore counts toward neither side of the share.
   - The buffer absorbs 1:50m coastline generalization. It is check-only.
@@ -846,15 +854,16 @@ Modelled on `stage-germany-weinbau.mjs`.
 A read-only step (the stage script's dry run) computes, over the simplified normalized geometry,
 the inputs to the pure `usa-tree.mjs`:
 
-- **Map state** = the state holding the largest land share (D6), unless `state_override` says
-  otherwise.
+- **Map state** = the legal state holding the largest land share (D6), unless `state_override`
+  says otherwise.
 - **`within(a, b)`** = area(a ∩ b) ≥ 99.5% of area(a).
 - **Primary parent** = the smallest-area AVA with `within` **that has the same map state**.
   Otherwise, the umbrella SUBREGION or navigation node the data file names. Otherwise, the state
   (D7).
 - **`ALTERNATE_PARENT(a → b)`** for every other `within` container, whatever its state.
-- **`ALTERNATE_PARENT(a → state)`** for every state, other than the map state, that holds ≥ 0.5% of
-  a's land area.
+- **`ALTERNATE_PARENT(a → state)`** for every legal (TTB) state of a (D6), other than the map
+  state, that holds ≥ 0.5% of a's land area. A measured share in any other state is a state-line
+  artifact: withheld, listed for review, no edge.
 - **`OVERLAPS(a, b)`**, stored once with `source` = the smaller place, when their intersection is
   > 1% of the smaller one's area and neither is `within` the other. Below 1% is digitizing noise and
   gets no edge.

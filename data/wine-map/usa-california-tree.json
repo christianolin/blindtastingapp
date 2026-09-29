@@ -4,7 +4,8 @@
   "_inputs": {
     "measurements_sha256": "72339AB6F6A804F831F00D6D8A27106CFC0BE2C5EE078B23EC41FAD4CB26BA42",
     "config_sha256": "41D385B8CB6591A32B4C187857B93D77B0243228DA8980C6DA6AF7A42D175043",
-    "diff_sha256": "80DF4951FE4A9AE42B6999B90EFC1D797B3976A7921A9CF7A7994462AC1B75A2"
+    "diff_sha256": "80DF4951FE4A9AE42B6999B90EFC1D797B3976A7921A9CF7A7994462AC1B75A2",
+    "ttb_list_sha256": "C745F493AE24E0777F1177E3056785942B6C14160AA54D348F8520220B660A87"
   },
   "state": "CA",
   "state_key": "united-states.california",
@@ -61,6 +62,8 @@
       "area_km2": null,
       "land_share": null,
       "containment_share": null,
+      "legal_states": null,
+      "legal_source": null,
       "state_shares": null
     },
     {
@@ -86,6 +89,8 @@
       "area_km2": null,
       "land_share": null,
       "containment_share": null,
+      "legal_states": null,
+      "legal_source": null,
       "state_shares": null
     },
     {
@@ -111,6 +116,10 @@
       "area_km2": 1793.906,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -138,6 +147,10 @@
       "area_km2": 27490.268,
       "land_share": 0.969579,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -165,6 +178,10 @@
       "area_km2": 23.614,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -192,6 +209,10 @@
       "area_km2": 77.893,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -219,6 +240,10 @@
       "area_km2": 545.486,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -246,6 +271,10 @@
       "area_km2": 34.847,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -273,6 +302,10 @@
       "area_km2": 31.506,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -300,6 +333,10 @@
       "area_km2": 2414.981,
       "land_share": 0.977706,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -327,6 +364,10 @@
       "area_km2": 130.301,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -354,6 +395,10 @@
       "area_km2": 49.662,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -381,6 +426,10 @@
       "area_km2": 100.077,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -408,6 +457,10 @@
       "area_km2": 135.26,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -435,6 +488,10 @@
       "area_km2": 83.547,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -462,6 +519,10 @@
       "area_km2": 2471.842,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -489,6 +550,10 @@
       "area_km2": 215.273,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -516,6 +581,10 @@
       "area_km2": 89.085,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -543,6 +612,10 @@
       "area_km2": 269.876,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -570,6 +643,10 @@
       "area_km2": 70.538,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -597,6 +674,10 @@
       "area_km2": 67.225,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -624,6 +705,10 @@
       "area_km2": 109.757,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -651,6 +736,10 @@
       "area_km2": 598.142,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -678,6 +767,10 @@
       "area_km2": 189.203,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -705,6 +798,10 @@
       "area_km2": 28.708,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -732,6 +829,10 @@
       "area_km2": 9.278,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -759,6 +860,10 @@
       "area_km2": 76.705,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -786,6 +891,10 @@
       "area_km2": 1632.171,
       "land_share": 0.978219,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -813,6 +922,10 @@
       "area_km2": 160.038,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -840,6 +953,10 @@
       "area_km2": 88.199,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -867,6 +984,10 @@
       "area_km2": 76.863,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -894,6 +1015,10 @@
       "area_km2": 1284.967,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -921,6 +1046,10 @@
       "area_km2": 10.955,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -948,6 +1077,10 @@
       "area_km2": 10.211,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -975,6 +1108,10 @@
       "area_km2": 70.868,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -1002,6 +1139,10 @@
       "area_km2": 737.238,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -1029,6 +1170,10 @@
       "area_km2": 31.285,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -1056,6 +1201,10 @@
       "area_km2": 104.515,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -1083,6 +1232,10 @@
       "area_km2": 89.421,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -1110,6 +1263,10 @@
       "area_km2": 144.389,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -1137,6 +1294,10 @@
       "area_km2": 76.923,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -1164,6 +1325,10 @@
       "area_km2": 25.552,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -1191,6 +1356,8 @@
       "area_km2": null,
       "land_share": null,
       "containment_share": null,
+      "legal_states": null,
+      "legal_source": null,
       "state_shares": null
     },
     {
@@ -1216,6 +1383,10 @@
       "area_km2": 404.32,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -1243,6 +1414,10 @@
       "area_km2": 395.56,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -1270,6 +1445,10 @@
       "area_km2": 19.872,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -1297,6 +1476,10 @@
       "area_km2": 139.884,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -1324,6 +1507,10 @@
       "area_km2": 281.401,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -1351,6 +1538,10 @@
       "area_km2": 2188.886,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -1378,6 +1569,10 @@
       "area_km2": 225.023,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -1405,6 +1600,10 @@
       "area_km2": 283.132,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -1432,6 +1631,10 @@
       "area_km2": 334.176,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -1459,6 +1662,10 @@
       "area_km2": 213.091,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -1486,6 +1693,10 @@
       "area_km2": 113.815,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -1513,6 +1724,10 @@
       "area_km2": 331.297,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -1540,6 +1755,10 @@
       "area_km2": 301.689,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -1567,6 +1786,10 @@
       "area_km2": 1845.875,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -1594,6 +1817,10 @@
       "area_km2": 146.453,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -1621,6 +1848,10 @@
       "area_km2": 5.264,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -1648,6 +1879,10 @@
       "area_km2": 12.31,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -1675,6 +1910,10 @@
       "area_km2": 174.481,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -1702,6 +1941,10 @@
       "area_km2": 77.095,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -1729,6 +1972,10 @@
       "area_km2": 235.597,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -1756,6 +2003,10 @@
       "area_km2": 152.306,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -1783,6 +2034,10 @@
       "area_km2": 21.924,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -1810,6 +2065,10 @@
       "area_km2": 690.176,
       "land_share": 0.987747,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -1837,6 +2096,10 @@
       "area_km2": 158.281,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -1864,6 +2127,10 @@
       "area_km2": 189.467,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -1891,6 +2158,10 @@
       "area_km2": 552.03,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -1918,6 +2189,10 @@
       "area_km2": 64.997,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -1945,6 +2220,10 @@
       "area_km2": 1662.935,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -1972,6 +2251,10 @@
       "area_km2": 105.513,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -1999,6 +2282,10 @@
       "area_km2": 117.229,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -2026,6 +2313,10 @@
       "area_km2": 35.479,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -2053,6 +2344,10 @@
       "area_km2": 604.057,
       "land_share": 0.976674,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -2080,6 +2375,10 @@
       "area_km2": 3.871,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -2107,6 +2406,10 @@
       "area_km2": 8.439,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -2134,6 +2437,10 @@
       "area_km2": 45.356,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -2161,6 +2468,10 @@
       "area_km2": 13333.128,
       "land_share": 0.993339,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -2188,6 +2499,10 @@
       "area_km2": 315.957,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -2215,6 +2530,10 @@
       "area_km2": 5.213,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -2242,6 +2561,10 @@
       "area_km2": 33.751,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -2269,6 +2592,10 @@
       "area_km2": 884.091,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -2296,6 +2623,10 @@
       "area_km2": 45.589,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -2323,6 +2654,10 @@
       "area_km2": 36.979,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -2350,6 +2685,10 @@
       "area_km2": 129.056,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -2377,6 +2716,10 @@
       "area_km2": 79.773,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -2404,6 +2747,10 @@
       "area_km2": 0.764,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -2431,6 +2778,10 @@
       "area_km2": 7.053,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -2458,6 +2809,10 @@
       "area_km2": 106.653,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -2485,6 +2840,10 @@
       "area_km2": 149.05,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -2512,6 +2871,10 @@
       "area_km2": 22.366,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -2539,6 +2902,10 @@
       "area_km2": 66.002,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -2566,6 +2933,10 @@
       "area_km2": 31.089,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -2593,6 +2964,10 @@
       "area_km2": 150.67,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -2620,6 +2995,10 @@
       "area_km2": 9.01,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -2647,6 +3026,10 @@
       "area_km2": 1247.842,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -2674,6 +3057,10 @@
       "area_km2": 234.657,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -2701,6 +3088,10 @@
       "area_km2": 124.45,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -2728,6 +3119,10 @@
       "area_km2": 177.649,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -2755,6 +3150,10 @@
       "area_km2": 340.219,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -2782,6 +3181,10 @@
       "area_km2": 1620.974,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -2809,6 +3212,10 @@
       "area_km2": 49.931,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -2836,6 +3243,10 @@
       "area_km2": 51.462,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -2863,6 +3274,10 @@
       "area_km2": 21.132,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -2890,6 +3305,10 @@
       "area_km2": 45.79,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -2917,6 +3336,10 @@
       "area_km2": 16.152,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -2944,6 +3367,10 @@
       "area_km2": 19.907,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -2971,6 +3398,10 @@
       "area_km2": 52.813,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -2998,6 +3429,10 @@
       "area_km2": 68.365,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -3025,6 +3460,10 @@
       "area_km2": 39.853,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -3052,6 +3491,10 @@
       "area_km2": 27.457,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -3079,6 +3522,10 @@
       "area_km2": 30.438,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -3106,6 +3553,10 @@
       "area_km2": 34.319,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -3133,6 +3584,10 @@
       "area_km2": 37.277,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -3160,6 +3615,10 @@
       "area_km2": 12.346,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -3187,6 +3646,10 @@
       "area_km2": 33.792,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -3214,6 +3677,10 @@
       "area_km2": 1595.985,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -3241,6 +3708,10 @@
       "area_km2": 315.814,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -3268,6 +3739,10 @@
       "area_km2": 150.31,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -3295,6 +3770,10 @@
       "area_km2": 691.715,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -3322,6 +3801,10 @@
       "area_km2": 91.764,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -3349,6 +3832,10 @@
       "area_km2": 77.19,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -3376,6 +3863,10 @@
       "area_km2": 818.925,
       "land_share": 0.98587,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -3403,6 +3894,10 @@
       "area_km2": 18.621,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -3430,6 +3925,10 @@
       "area_km2": 116.946,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -3457,6 +3956,10 @@
       "area_km2": 59.487,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -3484,6 +3987,10 @@
       "area_km2": 68.828,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -3511,6 +4018,10 @@
       "area_km2": 2091.997,
       "land_share": 0.990781,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -3538,6 +4049,10 @@
       "area_km2": 573.882,
       "land_share": 0.980221,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -3565,6 +4080,10 @@
       "area_km2": 129.348,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -3592,6 +4111,10 @@
       "area_km2": 465.29,
       "land_share": 0.995176,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -3619,6 +4142,10 @@
       "area_km2": 71.581,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -3646,6 +4173,10 @@
       "area_km2": 22.637,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -3673,6 +4204,10 @@
       "area_km2": 15.904,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -3700,6 +4235,10 @@
       "area_km2": 65.594,
       "land_share": 0.893422,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -3727,6 +4266,10 @@
       "area_km2": 241.873,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -3754,6 +4297,10 @@
       "area_km2": 7424.115,
       "land_share": 0.917108,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -3781,6 +4328,10 @@
       "area_km2": 119.136,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -3808,6 +4359,10 @@
       "area_km2": 960.694,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -3835,6 +4390,10 @@
       "area_km2": 1653.735,
       "land_share": 0.998934,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -3862,6 +4421,10 @@
       "area_km2": 141.788,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -3889,6 +4452,10 @@
       "area_km2": 469.512,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -3916,6 +4483,10 @@
       "area_km2": 8.787,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -3943,6 +4514,10 @@
       "area_km2": 10645.608,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -3970,6 +4545,10 @@
       "area_km2": 55.259,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -3997,6 +4576,10 @@
       "area_km2": 48.873,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -4024,6 +4607,10 @@
       "area_km2": 86.309,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -4051,6 +4638,10 @@
       "area_km2": 35.76,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -4078,6 +4669,10 @@
       "area_km2": 8701.122,
       "land_share": 0.997493,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -4105,6 +4700,10 @@
       "area_km2": 360.094,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -4132,6 +4731,10 @@
       "area_km2": 394.484,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -4159,6 +4762,10 @@
       "area_km2": 37.198,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -4186,6 +4793,10 @@
       "area_km2": 363.194,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -4213,6 +4824,10 @@
       "area_km2": 405.266,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -4240,6 +4855,10 @@
       "area_km2": 31.064,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }
@@ -4267,6 +4886,10 @@
       "area_km2": 149.698,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 1
       }

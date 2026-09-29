@@ -40,3 +40,22 @@ test("US-0 acceptance: every AVA's map state, land share and parent; the named b
   assert.ok(gorge && gorge.map_state === "OR" && gorge.map_state_source === "override", "Columbia Gorge = Oregon (owner)");
   assert.ok(byName("Walla Walla Valley")?.breadcrumb, "Walla Walla Valley has a breadcrumb");
 });
+
+test("state edges only to a state TTB lists: no Oregon parent for Washington-only AVAs", async () => {
+  const ttb = new Map(JSON.parse(await readFile("data/wine-map/usa-ava-ttb-list.json", "utf8")).avas.map((t) => [t.name, t.states]));
+  for (const slug of Object.values(STATE_FILES)) {
+    const report = JSON.parse(await readFile(reportPath(slug), "utf8"));
+    const byKey = new Map(report.places.map((p) => [p.key, p]));
+    for (const e of report.edges.filter((x) => x.basis === "state_share")) {
+      const p = byKey.get(e.source_key);
+      const target = Object.entries(STATE_FILES).find(([, s]) => e.target_key === `united-states.${s}`)[0];
+      assert.ok(ttb.get(p.name).includes(target), `${p.name} -> ${target}: not a TTB state`);
+    }
+    for (const p of report.places.filter((x) => x.ucd_ava_id)) {
+      assert.ok(ttb.get(p.name)?.includes(p.map_state), `${p.name}: map state ${p.map_state} is not a TTB state`);
+    }
+  }
+  const wa = JSON.parse(await readFile(reportPath("washington"), "utf8"));
+  const oregonParents = wa.edges.filter((e) => e.target_key === "united-states.oregon").map((e) => e.source_key.split(".").at(-1)).sort();
+  assert.deepEqual(oregonParents, ["columbia-valley", "walla-walla-valley"]);
+});

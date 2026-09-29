@@ -5,6 +5,16 @@
 // (measure-usa-ava.mjs) and the hand-edited usa-tree-config.json, so the
 // committed tree reports can be rebuilt and re-checked offline, and US-2's
 // stage script re-asserts the same result before it writes a row.
+//
+// Legal states. Each AVA carries `legal_states`: the states TTB lists for it
+// (data/wine-map/usa-ava-ttb-list.json, legal data), or UC Davis's own list
+// for an AVA TTB does not name. A measured land share decides the map state
+// and yields a state edge only in a legal state. The Natural Earth 1:50m state
+// line is several km off along the Columbia River, so it measures Oregon land
+// inside Washington-only AVAs (The Burn of Columbia Valley 38%, Horse Heaven
+// Hills 2%); a share in a state TTB does not list is that artifact. It gets no
+// edge and no say in the map state, and is listed under
+// review.state_list_disagreements (`withheld_states`).
 import { foldAvaName, placeSlug } from "./usa-ava-lib.mjs";
 
 export const DEFAULT_THRESHOLDS = Object.freeze({
@@ -37,7 +47,7 @@ function emptyPlace() {
     is_appellation: false, appellation_system: null, appellation_level: null,
     display: null, navigation_node: false, map_state: null, map_state_source: null,
     ucd_ava_id: null, cfr_section: null, area_km2: null, land_share: null,
-    containment_share: null, state_shares: null,
+    containment_share: null, legal_states: null, legal_source: null, state_shares: null,
   };
 }
 
@@ -60,21 +70,53 @@ export function buildUsaTree({ avas, pairs, config }) {
     return id;
   };
 
-  // 1. Map state (D6): the largest land share, unless the owner overrode it.
+  // 1. Map state (D6): the largest land share among the AVA's legal states,
+  //    unless the owner overrode it.
   const overrides = config.state_overrides ?? {};
   for (const name of Object.keys(overrides)) idForName(name, "state_overrides");
+  const legalOf = new Map();
+  for (const a of avas) {
+    const legal = [...(a.legal_states ?? [])].sort();
+    if (legal.length === 0) throw new Error(`${a.name}: no legal state list (TTB or UC Davis)`);
+    legalOf.set(a.id, new Set(legal));
+  }
+  const isLegal = (id, code) => legalOf.get(id).has(code);
+  const byShare = (x, y) => y[1] - x[1] || x[0].localeCompare(y[0]);
   const mapState = new Map();
   const stateSource = new Map();
   for (const a of avas) {
-    const ranked = Object.entries(a.state_shares ?? {}).sort((x, y) => y[1] - x[1] || x[0].localeCompare(y[0]));
-    if (ranked.length === 0) throw new Error(`${a.name}: no state share; is it outside every state outline?`);
+    const measured = Object.entries(a.state_shares ?? {}).sort(byShare);
+    if (measured.length === 0) throw new Error(`${a.name}: no state share; is it outside every state outline?`);
+    const ranked = measured.filter(([code]) => isLegal(a.id, code));
+    if (ranked.length === 0) {
+      throw new Error(`${a.name}: no measured land in its legal states (${[...legalOf.get(a.id)].join("/")}); measured ${measured.map(([c]) => c).join("/")}`);
+    }
     if (ranked.length > 1 && ranked[0][1] === ranked[1][1]) {
       throw new Error(`${a.name}: ${ranked[0][0]} and ${ranked[1][0]} hold equal shares; add a state_override`);
     }
     const override = Object.hasOwn(overrides, a.name) ? overrides[a.name] : null;
+    if (override && !isLegal(a.id, override.state)) {
+      throw new Error(`state_overrides[${a.name}]: ${override.state} is not one of its legal states (${[...legalOf.get(a.id)].join("/")})`);
+    }
     mapState.set(a.id, override ? override.state : ranked[0][0]);
     stateSource.set(a.id, override ? "override" : "dominant");
   }
+
+  // State containment (§8.2) over the legal states: area(AVA ∩ the legal
+  // states' outlines, each buffered 0.05°) / area(AVA ∩ every state outline,
+  // buffered). For one legal state that is exactly its buffered share; for
+  // several, the measurement's union share, which it took over the states it
+  // measured at 0.5% or more, so it counts only when that set is the legal set.
+  const containmentOf = (a) => {
+    const legal = [...legalOf.get(a.id)].sort();
+    const buffered = a.buffered_shares ?? {};
+    if (legal.length === 1) return Object.keys(buffered).length === 0 ? null : (buffered[legal[0]] ?? 0);
+    const m = a.measured_containment ?? { states: [], share: null };
+    if ([...m.states].sort().join(",") !== legal.join(",")) {
+      throw new Error(`${a.name}: containment was measured over ${m.states.join("/") || "no states"}, not its legal states ${legal.join("/")}; re-measure (measure-usa-ava.mjs)`);
+    }
+    return m.share;
+  };
   const inWave = (id) => isWaveState(mapState.get(id));
 
   // 2. Containment and partial overlap (§8.3).
@@ -203,8 +245,8 @@ export function buildUsaTree({ avas, pairs, config }) {
       display: a.area_km2 >= t.outlineKm2 ? "outline" : null,
       map_state: mapState.get(a.id), map_state_source: stateSource.get(a.id),
       ucd_ava_id: a.id, cfr_section: a.cfr ?? null, area_km2: a.area_km2,
-      land_share: a.land_share ?? null, containment_share: a.containment_share ?? null,
-      state_shares: a.state_shares,
+      land_share: a.land_share ?? null, containment_share: containmentOf(a),
+      legal_states: [...legalOf.get(a.id)].sort(), legal_source: a.legal_source ?? null, state_shares: a.state_shares,
     });
   }
 
@@ -262,7 +304,7 @@ export function buildUsaTree({ avas, pairs, config }) {
       else deferredEdges.push({ type: "ALTERNATE_PARENT", source: a.name, target: nameOf(c), reason: `${nameOf(c)} is keyed under ${mapState.get(c)}, outside wave 1` });
     }
     for (const [code, share] of Object.entries(a.state_shares)) {
-      if (code === mapState.get(a.id) || share < t.stateEdgeMin) continue;
+      if (code === mapState.get(a.id) || share < t.stateEdgeMin || !isLegal(a.id, code)) continue;
       if (isWaveState(code)) edges.push({ type: "ALTERNATE_PARENT", source_key: keyOf(a.id), target_key: stateKey(code), basis: "state_share", share: round4(share) });
       else deferredEdges.push({ type: "ALTERNATE_PARENT", source: a.name, target: code, share: round4(share), reason: `${code} is not a wave-1 state` });
     }
@@ -279,7 +321,7 @@ export function buildUsaTree({ avas, pairs, config }) {
 
   // 9. Deferred AVAs and the review lists.
   const deferred = avas.filter((a) => !inWave(a.id))
-    .map((a) => ({ ucd_ava_id: a.id, name: a.name, map_state: mapState.get(a.id), state_shares: a.state_shares, reason: `dominant state ${mapState.get(a.id)} is outside wave 1` }))
+    .map((a) => ({ ucd_ava_id: a.id, name: a.name, map_state: mapState.get(a.id), legal_states: [...legalOf.get(a.id)].sort(), state_shares: a.state_shares, reason: `dominant state ${mapState.get(a.id)} is outside wave 1` }))
     .sort((x, y) => x.name.localeCompare(y.name));
   const resolveToken = (token) => (byId.has(token) ? token : idByFold.get(foldAvaName(token)) ?? null);
   const withinDisagreements = [];
@@ -301,9 +343,18 @@ export function buildUsaTree({ avas, pairs, config }) {
     };
     if (entry.ucd_within_not_computed.length || entry.computed_not_in_ucd_within.length
       || entry.ucd_contains_not_computed.length || entry.unresolved_tokens.length) withinDisagreements.push(entry);
+    const legal = [...legalOf.get(a.id)].sort();
+    const ucd = [...a.ucd_states].sort();
     const measured = Object.entries(a.state_shares).filter(([, s]) => s >= t.stateEdgeMin).map(([c]) => c).sort();
-    if (measured.join(",") !== [...a.ucd_states].sort().join(",")) {
-      stateListDisagreements.push({ key: keyOf(a.id), name: a.name, ucd_states: [...a.ucd_states].sort(), measured_states: measured });
+    const withheld = Object.entries(a.state_shares).filter(([c]) => !isLegal(a.id, c)).sort(byShare)
+      .map(([state, share]) => ({ state, share }));
+    const measuredDominant = Object.entries(a.state_shares).sort(byShare)[0][0];
+    if (measured.join(",") !== legal.join(",") || ucd.join(",") !== legal.join(",") || withheld.length > 0) {
+      stateListDisagreements.push({
+        key: keyOf(a.id), name: a.name, legal_states: legal, legal_source: a.legal_source ?? null,
+        ucd_states: ucd, measured_states: measured, withheld_states: withheld,
+        measured_dominant: measuredDominant, map_state: mapState.get(a.id),
+      });
     }
   }
   const avaPlaces = ordered.filter((p) => p.ucd_ava_id !== null);

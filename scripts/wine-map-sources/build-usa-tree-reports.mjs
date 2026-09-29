@@ -18,6 +18,7 @@ const PATHS = {
   measurements: "data/wine-map/usa-measurements.json",
   config: "data/wine-map/usa-tree-config.json",
   diff: "data/wine-map/usa-ava-diff.json",
+  ttb: "data/wine-map/usa-ava-ttb-list.json",
   states: "data/wine-map/usa-states-ne50m.geojson",
 };
 
@@ -30,6 +31,9 @@ export async function loadInputs() {
   const nameToCode = Object.fromEntries(JSON.parse(raw.states.toString("utf8")).features
     .map((f) => [f.properties.name, f.properties.code]));
   const legalName = new Map(diff.matched.map((m) => [m.ucd_id, m.ttb_name]));
+  // The legal state list (usa-tree.mjs, "Legal states"): TTB's, by the diff's
+  // match; UC Davis's own only for an AVA TTB does not name.
+  const ttbStates = new Map(JSON.parse(raw.ttb.toString("utf8")).avas.map((t) => [t.name, t.states]));
   const props = new Map();
   for (const slug of Object.values(STATE_FILES)) {
     const fc = JSON.parse(await readFile(`data/wine-map/usa-${slug}-ava.geojson`, "utf8"));
@@ -38,17 +42,23 @@ export async function loadInputs() {
   const avas = Object.entries(measurements.avas).map(([id, m]) => {
     const p = props.get(id);
     assert.ok(p, `measured AVA ${id} is in no normalized artifact`);
+    const ucdStates = stateCodes(p.state, nameToCode);
+    const ttb = legalName.has(id) ? ttbStates.get(legalName.get(id)) : undefined;
+    assert.ok(!legalName.has(id) || ttb, `${id}: matched to TTB "${legalName.get(id)}", which the TTB list lacks`);
     return {
       id,
       name: legalName.get(id) ?? p.name,
       area_km2: m.area_km2,
       state_shares: m.state_shares,
       land_share: m.land_share,
-      containment_share: m.containment_share ?? null,
+      buffered_shares: m.buffered_shares,
+      measured_containment: { states: m.containment_states ?? [], share: m.containment_share ?? null },
+      legal_states: ttb ? [...ttb].sort() : ucdStates,
+      legal_source: ttb ? "ttb" : "ucd",
       counties: splitList(p.county),
       ucd_within: splitList(p.within),
       ucd_contains: splitList(p.contains),
-      ucd_states: stateCodes(p.state, nameToCode),
+      ucd_states: ucdStates,
       cfr: normalizeCfr(p.cfr_index),
     };
   });
@@ -62,6 +72,7 @@ export async function loadInputs() {
       measurements_sha256: sha256hex(raw.measurements),
       config_sha256: sha256hex(raw.config),
       diff_sha256: sha256hex(raw.diff),
+      ttb_list_sha256: sha256hex(raw.ttb),
     },
   };
 }
@@ -97,7 +108,7 @@ export function buildReports({ tree, diff, inputs }) {
       },
       places,
       edges,
-      deferred: tree.deferred.filter((d) => (d.state_shares[code] ?? 0) > 0),
+      deferred: tree.deferred.filter((d) => d.legal_states.includes(code)),
       deferred_edges: tree.deferred_edges.filter((e) => stateOfName.get(e.source) === code),
       ttb_only_pending: diff.ttb_only.filter((t) => t.states.includes(code)),
       review: Object.fromEntries(Object.entries(tree.review).map(([k, list]) => [k, list.filter((r) => keys.has(r.key))])),
@@ -125,11 +136,24 @@ export function summaryMarkdown(tree, reports) {
       ? `- **${name}**: ${p.breadcrumb} (\`${p.key}\`; map state ${p.map_state}, ${p.map_state_source}; land shares ${shares(p.state_shares)})`
       : `- **${name}**: not placed in wave 1 (see "Deferred")`);
   }
-  L.push("", "## Cross-state AVAs", "", "| AVA | Map state | Land shares | State edges |", "|---|---|---|---|");
-  for (const p of tree.places.filter((x) => x.state_shares && Object.keys(x.state_shares).length > 1)) {
+  L.push("", "## Cross-state AVAs", "", "An AVA is cross-state when TTB lists more than one state for it. Only those states get a state edge or a say in the map state.", "");
+  L.push("| AVA | Map state | TTB states | Measured land shares | State edges |", "|---|---|---|---|---|");
+  for (const p of tree.places.filter((x) => x.legal_states && x.legal_states.length > 1)) {
+    const legalShares = Object.fromEntries(p.legal_states.map((c) => [c, p.state_shares[c] ?? 0]));
     const stateEdges = tree.edges.filter((e) => e.source_key === p.key && e.basis === "state_share")
       .map((e) => e.target_key.split(".")[1]).join(", ") || "none (under 0.5%)";
-    L.push(`| ${p.name} | ${p.map_state} (${p.map_state_source}) | ${shares(p.state_shares)} | ${stateEdges} |`);
+    L.push(`| ${p.name} | ${p.map_state} (${p.map_state_source}) | ${p.legal_states.join(", ")} | ${shares(legalShares)} | ${stateEdges} |`);
+  }
+  L.push("", "## State shares that are map artifacts (no edge, no say in the map state)", "");
+  L.push("The Natural Earth 1:50m state line is coarse: along the Columbia River it sits several km off the river, so it measures Oregon land inside AVAs that TTB and UC Davis both place in Washington alone. A share in a state TTB does not list is that artifact. It is withheld: no ALTERNATE_PARENT edge, and it is left out when the map state is picked.", "");
+  const artifacts = tree.review.state_list_disagreements.filter((r) => r.withheld_states.length > 0);
+  if (artifacts.length === 0) L.push("- none");
+  else {
+    L.push("| AVA | TTB states | Map state | Withheld measured shares | Would have been a state edge |", "|---|---|---|---|---|");
+    for (const r of artifacts) {
+      const edgeLike = r.withheld_states.filter((w) => w.share >= tree.thresholds.stateEdgeMin).map((w) => w.state).join(", ") || "no (under 0.5%)";
+      L.push(`| ${r.name} | ${r.legal_states.join(", ")} | ${r.map_state} | ${r.withheld_states.map((w) => `${w.state} ${pct(w.share)}`).join(", ")} | ${edgeLike} |`);
+    }
   }
   L.push("", "## Central Valley (a grouping on this map, not an AVA)", "");
   L.push(...listOrNone(tree.places.filter((x) => x.parent_key === "united-states.california.central-valley").map((p) => `- ${p.name}`)));
@@ -155,7 +179,9 @@ export function summaryMarkdown(tree, reports) {
   L.push(`- Land share under ${pct(tree.thresholds.landShareReview)}: ${tree.review.low_land_share.map((r) => `${r.key} ${pct(r.land_share)}`).join("; ") || "none"}`);
   L.push(`- State containment under ${pct(tree.thresholds.containmentMin)} (spec §8.2: the threshold is fixed only after these numbers are seen): ${tree.review.low_containment.map((r) => `${r.key} ${pct(r.containment_share)}`).join("; ") || "none"}`);
   L.push(`- UC Davis \`within\`/\`contains\` disagreements: ${tree.review.within_disagreements.length} (listed in each state's report; never used to decide)`);
-  L.push(`- UC Davis state lists that disagree with the measured land shares: ${tree.review.state_list_disagreements.map((r) => `${r.name} (UC Davis ${r.ucd_states.join("/")}, measured ${r.measured_states.join("/")})`).join("; ") || "none"}`);
+  L.push(`- Map state where the largest measured share lies outside the legal states (would have been keyed wrongly without the TTB gate): ${tree.review.state_list_disagreements.filter((r) => r.measured_dominant !== r.map_state && !r.legal_states.includes(r.measured_dominant)).map((r) => `${r.name} (measured ${r.measured_dominant}, keyed ${r.map_state})`).join("; ") || "none"}`);
+  L.push(`- UC Davis state lists that disagree with TTB's: ${tree.review.state_list_disagreements.filter((r) => r.ucd_states.join(",") !== r.legal_states.join(",")).map((r) => `${r.name} (UC Davis ${r.ucd_states.join("/")}, TTB ${r.legal_states.join("/")})`).join("; ") || "none"}`);
+  L.push(`- AVAs whose legal states come from UC Davis because TTB does not name them: ${tree.places.filter((p) => p.legal_source === "ucd").map((p) => p.name).join("; ") || "none"}`);
   return `${L.join("\n")}\n`;
 }
 

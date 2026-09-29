@@ -14,10 +14,18 @@ const CONFIG = {
   state_overrides: { "Columbia Gorge": { state: "OR", owner_answer: "Oregon" } },
   parent_overrides: {},
 };
-const ava = (id, name, area_km2, state_shares, extra = {}) => ({
-  id, name, area_km2, state_shares, land_share: 1, containment_share: 1,
-  counties: [], ucd_within: [], ucd_contains: [], ucd_states: Object.keys(state_shares).sort(), cfr: null, ...extra,
-});
+// By default an AVA's legal (TTB) states are the states it was measured in,
+// and its buffered shares match its measured ones.
+const ava = (id, name, area_km2, state_shares, extra = {}) => {
+  const states = Object.keys(state_shares).sort();
+  return {
+    id, name, area_km2, state_shares, land_share: 1,
+    buffered_shares: Object.fromEntries(states.map((c) => [c, 1])),
+    measured_containment: { states, share: 1 },
+    legal_states: states, legal_source: "ttb",
+    counties: [], ucd_within: [], ucd_contains: [], ucd_states: states, cfr: null, ...extra,
+  };
+};
 const pair = (a, b, a_in_b, b_in_a) => ({ a, b, a_in_b, b_in_a });
 const CA = { CA: 1 };
 const AVAS = [
@@ -188,7 +196,7 @@ test("near-duplicate outlines, slug collisions, bad names and orphan nodes stop 
   assert.throws(() => buildUsaTree({ avas: AVAS, pairs: PAIRS, config: { ...CONFIG, umbrellas: { CA: ["Napa Valley"] } } }), /cannot be a SUBREGION/);
   assert.throws(() => buildUsaTree({ avas: [...AVAS, ava("gv1", "Green Valley", 5, CA), ava("gv2", "Green-Valley", 6, CA)], pairs: PAIRS, config: CONFIG }), /duplicate key/);
   assert.throws(() => buildUsaTree({ avas: AVAS, pairs: PAIRS, config: { ...CONFIG, state_overrides: { Nowhere: { state: "OR" } } } }), /no AVA named "Nowhere"/);
-  assert.throws(() => buildUsaTree({ avas: [...AVAS, ava("lost", "Lost", 5, {})], pairs: PAIRS, config: CONFIG }), /no state share/);
+  assert.throws(() => buildUsaTree({ avas: [...AVAS, ava("lost", "Lost", 5, {}, { legal_states: ["CA"] })], pairs: PAIRS, config: CONFIG }), /no state share/);
   const noMembers = { ...CONFIG, navigation_nodes: [{ ...CONFIG.navigation_nodes[0], counties: ["Nowhere"] }] };
   assert.throws(() => buildUsaTree({ avas: AVAS, pairs: PAIRS, config: noMembers }), /has no member/);
 });
@@ -206,4 +214,42 @@ test("an almost-within pair is listed for review and still placed as not within"
     ucd_says_within: true,
   }]);
   assert.deepEqual(tree().review.near_within, []);
+});
+
+test("a measured share in a state TTB does not list is a state-line artifact: no edge, no say in the map state", () => {
+  // The Burn of Columbia Valley: TTB and UC Davis list Washington alone, but the
+  // 1:50m state line measures 38% Oregon. Here the false share even wins.
+  const burn = ava("burn", "The Burn of Columbia Valley", 60, { WA: 0.45, OR: 0.55 }, {
+    legal_states: ["WA"], ucd_states: ["WA"], buffered_shares: { WA: 1, OR: 0.9999 },
+    measured_containment: { states: ["OR", "WA"], share: 1 },
+  });
+  const hhh = ava("hhh", "Horse Heaven Hills", 2300, { WA: 0.977, OR: 0.023 }, {
+    legal_states: ["WA"], ucd_states: ["WA"], buffered_shares: { WA: 0.998, OR: 0.21 },
+  });
+  const t = buildUsaTree({ avas: [...AVAS, burn, hhh], pairs: PAIRS, config: CONFIG });
+  const b = place(t, "The Burn of Columbia Valley");
+  assert.deepEqual([b.key, b.map_state, b.map_state_source, b.legal_states], ["united-states.washington.the-burn-of-columbia-valley", "WA", "dominant", ["WA"]]);
+  assert.deepEqual(edgesFrom(t, b.key), []);
+  assert.equal(b.containment_share, 1, "one legal state: containment is its buffered share");
+  const h = place(t, "Horse Heaven Hills");
+  assert.deepEqual(edgesFrom(t, h.key), []);
+  assert.equal(h.containment_share, 0.998);
+  assert.equal(t.edges.filter((e) => e.target_key === "united-states.oregon" && [b.key, h.key].includes(e.source_key)).length, 0);
+  const r = t.review.state_list_disagreements.find((x) => x.name === "The Burn of Columbia Valley");
+  assert.deepEqual([r.legal_states, r.withheld_states, r.measured_dominant, r.map_state],
+    [["WA"], [{ state: "OR", share: 0.55 }], "OR", "WA"]);
+  // A real cross-state AVA keeps its edge.
+  assert.deepEqual(edgesFrom(t, place(t, "Walla Walla Valley").key), ["ALTERNATE_PARENT>united-states.oregon"]);
+});
+
+test("legal states: an override outside them, no land in them, or a stale multi-state containment stops the build", () => {
+  const badOverride = { ...CONFIG, state_overrides: { "Lake Chelan": { state: "OR" } } };
+  const chelanWaOnly = AVAS.map((a) => (a.id === "chelan" ? { ...a, legal_states: ["WA"] } : a));
+  assert.throws(() => buildUsaTree({ avas: chelanWaOnly, pairs: PAIRS, config: badOverride }), /not one of its legal states/);
+  const nowhere = AVAS.map((a) => (a.id === "seiad" ? { ...a, legal_states: ["OR"] } : a));
+  assert.throws(() => buildUsaTree({ avas: nowhere, pairs: PAIRS, config: CONFIG }), /no measured land in its legal states/);
+  const stale = AVAS.map((a) => (a.id === "walla_walla" ? { ...a, measured_containment: { states: ["WA"], share: 1 } } : a));
+  assert.throws(() => buildUsaTree({ avas: stale, pairs: PAIRS, config: CONFIG }), /re-measure/);
+  const none = AVAS.map((a) => (a.id === "seiad" ? { ...a, legal_states: [] } : a));
+  assert.throws(() => buildUsaTree({ avas: none, pairs: PAIRS, config: CONFIG }), /no legal state list/);
 });

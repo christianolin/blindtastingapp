@@ -4,7 +4,8 @@
   "_inputs": {
     "measurements_sha256": "72339AB6F6A804F831F00D6D8A27106CFC0BE2C5EE078B23EC41FAD4CB26BA42",
     "config_sha256": "41D385B8CB6591A32B4C187857B93D77B0243228DA8980C6DA6AF7A42D175043",
-    "diff_sha256": "80DF4951FE4A9AE42B6999B90EFC1D797B3976A7921A9CF7A7994462AC1B75A2"
+    "diff_sha256": "80DF4951FE4A9AE42B6999B90EFC1D797B3976A7921A9CF7A7994462AC1B75A2",
+    "ttb_list_sha256": "C745F493AE24E0777F1177E3056785942B6C14160AA54D348F8520220B660A87"
   },
   "state": "OR",
   "state_key": "united-states.oregon",
@@ -60,6 +61,8 @@
       "area_km2": null,
       "land_share": null,
       "containment_share": null,
+      "legal_states": null,
+      "legal_source": null,
       "state_shares": null
     },
     {
@@ -85,6 +88,8 @@
       "area_km2": null,
       "land_share": null,
       "containment_share": null,
+      "legal_states": null,
+      "legal_source": null,
       "state_shares": null
     },
     {
@@ -110,6 +115,11 @@
       "area_km2": 786.101,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "OR",
+        "WA"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "OR": 0.652023,
         "WA": 0.347977
@@ -138,6 +148,10 @@
       "area_km2": 298.124,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "OR"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "OR": 1
       }
@@ -165,6 +179,10 @@
       "area_km2": 116.627,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "OR"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "OR": 1
       }
@@ -192,6 +210,10 @@
       "area_km2": 148.545,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "OR"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "OR": 1
       }
@@ -219,6 +241,10 @@
       "area_km2": 8130.316,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "OR"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 0.000047,
         "OR": 0.999953
@@ -247,6 +273,10 @@
       "area_km2": 4638.817,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "OR"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "CA": 0.000063,
         "OR": 0.999937
@@ -275,6 +305,10 @@
       "area_km2": 1089.696,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "OR"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "OR": 1
       }
@@ -302,6 +336,10 @@
       "area_km2": 12.799,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "OR"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "OR": 1
       }
@@ -329,6 +367,10 @@
       "area_km2": 2811.096,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "OR"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "OR": 1
       }
@@ -356,6 +398,10 @@
       "area_km2": 22.336,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "OR"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "OR": 1
       }
@@ -383,6 +429,10 @@
       "area_km2": 14034.069,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "OR"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "OR": 1
       }
@@ -410,6 +460,10 @@
       "area_km2": 252.179,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "OR"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "OR": 1
       }
@@ -437,6 +491,10 @@
       "area_km2": 14.156,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "OR"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "OR": 1
       }
@@ -464,6 +522,10 @@
       "area_km2": 50.457,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "OR"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "OR": 1
       }
@@ -491,6 +553,10 @@
       "area_km2": 158.004,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "OR"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "OR": 1
       }
@@ -518,6 +584,10 @@
       "area_km2": 135.164,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "OR"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "OR": 1
       }
@@ -545,6 +615,10 @@
       "area_km2": 22.935,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "OR"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "OR": 1
       }
@@ -572,6 +646,10 @@
       "area_km2": 580.982,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "OR"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "OR": 1
       }
@@ -599,6 +677,10 @@
       "area_km2": 227.693,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "OR"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "OR": 1
       }
@@ -626,6 +708,10 @@
       "area_km2": 232.506,
       "land_share": 1,
       "containment_share": 1,
+      "legal_states": [
+        "OR"
+      ],
+      "legal_source": "ttb",
       "state_shares": {
         "OR": 1
       }
@@ -706,6 +792,10 @@
       "ucd_ava_id": "snake_river_valley",
       "name": "Snake River Valley",
       "map_state": "ID",
+      "legal_states": [
+        "ID",
+        "OR"
+      ],
       "state_shares": {
         "ID": 0.701023,
         "OR": 0.298977
@@ -815,7 +905,52 @@
     ],
     "low_land_share": [],
     "low_containment": [],
-    "state_list_disagreements": [],
+    "state_list_disagreements": [
+      {
+        "key": "united-states.oregon.southern-oregon",
+        "name": "Southern Oregon",
+        "legal_states": [
+          "OR"
+        ],
+        "legal_source": "ttb",
+        "ucd_states": [
+          "OR"
+        ],
+        "measured_states": [
+          "OR"
+        ],
+        "withheld_states": [
+          {
+            "state": "CA",
+            "share": 0.000047
+          }
+        ],
+        "measured_dominant": "OR",
+        "map_state": "OR"
+      },
+      {
+        "key": "united-states.oregon.southern-oregon.rogue-valley",
+        "name": "Rogue Valley",
+        "legal_states": [
+          "OR"
+        ],
+        "legal_source": "ttb",
+        "ucd_states": [
+          "OR"
+        ],
+        "measured_states": [
+          "OR"
+        ],
+        "withheld_states": [
+          {
+            "state": "CA",
+            "share": 0.000063
+          }
+        ],
+        "measured_dominant": "OR",
+        "map_state": "OR"
+      }
+    ],
     "near_within": [
       {
         "key": "united-states.oregon.elkton-oregon",
