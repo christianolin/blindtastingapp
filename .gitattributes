@@ -1,0 +1,7 @@
+# USA map data (spec 2026-09-29): artifacts are pinned by sha256, so their bytes
+# must be identical on every checkout. core.autocrlf would otherwise rewrite the
+# line endings on Windows and break the pins.
+data/wine-map/usa-* -text
+data/wine-map/united-states-* -text
+data/wine-map/review/usa-* -text
+data/usa-reference/** -text
