@@ -5,7 +5,14 @@ import { groupRanking } from "@/lib/training/groups";
 import type { RankedCandidate, TrainingCandidate } from "@/lib/training/types";
 import { MAP_PALETTES } from "@/lib/wine-map/map-palette";
 import { emptyNoteState } from "@/lib/wset/note-state";
-import { CandidatesPanel, selectedMapIds, targetDetailId, visibleTarget, type PopoverTarget } from "./candidates-panel";
+import {
+  CandidatesPanel,
+  selectedMapIds,
+  targetAfterMapChange,
+  targetDetailId,
+  visibleTarget,
+  type PopoverTarget,
+} from "./candidates-panel";
 import { MapFallback, MapUpright } from "./map-fallback";
 import { MapSwitch, nextTab } from "./map-switch";
 import { ROOM_MAP_START, type RoomMap, type RoomMapState } from "./room-map-state";
@@ -137,6 +144,17 @@ describe("the popover's target rules (RM18)", () => {
     const m = map(["a"]);
     expect(visibleTarget(m, true)).toBe(m);
     expect(visibleTarget(m, false)).toBeNull();
+  });
+
+  it("a view change, a stopped or remounted map, or crossing lg drops what can no longer show", () => {
+    // A map target's anchor is a point on a map that is gone (or remounted):
+    // it must not come back at the screen's corner when Map is chosen again.
+    expect(targetAfterMapChange(map(["a"]), false)).toBeNull();
+    expect(targetAfterMapChange(map(["a"]), true)).toBeNull();
+    // A row's popover survives only while the list is the view.
+    expect(targetAfterMapChange(row, false)).toBe(row);
+    expect(targetAfterMapChange(row, true)).toBeNull();
+    expect(targetAfterMapChange(null, false)).toBeNull();
   });
 });
 

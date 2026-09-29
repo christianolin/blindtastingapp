@@ -255,6 +255,14 @@ export function visibleTarget(target: PopoverTarget | null, mapView: boolean): P
   return (target.kind === "map") === mapView ? target : null;
 }
 
+/** What survives a change of the view, of the map's mount (it stopped, or a
+    retry remounted it) or of the lg breakpoint: a row's popover while the
+    list is the view, and never a map's — its anchor is a point on a map that
+    is gone or new, so kept it would come back at the screen's corner. */
+export function targetAfterMapChange(target: PopoverTarget | null, mapView: boolean): PopoverTarget | null {
+  return target?.kind === "row" && !mapView ? target : null;
+}
+
 /** "{n} wines here": the wines a tap hit, as the list's own rows, best first (RM18). */
 export function MapChooser({ wines, onChoose }: { wines: RankedCandidate[]; onChoose: (id: string) => void }) {
   return (
@@ -416,6 +424,16 @@ export function CandidatesPanel({
   const byId = useMemo(() => new Map(ranked.map((r) => [r.candidate.id, r] as const)), [ranked]);
   const lookup = (id: string) => byId.get(id) ?? findMember(groups, id);
   const mapView = roomMap?.state.view === "map";
+  // A change of view, of the map's mount (a stop, a retry's remount) or of lg
+  // drops what the new state cannot show, during render (React's "adjust
+  // state on a prop change"), so a stopped map's popover never reopens,
+  // anchored to a map that is gone, when Map is chosen again.
+  const mapKey = `${mapView}:${wide}:${roomMap?.state.attempt ?? 0}`;
+  const [seenMapKey, setSeenMapKey] = useState(mapKey);
+  if (seenMapKey !== mapKey) {
+    setSeenMapKey(mapKey);
+    setTarget((t) => targetAfterMapChange(t, mapView));
+  }
   const shown = visibleTarget(target, mapView);
   const openRowId = shown?.kind === "row" ? shown.id : null;
 
