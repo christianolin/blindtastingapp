@@ -271,6 +271,16 @@ const IS_RELATED = ["boolean", ["feature-state", "rel"], false];
 // selection of the session, since the explorer never clears one.
 const HAS_SELECTION = ["==", ["global-state", GS.hasSel], true];
 
+/** D15 (spec 2026-09-29): a place whose tile carries `outline: true` (the AVAs
+    of 5,000 km² or more, and the Central Valley grouping) draws its line and no
+    fill. The factor multiplies each zoom stop's base INSIDE `focus`, never the
+    top-level zoom `interpolate`, which may only be the outermost expression, so
+    style validation would reject a wrapper. The selected branch keeps its own
+    opacity, so a selected outline place still shows its emphasis. A feature
+    without the property evaluates `== true` to false, so its factor is 1 and
+    its opacity is unchanged. */
+const OUTLINE_FILL_FACTOR = ["case", ["==", ["get", "outline"], true], 0, 1];
+
 /** The fill paint every wine polygon layer shares. `ramp` is the shard's
     classification-ramp constant (the world archive passes false: its features
     carry no cru levels); `worldHandoff` folds WORLD_HANDED_FACTOR into each
@@ -285,7 +295,8 @@ export function staticFillPaint(input: {
   // The selection pops, its direct children keep full presence (you drill
   // into them), everything else fades to 45% once something is selected. The
   // selected fill still relaxes at deep zoom so children read on top of it.
-  const focus = (selectedOpacity: number, base: unknown) => {
+  const focus = (selectedOpacity: number, stopBase: unknown) => {
+    const base = ["*", OUTLINE_FILL_FACTOR, stopBase];
     const focused = [
       "case",
       IS_SELECTED,
