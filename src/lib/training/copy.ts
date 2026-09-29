@@ -119,7 +119,28 @@ export const TRAINING_COPY = {
   unrevealedBadge: "Training room · not revealed",
   // unreadable / gone wine
   unreadableWine: "a wine you can't see yet",
+  // the wine map, both ways (training-room-map spec §9 R1 — PROVISIONAL until
+  // the owner approves the table before the R1 deploy)
+  seeOnMap: "See it on the wine map",
+  newTabHint: "(opens in a new tab)",
+  notOnMap: "Not on the wine map yet",
+  practiseBlind: "Practise blind in the training room →",
 } as const;
+
+/** The explorer on one place: the house deep link (training-room-map spec RM6). */
+export function placeHref(key: string): string {
+  return `/knowledge/map?place=${encodeURIComponent(key)}`;
+}
+
+/** "{name} on the wine map": an expanded group's link to its MAP region (RM8). */
+export function regionOnMap(name: string): string {
+  return `${name} on the wine map`;
+}
+
+/** The explorer's heading over a place's typical wines (RM9): plural past one. */
+export function typicalWinesHeading(n: number): string {
+  return n === 1 ? "Typical wine" : "Typical wines";
+}
 
 /** The result table's seven rows, in order (spec §3.5, §9 "result rows"). */
 export const RESULT_ROW_ORDER: readonly PointCategory[] = [

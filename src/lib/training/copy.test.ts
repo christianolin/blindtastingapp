@@ -18,6 +18,8 @@ import {
   lineageLine,
   percentLabel,
   pickSaidLine,
+  placeHref,
+  regionOnMap,
   regionLabel,
   resultMark,
   reasonsLine,
@@ -34,6 +36,7 @@ import {
   styleVerdictLine,
   tallyLine,
   tawnyAgeOption,
+  typicalWinesHeading,
   vintageGuessLabel,
   youSaidLine,
   youSaidRegionLine,
@@ -129,6 +132,10 @@ describe("TRAINING_COPY (spec §9, verbatim)", () => {
       trainingBadge: "Training",
       unrevealedBadge: "Training room · not revealed",
       unreadableWine: "a wine you can't see yet",
+      seeOnMap: "See it on the wine map",
+      newTabHint: "(opens in a new tab)",
+      notOnMap: "Not on the wine map yet",
+      practiseBlind: "Practise blind in the training room →",
     });
   });
 
@@ -448,6 +455,24 @@ describe("hueClearedLine", () => {
     expect(hueClearedLine("LEMON_GREEN", "ORANGE")).toBe(
       "Your colour call (lemon-green) didn't fit — it was an orange wine.",
     );
+  });
+});
+
+describe("the wine-map lines (training-room-map spec §9, R1)", () => {
+  it("placeHref deep-links the explorer and encodes the key", () => {
+    expect(placeHref("france.bordeaux.haut-medoc.pauillac")).toBe(
+      "/knowledge/map?place=france.bordeaux.haut-medoc.pauillac",
+    );
+    expect(placeHref("a b&c/é")).toBe("/knowledge/map?place=a%20b%26c%2F%C3%A9");
+  });
+  it("regionOnMap names the map region", () => {
+    expect(regionOnMap("Veneto")).toBe("Veneto on the wine map");
+    expect(regionOnMap("Andalucía")).toBe("Andalucía on the wine map");
+  });
+  it("typicalWinesHeading is singular for one, plural otherwise", () => {
+    expect(typicalWinesHeading(1)).toBe("Typical wine");
+    expect(typicalWinesHeading(2)).toBe("Typical wines");
+    expect(typicalWinesHeading(9)).toBe("Typical wines");
   });
 });
 
