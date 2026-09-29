@@ -1,0 +1,5314 @@
+{
+ "_generated_by": "scripts/wine-map-sources/measure-usa-ava.mjs (read-only: begin read only ... rollback)",
+ "_inputs": {
+  "data/wine-map/usa-california-ava.geojson": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+  "data/wine-map/usa-washington-ava.geojson": "0D55D546E37CC1288DD24AEEC5DC1F303D295F72BC7A0DC6F213BB6F2DA22297",
+  "data/wine-map/usa-oregon-ava.geojson": "BF05463C00EB9D62EFFBF8A3608B10FFA798B0F84DC2B34699C49AB30863C732",
+  "data/wine-map/usa-new-york-ava.geojson": "4CF1BA9413468D7825A2E3B2EAC10D5DB2C09037718A87422C5E10D79205DBB1",
+  "data/wine-map/usa-states-ne50m.geojson": "C651A0E44CD9561A4AF642B7E7C46C599A5F9C2EECC78159DA92646FFD87F218"
+ },
+ "measured_at": "2026-09-29T17:32:53.367Z",
+ "buffer_degrees": 0.05,
+ "avas": {
+  "adelaida_district": {
+   "area_km2": 215.273,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "alexander_valley": {
+   "area_km2": 315.957,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "alisos_canyon": {
+   "area_km2": 23.614,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "alta_mesa": {
+   "area_km2": 225.023,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "ancient_lakes_of_columbia_valley": {
+   "area_km2": 685.923,
+   "land_share": 1,
+   "state_shares": {
+    "WA": 1
+   },
+   "buffered_shares": {
+    "WA": 1
+   },
+   "containment_states": [
+    "WA"
+   ],
+   "containment_share": 1
+  },
+  "anderson_valley": {
+   "area_km2": 234.657,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "antelope_valley_of_the_california_high_desert": {
+   "area_km2": 1793.906,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "applegate_valley": {
+   "area_km2": 1089.696,
+   "land_share": 1,
+   "state_shares": {
+    "OR": 1
+   },
+   "buffered_shares": {
+    "OR": 1
+   },
+   "containment_states": [
+    "OR"
+   ],
+   "containment_share": 1
+  },
+  "arroyo_grande_valley": {
+   "area_km2": 160.038,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "arroyo_seco": {
+   "area_km2": 130.301,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "atlas_peak": {
+   "area_km2": 49.931,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "ballard_canyon": {
+   "area_km2": 31.285,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "ben_lomond_mountain": {
+   "area_km2": 141.788,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "benmore_valley": {
+   "area_km2": 5.213,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "bennett_valley": {
+   "area_km2": 33.751,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "big_valley_district_lake_county": {
+   "area_km2": 45.589,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "borden_ranch": {
+   "area_km2": 283.132,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "california_shenandoah_valley": {
+   "area_km2": 55.259,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "calistoga": {
+   "area_km2": 51.462,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "candy_mountain": {
+   "area_km2": 3.654,
+   "land_share": 1,
+   "state_shares": {
+    "WA": 1
+   },
+   "buffered_shares": {
+    "WA": 1
+   },
+   "containment_states": [
+    "WA"
+   ],
+   "containment_share": 1
+  },
+  "capay_valley": {
+   "area_km2": 404.32,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "carmel_valley": {
+   "area_km2": 77.893,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "cayuga_lake": {
+   "area_km2": 476.585,
+   "land_share": 1,
+   "state_shares": {
+    "NY": 1
+   },
+   "buffered_shares": {
+    "NY": 1
+   },
+   "containment_states": [
+    "NY"
+   ],
+   "containment_share": 1
+  },
+  "central_coast": {
+   "area_km2": 27490.268,
+   "land_share": 0.969579,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "chalk_hill": {
+   "area_km2": 91.764,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "chalone": {
+   "area_km2": 34.847,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "champlain_valley_of_new_york": {
+   "area_km2": 1472.24,
+   "land_share": 0.996034,
+   "state_shares": {
+    "NY": 0.999431,
+    "VT": 0.000569
+   },
+   "buffered_shares": {
+    "NY": 1,
+    "VT": 0.132538
+   },
+   "containment_states": [
+    "NY"
+   ],
+   "containment_share": 1
+  },
+  "chehalem_mountains": {
+   "area_km2": 252.179,
+   "land_share": 1,
+   "state_shares": {
+    "OR": 1
+   },
+   "buffered_shares": {
+    "OR": 1
+   },
+   "containment_states": [
+    "OR"
+   ],
+   "containment_share": 1
+  },
+  "chiles_valley": {
+   "area_km2": 21.132,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "cienega_valley": {
+   "area_km2": 28.708,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "clarksburg": {
+   "area_km2": 395.56,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "clear_lake": {
+   "area_km2": 884.091,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "clements_hills": {
+   "area_km2": 334.176,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "cole_ranch": {
+   "area_km2": 0.764,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "columbia_gorge": {
+   "area_km2": 786.101,
+   "land_share": 1,
+   "state_shares": {
+    "OR": 0.652023,
+    "WA": 0.347977
+   },
+   "buffered_shares": {
+    "OR": 0.821158,
+    "WA": 0.549795
+   },
+   "containment_states": [
+    "OR",
+    "WA"
+   ],
+   "containment_share": 1
+  },
+  "columbia_valley": {
+   "area_km2": 46744.617,
+   "land_share": 1,
+   "state_shares": {
+    "OR": 0.224048,
+    "WA": 0.775952
+   },
+   "buffered_shares": {
+    "ID": 0.000254,
+    "OR": 0.252722,
+    "WA": 0.804195
+   },
+   "containment_states": [
+    "OR",
+    "WA"
+   ],
+   "containment_share": 1
+  },
+  "comptche": {
+   "area_km2": 7.053,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "contra_costa": {
+   "area_km2": 690.176,
+   "land_share": 0.987747,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "coombsville": {
+   "area_km2": 45.79,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "cosumnes_river": {
+   "area_km2": 213.091,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "covelo": {
+   "area_km2": 158.281,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "creston_district": {
+   "area_km2": 189.467,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "crystal_springs_of_napa_valley": {
+   "area_km2": 16.152,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "cucamonga_valley": {
+   "area_km2": 552.03,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "diablo_grande": {
+   "area_km2": 139.884,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "diamond_mountain_district": {
+   "area_km2": 19.907,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "dos_rios": {
+   "area_km2": 64.997,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "dry_creek_valley": {
+   "area_km2": 315.814,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "dundee_hills": {
+   "area_km2": 50.457,
+   "land_share": 1,
+   "state_shares": {
+    "OR": 1
+   },
+   "buffered_shares": {
+    "OR": 1
+   },
+   "containment_states": [
+    "OR"
+   ],
+   "containment_share": 1
+  },
+  "dunnigan_hills": {
+   "area_km2": 281.401,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "eagle_peak_mendocino_county": {
+   "area_km2": 106.653,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "edna_valley": {
+   "area_km2": 88.199,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "el_dorado": {
+   "area_km2": 1662.935,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "el_pomar_district": {
+   "area_km2": 89.085,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "elkton_oregon": {
+   "area_km2": 298.124,
+   "land_share": 1,
+   "state_shares": {
+    "OR": 1
+   },
+   "buffered_shares": {
+    "OR": 1
+   },
+   "containment_states": [
+    "OR"
+   ],
+   "containment_share": 1
+  },
+  "eola_amity_hills": {
+   "area_km2": 158.004,
+   "land_share": 1,
+   "state_shares": {
+    "OR": 1
+   },
+   "buffered_shares": {
+    "OR": 1
+   },
+   "containment_states": [
+    "OR"
+   ],
+   "containment_share": 1
+  },
+  "fair_play": {
+   "area_km2": 105.513,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "fiddletown": {
+   "area_km2": 48.873,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "finger_lakes": {
+   "area_km2": 8967.635,
+   "land_share": 1,
+   "state_shares": {
+    "NY": 1
+   },
+   "buffered_shares": {
+    "NY": 1
+   },
+   "containment_states": [
+    "NY"
+   ],
+   "containment_share": 1
+  },
+  "fort_ross_seaview": {
+   "area_km2": 129.348,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "fountaingrove_district": {
+   "area_km2": 149.05,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "gabilan_mountains": {
+   "area_km2": 545.486,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "goose_gap": {
+   "area_km2": 32.525,
+   "land_share": 1,
+   "state_shares": {
+    "WA": 1
+   },
+   "buffered_shares": {
+    "WA": 1
+   },
+   "containment_states": [
+    "WA"
+   ],
+   "containment_share": 1
+  },
+  "green_valley_of_russian_river_valley": {
+   "area_km2": 77.19,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "guenoc_valley": {
+   "area_km2": 22.366,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "hames_valley": {
+   "area_km2": 49.662,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "happy_canyon_of_santa_barbara": {
+   "area_km2": 104.515,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "high_valley": {
+   "area_km2": 66.002,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "horse_heaven_hills": {
+   "area_km2": 2325.747,
+   "land_share": 1,
+   "state_shares": {
+    "OR": 0.023489,
+    "WA": 0.976511
+   },
+   "buffered_shares": {
+    "OR": 0.210256,
+    "WA": 1
+   },
+   "containment_states": [
+    "OR",
+    "WA"
+   ],
+   "containment_share": 1
+  },
+  "howell_mountain": {
+   "area_km2": 52.813,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "hudson_river_region": {
+   "area_km2": 9750.796,
+   "land_share": 0.993817,
+   "state_shares": {
+    "CT": 0.000911,
+    "MA": 0.000003,
+    "NJ": 0.000121,
+    "NY": 0.998966
+   },
+   "buffered_shares": {
+    "CT": 0.054265,
+    "MA": 0.022087,
+    "NJ": 0.029449,
+    "NY": 1,
+    "PA": 0.001423
+   },
+   "containment_states": [
+    "NY"
+   ],
+   "containment_share": 1
+  },
+  "inwood_valley": {
+   "area_km2": 117.229,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "jahant": {
+   "area_km2": 113.815,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "kelsey_bench_lake_county": {
+   "area_km2": 36.979,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "knights_valley": {
+   "area_km2": 150.31,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "lake_chelan": {
+   "area_km2": 130.726,
+   "land_share": 1,
+   "state_shares": {
+    "WA": 1
+   },
+   "buffered_shares": {
+    "WA": 1
+   },
+   "containment_states": [
+    "WA"
+   ],
+   "containment_share": 1
+  },
+  "lake_erie": {
+   "area_km2": 8903.37,
+   "land_share": 0.927983,
+   "state_shares": {
+    "NY": 0.175446,
+    "OH": 0.752966,
+    "PA": 0.071588
+   },
+   "buffered_shares": {
+    "NY": 0.17313,
+    "OH": 0.764989,
+    "PA": 0.077777
+   },
+   "containment_states": [
+    "NY",
+    "OH",
+    "PA"
+   ],
+   "containment_share": 1
+  },
+  "lamorinda": {
+   "area_km2": 119.136,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "laurelwood_district": {
+   "area_km2": 135.164,
+   "land_share": 1,
+   "state_shares": {
+    "OR": 1
+   },
+   "buffered_shares": {
+    "OR": 1
+   },
+   "containment_states": [
+    "OR"
+   ],
+   "containment_share": 1
+  },
+  "leona_valley": {
+   "area_km2": 35.479,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "lewis_clark_valley": {
+   "area_km2": 1246.102,
+   "land_share": 1,
+   "state_shares": {
+    "ID": 0.682942,
+    "WA": 0.317058
+   },
+   "buffered_shares": {
+    "ID": 0.792198,
+    "OR": 0.00315,
+    "WA": 0.397866
+   },
+   "containment_states": [
+    "ID",
+    "WA"
+   ],
+   "containment_share": 1
+  },
+  "lime_kiln_valley": {
+   "area_km2": 9.278,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "livermore_valley": {
+   "area_km2": 960.694,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "lodi": {
+   "area_km2": 2188.886,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "long_island": {
+   "area_km2": 3146.686,
+   "land_share": 0.905174,
+   "state_shares": {
+    "NY": 1
+   },
+   "buffered_shares": {
+    "CT": 0.000048,
+    "NY": 0.999952
+   },
+   "containment_states": [
+    "NY"
+   ],
+   "containment_share": 0.999952
+  },
+  "long_valley-lake_county": {
+   "area_km2": 31.089,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "los_carneros": {
+   "area_km2": 150.67,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "los_olivos_district": {
+   "area_km2": 89.421,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "lower_long_tom": {
+   "area_km2": 116.627,
+   "land_share": 1,
+   "state_shares": {
+    "OR": 1
+   },
+   "buffered_shares": {
+    "OR": 1
+   },
+   "containment_states": [
+    "OR"
+   ],
+   "containment_share": 1
+  },
+  "madera": {
+   "area_km2": 1845.875,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "malibu_coast": {
+   "area_km2": 604.057,
+   "land_share": 0.976674,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "malibu_newton_canyon": {
+   "area_km2": 3.871,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "manton_valley": {
+   "area_km2": 45.356,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "mcdowell_valley": {
+   "area_km2": 9.01,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "mcminnville": {
+   "area_km2": 148.545,
+   "land_share": 1,
+   "state_shares": {
+    "OR": 1
+   },
+   "buffered_shares": {
+    "OR": 1
+   },
+   "containment_states": [
+    "OR"
+   ],
+   "containment_share": 1
+  },
+  "mendocino": {
+   "area_km2": 1247.842,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "mendocino_ridge": {
+   "area_km2": 340.219,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "merritt_island": {
+   "area_km2": 19.872,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "mokelumne_river": {
+   "area_km2": 331.297,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "monterey": {
+   "area_km2": 2414.981,
+   "land_share": 0.977706,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "moon_mountain_district_sonoma_county": {
+   "area_km2": 71.581,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "mount_pisgah__polk_county__oregon": {
+   "area_km2": 22.935,
+   "land_share": 1,
+   "state_shares": {
+    "OR": 1
+   },
+   "buffered_shares": {
+    "OR": 1
+   },
+   "containment_states": [
+    "OR"
+   ],
+   "containment_share": 1
+  },
+  "mt__harlan": {
+   "area_km2": 31.506,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "mt__veeder": {
+   "area_km2": 68.365,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "naches_heights": {
+   "area_km2": 52.907,
+   "land_share": 1,
+   "state_shares": {
+    "WA": 1
+   },
+   "buffered_shares": {
+    "WA": 1
+   },
+   "containment_states": [
+    "WA"
+   ],
+   "containment_share": 1
+  },
+  "napa_valley": {
+   "area_km2": 1620.974,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "niagara_escarpment": {
+   "area_km2": 117.059,
+   "land_share": 1,
+   "state_shares": {
+    "NY": 1
+   },
+   "buffered_shares": {
+    "NY": 1
+   },
+   "containment_states": [
+    "NY"
+   ],
+   "containment_share": 1
+  },
+  "north_coast": {
+   "area_km2": 13333.128,
+   "land_share": 0.993339,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "north_fork_of_long_island": {
+   "area_km2": 355.125,
+   "land_share": 0.77909,
+   "state_shares": {
+    "NY": 1
+   },
+   "buffered_shares": {
+    "CT": 0.00035,
+    "NY": 0.99965
+   },
+   "containment_states": [
+    "NY"
+   ],
+   "containment_share": 0.99965
+  },
+  "north_yuba": {
+   "area_km2": 86.309,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "northern_sonoma": {
+   "area_km2": 1595.985,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "oak_knoll_district_of_napa_valley": {
+   "area_km2": 39.853,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "oakville": {
+   "area_km2": 27.457,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "pacheco_pass": {
+   "area_km2": 10.955,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "paicines": {
+   "area_km2": 76.705,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "palos_verdes_peninsula": {
+   "area_km2": 65.594,
+   "land_share": 0.893422,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "paso_robles": {
+   "area_km2": 2471.842,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "paso_robles_estrella_district": {
+   "area_km2": 269.876,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "paso_robles_geneseo_district": {
+   "area_km2": 70.538,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "paso_robles_highlands_district": {
+   "area_km2": 241.873,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "paso_robles_willow_creek_district": {
+   "area_km2": 67.225,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "paulsell_valley": {
+   "area_km2": 146.453,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "petaluma_gap": {
+   "area_km2": 818.925,
+   "land_share": 0.98587,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "pine_mountain_cloverdale_peak": {
+   "area_km2": 18.621,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "potter_valley": {
+   "area_km2": 116.946,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "puget_sound": {
+   "area_km2": 18091.022,
+   "land_share": 0.634984,
+   "state_shares": {
+    "WA": 1
+   },
+   "buffered_shares": {
+    "WA": 1
+   },
+   "containment_states": [
+    "WA"
+   ],
+   "containment_share": 1
+  },
+  "ramona_valley": {
+   "area_km2": 360.094,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "rattlesnake_hills": {
+   "area_km2": 302.471,
+   "land_share": 1,
+   "state_shares": {
+    "WA": 1
+   },
+   "buffered_shares": {
+    "WA": 1
+   },
+   "containment_states": [
+    "WA"
+   ],
+   "containment_share": 1
+  },
+  "red_hill_douglas_county__oregon": {
+   "area_km2": 22.336,
+   "land_share": 1,
+   "state_shares": {
+    "OR": 1
+   },
+   "buffered_shares": {
+    "OR": 1
+   },
+   "containment_states": [
+    "OR"
+   ],
+   "containment_share": 1
+  },
+  "red_hills_lake_county": {
+   "area_km2": 129.056,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "red_mountain": {
+   "area_km2": 18.335,
+   "land_share": 1,
+   "state_shares": {
+    "WA": 1
+   },
+   "buffered_shares": {
+    "WA": 1
+   },
+   "containment_states": [
+    "WA"
+   ],
+   "containment_share": 1
+  },
+  "redwood_valley": {
+   "area_km2": 124.45,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "ribbon_ridge": {
+   "area_km2": 14.156,
+   "land_share": 1,
+   "state_shares": {
+    "OR": 1
+   },
+   "buffered_shares": {
+    "OR": 1
+   },
+   "containment_states": [
+    "OR"
+   ],
+   "containment_share": 1
+  },
+  "river_junction": {
+   "area_km2": 5.264,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "rockpile": {
+   "area_km2": 59.487,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "rocky_reach": {
+   "area_km2": 131.185,
+   "land_share": 1,
+   "state_shares": {
+    "WA": 1
+   },
+   "buffered_shares": {
+    "WA": 1
+   },
+   "containment_states": [
+    "WA"
+   ],
+   "containment_share": 1
+  },
+  "rogue_valley": {
+   "area_km2": 4638.817,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 0.000063,
+    "OR": 0.999937
+   },
+   "buffered_shares": {
+    "CA": 0.009831,
+    "OR": 1
+   },
+   "containment_states": [
+    "OR"
+   ],
+   "containment_share": 1
+  },
+  "royal_slope": {
+   "area_km2": 632.699,
+   "land_share": 1,
+   "state_shares": {
+    "WA": 1
+   },
+   "buffered_shares": {
+    "WA": 1
+   },
+   "containment_states": [
+    "WA"
+   ],
+   "containment_share": 1
+  },
+  "russian_river_valley": {
+   "area_km2": 691.715,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "rutherford": {
+   "area_km2": 30.438,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "saddle_rock_malibu": {
+   "area_km2": 8.439,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "salado_creek": {
+   "area_km2": 12.31,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "san_antonio_valley": {
+   "area_km2": 598.142,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "san_benito": {
+   "area_km2": 189.203,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "san_bernabe": {
+   "area_km2": 100.077,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "san_francisco_bay": {
+   "area_km2": 7424.115,
+   "land_share": 0.917108,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "san_juan_creek": {
+   "area_km2": 109.757,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "san_lucas": {
+   "area_km2": 135.26,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "san_luis_obispo_coast": {
+   "area_km2": 1632.171,
+   "land_share": 0.978219,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "san_luis_rey": {
+   "area_km2": 394.484,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "san_miguel_district": {
+   "area_km2": 76.863,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "san_pasqual_valley": {
+   "area_km2": 37.198,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "san_ysidro_district": {
+   "area_km2": 10.211,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "santa_clara_valley": {
+   "area_km2": 1284.967,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "santa_cruz_mountains": {
+   "area_km2": 1653.735,
+   "land_share": 0.998934,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "santa_lucia_highlands": {
+   "area_km2": 83.547,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "santa_margarita_ranch": {
+   "area_km2": 70.868,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "santa_maria_valley": {
+   "area_km2": 469.512,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "santa_ynez_valley": {
+   "area_km2": 737.238,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "seiad_valley": {
+   "area_km2": 8.787,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "seneca_lake": {
+   "area_km2": 795.11,
+   "land_share": 1,
+   "state_shares": {
+    "NY": 1
+   },
+   "buffered_shares": {
+    "NY": 1
+   },
+   "containment_states": [
+    "NY"
+   ],
+   "containment_share": 1
+  },
+  "sierra_foothills": {
+   "area_km2": 10645.608,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "sierra_pelona_valley": {
+   "area_km2": 35.76,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "sloughhouse": {
+   "area_km2": 301.689,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "snake_river_valley": {
+   "area_km2": 21161.044,
+   "land_share": 1,
+   "state_shares": {
+    "ID": 0.701023,
+    "OR": 0.298977
+   },
+   "buffered_shares": {
+    "ID": 0.737686,
+    "OR": 0.330087
+   },
+   "containment_states": [
+    "ID",
+    "OR"
+   ],
+   "containment_share": 1
+  },
+  "snipes_mountain": {
+   "area_km2": 16.179,
+   "land_share": 1,
+   "state_shares": {
+    "WA": 1
+   },
+   "buffered_shares": {
+    "WA": 1
+   },
+   "containment_states": [
+    "WA"
+   ],
+   "containment_share": 1
+  },
+  "solano_county_green_valley": {
+   "area_km2": 68.828,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "sonoma_coast": {
+   "area_km2": 2091.997,
+   "land_share": 0.990781,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "sonoma_mountain": {
+   "area_km2": 22.637,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "sonoma_valley": {
+   "area_km2": 465.29,
+   "land_share": 0.995176,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "south_coast": {
+   "area_km2": 8701.122,
+   "land_share": 0.997493,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "southern_oregon": {
+   "area_km2": 8130.316,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 0.000047,
+    "OR": 0.999953
+   },
+   "buffered_shares": {
+    "CA": 0.005586,
+    "OR": 1
+   },
+   "containment_states": [
+    "OR"
+   ],
+   "containment_share": 1
+  },
+  "spring_mountain_district": {
+   "area_km2": 34.319,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "squaw_valley_miramonte": {
+   "area_km2": 174.481,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "st__helena": {
+   "area_km2": 37.277,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "sta__rita_hills": {
+   "area_km2": 144.389,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "stags_leap_district": {
+   "area_km2": 12.346,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "suisun_valley": {
+   "area_km2": 77.095,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "tehachapi_mountains": {
+   "area_km2": 235.597,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "temecula_valley": {
+   "area_km2": 363.194,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "templeton_gap_district": {
+   "area_km2": 76.923,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "the_burn_of_columbia_valley": {
+   "area_km2": 52.912,
+   "land_share": 1,
+   "state_shares": {
+    "OR": 0.382118,
+    "WA": 0.617882
+   },
+   "buffered_shares": {
+    "OR": 0.999921,
+    "WA": 1
+   },
+   "containment_states": [
+    "OR",
+    "WA"
+   ],
+   "containment_share": 1
+  },
+  "the_hamptons_long_island": {
+   "area_km2": 566.557,
+   "land_share": 0.816194,
+   "state_shares": {
+    "NY": 1
+   },
+   "buffered_shares": {
+    "NY": 1
+   },
+   "containment_states": [
+    "NY"
+   ],
+   "containment_share": 1
+  },
+  "the_rocks_district_of_milton_freewater": {
+   "area_km2": 12.799,
+   "land_share": 1,
+   "state_shares": {
+    "OR": 1
+   },
+   "buffered_shares": {
+    "OR": 1,
+    "WA": 0.773547
+   },
+   "containment_states": [
+    "OR"
+   ],
+   "containment_share": 1
+  },
+  "tracy_hills": {
+   "area_km2": 152.306,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "trinity_lakes": {
+   "area_km2": 405.266,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "tualatin_hills": {
+   "area_km2": 580.982,
+   "land_share": 1,
+   "state_shares": {
+    "OR": 1
+   },
+   "buffered_shares": {
+    "OR": 1
+   },
+   "containment_states": [
+    "OR"
+   ],
+   "containment_share": 1
+  },
+  "umpqua_valley": {
+   "area_km2": 2811.096,
+   "land_share": 1,
+   "state_shares": {
+    "OR": 1
+   },
+   "buffered_shares": {
+    "OR": 1
+   },
+   "containment_states": [
+    "OR"
+   ],
+   "containment_share": 1
+  },
+  "upper_hudson": {
+   "area_km2": 4206.243,
+   "land_share": 1,
+   "state_shares": {
+    "NY": 1
+   },
+   "buffered_shares": {
+    "NY": 1
+   },
+   "containment_states": [
+    "NY"
+   ],
+   "containment_share": 1
+  },
+  "upper_lake_valley": {
+   "area_km2": 79.773,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "van_duzer_corridor": {
+   "area_km2": 227.693,
+   "land_share": 1,
+   "state_shares": {
+    "OR": 1
+   },
+   "buffered_shares": {
+    "OR": 1
+   },
+   "containment_states": [
+    "OR"
+   ],
+   "containment_share": 1
+  },
+  "wahluke_slope": {
+   "area_km2": 326.173,
+   "land_share": 1,
+   "state_shares": {
+    "WA": 1
+   },
+   "buffered_shares": {
+    "WA": 1
+   },
+   "containment_states": [
+    "WA"
+   ],
+   "containment_share": 1
+  },
+  "walla_walla_valley": {
+   "area_km2": 1314.215,
+   "land_share": 1,
+   "state_shares": {
+    "OR": 0.310107,
+    "WA": 0.689893
+   },
+   "buffered_shares": {
+    "OR": 0.499573,
+    "WA": 0.854046
+   },
+   "containment_states": [
+    "OR",
+    "WA"
+   ],
+   "containment_share": 1
+  },
+  "west_sonoma_coast": {
+   "area_km2": 573.882,
+   "land_share": 0.980221,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "white_bluffs": {
+   "area_km2": 380.648,
+   "land_share": 1,
+   "state_shares": {
+    "WA": 1
+   },
+   "buffered_shares": {
+    "WA": 1
+   },
+   "containment_states": [
+    "WA"
+   ],
+   "containment_share": 1
+  },
+  "wild_horse_valley": {
+   "area_km2": 15.904,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "willamette_valley": {
+   "area_km2": 14034.069,
+   "land_share": 1,
+   "state_shares": {
+    "OR": 1
+   },
+   "buffered_shares": {
+    "OR": 1,
+    "WA": 0.005761
+   },
+   "containment_states": [
+    "OR"
+   ],
+   "containment_share": 1
+  },
+  "willow_creek": {
+   "area_km2": 31.064,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "winters_highlands": {
+   "area_km2": 21.924,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "yakima_valley": {
+   "area_km2": 2828.27,
+   "land_share": 1,
+   "state_shares": {
+    "WA": 1
+   },
+   "buffered_shares": {
+    "WA": 1
+   },
+   "containment_states": [
+    "WA"
+   ],
+   "containment_share": 1
+  },
+  "yamhill_carlton": {
+   "area_km2": 232.506,
+   "land_share": 1,
+   "state_shares": {
+    "OR": 1
+   },
+   "buffered_shares": {
+    "OR": 1
+   },
+   "containment_states": [
+    "OR"
+   ],
+   "containment_share": 1
+  },
+  "york_mountain": {
+   "area_km2": 25.552,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "yorkville_highlands": {
+   "area_km2": 177.649,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "yountville": {
+   "area_km2": 33.792,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  },
+  "yucaipa_valley": {
+   "area_km2": 149.698,
+   "land_share": 1,
+   "state_shares": {
+    "CA": 1
+   },
+   "buffered_shares": {
+    "CA": 1
+   },
+   "containment_states": [
+    "CA"
+   ],
+   "containment_share": 1
+  }
+ },
+ "pairs": [
+  {
+   "a": "adelaida_district",
+   "b": "central_coast",
+   "a_in_b": 1,
+   "b_in_a": 0.00777
+  },
+  {
+   "a": "adelaida_district",
+   "b": "paso_robles",
+   "a_in_b": 0.999718,
+   "b_in_a": 0.08709
+  },
+  {
+   "a": "adelaida_district",
+   "b": "paso_robles_estrella_district",
+   "a_in_b": 0.000004,
+   "b_in_a": 0.000003
+  },
+  {
+   "a": "adelaida_district",
+   "b": "san_miguel_district",
+   "a_in_b": 0.000051,
+   "b_in_a": 0.000143
+  },
+  {
+   "a": "alexander_valley",
+   "b": "chalk_hill",
+   "a_in_b": 0.002174,
+   "b_in_a": 0.007501
+  },
+  {
+   "a": "alexander_valley",
+   "b": "dry_creek_valley",
+   "a_in_b": 0.000157,
+   "b_in_a": 0.000157
+  },
+  {
+   "a": "alexander_valley",
+   "b": "knights_valley",
+   "a_in_b": 0.000024,
+   "b_in_a": 0.000051
+  },
+  {
+   "a": "alexander_valley",
+   "b": "mendocino",
+   "a_in_b": 0.00003,
+   "b_in_a": 0.000008
+  },
+  {
+   "a": "alexander_valley",
+   "b": "north_coast",
+   "a_in_b": 1,
+   "b_in_a": 0.023676
+  },
+  {
+   "a": "alexander_valley",
+   "b": "northern_sonoma",
+   "a_in_b": 0.985012,
+   "b_in_a": 0.19537
+  },
+  {
+   "a": "alexander_valley",
+   "b": "pine_mountain_cloverdale_peak",
+   "a_in_b": 0.019319,
+   "b_in_a": 0.327185
+  },
+  {
+   "a": "alexander_valley",
+   "b": "russian_river_valley",
+   "a_in_b": 0.088186,
+   "b_in_a": 0.040414
+  },
+  {
+   "a": "alexander_valley",
+   "b": "sonoma_coast",
+   "a_in_b": 0.000681,
+   "b_in_a": 0.000103
+  },
+  {
+   "a": "alexander_valley",
+   "b": "yorkville_highlands",
+   "a_in_b": 0.000014,
+   "b_in_a": 0.000024
+  },
+  {
+   "a": "alisos_canyon",
+   "b": "central_coast",
+   "a_in_b": 1,
+   "b_in_a": 0.000843
+  },
+  {
+   "a": "alta_mesa",
+   "b": "jahant",
+   "a_in_b": 0.000002,
+   "b_in_a": 0.000005
+  },
+  {
+   "a": "alta_mesa",
+   "b": "lodi",
+   "a_in_b": 0.999999,
+   "b_in_a": 0.102967
+  },
+  {
+   "a": "ancient_lakes_of_columbia_valley",
+   "b": "columbia_valley",
+   "a_in_b": 0.999997,
+   "b_in_a": 0.014842
+  },
+  {
+   "a": "ancient_lakes_of_columbia_valley",
+   "b": "royal_slope",
+   "a_in_b": 0.000028,
+   "b_in_a": 0.00003
+  },
+  {
+   "a": "anderson_valley",
+   "b": "mendocino",
+   "a_in_b": 0.99999,
+   "b_in_a": 0.18789
+  },
+  {
+   "a": "anderson_valley",
+   "b": "mendocino_ridge",
+   "a_in_b": 0.06271,
+   "b_in_a": 0.043291
+  },
+  {
+   "a": "anderson_valley",
+   "b": "north_coast",
+   "a_in_b": 1,
+   "b_in_a": 0.017657
+  },
+  {
+   "a": "applegate_valley",
+   "b": "rogue_valley",
+   "a_in_b": 0.999989,
+   "b_in_a": 0.234476
+  },
+  {
+   "a": "applegate_valley",
+   "b": "southern_oregon",
+   "a_in_b": 0.999716,
+   "b_in_a": 0.132916
+  },
+  {
+   "a": "arroyo_grande_valley",
+   "b": "central_coast",
+   "a_in_b": 1,
+   "b_in_a": 0.005741
+  },
+  {
+   "a": "arroyo_grande_valley",
+   "b": "edna_valley",
+   "a_in_b": 0.000153,
+   "b_in_a": 0.000277
+  },
+  {
+   "a": "arroyo_grande_valley",
+   "b": "san_luis_obispo_coast",
+   "a_in_b": 0.999803,
+   "b_in_a": 0.097793
+  },
+  {
+   "a": "arroyo_seco",
+   "b": "central_coast",
+   "a_in_b": 1,
+   "b_in_a": 0.004742
+  },
+  {
+   "a": "arroyo_seco",
+   "b": "monterey",
+   "a_in_b": 0.99984,
+   "b_in_a": 0.053871
+  },
+  {
+   "a": "arroyo_seco",
+   "b": "santa_lucia_highlands",
+   "a_in_b": 0.000002,
+   "b_in_a": 0.000003
+  },
+  {
+   "a": "atlas_peak",
+   "b": "napa_valley",
+   "a_in_b": 1,
+   "b_in_a": 0.030788
+  },
+  {
+   "a": "atlas_peak",
+   "b": "north_coast",
+   "a_in_b": 1,
+   "b_in_a": 0.003726
+  },
+  {
+   "a": "ballard_canyon",
+   "b": "central_coast",
+   "a_in_b": 1,
+   "b_in_a": 0.001116
+  },
+  {
+   "a": "ballard_canyon",
+   "b": "santa_ynez_valley",
+   "a_in_b": 1,
+   "b_in_a": 0.042438
+  },
+  {
+   "a": "ben_lomond_mountain",
+   "b": "central_coast",
+   "a_in_b": 1,
+   "b_in_a": 0.005211
+  },
+  {
+   "a": "ben_lomond_mountain",
+   "b": "san_francisco_bay",
+   "a_in_b": 1,
+   "b_in_a": 0.018997
+  },
+  {
+   "a": "ben_lomond_mountain",
+   "b": "santa_cruz_mountains",
+   "a_in_b": 1,
+   "b_in_a": 0.085625
+  },
+  {
+   "a": "benmore_valley",
+   "b": "north_coast",
+   "a_in_b": 1,
+   "b_in_a": 0.000392
+  },
+  {
+   "a": "bennett_valley",
+   "b": "north_coast",
+   "a_in_b": 1,
+   "b_in_a": 0.002518
+  },
+  {
+   "a": "bennett_valley",
+   "b": "petaluma_gap",
+   "a_in_b": 0.000225,
+   "b_in_a": 0.000009
+  },
+  {
+   "a": "bennett_valley",
+   "b": "sonoma_coast",
+   "a_in_b": 0.032414,
+   "b_in_a": 0.000523
+  },
+  {
+   "a": "bennett_valley",
+   "b": "sonoma_mountain",
+   "a_in_b": 0.129825,
+   "b_in_a": 0.193649
+  },
+  {
+   "a": "bennett_valley",
+   "b": "sonoma_valley",
+   "a_in_b": 0.972982,
+   "b_in_a": 0.070634
+  },
+  {
+   "a": "big_valley_district_lake_county",
+   "b": "clear_lake",
+   "a_in_b": 1,
+   "b_in_a": 0.051557
+  },
+  {
+   "a": "big_valley_district_lake_county",
+   "b": "kelsey_bench_lake_county",
+   "a_in_b": 0.000004,
+   "b_in_a": 0.000005
+  },
+  {
+   "a": "big_valley_district_lake_county",
+   "b": "north_coast",
+   "a_in_b": 1,
+   "b_in_a": 0.003429
+  },
+  {
+   "a": "borden_ranch",
+   "b": "clements_hills",
+   "a_in_b": 0.000099,
+   "b_in_a": 0.000084
+  },
+  {
+   "a": "borden_ranch",
+   "b": "jahant",
+   "a_in_b": 0.000001,
+   "b_in_a": 0.000003
+  },
+  {
+   "a": "borden_ranch",
+   "b": "lodi",
+   "a_in_b": 1,
+   "b_in_a": 0.129502
+  },
+  {
+   "a": "borden_ranch",
+   "b": "sloughhouse",
+   "a_in_b": 0.000007,
+   "b_in_a": 0.000006
+  },
+  {
+   "a": "california_shenandoah_valley",
+   "b": "el_dorado",
+   "a_in_b": 0.108828,
+   "b_in_a": 0.003606
+  },
+  {
+   "a": "california_shenandoah_valley",
+   "b": "fiddletown",
+   "a_in_b": 0.000024,
+   "b_in_a": 0.000027
+  },
+  {
+   "a": "california_shenandoah_valley",
+   "b": "sierra_foothills",
+   "a_in_b": 1,
+   "b_in_a": 0.005204
+  },
+  {
+   "a": "calistoga",
+   "b": "crystal_springs_of_napa_valley",
+   "a_in_b": 0.003953,
+   "b_in_a": 0.0126
+  },
+  {
+   "a": "calistoga",
+   "b": "diamond_mountain_district",
+   "a_in_b": 0.000023,
+   "b_in_a": 0.000059
+  },
+  {
+   "a": "calistoga",
+   "b": "fountaingrove_district",
+   "a_in_b": 0.000007,
+   "b_in_a": 0.000002
+  },
+  {
+   "a": "calistoga",
+   "b": "knights_valley",
+   "a_in_b": 0.000002,
+   "b_in_a": 0.000001
+  },
+  {
+   "a": "calistoga",
+   "b": "napa_valley",
+   "a_in_b": 0.999924,
+   "b_in_a": 0.0318
+  },
+  {
+   "a": "calistoga",
+   "b": "north_coast",
+   "a_in_b": 1,
+   "b_in_a": 0.003849
+  },
+  {
+   "a": "calistoga",
+   "b": "northern_sonoma",
+   "a_in_b": 0.000102,
+   "b_in_a": 0.000003
+  },
+  {
+   "a": "calistoga",
+   "b": "st__helena",
+   "a_in_b": 0.000359,
+   "b_in_a": 0.000497
+  },
+  {
+   "a": "candy_mountain",
+   "b": "columbia_valley",
+   "a_in_b": 1,
+   "b_in_a": 0.000078
+  },
+  {
+   "a": "candy_mountain",
+   "b": "goose_gap",
+   "a_in_b": 0.013394,
+   "b_in_a": 0.001505
+  },
+  {
+   "a": "candy_mountain",
+   "b": "yakima_valley",
+   "a_in_b": 0.893096,
+   "b_in_a": 0.001152
+  },
+  {
+   "a": "carmel_valley",
+   "b": "central_coast",
+   "a_in_b": 1,
+   "b_in_a": 0.002839
+  },
+  {
+   "a": "carmel_valley",
+   "b": "monterey",
+   "a_in_b": 0.000103,
+   "b_in_a": 0.000003
+  },
+  {
+   "a": "cayuga_lake",
+   "b": "finger_lakes",
+   "a_in_b": 0.999837,
+   "b_in_a": 0.053131
+  },
+  {
+   "a": "central_coast",
+   "b": "chalone",
+   "a_in_b": 0.001271,
+   "b_in_a": 1
+  },
+  {
+   "a": "central_coast",
+   "b": "cienega_valley",
+   "a_in_b": 0.00105,
+   "b_in_a": 1
+  },
+  {
+   "a": "central_coast",
+   "b": "contra_costa",
+   "a_in_b": 0.008641,
+   "b_in_a": 0.336739
+  },
+  {
+   "a": "central_coast",
+   "b": "creston_district",
+   "a_in_b": 0.006773,
+   "b_in_a": 0.992119
+  },
+  {
+   "a": "central_coast",
+   "b": "edna_valley",
+   "a_in_b": 0.003167,
+   "b_in_a": 1
+  },
+  {
+   "a": "central_coast",
+   "b": "el_pomar_district",
+   "a_in_b": 0.003212,
+   "b_in_a": 1
+  },
+  {
+   "a": "central_coast",
+   "b": "gabilan_mountains",
+   "a_in_b": 0.019922,
+   "b_in_a": 1
+  },
+  {
+   "a": "central_coast",
+   "b": "hames_valley",
+   "a_in_b": 0.001798,
+   "b_in_a": 1
+  },
+  {
+   "a": "central_coast",
+   "b": "happy_canyon_of_santa_barbara",
+   "a_in_b": 0.003683,
+   "b_in_a": 0.987985
+  },
+  {
+   "a": "central_coast",
+   "b": "lamorinda",
+   "a_in_b": 0.004424,
+   "b_in_a": 1
+  },
+  {
+   "a": "central_coast",
+   "b": "lime_kiln_valley",
+   "a_in_b": 0.000339,
+   "b_in_a": 1
+  },
+  {
+   "a": "central_coast",
+   "b": "livermore_valley",
+   "a_in_b": 0.035587,
+   "b_in_a": 0.999928
+  },
+  {
+   "a": "central_coast",
+   "b": "los_olivos_district",
+   "a_in_b": 0.003188,
+   "b_in_a": 1
+  },
+  {
+   "a": "central_coast",
+   "b": "monterey",
+   "a_in_b": 0.087996,
+   "b_in_a": 0.999759
+  },
+  {
+   "a": "central_coast",
+   "b": "mt__harlan",
+   "a_in_b": 0.001152,
+   "b_in_a": 1
+  },
+  {
+   "a": "central_coast",
+   "b": "pacheco_pass",
+   "a_in_b": 0.000402,
+   "b_in_a": 1
+  },
+  {
+   "a": "central_coast",
+   "b": "paicines",
+   "a_in_b": 0.002805,
+   "b_in_a": 1
+  },
+  {
+   "a": "central_coast",
+   "b": "paso_robles",
+   "a_in_b": 0.089148,
+   "b_in_a": 0.999516
+  },
+  {
+   "a": "central_coast",
+   "b": "paso_robles_estrella_district",
+   "a_in_b": 0.009747,
+   "b_in_a": 1
+  },
+  {
+   "a": "central_coast",
+   "b": "paso_robles_geneseo_district",
+   "a_in_b": 0.002545,
+   "b_in_a": 1
+  },
+  {
+   "a": "central_coast",
+   "b": "paso_robles_highlands_district",
+   "a_in_b": 0.008643,
+   "b_in_a": 0.991758
+  },
+  {
+   "a": "central_coast",
+   "b": "paso_robles_willow_creek_district",
+   "a_in_b": 0.002424,
+   "b_in_a": 1
+  },
+  {
+   "a": "central_coast",
+   "b": "san_antonio_valley",
+   "a_in_b": 0.021672,
+   "b_in_a": 1
+  },
+  {
+   "a": "central_coast",
+   "b": "san_benito",
+   "a_in_b": 0.006921,
+   "b_in_a": 1
+  },
+  {
+   "a": "central_coast",
+   "b": "san_bernabe",
+   "a_in_b": 0.003634,
+   "b_in_a": 1
+  },
+  {
+   "a": "central_coast",
+   "b": "san_francisco_bay",
+   "a_in_b": 0.264997,
+   "b_in_a": 0.966103
+  },
+  {
+   "a": "central_coast",
+   "b": "san_juan_creek",
+   "a_in_b": 0.00396,
+   "b_in_a": 1
+  },
+  {
+   "a": "central_coast",
+   "b": "san_lucas",
+   "a_in_b": 0.004908,
+   "b_in_a": 1
+  },
+  {
+   "a": "central_coast",
+   "b": "san_luis_obispo_coast",
+   "a_in_b": 0.058432,
+   "b_in_a": 0.995527
+  },
+  {
+   "a": "central_coast",
+   "b": "san_miguel_district",
+   "a_in_b": 0.002777,
+   "b_in_a": 1
+  },
+  {
+   "a": "central_coast",
+   "b": "san_ysidro_district",
+   "a_in_b": 0.000375,
+   "b_in_a": 1
+  },
+  {
+   "a": "central_coast",
+   "b": "santa_clara_valley",
+   "a_in_b": 0.047208,
+   "b_in_a": 0.99771
+  },
+  {
+   "a": "central_coast",
+   "b": "santa_cruz_mountains",
+   "a_in_b": 0.060856,
+   "b_in_a": 1
+  },
+  {
+   "a": "central_coast",
+   "b": "santa_lucia_highlands",
+   "a_in_b": 0.003045,
+   "b_in_a": 1
+  },
+  {
+   "a": "central_coast",
+   "b": "santa_margarita_ranch",
+   "a_in_b": 0.002543,
+   "b_in_a": 0.997591
+  },
+  {
+   "a": "central_coast",
+   "b": "santa_maria_valley",
+   "a_in_b": 0.016597,
+   "b_in_a": 0.988407
+  },
+  {
+   "a": "central_coast",
+   "b": "santa_ynez_valley",
+   "a_in_b": 0.026158,
+   "b_in_a": 0.995092
+  },
+  {
+   "a": "central_coast",
+   "b": "sta__rita_hills",
+   "a_in_b": 0.005148,
+   "b_in_a": 1
+  },
+  {
+   "a": "central_coast",
+   "b": "templeton_gap_district",
+   "a_in_b": 0.002773,
+   "b_in_a": 1
+  },
+  {
+   "a": "central_coast",
+   "b": "york_mountain",
+   "a_in_b": 0.000921,
+   "b_in_a": 1
+  },
+  {
+   "a": "chalk_hill",
+   "b": "fountaingrove_district",
+   "a_in_b": 0.000027,
+   "b_in_a": 0.000017
+  },
+  {
+   "a": "chalk_hill",
+   "b": "knights_valley",
+   "a_in_b": 0.000288,
+   "b_in_a": 0.000175
+  },
+  {
+   "a": "chalk_hill",
+   "b": "north_coast",
+   "a_in_b": 1,
+   "b_in_a": 0.006862
+  },
+  {
+   "a": "chalk_hill",
+   "b": "northern_sonoma",
+   "a_in_b": 0.999993,
+   "b_in_a": 0.057486
+  },
+  {
+   "a": "chalk_hill",
+   "b": "russian_river_valley",
+   "a_in_b": 0.999973,
+   "b_in_a": 0.132821
+  },
+  {
+   "a": "chalk_hill",
+   "b": "sonoma_coast",
+   "a_in_b": 0.559842,
+   "b_in_a": 0.024607
+  },
+  {
+   "a": "chalone",
+   "b": "gabilan_mountains",
+   "a_in_b": 0.999957,
+   "b_in_a": 0.063781
+  },
+  {
+   "a": "chehalem_mountains",
+   "b": "laurelwood_district",
+   "a_in_b": 0.532731,
+   "b_in_a": 0.993621
+  },
+  {
+   "a": "chehalem_mountains",
+   "b": "ribbon_ridge",
+   "a_in_b": 0.056111,
+   "b_in_a": 0.999834
+  },
+  {
+   "a": "chehalem_mountains",
+   "b": "tualatin_hills",
+   "a_in_b": 0.000049,
+   "b_in_a": 0.000021
+  },
+  {
+   "a": "chehalem_mountains",
+   "b": "willamette_valley",
+   "a_in_b": 1,
+   "b_in_a": 0.018127
+  },
+  {
+   "a": "chehalem_mountains",
+   "b": "yamhill_carlton",
+   "a_in_b": 0.000004,
+   "b_in_a": 0.000004
+  },
+  {
+   "a": "chiles_valley",
+   "b": "napa_valley",
+   "a_in_b": 1,
+   "b_in_a": 0.013055
+  },
+  {
+   "a": "chiles_valley",
+   "b": "north_coast",
+   "a_in_b": 1,
+   "b_in_a": 0.00158
+  },
+  {
+   "a": "cienega_valley",
+   "b": "gabilan_mountains",
+   "a_in_b": 0.002603,
+   "b_in_a": 0.000137
+  },
+  {
+   "a": "cienega_valley",
+   "b": "lime_kiln_valley",
+   "a_in_b": 0.322943,
+   "b_in_a": 0.999583
+  },
+  {
+   "a": "cienega_valley",
+   "b": "san_benito",
+   "a_in_b": 0.999745,
+   "b_in_a": 0.151684
+  },
+  {
+   "a": "clarksburg",
+   "b": "cosumnes_river",
+   "a_in_b": 0,
+   "b_in_a": 0.000001
+  },
+  {
+   "a": "clarksburg",
+   "b": "lodi",
+   "a_in_b": 0,
+   "b_in_a": 0
+  },
+  {
+   "a": "clarksburg",
+   "b": "merritt_island",
+   "a_in_b": 0.05027,
+   "b_in_a": 1
+  },
+  {
+   "a": "clear_lake",
+   "b": "high_valley",
+   "a_in_b": 0.056698,
+   "b_in_a": 0.759104
+  },
+  {
+   "a": "clear_lake",
+   "b": "kelsey_bench_lake_county",
+   "a_in_b": 0.041775,
+   "b_in_a": 0.999627
+  },
+  {
+   "a": "clear_lake",
+   "b": "long_valley-lake_county",
+   "a_in_b": 0.000003,
+   "b_in_a": 0.000083
+  },
+  {
+   "a": "clear_lake",
+   "b": "north_coast",
+   "a_in_b": 0.999688,
+   "b_in_a": 0.066495
+  },
+  {
+   "a": "clear_lake",
+   "b": "red_hills_lake_county",
+   "a_in_b": 0.145757,
+   "b_in_a": 0.999794
+  },
+  {
+   "a": "clear_lake",
+   "b": "upper_lake_valley",
+   "a_in_b": 0.090422,
+   "b_in_a": 0.999998
+  },
+  {
+   "a": "clements_hills",
+   "b": "lodi",
+   "a_in_b": 0.999581,
+   "b_in_a": 0.152411
+  },
+  {
+   "a": "clements_hills",
+   "b": "mokelumne_river",
+   "a_in_b": 0.000001,
+   "b_in_a": 0.000001
+  },
+  {
+   "a": "clements_hills",
+   "b": "sierra_foothills",
+   "a_in_b": 0.000001,
+   "b_in_a": 0
+  },
+  {
+   "a": "cole_ranch",
+   "b": "mendocino",
+   "a_in_b": 0.693958,
+   "b_in_a": 0.000425
+  },
+  {
+   "a": "cole_ranch",
+   "b": "north_coast",
+   "a_in_b": 1,
+   "b_in_a": 0.000058
+  },
+  {
+   "a": "columbia_gorge",
+   "b": "columbia_valley",
+   "a_in_b": 0,
+   "b_in_a": 0
+  },
+  {
+   "a": "columbia_valley",
+   "b": "goose_gap",
+   "a_in_b": 0.000692,
+   "b_in_a": 1
+  },
+  {
+   "a": "columbia_valley",
+   "b": "horse_heaven_hills",
+   "a_in_b": 0.049319,
+   "b_in_a": 1
+  },
+  {
+   "a": "columbia_valley",
+   "b": "lake_chelan",
+   "a_in_b": 0.002746,
+   "b_in_a": 0.957193
+  },
+  {
+   "a": "columbia_valley",
+   "b": "lewis_clark_valley",
+   "a_in_b": 0.000006,
+   "b_in_a": 0.00023
+  },
+  {
+   "a": "columbia_valley",
+   "b": "naches_heights",
+   "a_in_b": 0.001135,
+   "b_in_a": 1
+  },
+  {
+   "a": "columbia_valley",
+   "b": "rattlesnake_hills",
+   "a_in_b": 0.006463,
+   "b_in_a": 1
+  },
+  {
+   "a": "columbia_valley",
+   "b": "red_mountain",
+   "a_in_b": 0.000391,
+   "b_in_a": 1
+  },
+  {
+   "a": "columbia_valley",
+   "b": "rocky_reach",
+   "a_in_b": 0.002868,
+   "b_in_a": 1
+  },
+  {
+   "a": "columbia_valley",
+   "b": "royal_slope",
+   "a_in_b": 0.013636,
+   "b_in_a": 1
+  },
+  {
+   "a": "columbia_valley",
+   "b": "snipes_mountain",
+   "a_in_b": 0.000345,
+   "b_in_a": 1
+  },
+  {
+   "a": "columbia_valley",
+   "b": "the_burn_of_columbia_valley",
+   "a_in_b": 0.001116,
+   "b_in_a": 1
+  },
+  {
+   "a": "columbia_valley",
+   "b": "the_rocks_district_of_milton_freewater",
+   "a_in_b": 0.000271,
+   "b_in_a": 1
+  },
+  {
+   "a": "columbia_valley",
+   "b": "wahluke_slope",
+   "a_in_b": 0.007005,
+   "b_in_a": 1
+  },
+  {
+   "a": "columbia_valley",
+   "b": "walla_walla_valley",
+   "a_in_b": 0.027855,
+   "b_in_a": 0.999475
+  },
+  {
+   "a": "columbia_valley",
+   "b": "white_bluffs",
+   "a_in_b": 0.008145,
+   "b_in_a": 1
+  },
+  {
+   "a": "columbia_valley",
+   "b": "yakima_valley",
+   "a_in_b": 0.060309,
+   "b_in_a": 0.999705
+  },
+  {
+   "a": "comptche",
+   "b": "north_coast",
+   "a_in_b": 1,
+   "b_in_a": 0.000533
+  },
+  {
+   "a": "contra_costa",
+   "b": "lamorinda",
+   "a_in_b": 0.000025,
+   "b_in_a": 0.000142
+  },
+  {
+   "a": "contra_costa",
+   "b": "san_francisco_bay",
+   "a_in_b": 0.336329,
+   "b_in_a": 0.031465
+  },
+  {
+   "a": "coombsville",
+   "b": "napa_valley",
+   "a_in_b": 1,
+   "b_in_a": 0.028189
+  },
+  {
+   "a": "coombsville",
+   "b": "north_coast",
+   "a_in_b": 1,
+   "b_in_a": 0.003412
+  },
+  {
+   "a": "coombsville",
+   "b": "oak_knoll_district_of_napa_valley",
+   "a_in_b": 0.000008,
+   "b_in_a": 0.000009
+  },
+  {
+   "a": "cosumnes_river",
+   "b": "lodi",
+   "a_in_b": 0.999999,
+   "b_in_a": 0.097468
+  },
+  {
+   "a": "cosumnes_river",
+   "b": "mokelumne_river",
+   "a_in_b": 0.000007,
+   "b_in_a": 0.000005
+  },
+  {
+   "a": "creston_district",
+   "b": "el_pomar_district",
+   "a_in_b": 0,
+   "b_in_a": 0.000001
+  },
+  {
+   "a": "creston_district",
+   "b": "paso_robles",
+   "a_in_b": 0.99484,
+   "b_in_a": 0.076148
+  },
+  {
+   "a": "creston_district",
+   "b": "paso_robles_geneseo_district",
+   "a_in_b": 0,
+   "b_in_a": 0.000001
+  },
+  {
+   "a": "creston_district",
+   "b": "paso_robles_highlands_district",
+   "a_in_b": 0.000011,
+   "b_in_a": 0.000009
+  },
+  {
+   "a": "crystal_springs_of_napa_valley",
+   "b": "howell_mountain",
+   "a_in_b": 0.00011,
+   "b_in_a": 0.000034
+  },
+  {
+   "a": "crystal_springs_of_napa_valley",
+   "b": "napa_valley",
+   "a_in_b": 1,
+   "b_in_a": 0.009977
+  },
+  {
+   "a": "crystal_springs_of_napa_valley",
+   "b": "north_coast",
+   "a_in_b": 1,
+   "b_in_a": 0.001208
+  },
+  {
+   "a": "crystal_springs_of_napa_valley",
+   "b": "st__helena",
+   "a_in_b": 0.000041,
+   "b_in_a": 0.000018
+  },
+  {
+   "a": "diamond_mountain_district",
+   "b": "fountaingrove_district",
+   "a_in_b": 0.000023,
+   "b_in_a": 0.000003
+  },
+  {
+   "a": "diamond_mountain_district",
+   "b": "napa_valley",
+   "a_in_b": 0.999341,
+   "b_in_a": 0.012289
+  },
+  {
+   "a": "diamond_mountain_district",
+   "b": "north_coast",
+   "a_in_b": 1,
+   "b_in_a": 0.001488
+  },
+  {
+   "a": "diamond_mountain_district",
+   "b": "spring_mountain_district",
+   "a_in_b": 0.000024,
+   "b_in_a": 0.000014
+  },
+  {
+   "a": "dry_creek_valley",
+   "b": "north_coast",
+   "a_in_b": 1,
+   "b_in_a": 0.023645
+  },
+  {
+   "a": "dry_creek_valley",
+   "b": "northern_sonoma",
+   "a_in_b": 0.999817,
+   "b_in_a": 0.198047
+  },
+  {
+   "a": "dry_creek_valley",
+   "b": "rockpile",
+   "a_in_b": 0.036077,
+   "b_in_a": 0.19126
+  },
+  {
+   "a": "dry_creek_valley",
+   "b": "russian_river_valley",
+   "a_in_b": 0.006247,
+   "b_in_a": 0.002859
+  },
+  {
+   "a": "dry_creek_valley",
+   "b": "sonoma_coast",
+   "a_in_b": 0.000752,
+   "b_in_a": 0.000114
+  },
+  {
+   "a": "dundee_hills",
+   "b": "willamette_valley",
+   "a_in_b": 1,
+   "b_in_a": 0.003621
+  },
+  {
+   "a": "dundee_hills",
+   "b": "yamhill_carlton",
+   "a_in_b": 0.00011,
+   "b_in_a": 0.000024
+  },
+  {
+   "a": "eagle_peak_mendocino_county",
+   "b": "mendocino",
+   "a_in_b": 0.000997,
+   "b_in_a": 0.000085
+  },
+  {
+   "a": "eagle_peak_mendocino_county",
+   "b": "north_coast",
+   "a_in_b": 1,
+   "b_in_a": 0.008056
+  },
+  {
+   "a": "eagle_peak_mendocino_county",
+   "b": "redwood_valley",
+   "a_in_b": 0.000046,
+   "b_in_a": 0.000039
+  },
+  {
+   "a": "edna_valley",
+   "b": "san_luis_obispo_coast",
+   "a_in_b": 1,
+   "b_in_a": 0.053956
+  },
+  {
+   "a": "el_dorado",
+   "b": "fair_play",
+   "a_in_b": 0.063325,
+   "b_in_a": 0.999964
+  },
+  {
+   "a": "el_dorado",
+   "b": "sierra_foothills",
+   "a_in_b": 0.748651,
+   "b_in_a": 0.117574
+  },
+  {
+   "a": "el_pomar_district",
+   "b": "paso_robles",
+   "a_in_b": 1,
+   "b_in_a": 0.036011
+  },
+  {
+   "a": "el_pomar_district",
+   "b": "paso_robles_geneseo_district",
+   "a_in_b": 0,
+   "b_in_a": 0
+  },
+  {
+   "a": "el_pomar_district",
+   "b": "templeton_gap_district",
+   "a_in_b": 0.000003,
+   "b_in_a": 0.000004
+  },
+  {
+   "a": "elkton_oregon",
+   "b": "southern_oregon",
+   "a_in_b": 0.989961,
+   "b_in_a": 0.036813
+  },
+  {
+   "a": "elkton_oregon",
+   "b": "umpqua_valley",
+   "a_in_b": 0.990563,
+   "b_in_a": 0.105438
+  },
+  {
+   "a": "eola_amity_hills",
+   "b": "van_duzer_corridor",
+   "a_in_b": 0.0001,
+   "b_in_a": 0.000069
+  },
+  {
+   "a": "eola_amity_hills",
+   "b": "willamette_valley",
+   "a_in_b": 1,
+   "b_in_a": 0.011292
+  },
+  {
+   "a": "fair_play",
+   "b": "sierra_foothills",
+   "a_in_b": 0.999409,
+   "b_in_a": 0.009939
+  },
+  {
+   "a": "fiddletown",
+   "b": "sierra_foothills",
+   "a_in_b": 1,
+   "b_in_a": 0.0046
+  },
+  {
+   "a": "finger_lakes",
+   "b": "seneca_lake",
+   "a_in_b": 0.088597,
+   "b_in_a": 1
+  },
+  {
+   "a": "fort_ross_seaview",
+   "b": "north_coast",
+   "a_in_b": 1,
+   "b_in_a": 0.009674
+  },
+  {
+   "a": "fort_ross_seaview",
+   "b": "sonoma_coast",
+   "a_in_b": 1,
+   "b_in_a": 0.061968
+  },
+  {
+   "a": "fort_ross_seaview",
+   "b": "west_sonoma_coast",
+   "a_in_b": 0.999836,
+   "b_in_a": 0.225448
+  },
+  {
+   "a": "fountaingrove_district",
+   "b": "knights_valley",
+   "a_in_b": 0.000033,
+   "b_in_a": 0.000032
+  },
+  {
+   "a": "fountaingrove_district",
+   "b": "napa_valley",
+   "a_in_b": 0.000143,
+   "b_in_a": 0.000013
+  },
+  {
+   "a": "fountaingrove_district",
+   "b": "north_coast",
+   "a_in_b": 1,
+   "b_in_a": 0.011137
+  },
+  {
+   "a": "fountaingrove_district",
+   "b": "northern_sonoma",
+   "a_in_b": 0.034739,
+   "b_in_a": 0.003241
+  },
+  {
+   "a": "fountaingrove_district",
+   "b": "russian_river_valley",
+   "a_in_b": 0.000019,
+   "b_in_a": 0.000004
+  },
+  {
+   "a": "fountaingrove_district",
+   "b": "sonoma_coast",
+   "a_in_b": 0.003609,
+   "b_in_a": 0.000257
+  },
+  {
+   "a": "fountaingrove_district",
+   "b": "spring_mountain_district",
+   "a_in_b": 0.000002,
+   "b_in_a": 0.000008
+  },
+  {
+   "a": "gabilan_mountains",
+   "b": "mt__harlan",
+   "a_in_b": 0.057833,
+   "b_in_a": 1
+  },
+  {
+   "a": "gabilan_mountains",
+   "b": "paicines",
+   "a_in_b": 0.001382,
+   "b_in_a": 0.009814
+  },
+  {
+   "a": "gabilan_mountains",
+   "b": "san_benito",
+   "a_in_b": 0.001525,
+   "b_in_a": 0.00439
+  },
+  {
+   "a": "goose_gap",
+   "b": "red_mountain",
+   "a_in_b": 0.000052,
+   "b_in_a": 0.000091
+  },
+  {
+   "a": "goose_gap",
+   "b": "yakima_valley",
+   "a_in_b": 0.999694,
+   "b_in_a": 0.011475
+  },
+  {
+   "a": "green_valley_of_russian_river_valley",
+   "b": "north_coast",
+   "a_in_b": 1,
+   "b_in_a": 0.005761
+  },
+  {
+   "a": "green_valley_of_russian_river_valley",
+   "b": "northern_sonoma",
+   "a_in_b": 0.999997,
+   "b_in_a": 0.048266
+  },
+  {
+   "a": "green_valley_of_russian_river_valley",
+   "b": "russian_river_valley",
+   "a_in_b": 0.999997,
+   "b_in_a": 0.111522
+  },
+  {
+   "a": "green_valley_of_russian_river_valley",
+   "b": "sonoma_coast",
+   "a_in_b": 1,
+   "b_in_a": 0.036905
+  },
+  {
+   "a": "green_valley_of_russian_river_valley",
+   "b": "west_sonoma_coast",
+   "a_in_b": 0.000004,
+   "b_in_a": 0.000001
+  },
+  {
+   "a": "guenoc_valley",
+   "b": "north_coast",
+   "a_in_b": 1,
+   "b_in_a": 0.001677
+  },
+  {
+   "a": "hames_valley",
+   "b": "monterey",
+   "a_in_b": 0.999997,
+   "b_in_a": 0.020424
+  },
+  {
+   "a": "happy_canyon_of_santa_barbara",
+   "b": "santa_ynez_valley",
+   "a_in_b": 0.99999,
+   "b_in_a": 0.141797
+  },
+  {
+   "a": "high_valley",
+   "b": "long_valley-lake_county",
+   "a_in_b": 0.001032,
+   "b_in_a": 0.002191
+  },
+  {
+   "a": "high_valley",
+   "b": "north_coast",
+   "a_in_b": 1,
+   "b_in_a": 0.004968
+  },
+  {
+   "a": "horse_heaven_hills",
+   "b": "yakima_valley",
+   "a_in_b": 0.000091,
+   "b_in_a": 0.000074
+  },
+  {
+   "a": "howell_mountain",
+   "b": "napa_valley",
+   "a_in_b": 1,
+   "b_in_a": 0.032637
+  },
+  {
+   "a": "howell_mountain",
+   "b": "north_coast",
+   "a_in_b": 1,
+   "b_in_a": 0.00395
+  },
+  {
+   "a": "jahant",
+   "b": "lodi",
+   "a_in_b": 1,
+   "b_in_a": 0.051988
+  },
+  {
+   "a": "jahant",
+   "b": "mokelumne_river",
+   "a_in_b": 0.000036,
+   "b_in_a": 0.000013
+  },
+  {
+   "a": "kelsey_bench_lake_county",
+   "b": "north_coast",
+   "a_in_b": 1,
+   "b_in_a": 0.00278
+  },
+  {
+   "a": "kelsey_bench_lake_county",
+   "b": "red_hills_lake_county",
+   "a_in_b": 0.000021,
+   "b_in_a": 0.000006
+  },
+  {
+   "a": "knights_valley",
+   "b": "napa_valley",
+   "a_in_b": 0.000092,
+   "b_in_a": 0.000009
+  },
+  {
+   "a": "knights_valley",
+   "b": "north_coast",
+   "a_in_b": 1,
+   "b_in_a": 0.011253
+  },
+  {
+   "a": "knights_valley",
+   "b": "northern_sonoma",
+   "a_in_b": 0.998666,
+   "b_in_a": 0.09415
+  },
+  {
+   "a": "knights_valley",
+   "b": "russian_river_valley",
+   "a_in_b": 0.000176,
+   "b_in_a": 0.000038
+  },
+  {
+   "a": "lamorinda",
+   "b": "san_francisco_bay",
+   "a_in_b": 1,
+   "b_in_a": 0.016129
+  },
+  {
+   "a": "laurelwood_district",
+   "b": "willamette_valley",
+   "a_in_b": 1,
+   "b_in_a": 0.009719
+  },
+  {
+   "a": "lime_kiln_valley",
+   "b": "san_benito",
+   "a_in_b": 0.999586,
+   "b_in_a": 0.048998
+  },
+  {
+   "a": "livermore_valley",
+   "b": "san_francisco_bay",
+   "a_in_b": 0.999891,
+   "b_in_a": 0.129733
+  },
+  {
+   "a": "livermore_valley",
+   "b": "santa_clara_valley",
+   "a_in_b": 0.000012,
+   "b_in_a": 0.000009
+  },
+  {
+   "a": "lodi",
+   "b": "mokelumne_river",
+   "a_in_b": 0.151144,
+   "b_in_a": 0.999956
+  },
+  {
+   "a": "lodi",
+   "b": "sierra_foothills",
+   "a_in_b": 0,
+   "b_in_a": 0
+  },
+  {
+   "a": "lodi",
+   "b": "sloughhouse",
+   "a_in_b": 0.138088,
+   "b_in_a": 0.998857
+  },
+  {
+   "a": "long_island",
+   "b": "north_fork_of_long_island",
+   "a_in_b": 0.113123,
+   "b_in_a": 0.999963
+  },
+  {
+   "a": "long_island",
+   "b": "the_hamptons_long_island",
+   "a_in_b": 0.180284,
+   "b_in_a": 0.999974
+  },
+  {
+   "a": "long_valley-lake_county",
+   "b": "north_coast",
+   "a_in_b": 1,
+   "b_in_a": 0.002341
+  },
+  {
+   "a": "los_carneros",
+   "b": "mt__veeder",
+   "a_in_b": 0.000002,
+   "b_in_a": 0.000003
+  },
+  {
+   "a": "los_carneros",
+   "b": "napa_valley",
+   "a_in_b": 0.401708,
+   "b_in_a": 0.037233
+  },
+  {
+   "a": "los_carneros",
+   "b": "north_coast",
+   "a_in_b": 1,
+   "b_in_a": 0.011219
+  },
+  {
+   "a": "los_carneros",
+   "b": "petaluma_gap",
+   "a_in_b": 0,
+   "b_in_a": 0
+  },
+  {
+   "a": "los_carneros",
+   "b": "sonoma_coast",
+   "a_in_b": 0.598284,
+   "b_in_a": 0.042993
+  },
+  {
+   "a": "los_carneros",
+   "b": "sonoma_valley",
+   "a_in_b": 0.598315,
+   "b_in_a": 0.193546
+  },
+  {
+   "a": "los_olivos_district",
+   "b": "santa_ynez_valley",
+   "a_in_b": 1,
+   "b_in_a": 0.121269
+  },
+  {
+   "a": "lower_long_tom",
+   "b": "willamette_valley",
+   "a_in_b": 0.993202,
+   "b_in_a": 0.008165
+  },
+  {
+   "a": "malibu_coast",
+   "b": "malibu_newton_canyon",
+   "a_in_b": 0.006407,
+   "b_in_a": 1
+  },
+  {
+   "a": "malibu_coast",
+   "b": "saddle_rock_malibu",
+   "a_in_b": 0.01397,
+   "b_in_a": 1
+  },
+  {
+   "a": "malibu_newton_canyon",
+   "b": "saddle_rock_malibu",
+   "a_in_b": 0.000022,
+   "b_in_a": 0.00001
+  },
+  {
+   "a": "mcdowell_valley",
+   "b": "mendocino",
+   "a_in_b": 0.983698,
+   "b_in_a": 0.007092
+  },
+  {
+   "a": "mcdowell_valley",
+   "b": "north_coast",
+   "a_in_b": 1,
+   "b_in_a": 0.000678
+  },
+  {
+   "a": "mcminnville",
+   "b": "willamette_valley",
+   "a_in_b": 0.980857,
+   "b_in_a": 0.010436
+  },
+  {
+   "a": "mcminnville",
+   "b": "yamhill_carlton",
+   "a_in_b": 0.000001,
+   "b_in_a": 0.000001
+  },
+  {
+   "a": "mendocino",
+   "b": "mendocino_ridge",
+   "a_in_b": 0.012213,
+   "b_in_a": 0.044872
+  },
+  {
+   "a": "mendocino",
+   "b": "north_coast",
+   "a_in_b": 1,
+   "b_in_a": 0.093975
+  },
+  {
+   "a": "mendocino",
+   "b": "northern_sonoma",
+   "a_in_b": 0.000008,
+   "b_in_a": 0.000006
+  },
+  {
+   "a": "mendocino",
+   "b": "pine_mountain_cloverdale_peak",
+   "a_in_b": 0,
+   "b_in_a": 0.000032
+  },
+  {
+   "a": "mendocino",
+   "b": "potter_valley",
+   "a_in_b": 0.087741,
+   "b_in_a": 0.933381
+  },
+  {
+   "a": "mendocino",
+   "b": "redwood_valley",
+   "a_in_b": 0.100014,
+   "b_in_a": 0.999765
+  },
+  {
+   "a": "mendocino",
+   "b": "yorkville_highlands",
+   "a_in_b": 0.142051,
+   "b_in_a": 0.999971
+  },
+  {
+   "a": "mendocino_ridge",
+   "b": "north_coast",
+   "a_in_b": 1,
+   "b_in_a": 0.025577
+  },
+  {
+   "a": "mendocino_ridge",
+   "b": "yorkville_highlands",
+   "a_in_b": 0.001581,
+   "b_in_a": 0.003029
+  },
+  {
+   "a": "monterey",
+   "b": "san_antonio_valley",
+   "a_in_b": 0,
+   "b_in_a": 0.000001
+  },
+  {
+   "a": "monterey",
+   "b": "san_bernabe",
+   "a_in_b": 0.041278,
+   "b_in_a": 0.999795
+  },
+  {
+   "a": "monterey",
+   "b": "san_lucas",
+   "a_in_b": 0.055756,
+   "b_in_a": 1
+  },
+  {
+   "a": "monterey",
+   "b": "santa_lucia_highlands",
+   "a_in_b": 0.034566,
+   "b_in_a": 0.999314
+  },
+  {
+   "a": "moon_mountain_district_sonoma_county",
+   "b": "mt__veeder",
+   "a_in_b": 0.000021,
+   "b_in_a": 0.000022
+  },
+  {
+   "a": "moon_mountain_district_sonoma_county",
+   "b": "napa_valley",
+   "a_in_b": 0.000034,
+   "b_in_a": 0.000002
+  },
+  {
+   "a": "moon_mountain_district_sonoma_county",
+   "b": "north_coast",
+   "a_in_b": 1,
+   "b_in_a": 0.005337
+  },
+  {
+   "a": "moon_mountain_district_sonoma_county",
+   "b": "sonoma_valley",
+   "a_in_b": 0.99998,
+   "b_in_a": 0.153899
+  },
+  {
+   "a": "mount_pisgah__polk_county__oregon",
+   "b": "willamette_valley",
+   "a_in_b": 1,
+   "b_in_a": 0.001635
+  },
+  {
+   "a": "mt__veeder",
+   "b": "napa_valley",
+   "a_in_b": 0.999985,
+   "b_in_a": 0.042115
+  },
+  {
+   "a": "mt__veeder",
+   "b": "north_coast",
+   "a_in_b": 1,
+   "b_in_a": 0.005098
+  },
+  {
+   "a": "mt__veeder",
+   "b": "oak_knoll_district_of_napa_valley",
+   "a_in_b": 0.001075,
+   "b_in_a": 0.001844
+  },
+  {
+   "a": "mt__veeder",
+   "b": "sonoma_valley",
+   "a_in_b": 0.000013,
+   "b_in_a": 0.000002
+  },
+  {
+   "a": "mt__veeder",
+   "b": "yountville",
+   "a_in_b": 0.000015,
+   "b_in_a": 0.000031
+  },
+  {
+   "a": "napa_valley",
+   "b": "north_coast",
+   "a_in_b": 0.998493,
+   "b_in_a": 0.120854
+  },
+  {
+   "a": "napa_valley",
+   "b": "northern_sonoma",
+   "a_in_b": 0.000011,
+   "b_in_a": 0.000011
+  },
+  {
+   "a": "napa_valley",
+   "b": "oak_knoll_district_of_napa_valley",
+   "a_in_b": 0.024548,
+   "b_in_a": 1
+  },
+  {
+   "a": "napa_valley",
+   "b": "oakville",
+   "a_in_b": 0.016933,
+   "b_in_a": 1
+  },
+  {
+   "a": "napa_valley",
+   "b": "rutherford",
+   "a_in_b": 0.018779,
+   "b_in_a": 1
+  },
+  {
+   "a": "napa_valley",
+   "b": "san_francisco_bay",
+   "a_in_b": 0.000001,
+   "b_in_a": 0
+  },
+  {
+   "a": "napa_valley",
+   "b": "solano_county_green_valley",
+   "a_in_b": 0.000026,
+   "b_in_a": 0.000606
+  },
+  {
+   "a": "napa_valley",
+   "b": "sonoma_coast",
+   "a_in_b": 0.000004,
+   "b_in_a": 0.000003
+  },
+  {
+   "a": "napa_valley",
+   "b": "sonoma_valley",
+   "a_in_b": 0.000042,
+   "b_in_a": 0.000147
+  },
+  {
+   "a": "napa_valley",
+   "b": "spring_mountain_district",
+   "a_in_b": 0.021168,
+   "b_in_a": 0.99912
+  },
+  {
+   "a": "napa_valley",
+   "b": "st__helena",
+   "a_in_b": 0.023014,
+   "b_in_a": 1
+  },
+  {
+   "a": "napa_valley",
+   "b": "stags_leap_district",
+   "a_in_b": 0.00761,
+   "b_in_a": 1
+  },
+  {
+   "a": "napa_valley",
+   "b": "suisun_valley",
+   "a_in_b": 0.000021,
+   "b_in_a": 0.000438
+  },
+  {
+   "a": "napa_valley",
+   "b": "wild_horse_valley",
+   "a_in_b": 0.003331,
+   "b_in_a": 0.340298
+  },
+  {
+   "a": "napa_valley",
+   "b": "yountville",
+   "a_in_b": 0.020828,
+   "b_in_a": 1
+  },
+  {
+   "a": "north_coast",
+   "b": "northern_sonoma",
+   "a_in_b": 0.119368,
+   "b_in_a": 1
+  },
+  {
+   "a": "north_coast",
+   "b": "oak_knoll_district_of_napa_valley",
+   "a_in_b": 0.002971,
+   "b_in_a": 1
+  },
+  {
+   "a": "north_coast",
+   "b": "oakville",
+   "a_in_b": 0.00205,
+   "b_in_a": 1
+  },
+  {
+   "a": "north_coast",
+   "b": "petaluma_gap",
+   "a_in_b": 0.060884,
+   "b_in_a": 0.998623
+  },
+  {
+   "a": "north_coast",
+   "b": "pine_mountain_cloverdale_peak",
+   "a_in_b": 0.001398,
+   "b_in_a": 1
+  },
+  {
+   "a": "north_coast",
+   "b": "potter_valley",
+   "a_in_b": 0.008834,
+   "b_in_a": 1
+  },
+  {
+   "a": "north_coast",
+   "b": "red_hills_lake_county",
+   "a_in_b": 0.009697,
+   "b_in_a": 1
+  },
+  {
+   "a": "north_coast",
+   "b": "redwood_valley",
+   "a_in_b": 0.009401,
+   "b_in_a": 1
+  },
+  {
+   "a": "north_coast",
+   "b": "rockpile",
+   "a_in_b": 0.00446,
+   "b_in_a": 1
+  },
+  {
+   "a": "north_coast",
+   "b": "russian_river_valley",
+   "a_in_b": 0.051662,
+   "b_in_a": 1
+  },
+  {
+   "a": "north_coast",
+   "b": "rutherford",
+   "a_in_b": 0.002273,
+   "b_in_a": 1
+  },
+  {
+   "a": "north_coast",
+   "b": "san_francisco_bay",
+   "a_in_b": 0.000021,
+   "b_in_a": 0.000039
+  },
+  {
+   "a": "north_coast",
+   "b": "solano_county_green_valley",
+   "a_in_b": 0.005117,
+   "b_in_a": 0.998355
+  },
+  {
+   "a": "north_coast",
+   "b": "sonoma_coast",
+   "a_in_b": 0.155766,
+   "b_in_a": 0.99776
+  },
+  {
+   "a": "north_coast",
+   "b": "sonoma_mountain",
+   "a_in_b": 0.001688,
+   "b_in_a": 1
+  },
+  {
+   "a": "north_coast",
+   "b": "sonoma_valley",
+   "a_in_b": 0.03467,
+   "b_in_a": 0.999704
+  },
+  {
+   "a": "north_coast",
+   "b": "spring_mountain_district",
+   "a_in_b": 0.002564,
+   "b_in_a": 1
+  },
+  {
+   "a": "north_coast",
+   "b": "st__helena",
+   "a_in_b": 0.002785,
+   "b_in_a": 1
+  },
+  {
+   "a": "north_coast",
+   "b": "stags_leap_district",
+   "a_in_b": 0.000921,
+   "b_in_a": 1
+  },
+  {
+   "a": "north_coast",
+   "b": "suisun_valley",
+   "a_in_b": 0.005287,
+   "b_in_a": 0.920777
+  },
+  {
+   "a": "north_coast",
+   "b": "upper_lake_valley",
+   "a_in_b": 0.006014,
+   "b_in_a": 1
+  },
+  {
+   "a": "north_coast",
+   "b": "west_sonoma_coast",
+   "a_in_b": 0.042841,
+   "b_in_a": 0.998527
+  },
+  {
+   "a": "north_coast",
+   "b": "wild_horse_valley",
+   "a_in_b": 0.001185,
+   "b_in_a": 1
+  },
+  {
+   "a": "north_coast",
+   "b": "yorkville_highlands",
+   "a_in_b": 0.01335,
+   "b_in_a": 1
+  },
+  {
+   "a": "north_coast",
+   "b": "yountville",
+   "a_in_b": 0.002521,
+   "b_in_a": 1
+  },
+  {
+   "a": "north_yuba",
+   "b": "sierra_foothills",
+   "a_in_b": 1,
+   "b_in_a": 0.008222
+  },
+  {
+   "a": "northern_sonoma",
+   "b": "petaluma_gap",
+   "a_in_b": 0.000001,
+   "b_in_a": 0.000003
+  },
+  {
+   "a": "northern_sonoma",
+   "b": "pine_mountain_cloverdale_peak",
+   "a_in_b": 0.003832,
+   "b_in_a": 0.327185
+  },
+  {
+   "a": "northern_sonoma",
+   "b": "rockpile",
+   "a_in_b": 0.007156,
+   "b_in_a": 0.191525
+  },
+  {
+   "a": "northern_sonoma",
+   "b": "russian_river_valley",
+   "a_in_b": 0.432775,
+   "b_in_a": 0.999955
+  },
+  {
+   "a": "northern_sonoma",
+   "b": "sonoma_coast",
+   "a_in_b": 0.380945,
+   "b_in_a": 0.291274
+  },
+  {
+   "a": "northern_sonoma",
+   "b": "west_sonoma_coast",
+   "a_in_b": 0.000133,
+   "b_in_a": 0.00037
+  },
+  {
+   "a": "northern_sonoma",
+   "b": "yorkville_highlands",
+   "a_in_b": 0.000003,
+   "b_in_a": 0.000024
+  },
+  {
+   "a": "oak_knoll_district_of_napa_valley",
+   "b": "yountville",
+   "a_in_b": 0.000002,
+   "b_in_a": 0.000003
+  },
+  {
+   "a": "oakville",
+   "b": "yountville",
+   "a_in_b": 0.000069,
+   "b_in_a": 0.000056
+  },
+  {
+   "a": "pacheco_pass",
+   "b": "san_francisco_bay",
+   "a_in_b": 0.999824,
+   "b_in_a": 0.001465
+  },
+  {
+   "a": "pacheco_pass",
+   "b": "santa_clara_valley",
+   "a_in_b": 1,
+   "b_in_a": 0.008496
+  },
+  {
+   "a": "paicines",
+   "b": "san_benito",
+   "a_in_b": 0.999971,
+   "b_in_a": 0.405251
+  },
+  {
+   "a": "paso_robles",
+   "b": "paso_robles_estrella_district",
+   "a_in_b": 0.109141,
+   "b_in_a": 0.998712
+  },
+  {
+   "a": "paso_robles",
+   "b": "paso_robles_geneseo_district",
+   "a_in_b": 0.028537,
+   "b_in_a": 1
+  },
+  {
+   "a": "paso_robles",
+   "b": "paso_robles_highlands_district",
+   "a_in_b": 0.09683,
+   "b_in_a": 0.990947
+  },
+  {
+   "a": "paso_robles",
+   "b": "paso_robles_willow_creek_district",
+   "a_in_b": 0.027108,
+   "b_in_a": 0.997254
+  },
+  {
+   "a": "paso_robles",
+   "b": "san_antonio_valley",
+   "a_in_b": 0.000009,
+   "b_in_a": 0.000035
+  },
+  {
+   "a": "paso_robles",
+   "b": "san_juan_creek",
+   "a_in_b": 0.044286,
+   "b_in_a": 0.997402
+  },
+  {
+   "a": "paso_robles",
+   "b": "san_luis_obispo_coast",
+   "a_in_b": 0.000003,
+   "b_in_a": 0.000004
+  },
+  {
+   "a": "paso_robles",
+   "b": "san_miguel_district",
+   "a_in_b": 0.030874,
+   "b_in_a": 0.991462
+  },
+  {
+   "a": "paso_robles",
+   "b": "santa_margarita_ranch",
+   "a_in_b": 0.02842,
+   "b_in_a": 0.994265
+  },
+  {
+   "a": "paso_robles",
+   "b": "templeton_gap_district",
+   "a_in_b": 0.030538,
+   "b_in_a": 0.982184
+  },
+  {
+   "a": "paso_robles",
+   "b": "york_mountain",
+   "a_in_b": 0.000033,
+   "b_in_a": 0.003181
+  },
+  {
+   "a": "paso_robles_estrella_district",
+   "b": "paso_robles_geneseo_district",
+   "a_in_b": 0.00005,
+   "b_in_a": 0.000192
+  },
+  {
+   "a": "paso_robles_estrella_district",
+   "b": "san_juan_creek",
+   "a_in_b": 0.000012,
+   "b_in_a": 0.00003
+  },
+  {
+   "a": "paso_robles_estrella_district",
+   "b": "san_miguel_district",
+   "a_in_b": 0.000022,
+   "b_in_a": 0.000075
+  },
+  {
+   "a": "paso_robles_highlands_district",
+   "b": "san_juan_creek",
+   "a_in_b": 0.000014,
+   "b_in_a": 0.000031
+  },
+  {
+   "a": "paso_robles_willow_creek_district",
+   "b": "templeton_gap_district",
+   "a_in_b": 0.000009,
+   "b_in_a": 0.000008
+  },
+  {
+   "a": "petaluma_gap",
+   "b": "russian_river_valley",
+   "a_in_b": 0.000035,
+   "b_in_a": 0.000042
+  },
+  {
+   "a": "petaluma_gap",
+   "b": "sonoma_coast",
+   "a_in_b": 0.664413,
+   "b_in_a": 0.259475
+  },
+  {
+   "a": "petaluma_gap",
+   "b": "sonoma_valley",
+   "a_in_b": 0.000009,
+   "b_in_a": 0.000016
+  },
+  {
+   "a": "petaluma_gap",
+   "b": "west_sonoma_coast",
+   "a_in_b": 0.000172,
+   "b_in_a": 0.000244
+  },
+  {
+   "a": "potter_valley",
+   "b": "redwood_valley",
+   "a_in_b": 0.002297,
+   "b_in_a": 0.002158
+  },
+  {
+   "a": "ramona_valley",
+   "b": "south_coast",
+   "a_in_b": 1,
+   "b_in_a": 0.041285
+  },
+  {
+   "a": "rattlesnake_hills",
+   "b": "yakima_valley",
+   "a_in_b": 0.994536,
+   "b_in_a": 0.106546
+  },
+  {
+   "a": "red_hill_douglas_county__oregon",
+   "b": "southern_oregon",
+   "a_in_b": 0.677527,
+   "b_in_a": 0.001885
+  },
+  {
+   "a": "red_hill_douglas_county__oregon",
+   "b": "umpqua_valley",
+   "a_in_b": 1,
+   "b_in_a": 0.007963
+  },
+  {
+   "a": "red_mountain",
+   "b": "yakima_valley",
+   "a_in_b": 0.995035,
+   "b_in_a": 0.006443
+  },
+  {
+   "a": "ribbon_ridge",
+   "b": "willamette_valley",
+   "a_in_b": 1,
+   "b_in_a": 0.001017
+  },
+  {
+   "a": "ribbon_ridge",
+   "b": "yamhill_carlton",
+   "a_in_b": 0.000072,
+   "b_in_a": 0.000004
+  },
+  {
+   "a": "rogue_valley",
+   "b": "southern_oregon",
+   "a_in_b": 0.999375,
+   "b_in_a": 0.566661
+  },
+  {
+   "a": "russian_river_valley",
+   "b": "sonoma_coast",
+   "a_in_b": 0.879534,
+   "b_in_a": 0.291054
+  },
+  {
+   "a": "russian_river_valley",
+   "b": "west_sonoma_coast",
+   "a_in_b": 0.000039,
+   "b_in_a": 0.000047
+  },
+  {
+   "a": "rutherford",
+   "b": "st__helena",
+   "a_in_b": 0.000012,
+   "b_in_a": 0.00001
+  },
+  {
+   "a": "san_bernabe",
+   "b": "san_lucas",
+   "a_in_b": 0.000746,
+   "b_in_a": 0.000552
+  },
+  {
+   "a": "san_francisco_bay",
+   "b": "san_ysidro_district",
+   "a_in_b": 0.001367,
+   "b_in_a": 1
+  },
+  {
+   "a": "san_francisco_bay",
+   "b": "santa_clara_valley",
+   "a_in_b": 0.169393,
+   "b_in_a": 0.981974
+  },
+  {
+   "a": "san_francisco_bay",
+   "b": "santa_cruz_mountains",
+   "a_in_b": 0.221738,
+   "b_in_a": 0.999431
+  },
+  {
+   "a": "san_francisco_bay",
+   "b": "solano_county_green_valley",
+   "a_in_b": 0,
+   "b_in_a": 0.000021
+  },
+  {
+   "a": "san_luis_obispo_coast",
+   "b": "santa_maria_valley",
+   "a_in_b": 0.000077,
+   "b_in_a": 0.000268
+  },
+  {
+   "a": "san_luis_obispo_coast",
+   "b": "york_mountain",
+   "a_in_b": 0.000016,
+   "b_in_a": 0.001006
+  },
+  {
+   "a": "san_luis_rey",
+   "b": "south_coast",
+   "a_in_b": 1,
+   "b_in_a": 0.045353
+  },
+  {
+   "a": "san_pasqual_valley",
+   "b": "south_coast",
+   "a_in_b": 1,
+   "b_in_a": 0.004268
+  },
+  {
+   "a": "san_ysidro_district",
+   "b": "santa_clara_valley",
+   "a_in_b": 0.998439,
+   "b_in_a": 0.007911
+  },
+  {
+   "a": "santa_clara_valley",
+   "b": "santa_cruz_mountains",
+   "a_in_b": 0.000604,
+   "b_in_a": 0.00047
+  },
+  {
+   "a": "santa_ynez_valley",
+   "b": "sta__rita_hills",
+   "a_in_b": 0.187411,
+   "b_in_a": 0.956965
+  },
+  {
+   "a": "snipes_mountain",
+   "b": "yakima_valley",
+   "a_in_b": 1,
+   "b_in_a": 0.005717
+  },
+  {
+   "a": "solano_county_green_valley",
+   "b": "wild_horse_valley",
+   "a_in_b": 0.152434,
+   "b_in_a": 0.659429
+  },
+  {
+   "a": "sonoma_coast",
+   "b": "sonoma_valley",
+   "a_in_b": 0.088083,
+   "b_in_a": 0.396515
+  },
+  {
+   "a": "sonoma_coast",
+   "b": "west_sonoma_coast",
+   "a_in_b": 0.274806,
+   "b_in_a": 0.999947
+  },
+  {
+   "a": "sonoma_mountain",
+   "b": "sonoma_valley",
+   "a_in_b": 1,
+   "b_in_a": 0.048669
+  },
+  {
+   "a": "sonoma_valley",
+   "b": "spring_mountain_district",
+   "a_in_b": 0.000004,
+   "b_in_a": 0.000059
+  },
+  {
+   "a": "south_coast",
+   "b": "temecula_valley",
+   "a_in_b": 0.041876,
+   "b_in_a": 1
+  },
+  {
+   "a": "southern_oregon",
+   "b": "umpqua_valley",
+   "a_in_b": 0.343302,
+   "b_in_a": 0.982664
+  },
+  {
+   "a": "southern_oregon",
+   "b": "willamette_valley",
+   "a_in_b": 0.000021,
+   "b_in_a": 0.000012
+  },
+  {
+   "a": "spring_mountain_district",
+   "b": "st__helena",
+   "a_in_b": 0.000035,
+   "b_in_a": 0.000032
+  },
+  {
+   "a": "stags_leap_district",
+   "b": "yountville",
+   "a_in_b": 0.000008,
+   "b_in_a": 0.000003
+  },
+  {
+   "a": "the_rocks_district_of_milton_freewater",
+   "b": "walla_walla_valley",
+   "a_in_b": 1,
+   "b_in_a": 0.009728
+  },
+  {
+   "a": "tualatin_hills",
+   "b": "willamette_valley",
+   "a_in_b": 0.999978,
+   "b_in_a": 0.041927
+  },
+  {
+   "a": "tualatin_hills",
+   "b": "yamhill_carlton",
+   "a_in_b": 0.000077,
+   "b_in_a": 0.000193
+  },
+  {
+   "a": "umpqua_valley",
+   "b": "willamette_valley",
+   "a_in_b": 0.000057,
+   "b_in_a": 0.000011
+  },
+  {
+   "a": "van_duzer_corridor",
+   "b": "willamette_valley",
+   "a_in_b": 1,
+   "b_in_a": 0.016264
+  },
+  {
+   "a": "willamette_valley",
+   "b": "yamhill_carlton",
+   "a_in_b": 0.016683,
+   "b_in_a": 0.998592
+  }
+ ]
+}

@@ -42,6 +42,7 @@ const EXPORT_SQL = `
       where c.primary_parent_id = p.id and c.publication_status = 'VERIFIED'
     ) as has_children,
     s.source_namespace,
+    b.generation_parameters->>'display' as display,
     extensions.ST_AsGeoJSON(b.display_geometry, 6) as geometry,
     extensions.ST_AsGeoJSON(b.label_point, 6) as label_point,
     extensions.ST_X(b.label_point) as label_lon,

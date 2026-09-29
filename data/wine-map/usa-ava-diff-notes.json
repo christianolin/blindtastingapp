@@ -1,0 +1,13 @@
+{
+  "_note": "Why each UC-Davis-only AVA is not in TTB's list (spec §5.4), and what each TTB-only AVA lacks. Researched in-session on 2026-09-29; each entry names its source. usa-ava-diff.mjs reads ucd_only only; ttb_only and matched_notes are information for US-1 and US-5.",
+  "ucd_only": {},
+  "ttb_only": {
+    "Beverly, Washington": "27 CFR 9.297, established 2024-10-29. UC Davis has it as its own file (avas/beverly_washington.geojson, 8,242 B at 355f7da), but the per-state file avas_by_state/WA_avas.geojson at the same commit does not include it. US-5 can take it from that per-AVA file (not downloaded in US-0) or from TTB's AVA Map Explorer.",
+    "Columbia Hills": "27 CFR 9.301, established 2026-08-17 (TTB list updated 2026-08-18). No UC Davis file at 355f7da (avas/ has no columbia_hills), as the spec found. US-5 takes it from TTB's AVA Map Explorer."
+  },
+  "matched_notes": {
+    "comptche": "UC Davis carries no cfr_index for Comptche; it matched TTB's Comptche (27 CFR 9.292) by name alone.",
+    "crystal_springs_of_napa_valley": "UC Davis's name has a trailing space (\"Crystal Springs of Napa Valley \"); the tree uses TTB's legal name.",
+    "mount_pisgah__polk_county__oregon": "27 CFR 9.284's heading is \"Mount Pisgah, Polk County, Oregon\" (as UC Davis spells it); TTB's list page writes \"Mt. Pisgah, Polk County, Oregon\". The legal name (the CFR heading) is used."
+  }
+}

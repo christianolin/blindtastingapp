@@ -27,7 +27,7 @@ function perpDistance(p, a, b) {
 
 // Iterative Ramer-Douglas-Peucker on a closed ring (first === last); the
 // stack form avoids deep recursion on dense hulls.
-function simplifyRing(ring, epsilon) {
+export function simplifyRing(ring, epsilon) {
   const open = ring.slice(0, -1);
   if (open.length < 4) return ring;
   const keep = new Array(open.length).fill(false);

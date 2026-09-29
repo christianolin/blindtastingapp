@@ -141,10 +141,19 @@ const LIGHT_REGIONS: Record<string, string> = {
   "peninsula-de-setubal": "#2E8C9A",
   alentejo: "#B04A2E",
   madeira: "#8C3E7A",
+  // United States (spec 2026-09-29 §7). The country is neutral context like
+  // France's; the three West Coast states touch in a chain, so their hues
+  // alternate warm/cool (amber, plum, slate-blue), and New York is green.
+  "united-states": "#6B6257",
+  california: "#B0762E",
+  washington: "#2E6E8C",
+  oregon: "#6A3E8C",
+  "new-york": "#3E8C6A",
 };
 
 // The light table lifted by the §7.1 rule: same keys, same order, same
-// equality classes (france = spain = portugal = fallback, murcia = madeira).
+// equality classes (france = spain = portugal = united-states = fallback,
+// murcia = madeira).
 // Bordeaux lands on a dusty claret — #5C1A2B is 1.5:1 on black — while the
 // UI's own bordeaux --primary is untouched. Beaujolais, friuli, marche and
 // emilia-romagna lift into pinks; if they read as hot pink, lower only those
@@ -214,6 +223,11 @@ const DARK_REGIONS: Record<string, string> = {
   "peninsula-de-setubal": "#58BDCD",
   alentejo: "#F67E5E",
   madeira: "#D77ABF",
+  "united-states": "#AA9F92",
+  california: "#E29F50",
+  washington: "#65ACD0",
+  oregon: "#B481DE",
+  "new-york": "#69C098",
 };
 
 export const MAP_PALETTES: Record<Theme, MapPalette> = {

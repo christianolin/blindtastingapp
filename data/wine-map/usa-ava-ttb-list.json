@@ -1,0 +1,2296 @@
+{
+  "_source": {
+    "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/established-avas",
+    "read_at": "2026-09-29",
+    "page_updated": "2026-08-18",
+    "page_total": 280,
+    "dates_from": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/ava-establishment-dates (page 'Last updated: August 18, 2026'; the date the final rule published in the Federal Register)",
+    "names_from": "27 CFR Part 9 Subpart C section headings (eCFR structure API, title 27 part 9, as of 2026-09-25): the legal name, without a trailing ' AVA'. listed_as keeps the list page's own spelling where it differs.",
+    "method": "copied in-session from the two pages' tables (spec §5.4); the saved HTML lives under .tiles-build/usa/ttb/ and is not committed",
+    "corrections": [
+      "Long Island: the page's link text says 9.101 (The Hamptons' section) but its link points at section 9.170; 9.170 is used."
+    ],
+    "licence": "US government work (public domain)"
+  },
+  "total": 280,
+  "avas": [
+    {
+      "name": "Adelaida District",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.238",
+      "established": "2014-10-09"
+    },
+    {
+      "name": "Alexander Valley",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.53",
+      "established": "1984-10-24"
+    },
+    {
+      "name": "Alexandria Lakes",
+      "states": [
+        "MN"
+      ],
+      "cfr_section": "9.177",
+      "established": "2005-07-01"
+    },
+    {
+      "name": "Alisos Canyon",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.270",
+      "established": "2020-08-25"
+    },
+    {
+      "name": "Alta Mesa",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.195",
+      "established": "2006-07-17"
+    },
+    {
+      "name": "Altus",
+      "states": [
+        "AR"
+      ],
+      "cfr_section": "9.77",
+      "established": "1984-05-30"
+    },
+    {
+      "name": "Ancient Lakes of Columbia Valley",
+      "states": [
+        "WA"
+      ],
+      "cfr_section": "9.227",
+      "established": "2012-10-18"
+    },
+    {
+      "name": "Anderson Valley",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.86",
+      "established": "1983-08-18"
+    },
+    {
+      "name": "Antelope Valley of the California High Desert",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.219",
+      "established": "2011-05-24"
+    },
+    {
+      "name": "Appalachian High Country",
+      "states": [
+        "NC",
+        "TN",
+        "VA"
+      ],
+      "cfr_section": "9.260",
+      "established": "2016-10-27"
+    },
+    {
+      "name": "Applegate Valley",
+      "states": [
+        "OR"
+      ],
+      "cfr_section": "9.165",
+      "established": "2000-12-14"
+    },
+    {
+      "name": "Arkansas Mountain",
+      "states": [
+        "AR"
+      ],
+      "cfr_section": "9.112",
+      "established": "1986-09-26"
+    },
+    {
+      "name": "Arroyo Grande Valley",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.129",
+      "established": "1990-01-04"
+    },
+    {
+      "name": "Arroyo Seco",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.59",
+      "established": "1983-04-15"
+    },
+    {
+      "name": "Atlas Peak",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.140",
+      "established": "1992-01-22"
+    },
+    {
+      "name": "Augusta",
+      "states": [
+        "MO"
+      ],
+      "cfr_section": "9.22",
+      "established": "1980-06-20"
+    },
+    {
+      "name": "Ballard Canyon",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.230",
+      "established": "2013-10-02"
+    },
+    {
+      "name": "Bell Mountain",
+      "states": [
+        "TX"
+      ],
+      "cfr_section": "9.55",
+      "established": "1986-10-10"
+    },
+    {
+      "name": "Ben Lomond Mountain",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.118",
+      "established": "1987-12-09"
+    },
+    {
+      "name": "Benmore Valley",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.138",
+      "established": "1991-10-18"
+    },
+    {
+      "name": "Bennett Valley",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.142",
+      "established": "2003-10-30"
+    },
+    {
+      "name": "Beverly, Washington",
+      "states": [
+        "WA"
+      ],
+      "cfr_section": "9.297",
+      "established": "2024-10-29"
+    },
+    {
+      "name": "Big Valley District-Lake County",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.232",
+      "established": "2013-10-02",
+      "listed_as": "Big Valley District–Lake County"
+    },
+    {
+      "name": "Borden Ranch",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.196",
+      "established": "2006-07-17"
+    },
+    {
+      "name": "California Shenandoah Valley",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.37",
+      "established": "1982-12-28"
+    },
+    {
+      "name": "Calistoga",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.209",
+      "established": "2009-12-08"
+    },
+    {
+      "name": "Candy Mountain",
+      "states": [
+        "WA"
+      ],
+      "cfr_section": "9.272",
+      "established": "2020-09-25"
+    },
+    {
+      "name": "Capay Valley",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.176",
+      "established": "2002-12-20"
+    },
+    {
+      "name": "Cape May Peninsula",
+      "states": [
+        "NJ"
+      ],
+      "cfr_section": "9.262",
+      "established": "2018-04-06"
+    },
+    {
+      "name": "Carmel Valley",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.58",
+      "established": "1982-12-14"
+    },
+    {
+      "name": "Catoctin",
+      "states": [
+        "MD"
+      ],
+      "cfr_section": "9.67",
+      "established": "1983-10-13"
+    },
+    {
+      "name": "Cayuga Lake",
+      "states": [
+        "NY"
+      ],
+      "cfr_section": "9.127",
+      "established": "1988-03-25"
+    },
+    {
+      "name": "Central Coast",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.75",
+      "established": "1985-10-24"
+    },
+    {
+      "name": "Central Delaware Valley",
+      "states": [
+        "NJ",
+        "PA"
+      ],
+      "cfr_section": "9.49",
+      "established": "1984-03-19"
+    },
+    {
+      "name": "Chalk Hill",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.52",
+      "established": "1983-10-21"
+    },
+    {
+      "name": "Chalone",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.24",
+      "established": "1982-06-14"
+    },
+    {
+      "name": "Champlain Valley of New York",
+      "states": [
+        "NY"
+      ],
+      "cfr_section": "9.258",
+      "established": "2016-08-22"
+    },
+    {
+      "name": "Chehalem Mountains",
+      "states": [
+        "OR"
+      ],
+      "cfr_section": "9.205",
+      "established": "2006-11-27"
+    },
+    {
+      "name": "Chiles Valley",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.154",
+      "established": "1999-02-17"
+    },
+    {
+      "name": "Cienega Valley",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.38",
+      "established": "1982-08-19"
+    },
+    {
+      "name": "Clarksburg",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.95",
+      "established": "1984-01-23"
+    },
+    {
+      "name": "Clear Lake",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.99",
+      "established": "1984-05-08"
+    },
+    {
+      "name": "Clements Hills",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.197",
+      "established": "2006-07-17"
+    },
+    {
+      "name": "Cole Ranch",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.42",
+      "established": "1983-04-15"
+    },
+    {
+      "name": "Columbia Gorge",
+      "states": [
+        "OR",
+        "WA"
+      ],
+      "cfr_section": "9.178",
+      "established": "2004-05-10"
+    },
+    {
+      "name": "Columbia Hills",
+      "states": [
+        "WA"
+      ],
+      "cfr_section": "9.301",
+      "established": "2026-08-17"
+    },
+    {
+      "name": "Columbia Valley",
+      "states": [
+        "OR",
+        "WA"
+      ],
+      "cfr_section": "9.74",
+      "established": "1984-11-13"
+    },
+    {
+      "name": "Comptche",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.292",
+      "established": "2024-04-08"
+    },
+    {
+      "name": "Contra Costa",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.291",
+      "established": "2024-03-15"
+    },
+    {
+      "name": "Coombsville",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.223",
+      "established": "2011-12-14"
+    },
+    {
+      "name": "Cosumnes River",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.198",
+      "established": "2006-07-17"
+    },
+    {
+      "name": "Covelo",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.187",
+      "established": "2006-02-16"
+    },
+    {
+      "name": "Crest of the Blue Ridge Henderson County",
+      "states": [
+        "NC"
+      ],
+      "cfr_section": "9.266",
+      "established": "2019-07-19"
+    },
+    {
+      "name": "Creston District",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.239",
+      "established": "2014-10-09"
+    },
+    {
+      "name": "Crystal Springs of Napa Valley",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.296",
+      "established": "2024-10-16"
+    },
+    {
+      "name": "Cucamonga Valley",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.150",
+      "established": "1995-03-31"
+    },
+    {
+      "name": "Cumberland Valley",
+      "states": [
+        "MD",
+        "PA"
+      ],
+      "cfr_section": "9.105",
+      "established": "1985-07-23"
+    },
+    {
+      "name": "Dahlonega Plateau",
+      "states": [
+        "GA"
+      ],
+      "cfr_section": "9.263",
+      "established": "2018-06-29"
+    },
+    {
+      "name": "Diablo Grande",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.156",
+      "established": "1998-06-22"
+    },
+    {
+      "name": "Diamond Mountain District",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.166",
+      "established": "2001-06-01"
+    },
+    {
+      "name": "Dos Rios",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.175",
+      "established": "2005-10-14"
+    },
+    {
+      "name": "Dry Creek Valley",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.64",
+      "established": "1983-08-04"
+    },
+    {
+      "name": "Dundee Hills",
+      "states": [
+        "OR"
+      ],
+      "cfr_section": "9.180",
+      "established": "2004-11-30"
+    },
+    {
+      "name": "Dunnigan Hills",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.145",
+      "established": "1993-05-13"
+    },
+    {
+      "name": "Eagle Foothills",
+      "states": [
+        "ID"
+      ],
+      "cfr_section": "9.252",
+      "established": "2015-11-25"
+    },
+    {
+      "name": "Eagle Peak Mendocino County",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.237",
+      "established": "2014-10-09"
+    },
+    {
+      "name": "Eastern Connecticut Highlands",
+      "states": [
+        "CT"
+      ],
+      "cfr_section": "9.267",
+      "established": "2019-10-10"
+    },
+    {
+      "name": "Edna Valley",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.35",
+      "established": "1982-05-12"
+    },
+    {
+      "name": "El Dorado",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.61",
+      "established": "1983-10-13"
+    },
+    {
+      "name": "El Pomar District",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.240",
+      "established": "2014-10-09"
+    },
+    {
+      "name": "Elkton Oregon",
+      "states": [
+        "OR"
+      ],
+      "cfr_section": "9.229",
+      "established": "2013-02-05"
+    },
+    {
+      "name": "Eola-Amity Hills",
+      "states": [
+        "OR"
+      ],
+      "cfr_section": "9.202",
+      "established": "2006-07-17",
+      "listed_as": "Eola -Amity Hills"
+    },
+    {
+      "name": "Escondido Valley",
+      "states": [
+        "TX"
+      ],
+      "cfr_section": "9.141",
+      "established": "1992-05-15"
+    },
+    {
+      "name": "Fair Play",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.168",
+      "established": "2001-02-26"
+    },
+    {
+      "name": "Fennville",
+      "states": [
+        "MI"
+      ],
+      "cfr_section": "9.33",
+      "established": "1981-09-18"
+    },
+    {
+      "name": "Fiddletown",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.81",
+      "established": "1983-10-04"
+    },
+    {
+      "name": "Finger Lakes",
+      "states": [
+        "NY"
+      ],
+      "cfr_section": "9.34",
+      "established": "1982-09-01"
+    },
+    {
+      "name": "Fort Ross-Seaview",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.221",
+      "established": "2011-12-14"
+    },
+    {
+      "name": "Fountaingrove District",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.250",
+      "established": "2015-02-18"
+    },
+    {
+      "name": "Fredericksburg in the Texas Hill Country",
+      "states": [
+        "TX"
+      ],
+      "cfr_section": "9.125",
+      "established": "1988-12-22"
+    },
+    {
+      "name": "Gabilan Mountains",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.288",
+      "established": "2022-08-15"
+    },
+    {
+      "name": "Goose Gap",
+      "states": [
+        "WA"
+      ],
+      "cfr_section": "9.277",
+      "established": "2021-07-01"
+    },
+    {
+      "name": "Grand River Valley",
+      "states": [
+        "OH"
+      ],
+      "cfr_section": "9.87",
+      "established": "1983-10-21"
+    },
+    {
+      "name": "Grand Valley",
+      "states": [
+        "CO"
+      ],
+      "cfr_section": "9.137",
+      "established": "1991-11-25"
+    },
+    {
+      "name": "Green Valley of Russian River Valley",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.57",
+      "established": "1983-11-21"
+    },
+    {
+      "name": "Guenoc Valley",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.26",
+      "established": "1981-11-19"
+    },
+    {
+      "name": "Hames Valley",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.147",
+      "established": "1994-03-25"
+    },
+    {
+      "name": "Happy Canyon of Santa Barbara",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.217",
+      "established": "2009-10-08"
+    },
+    {
+      "name": "Haw River Valley",
+      "states": [
+        "NC"
+      ],
+      "cfr_section": "9.214",
+      "established": "2009-03-30"
+    },
+    {
+      "name": "Hermann",
+      "states": [
+        "MO"
+      ],
+      "cfr_section": "9.71",
+      "established": "1983-08-18"
+    },
+    {
+      "name": "High Valley",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.189",
+      "established": "2005-07-01"
+    },
+    {
+      "name": "Horse Heaven Hills",
+      "states": [
+        "WA"
+      ],
+      "cfr_section": "9.188",
+      "established": "2005-07-01"
+    },
+    {
+      "name": "Howell Mountain",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.94",
+      "established": "1983-12-30"
+    },
+    {
+      "name": "Hudson River Region",
+      "states": [
+        "NY"
+      ],
+      "cfr_section": "9.47",
+      "established": "1982-06-04"
+    },
+    {
+      "name": "Indiana Uplands",
+      "states": [
+        "IN"
+      ],
+      "cfr_section": "9.228",
+      "established": "2013-02-05"
+    },
+    {
+      "name": "Inwood Valley",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.226",
+      "established": "2012-09-13"
+    },
+    {
+      "name": "Isle St. George",
+      "states": [
+        "OH"
+      ],
+      "cfr_section": "9.51",
+      "established": "1982-08-20"
+    },
+    {
+      "name": "Jahant",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.199",
+      "established": "2006-07-17"
+    },
+    {
+      "name": "Kanawha River Valley",
+      "states": [
+        "WV"
+      ],
+      "cfr_section": "9.111",
+      "established": "1986-04-08"
+    },
+    {
+      "name": "Kelsey Bench-Lake County",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.233",
+      "established": "2013-10-02",
+      "listed_as": "Kelsey Bench–Lake County"
+    },
+    {
+      "name": "Knights Valley",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.76",
+      "established": "1983-10-21"
+    },
+    {
+      "name": "Lake Chelan",
+      "states": [
+        "WA"
+      ],
+      "cfr_section": "9.215",
+      "established": "2009-04-29"
+    },
+    {
+      "name": "Lake Erie",
+      "states": [
+        "NY",
+        "OH",
+        "PA"
+      ],
+      "cfr_section": "9.83",
+      "established": "1983-10-21"
+    },
+    {
+      "name": "Lake Michigan Shore",
+      "states": [
+        "MI"
+      ],
+      "cfr_section": "9.79",
+      "established": "1983-10-13"
+    },
+    {
+      "name": "Lake Wisconsin",
+      "states": [
+        "WI"
+      ],
+      "cfr_section": "9.146",
+      "established": "1994-01-05"
+    },
+    {
+      "name": "Lamorinda",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.254",
+      "established": "2016-02-24"
+    },
+    {
+      "name": "Lancaster Valley",
+      "states": [
+        "PA"
+      ],
+      "cfr_section": "9.41",
+      "established": "1982-05-12"
+    },
+    {
+      "name": "Laurelwood District",
+      "states": [
+        "OR"
+      ],
+      "cfr_section": "9.269",
+      "established": "2020-06-03"
+    },
+    {
+      "name": "Leelanau Peninsula",
+      "states": [
+        "MI"
+      ],
+      "cfr_section": "9.40",
+      "established": "1982-03-30"
+    },
+    {
+      "name": "Lehigh Valley",
+      "states": [
+        "PA"
+      ],
+      "cfr_section": "9.210",
+      "established": "2008-03-11"
+    },
+    {
+      "name": "Leona Valley",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.212",
+      "established": "2008-10-29"
+    },
+    {
+      "name": "Lewis-Clark Valley",
+      "states": [
+        "ID",
+        "WA"
+      ],
+      "cfr_section": "9.256",
+      "established": "2016-04-20",
+      "listed_as": "Lewis–Clark Valley"
+    },
+    {
+      "name": "Lime Kiln Valley",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.27",
+      "established": "1982-06-04"
+    },
+    {
+      "name": "Linganore",
+      "states": [
+        "MD"
+      ],
+      "cfr_section": "9.63",
+      "established": "1983-08-18"
+    },
+    {
+      "name": "Livermore Valley",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.46",
+      "established": "1982-09-01"
+    },
+    {
+      "name": "Lodi",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.107",
+      "established": "1986-02-13"
+    },
+    {
+      "name": "Loess Hills District",
+      "states": [
+        "IA",
+        "MO"
+      ],
+      "cfr_section": "9.255",
+      "established": "2016-03-03"
+    },
+    {
+      "name": "Long Island",
+      "states": [
+        "NY"
+      ],
+      "cfr_section": "9.170",
+      "established": "2001-05-15"
+    },
+    {
+      "name": "Long Valley-Lake County",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.289",
+      "established": "2023-07-05"
+    },
+    {
+      "name": "Loramie Creek",
+      "states": [
+        "OH"
+      ],
+      "cfr_section": "9.62",
+      "established": "1982-11-26"
+    },
+    {
+      "name": "Los Carneros",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.32",
+      "established": "1983-08-18"
+    },
+    {
+      "name": "Los Olivos District",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.253",
+      "established": "2016-01-21"
+    },
+    {
+      "name": "Lower Long Tom",
+      "states": [
+        "OR"
+      ],
+      "cfr_section": "9.281",
+      "established": "2021-11-10"
+    },
+    {
+      "name": "Madera",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.92",
+      "established": "1984-12-12"
+    },
+    {
+      "name": "Malibu Coast",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.235",
+      "established": "2014-07-18"
+    },
+    {
+      "name": "Malibu-Newton Canyon",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.152",
+      "established": "1996-06-13"
+    },
+    {
+      "name": "Manton Valley",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.236",
+      "established": "2014-08-01"
+    },
+    {
+      "name": "Martha's Vineyard",
+      "states": [
+        "MA"
+      ],
+      "cfr_section": "9.73",
+      "established": "1985-01-03",
+      "listed_as": "Martha’s Vineyard"
+    },
+    {
+      "name": "McDowell Valley",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.36",
+      "established": "1981-12-04"
+    },
+    {
+      "name": "McMinnville",
+      "states": [
+        "OR"
+      ],
+      "cfr_section": "9.181",
+      "established": "2005-01-18"
+    },
+    {
+      "name": "Mendocino",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.93",
+      "established": "1984-06-15"
+    },
+    {
+      "name": "Mendocino Ridge",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.158",
+      "established": "1997-10-27"
+    },
+    {
+      "name": "Merritt Island",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.68",
+      "established": "1983-05-17"
+    },
+    {
+      "name": "Mesilla Valley",
+      "states": [
+        "NM",
+        "TX"
+      ],
+      "cfr_section": "9.100",
+      "established": "1985-02-14"
+    },
+    {
+      "name": "Middle Rio Grande Valley",
+      "states": [
+        "NM"
+      ],
+      "cfr_section": "9.119",
+      "established": "1988-02-02"
+    },
+    {
+      "name": "Middleburg Virginia",
+      "states": [
+        "VA"
+      ],
+      "cfr_section": "9.225",
+      "established": "2012-09-13"
+    },
+    {
+      "name": "Mimbres Valley",
+      "states": [
+        "NM"
+      ],
+      "cfr_section": "9.103",
+      "established": "1985-11-21"
+    },
+    {
+      "name": "Mississippi Delta",
+      "states": [
+        "LA",
+        "MS",
+        "TN"
+      ],
+      "cfr_section": "9.96",
+      "established": "1984-08-30"
+    },
+    {
+      "name": "Mokelumne River",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.200",
+      "established": "2006-07-17"
+    },
+    {
+      "name": "Monterey",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.98",
+      "established": "1984-06-15"
+    },
+    {
+      "name": "Monticello",
+      "states": [
+        "VA"
+      ],
+      "cfr_section": "9.48",
+      "established": "1984-01-23"
+    },
+    {
+      "name": "Moon Mountain District Sonoma County",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.231",
+      "established": "2013-10-02"
+    },
+    {
+      "name": "Mount Pisgah, Polk County, Oregon",
+      "states": [
+        "OR"
+      ],
+      "cfr_section": "9.284",
+      "established": "2022-06-03",
+      "listed_as": "Mt. Pisgah, Polk County, Oregon"
+    },
+    {
+      "name": "Mt. Harlan",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.131",
+      "established": "1990-11-15"
+    },
+    {
+      "name": "Mt. Veeder",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.123",
+      "established": "1990-02-20"
+    },
+    {
+      "name": "Naches Heights",
+      "states": [
+        "WA"
+      ],
+      "cfr_section": "9.222",
+      "established": "2011-12-14"
+    },
+    {
+      "name": "Napa Valley",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.23",
+      "established": "1981-01-28"
+    },
+    {
+      "name": "Nashoba Valley",
+      "states": [
+        "MA"
+      ],
+      "cfr_section": "9.299",
+      "established": "2026-03-24"
+    },
+    {
+      "name": "Niagara Escarpment",
+      "states": [
+        "NY"
+      ],
+      "cfr_section": "9.186",
+      "established": "2005-09-08"
+    },
+    {
+      "name": "Nine Lakes of East Tennessee",
+      "states": [
+        "PA"
+      ],
+      "cfr_section": "9.300",
+      "established": "2026-03-24"
+    },
+    {
+      "name": "North Coast",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.30",
+      "established": "1983-09-21"
+    },
+    {
+      "name": "North Fork of Long Island",
+      "states": [
+        "NY"
+      ],
+      "cfr_section": "9.113",
+      "established": "1986-10-10"
+    },
+    {
+      "name": "North Fork of Roanoke",
+      "states": [
+        "VA"
+      ],
+      "cfr_section": "9.65",
+      "established": "1983-04-15"
+    },
+    {
+      "name": "North Yuba",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.106",
+      "established": "1985-07-30"
+    },
+    {
+      "name": "Northern Neck George Washington Birthplace",
+      "states": [
+        "VA"
+      ],
+      "cfr_section": "9.109",
+      "established": "1987-04-21"
+    },
+    {
+      "name": "Northern Sonoma",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.70",
+      "established": "1985-05-17"
+    },
+    {
+      "name": "Oak Knoll District of Napa Valley",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.161",
+      "established": "2004-02-25"
+    },
+    {
+      "name": "Oakville",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.134",
+      "established": "1993-07-02"
+    },
+    {
+      "name": "Ohio River Valley",
+      "states": [
+        "IN",
+        "KY",
+        "OH",
+        "WV"
+      ],
+      "cfr_section": "9.78",
+      "established": "1983-09-07"
+    },
+    {
+      "name": "Old Mission Peninsula",
+      "states": [
+        "MI"
+      ],
+      "cfr_section": "9.114",
+      "established": "1987-06-08"
+    },
+    {
+      "name": "Outer Coastal Plain",
+      "states": [
+        "NJ"
+      ],
+      "cfr_section": "9.207",
+      "established": "2007-02-09"
+    },
+    {
+      "name": "Ozark Highlands",
+      "states": [
+        "MO"
+      ],
+      "cfr_section": "9.115",
+      "established": "1987-08-31"
+    },
+    {
+      "name": "Ozark Mountain",
+      "states": [
+        "AR",
+        "MO",
+        "OK"
+      ],
+      "cfr_section": "9.108",
+      "established": "1986-07-02"
+    },
+    {
+      "name": "Pacheco Pass",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.88",
+      "established": "1984-03-12"
+    },
+    {
+      "name": "Paicines",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.39",
+      "established": "1982-08-16"
+    },
+    {
+      "name": "Palos Verdes Peninsula",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.274",
+      "established": "2021-06-17"
+    },
+    {
+      "name": "Paso Robles",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.84",
+      "established": "1983-10-04"
+    },
+    {
+      "name": "Paso Robles Estrella District",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.241",
+      "established": "2014-10-09"
+    },
+    {
+      "name": "Paso Robles Geneseo District",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.242",
+      "established": "2014-10-09"
+    },
+    {
+      "name": "Paso Robles Highlands District",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.243",
+      "established": "2014-10-09"
+    },
+    {
+      "name": "Paso Robles Willow Creek District",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.244",
+      "established": "2014-10-09"
+    },
+    {
+      "name": "Paulsell Valley",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.285",
+      "established": "2022-06-03"
+    },
+    {
+      "name": "Petaluma Gap",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.261",
+      "established": "2017-12-07"
+    },
+    {
+      "name": "Pine Mountain-Cloverdale Peak",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.220",
+      "established": "2011-10-27"
+    },
+    {
+      "name": "Potter Valley",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.82",
+      "established": "1983-10-13"
+    },
+    {
+      "name": "Puget Sound",
+      "states": [
+        "WA"
+      ],
+      "cfr_section": "9.151",
+      "established": "1995-10-04"
+    },
+    {
+      "name": "Ramona Valley",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.191",
+      "established": "2005-12-07"
+    },
+    {
+      "name": "Rattlesnake Hills",
+      "states": [
+        "WA"
+      ],
+      "cfr_section": "9.193",
+      "established": "2006-02-16"
+    },
+    {
+      "name": "Red Hill Douglas County, Oregon",
+      "states": [
+        "OR"
+      ],
+      "cfr_section": "9.190",
+      "established": "2005-10-14",
+      "listed_as": "Red Hill Douglas County Oregon"
+    },
+    {
+      "name": "Red Hills Lake County",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.169",
+      "established": "2004-07-12"
+    },
+    {
+      "name": "Red Mountain",
+      "states": [
+        "WA"
+      ],
+      "cfr_section": "9.167",
+      "established": "2001-04-10"
+    },
+    {
+      "name": "Redwood Valley",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.153",
+      "established": "1996-12-23"
+    },
+    {
+      "name": "Ribbon Ridge",
+      "states": [
+        "OR"
+      ],
+      "cfr_section": "9.182",
+      "established": "2005-06-01"
+    },
+    {
+      "name": "River Junction",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.164",
+      "established": "2001-05-09"
+    },
+    {
+      "name": "Rockpile",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.173",
+      "established": "2002-02-28"
+    },
+    {
+      "name": "Rocky Knob",
+      "states": [
+        "VA"
+      ],
+      "cfr_section": "9.43",
+      "established": "1983-01-12"
+    },
+    {
+      "name": "Rocky Reach",
+      "states": [
+        "WA"
+      ],
+      "cfr_section": "9.287",
+      "established": "2022-06-03"
+    },
+    {
+      "name": "Rogue Valley",
+      "states": [
+        "OR"
+      ],
+      "cfr_section": "9.132",
+      "established": "1991-01-23"
+    },
+    {
+      "name": "Royal Slope",
+      "states": [
+        "WA"
+      ],
+      "cfr_section": "9.271",
+      "established": "2020-09-02"
+    },
+    {
+      "name": "Russian River Valley",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.66",
+      "established": "1983-10-21"
+    },
+    {
+      "name": "Rutherford",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.133",
+      "established": "1993-07-02"
+    },
+    {
+      "name": "Saddle Rock-Malibu",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.203",
+      "established": "2006-07-17"
+    },
+    {
+      "name": "Salado Creek",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.163",
+      "established": "2004-06-29"
+    },
+    {
+      "name": "San Antonio Valley",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.194",
+      "established": "2006-06-08"
+    },
+    {
+      "name": "San Benito",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.110",
+      "established": "1987-10-05"
+    },
+    {
+      "name": "San Bernabe",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.171",
+      "established": "2004-06-29"
+    },
+    {
+      "name": "San Francisco Bay",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.157",
+      "established": "1999-01-20"
+    },
+    {
+      "name": "San Juan Creek",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.245",
+      "established": "2014-10-09"
+    },
+    {
+      "name": "San Lucas",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.56",
+      "established": "1987-01-29"
+    },
+    {
+      "name": "San Luis Obispo Coast",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.282",
+      "established": "2022-03-09",
+      "listed_as": "San Luis Obispo Coast (SLO Coast)"
+    },
+    {
+      "name": "San Luis Rey",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.295",
+      "established": "2024-08-30"
+    },
+    {
+      "name": "San Miguel District",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.246",
+      "established": "2014-10-09"
+    },
+    {
+      "name": "San Pasqual Valley",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.25",
+      "established": "1981-09-23"
+    },
+    {
+      "name": "San Ysidro District",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.130",
+      "established": "1990-11-15"
+    },
+    {
+      "name": "Santa Clara Valley",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.126",
+      "established": "1989-03-28"
+    },
+    {
+      "name": "Santa Cruz Mountains",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.31",
+      "established": "1981-12-04"
+    },
+    {
+      "name": "Santa Lucia Highlands",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.139",
+      "established": "1992-05-15"
+    },
+    {
+      "name": "Santa Margarita Ranch",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.247",
+      "established": "2014-10-09"
+    },
+    {
+      "name": "Santa Maria Valley",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.28",
+      "established": "1981-08-05"
+    },
+    {
+      "name": "Santa Ynez Valley",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.54",
+      "established": "1983-04-15"
+    },
+    {
+      "name": "Seiad Valley",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.148",
+      "established": "1994-05-19"
+    },
+    {
+      "name": "Seneca Lake",
+      "states": [
+        "NY"
+      ],
+      "cfr_section": "9.128",
+      "established": "2003-07-03"
+    },
+    {
+      "name": "Shawnee Hills",
+      "states": [
+        "IL"
+      ],
+      "cfr_section": "9.206",
+      "established": "2006-11-27"
+    },
+    {
+      "name": "Shenandoah Valley",
+      "states": [
+        "VA",
+        "WV"
+      ],
+      "cfr_section": "9.60",
+      "established": "1982-12-28"
+    },
+    {
+      "name": "Sierra Foothills",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.120",
+      "established": "1987-11-18"
+    },
+    {
+      "name": "Sierra Pelona Valley",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.218",
+      "established": "2010-07-22"
+    },
+    {
+      "name": "Sloughhouse",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.201",
+      "established": "2006-07-17"
+    },
+    {
+      "name": "Snake River Valley",
+      "states": [
+        "ID",
+        "OR"
+      ],
+      "cfr_section": "9.208",
+      "established": "2007-03-09"
+    },
+    {
+      "name": "Snipes Mountain",
+      "states": [
+        "WA"
+      ],
+      "cfr_section": "9.213",
+      "established": "2009-01-21"
+    },
+    {
+      "name": "Solano County Green Valley",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.44",
+      "established": "1982-12-29"
+    },
+    {
+      "name": "Sonoita",
+      "states": [
+        "AZ"
+      ],
+      "cfr_section": "9.97",
+      "established": "1984-10-26"
+    },
+    {
+      "name": "Sonoma Coast",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.116",
+      "established": "1987-06-11"
+    },
+    {
+      "name": "Sonoma Mountain",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.102",
+      "established": "1985-01-23"
+    },
+    {
+      "name": "Sonoma Valley",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.29",
+      "established": "1981-12-04"
+    },
+    {
+      "name": "South Coast",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.104",
+      "established": "1985-11-21"
+    },
+    {
+      "name": "Southeastern New England",
+      "states": [
+        "CT",
+        "MA",
+        "RI"
+      ],
+      "cfr_section": "9.72",
+      "established": "1984-03-28"
+    },
+    {
+      "name": "Southern Oregon",
+      "states": [
+        "OR"
+      ],
+      "cfr_section": "9.179",
+      "established": "2004-12-08"
+    },
+    {
+      "name": "Spring Mountain District",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.143",
+      "established": "1993-05-13"
+    },
+    {
+      "name": "Squaw Valley-Miramonte",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.251",
+      "established": "2015-08-07",
+      "listed_as": "Squaw Valley–Miramonte"
+    },
+    {
+      "name": "St. Helena",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.149",
+      "established": "1995-09-11"
+    },
+    {
+      "name": "Sta. Rita Hills",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.162",
+      "established": "2001-05-31"
+    },
+    {
+      "name": "Stags Leap District",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.117",
+      "established": "1989-01-27"
+    },
+    {
+      "name": "Suisun Valley",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.45",
+      "established": "1982-11-24"
+    },
+    {
+      "name": "Swan Creek",
+      "states": [
+        "NC"
+      ],
+      "cfr_section": "9.211",
+      "established": "2008-04-25"
+    },
+    {
+      "name": "Tehachapi Mountains",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.273",
+      "established": "2020-11-19"
+    },
+    {
+      "name": "Temecula Valley",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.50",
+      "established": "1984-10-23"
+    },
+    {
+      "name": "Templeton Gap District",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.248",
+      "established": "2014-10-09"
+    },
+    {
+      "name": "Texas Davis Mountains",
+      "states": [
+        "TX"
+      ],
+      "cfr_section": "9.155",
+      "established": "1998-03-11"
+    },
+    {
+      "name": "Texas High Plains",
+      "states": [
+        "TX"
+      ],
+      "cfr_section": "9.144",
+      "established": "1993-03-02"
+    },
+    {
+      "name": "Texas Hill Country",
+      "states": [
+        "TX"
+      ],
+      "cfr_section": "9.136",
+      "established": "1991-11-29"
+    },
+    {
+      "name": "Texoma",
+      "states": [
+        "TX"
+      ],
+      "cfr_section": "9.185",
+      "established": "2005-12-07"
+    },
+    {
+      "name": "The Burn of Columbia Valley",
+      "states": [
+        "WA"
+      ],
+      "cfr_section": "9.276",
+      "established": "2021-06-17"
+    },
+    {
+      "name": "The Hamptons, Long Island",
+      "states": [
+        "NY"
+      ],
+      "cfr_section": "9.101",
+      "established": "1985-05-16"
+    },
+    {
+      "name": "The Rocks District of Milton-Freewater",
+      "states": [
+        "OR"
+      ],
+      "cfr_section": "9.249",
+      "established": "2015-02-19",
+      "listed_as": "The Rocks District of Milton–Freewater"
+    },
+    {
+      "name": "Tip of the Mitt",
+      "states": [
+        "MI"
+      ],
+      "cfr_section": "9.257",
+      "established": "2016-07-21"
+    },
+    {
+      "name": "Tracy Hills",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.204",
+      "established": "2006-11-08"
+    },
+    {
+      "name": "Trinity Lakes",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.184",
+      "established": "2005-02-28"
+    },
+    {
+      "name": "Tryon Foothills",
+      "states": [
+        "NC"
+      ],
+      "cfr_section": "9.298",
+      "established": "2025-09-29"
+    },
+    {
+      "name": "Tualatin Hills",
+      "states": [
+        "OR"
+      ],
+      "cfr_section": "9.268",
+      "established": "2020-06-03"
+    },
+    {
+      "name": "Ulupalakua",
+      "states": [
+        "GA"
+      ],
+      "cfr_section": "9.278",
+      "established": "2021-07-01"
+    },
+    {
+      "name": "Umpqua Valley",
+      "states": [
+        "OR"
+      ],
+      "cfr_section": "9.89",
+      "established": "1984-03-29"
+    },
+    {
+      "name": "Upper Cumberland",
+      "states": [
+        "PA"
+      ],
+      "cfr_section": "9.294",
+      "established": "2024-05-15"
+    },
+    {
+      "name": "Upper Hiwassee Highlands",
+      "states": [
+        "GA",
+        "NC"
+      ],
+      "cfr_section": "9.234",
+      "established": "2014-07-18"
+    },
+    {
+      "name": "Upper Hudson",
+      "states": [
+        "NY"
+      ],
+      "cfr_section": "9.264",
+      "established": "2018-12-06"
+    },
+    {
+      "name": "Upper Lake Valley",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.286",
+      "established": "2022-06-03"
+    },
+    {
+      "name": "Upper Mississippi River Valley",
+      "states": [
+        "IA",
+        "IL",
+        "MN",
+        "WI"
+      ],
+      "cfr_section": "9.216",
+      "established": "2009-06-22"
+    },
+    {
+      "name": "Van Duzer Corridor",
+      "states": [
+        "OR"
+      ],
+      "cfr_section": "9.265",
+      "established": "2018-12-14"
+    },
+    {
+      "name": "Verde Valley",
+      "states": [
+        "AZ"
+      ],
+      "cfr_section": "9.280",
+      "established": "2021-11-10"
+    },
+    {
+      "name": "Virginia Peninsula",
+      "states": [
+        "VA"
+      ],
+      "cfr_section": "9.279",
+      "established": "2021-08-25"
+    },
+    {
+      "name": "Virginia's Eastern Shore",
+      "states": [
+        "VA"
+      ],
+      "cfr_section": "9.135",
+      "established": "1991-01-02",
+      "listed_as": "Virginia’s Eastern Shore"
+    },
+    {
+      "name": "Wahluke Slope",
+      "states": [
+        "WA"
+      ],
+      "cfr_section": "9.192",
+      "established": "2005-12-07"
+    },
+    {
+      "name": "Walla Walla Valley",
+      "states": [
+        "OR",
+        "WA"
+      ],
+      "cfr_section": "9.91",
+      "established": "1984-02-06"
+    },
+    {
+      "name": "Warren Hills",
+      "states": [
+        "NJ"
+      ],
+      "cfr_section": "9.121",
+      "established": "1988-08-08"
+    },
+    {
+      "name": "West Elks",
+      "states": [
+        "CO"
+      ],
+      "cfr_section": "9.172",
+      "established": "2001-03-06"
+    },
+    {
+      "name": "West Sonoma Coast",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.283",
+      "established": "2022-05-23"
+    },
+    {
+      "name": "Western Connecticut Highlands",
+      "states": [
+        "CT"
+      ],
+      "cfr_section": "9.122",
+      "established": "1988-02-09"
+    },
+    {
+      "name": "White Bluffs",
+      "states": [
+        "WA"
+      ],
+      "cfr_section": "9.275",
+      "established": "2021-06-17"
+    },
+    {
+      "name": "Wild Horse Valley",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.124",
+      "established": "1988-11-30"
+    },
+    {
+      "name": "Willamette Valley",
+      "states": [
+        "OR"
+      ],
+      "cfr_section": "9.90",
+      "established": "1983-12-01"
+    },
+    {
+      "name": "Willcox",
+      "states": [
+        "AZ"
+      ],
+      "cfr_section": "9.259",
+      "established": "2016-09-12"
+    },
+    {
+      "name": "Willow Creek",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.85",
+      "established": "1983-08-18"
+    },
+    {
+      "name": "Winters Highlands",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.290",
+      "established": "2023-08-29"
+    },
+    {
+      "name": "Wisconsin Ledge",
+      "states": [
+        "WI"
+      ],
+      "cfr_section": "9.224",
+      "established": "2012-03-22"
+    },
+    {
+      "name": "Yadkin Valley",
+      "states": [
+        "NC"
+      ],
+      "cfr_section": "9.174",
+      "established": "2002-12-09"
+    },
+    {
+      "name": "Yakima Valley",
+      "states": [
+        "WA"
+      ],
+      "cfr_section": "9.69",
+      "established": "1983-04-04"
+    },
+    {
+      "name": "Yamhill-Carlton",
+      "states": [
+        "OR"
+      ],
+      "cfr_section": "9.183",
+      "established": "2004-12-09"
+    },
+    {
+      "name": "York Mountain",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.80",
+      "established": "1983-08-24"
+    },
+    {
+      "name": "Yorkville Highlands",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.159",
+      "established": "1998-04-07"
+    },
+    {
+      "name": "Yountville",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.160",
+      "established": "1999-03-19"
+    },
+    {
+      "name": "Yucaipa Valley",
+      "states": [
+        "CA"
+      ],
+      "cfr_section": "9.293",
+      "established": "2024-04-25"
+    }
+  ]
+}

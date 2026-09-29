@@ -5,13 +5,17 @@
 import { describe, expect, it } from "vitest";
 import {
   bboxesForCountry,
+  CHIP_FIT_ALL_SHARDS,
   CHIP_MIN_ZOOM,
   chipFlightNeeded,
+  chipLandingZoom,
+  chipMinZoom,
   countryCameraBox,
   FIT_PADDING_PX,
   MIN_FIT_BAND_PX,
   selectionFit,
 } from "./camera-fit";
+import { SHARD_MIN_ZOOM } from "./mount-policy";
 import type { Bbox } from "./shard-specs";
 
 const PORTUGAL: Bbox[] = [
@@ -166,5 +170,77 @@ describe("selectionFit", () => {
   it("drops the sheet for a canvas with no measurable height", () => {
     expect(selectionFit({ bottom: 380 }, 0)).toEqual(PLAIN);
     expect(selectionFit({ bottom: 380 }, Number.NaN)).toEqual(PLAIN);
+  });
+});
+
+const USA: Bbox[] = [
+  [-124.41, 32.53, -114.13, 42.01], // california
+  [-79.76, 40.5, -71.86, 45.02], // new-york
+  [-124.57, 41.99, -116.46, 46.29], // oregon
+  [-124.73, 45.54, -116.92, 49.0], // washington
+];
+
+describe("countryCameraBox with keepAll (spec 2026-09-29 D26)", () => {
+  it("keeps New York when asked, so the chip frames California to New York", () => {
+    expect(countryCameraBox(USA, { keepAll: true })).toEqual([-124.73, 32.53, -71.86, 49.0]);
+  });
+  it("drops New York without it (centre 44 deg off against a 5.1 median: why the option exists)", () => {
+    expect(countryCameraBox(USA)).toEqual([-124.73, 32.53, -114.13, 49.0]);
+  });
+  it("leaves Portugal and France as they were", () => {
+    expect(countryCameraBox(PORTUGAL, { keepAll: false })).toEqual([-9.261, 37.741, -6.749, 42.154]);
+    expect(countryCameraBox(FRANCE, {})).toEqual([-2.023, 41.454, 9.49, 49.455]);
+  });
+  it("applies to the United States only", () => {
+    expect([...CHIP_FIT_ALL_SHARDS]).toEqual(["united-states"]);
+  });
+});
+
+// MapLibre's cameraForBounds for a north-up map: the zoom at which the box,
+// in 512 px Web Mercator world units, fills the canvas minus the padding on
+// each side. Used only to check where a chip really lands.
+function fittedZoom(bbox: Bbox, width: number, height: number, padding = 48): number {
+  const x = (lon: number) => ((lon + 180) / 360) * 512;
+  const y = (lat: number) =>
+    ((180 - (180 / Math.PI) * Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI) / 360))) / 360) * 512;
+  const [minX, minY, maxX, maxY] = bbox;
+  const scale = Math.min(
+    (width - 2 * padding) / (x(maxX) - x(minX)),
+    (height - 2 * padding) / (y(minY) - y(maxY)),
+  );
+  return Math.log2(scale);
+}
+
+describe("where a chip lands (spec 2026-09-29 D26)", () => {
+  const lower48 = countryCameraBox(USA, { keepAll: true })!;
+  const floor = chipMinZoom("united-states");
+  it.each([
+    ["an iPhone", 375, 667],
+    ["a laptop", 1675, 900],
+  ])("the United States keeps its fitted zoom on %s, below shard zoom", (_, w, h) => {
+    const fitted = fittedZoom(lower48, w, h);
+    const landed = chipLandingZoom(fitted, floor);
+    expect(landed).toBe(fitted);
+    expect(landed).toBeLessThan(CHIP_MIN_ZOOM);
+    expect(landed).toBeLessThan(SHARD_MIN_ZOOM);
+  });
+  it("frames both coasts: the fitted box is the whole lower-48 box, not a z5.5 slice of its middle", () => {
+    // At the landed zoom on a laptop the view spans more longitude than the box.
+    const landed = chipLandingZoom(fittedZoom(lower48, 1675, 900), floor);
+    const degreesAcross = (1675 / (512 * 2 ** landed)) * 360;
+    expect(degreesAcross).toBeGreaterThan(lower48[2] - lower48[0]);
+    // What the old floor did: z5.5 shows about 26 degrees, neither California nor New York.
+    expect((1675 / (512 * 2 ** CHIP_MIN_ZOOM)) * 360).toBeLessThan(30);
+  });
+  it("every other country keeps the z5.5 floor", () => {
+    expect(chipMinZoom("portugal")).toBe(CHIP_MIN_ZOOM);
+    expect(chipMinZoom("france")).toBe(CHIP_MIN_ZOOM);
+    const portugal = countryCameraBox(PORTUGAL)!;
+    // Portugal's mainland fits deeper than z5.5 on a laptop, so the floor is idle there,
+    const laptop = fittedZoom(portugal, 1675, 900);
+    expect(chipLandingZoom(laptop, chipMinZoom("portugal"))).toBe(laptop);
+    // and a fitted zoom under it is still raised.
+    expect(chipLandingZoom(3, chipMinZoom("portugal"))).toBe(CHIP_MIN_ZOOM);
+    expect(chipLandingZoom(undefined, chipMinZoom("portugal"))).toBe(CHIP_MIN_ZOOM);
   });
 });

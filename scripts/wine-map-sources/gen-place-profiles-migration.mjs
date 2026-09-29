@@ -15,25 +15,23 @@
 //   node scripts/wine-map-sources/gen-place-profiles-migration.mjs           (check only)
 //   node scripts/wine-map-sources/gen-place-profiles-migration.mjs --write
 //        --version <YYYYMMDDHHMMSS> --name <migration_name>
+//        [--source <data file>]   default data/wine-map/place-profiles.json
+//        [--bare]                 no begin;/commit; (every US run passes it)
+//   The repo is BLINDR_REPO, else the current directory.
 //
 // Re-runnable. Content already live is skipped, so the data file describes every
 // place this project has profiled and each run emits only what is still missing.
 import { readFile, writeFile } from "node:fs/promises";
 import pg from "pg";
+import { genArgs, transactionLines } from "./gen-place-profiles-args.mjs";
 
-const REPO = "C:/Users/Birchenz/blindtastingapp";
-const SOURCE = "data/wine-map/place-profiles.json";
-const WRITE = process.argv.includes("--write");
 // The data file is the source of truth for ALL place content, including the
 // part already applied. So a later run has to emit only what is not live yet,
 // or it would try to insert the lot a second time -- and the version/name move
 // with each batch. Both are arguments rather than constants for that reason.
-const arg = (flag, fallback) => {
-  const i = process.argv.indexOf(flag);
-  return i === -1 ? fallback : process.argv[i + 1];
-};
-const VERSION = arg("--version", "20260915110000");
-const NAME = arg("--name", "place_profiles_iberia");
+const {
+  repo: REPO, source: SOURCE, write: WRITE, bare: BARE, version: VERSION, name: NAME,
+} = genArgs(process.argv.slice(2));
 
 const STYLE_KINDS = new Set(["RED", "WHITE", "ROSE", "SPARKLING", "SWEET", "FORTIFIED"]);
 const sq = (s) => (s === null || s === undefined ? "null" : `'${String(s).replace(/'/g, "''")}'`);
@@ -173,8 +171,7 @@ lines.push(`-- NO TILE RUN. scripts/wine-map-tiles/export.mjs reads wine_places 
 lines.push(`-- wine_place_boundaries only; grapes, styles and articles are served by`);
 lines.push(`-- get_wine_place_context at request time. Nothing here changes a tile.`);
 lines.push(``);
-lines.push(`begin;`);
-lines.push(``);
+lines.push(...transactionLines(BARE).open);
 
 if (grapesToAdd.length) {
   lines.push(`-- Varieties the content needs that the catalog did not carry.`);
@@ -272,7 +269,7 @@ lines.push(`     and not exists (select 1 from public.wine_place_articles a wher
 lines.push(`  if n <> 0 then raise exception '% places still have no article', n; end if;`);
 lines.push(`end $$;`);
 lines.push(``);
-lines.push(`commit;`);
+lines.push(...transactionLines(BARE).close);
 
 const path = `${REPO}/supabase/migrations/${VERSION}_${NAME}.sql`;
 await writeFile(path, lines.join("\n") + "\n");

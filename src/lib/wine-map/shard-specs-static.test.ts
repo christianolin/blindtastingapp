@@ -581,3 +581,32 @@ describe("the filters", () => {
     expect(hidden(tileProps(key))).toBe(false);
   });
 });
+
+describe("outline-only places draw no fill unless selected (D15)", () => {
+  const KEY = "france.bourgogne.cote-de-nuits";
+  for (const engine of ENGINES) {
+    it(`${engine.name}: zero everywhere but the selected state`, () => {
+      const paint = staticFillPaint({ color: "#000000", ramp: true, worldHandoff: false });
+      const outlined = { ...tileProps(KEY), outline: true };
+      const plain = tileProps(KEY);
+      for (const state of NO_SELECTION) {
+        const f = engine.compile("paint_fill", "fill-opacity", paint["fill-opacity"], state);
+        for (const zoom of ZOOMS) {
+          expect(f(zoom, outlined, {}), `z${zoom}`).toBe(0);
+          expect(f(zoom, plain, {}) as number, `plain z${zoom}`).toBeGreaterThan(0);
+        }
+      }
+      {
+        const { featureState, globals } = newInputs(KEY, SHARD, KEY);
+        const f = engine.compile("paint_fill", "fill-opacity", paint["fill-opacity"], globals[0]);
+        expect(f(5, outlined, featureState)).toBe(0.6);
+        expect(f(9, outlined, featureState)).toBe(0.3);
+      }
+      for (const selectedKey of ["france.bourgogne", "italy.toscana"]) {
+        const { featureState, globals } = newInputs(selectedKey, SHARD, KEY);
+        const f = engine.compile("paint_fill", "fill-opacity", paint["fill-opacity"], globals[0]);
+        for (const zoom of ZOOMS) expect(f(zoom, outlined, featureState), `${selectedKey} z${zoom}`).toBe(0);
+      }
+    });
+  }
+});

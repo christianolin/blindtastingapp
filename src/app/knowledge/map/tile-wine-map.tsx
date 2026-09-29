@@ -30,11 +30,13 @@ import {
 } from "@/lib/wine-map/focus";
 import {
   chipFlightNeeded,
+  chipLandingZoom,
   selectionFit,
   type CameraRequest,
   type SheetPadding,
 } from "@/lib/wine-map/camera-fit";
 import { latchRampedRegions } from "@/lib/wine-map/fill-palette";
+import { legendClassOf } from "@/lib/wine-map/legend-classes";
 import {
   AREA_PALETTE_ZOOM,
   selectedLabelLayout,
@@ -173,6 +175,12 @@ const REGION_LABELS: Record<string, string> = {
   "peninsula-de-setubal": "Península de Setúbal",
   alentejo: "Alentejo",
   madeira: "Madeira",
+  // Without these the fallback capitalises the key: "New-york".
+  "united-states": "United States",
+  california: "California",
+  washington: "Washington",
+  oregon: "Oregon",
+  "new-york": "New York",
 };
 // Diagnostic escape hatch: `?debugFills=off` on the map URL renders outlines
 // and labels but no polygon fills. Fills are the only thing that stacks —
@@ -969,13 +977,8 @@ export function TileWineMap({
       // Legend rows appear only for classes actually in view: Burgundy shows
       // village/premier/grand, Champagne its rated villages, Alsace its
       // grand-cru vineyards.
-      const cls =
-        typeof p.classification === "string" && p.classification
-          ? p.classification
-          : typeof p.level === "string"
-            ? p.level
-            : null;
-      if (cls === "grand_cru" || cls === "premier_cru" || cls === "communal") {
+      const cls = legendClassOf(p);
+      if (cls) {
         classifications.add(cls);
         if (region) {
           let levels = levelsByRegion.get(region);
@@ -1294,7 +1297,7 @@ export function TileWineMap({
     // into a jump, which is what a chip tap should do there.
     map.easeTo({
       center: cam.center,
-      zoom: Math.max(cam.zoom ?? 0, request.minZoom),
+      zoom: chipLandingZoom(cam.zoom, request.minZoom),
       duration: 900,
     });
   }, []);

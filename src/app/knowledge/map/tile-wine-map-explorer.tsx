@@ -69,7 +69,8 @@ import { detailStatus } from "@/lib/wine-map/detail-status";
 import { countryChips } from "@/lib/wine-map/country-chips";
 import {
   bboxesForCountry,
-  CHIP_MIN_ZOOM,
+  CHIP_FIT_ALL_SHARDS,
+  chipMinZoom,
   countryCameraBox,
   type CameraRequest,
   type SheetPadding,
@@ -805,12 +806,14 @@ export function TileWineMapExplorer({
         setChipFocus((prev) => chipOnTap(prev, country, report.countriesInView));
       }
       const bbox = manifest
-        ? countryCameraBox(bboxesForCountry(manifest.shards, shardCountries, country))
+        ? countryCameraBox(bboxesForCountry(manifest.shards, shardCountries, country), {
+            keepAll: CHIP_FIT_ALL_SHARDS.has(country),
+          })
         : null;
       if (!bbox) return;
       setCameraRequest((prev) => ({
         bbox,
-        minZoom: CHIP_MIN_ZOOM,
+        minZoom: chipMinZoom(country),
         nonce: (prev?.nonce ?? 0) + 1,
         stayIfVisible: detail === "one" ? country : null,
       }));

@@ -18,6 +18,12 @@ import {
   shardKeyFor,
   shadeIndex,
   SHADE_COUNT,
+  COVERAGE_BOXES,
+  archiveCountries,
+  boundsInside,
+  countryOfKey,
+  coverageBoxFor,
+  featureOutsideCoverage,
 } from "./lib.mjs";
 
 const EXPORT_ROW = {
@@ -204,6 +210,8 @@ test("attribution keys reject unknown namespaces", () => {
     "dgt-caop": ATTRIBUTION.CAOP_CONCELHOS.text,
     "hvbg-atkis": ATTRIBUTION.HESSEN_ATKIS_WEINBAU.text,
     "de-spec-atkis": ATTRIBUTION.DE_SPEC_ATKIS_WEINBAU.text,
+    "ucd-ava": ATTRIBUTION.UCD_TTB_AVA.text,
+    "ttb-ava": ATTRIBUTION.TTB_AVA_MAP.text,
   });
 });
 
@@ -400,4 +408,86 @@ test("tile decode dependencies expose the expected API", async () => {
   assert.deepEqual({ ...new VectorTile(new PbfReader(new Uint8Array())).layers }, {});
   const { decodeTileFeatures } = await import("./lib.mjs");
   assert.deepEqual(await decodeTileFeatures(new ArrayBuffer(0)), {});
+});
+
+const US_BOX = { minLon: -125.5, minLat: 24, maxLon: -66.5, maxLat: 49.5 };
+const EUROPE_BOX = { minLon: -18, minLat: 32, maxLon: 19, maxLat: 56 };
+
+test("coverage: the European countries keep the old box exactly", () => {
+  for (const country of ["france", "italy", "spain", "germany", "portugal"]) {
+    assert.deepEqual({ ...COVERAGE_BOXES[country] }, EUROPE_BOX, country);
+  }
+  assert.deepEqual({ ...COVERAGE_BOXES["united-states"] }, US_BOX);
+  assert.equal(countryOfKey("united-states.california.napa-valley"), "united-states");
+});
+
+test("coverage: a Madeira shard passes the header check", () => {
+  const madeira = { minLon: -17.266, minLat: 32.633, maxLon: -16.289, maxLat: 33.107 };
+  assert.equal(boundsInside(madeira, coverageBoxFor(["portugal"])), true);
+});
+
+test("coverage: a US shard passes, and would not pass as a European one", () => {
+  const california = { minLon: -124.41, minLat: 32.53, maxLon: -114.13, maxLat: 42.01 };
+  assert.equal(boundsInside(california, coverageBoxFor(["united-states"])), true);
+  assert.equal(boundsInside(california, coverageBoxFor(["france"])), false);
+});
+
+test("coverage: a Paris label on a united-states key fails, even in the world archive", () => {
+  const release = {
+    expected: [
+      { id: "p1", key: "united-states.california.paris", label_lon: 2.35, label_lat: 48.85, archive: { world: true, shard: null } },
+      { id: "p2", key: "france.bourgogne", label_lon: 4.8, label_lat: 47.0, archive: { world: true, shard: "bourgogne" } },
+      { id: "p3", key: "united-states.new-york", label_lon: -75.5, label_lat: 42.9, archive: { world: true, shard: "new-york" } },
+    ],
+  };
+  assert.deepEqual(featureOutsideCoverage(release).map(({ id }) => id), ["p1"]);
+});
+
+test("coverage: a world archive holding the US and Europe passes the header check", () => {
+  const release = {
+    expected: [
+      { id: "f", key: "france", label_lon: 2.4, label_lat: 46.6 },
+      { id: "g", key: "germany", label_lon: 10.4, label_lat: 51.1 },
+      { id: "p", key: "portugal.madeira", label_lon: -16.9, label_lat: 32.7 },
+      { id: "u", key: "united-states", label_lon: -98, label_lat: 39 },
+      { id: "x", key: "italy", label_lon: 12.5, label_lat: 42.5 },
+    ],
+  };
+  const countries = archiveCountries(release, new Set(["f", "g", "p", "u"]));
+  assert.deepEqual(countries, ["france", "germany", "portugal", "united-states"]);
+  const box = coverageBoxFor(countries);
+  assert.deepEqual(box, { minLon: -125.5, minLat: 24, maxLon: 19, maxLat: 56 });
+  assert.equal(boundsInside({ minLon: -124.73, minLat: 24.52, maxLon: 15.04, maxLat: 55.06 }, box), true);
+});
+
+test("coverage: an unknown country throws, prototype names included", () => {
+  assert.throws(() => coverageBoxFor(["austria"]), /No coverage box for country "austria"/);
+  assert.throws(() => coverageBoxFor(["constructor"]), /No coverage box for country "constructor"/);
+  assert.throws(() => coverageBoxFor([]), /at least one country/);
+  assert.throws(
+    () => featureOutsideCoverage({ expected: [{ id: "a", key: "austria.wachau", label_lon: 15.4, label_lat: 48.4 }] }),
+    /No coverage box for country "austria"/,
+  );
+});
+
+test("the US AVA namespaces resolve to their own credits and never claim a legal boundary", () => {
+  assert.equal(attributionKeyFor("UCD_TTB_AVA"), "ucd-ava");
+  assert.equal(attributionKeyFor("TTB_AVA_MAP"), "ttb-ava");
+  assert.match(ATTRIBUTION.UCD_TTB_AVA.text, /not TTB's legal boundary$/);
+  assert.match(ATTRIBUTION.TTB_AVA_MAP.text, /not the legal boundary$/);
+  for (const { text } of [ATTRIBUTION.UCD_TTB_AVA, ATTRIBUTION.TTB_AVA_MAP]) {
+    assert.doesNotMatch(text, /official/i);
+  }
+});
+
+test("outline appears only for an outline boundary, on the fill and on every label", () => {
+  const outlined = placeFeature({ ...EXPORT_ROW, display: "outline" });
+  assert.equal(outlined.properties.outline, true);
+  for (const label of labelFeatures({ ...EXPORT_ROW, display: "outline" })) {
+    assert.equal(label.properties.outline, true);
+  }
+  for (const display of [undefined, null, "fill", "OUTLINE"]) {
+    const feature = placeFeature({ ...EXPORT_ROW, display });
+    assert.equal(Object.hasOwn(feature.properties, "outline"), false, String(display));
+  }
 });

@@ -1,0 +1,44 @@
+{
+  "_note": "Inputs to scripts/wine-map-sources/usa-tree.mjs (spec docs/superpowers/specs/2026-09-29-usa-wine-map-design.md D2-D7, D25, §4). Hand-edited. Every change here changes canonical keys, and keys lock at each wave's promote.",
+  "wave_states": {
+    "CA": { "slug": "california", "name": "California" },
+    "WA": { "slug": "washington", "name": "Washington" },
+    "OR": { "slug": "oregon", "name": "Oregon" },
+    "NY": { "slug": "new-york", "name": "New York" }
+  },
+  "check_only_states": ["AZ", "CT", "ID", "MA", "NJ", "NV", "OH", "PA", "VT"],
+  "umbrellas": {
+    "CA": ["North Coast", "Central Coast", "Sierra Foothills", "South Coast"],
+    "WA": ["Columbia Valley", "Puget Sound"],
+    "OR": ["Willamette Valley", "Southern Oregon"],
+    "NY": ["Finger Lakes", "Long Island"]
+  },
+  "navigation_nodes": [
+    {
+      "state": "CA",
+      "slug": "central-valley",
+      "name": "Central Valley",
+      "member_rule": "counties",
+      "note": "A grouping on this map, not an AVA (D25). Members: AVAs in no umbrella AVA whose every listed county is below. Draft for the owner.",
+      "counties": ["Butte", "Colusa", "Fresno", "Glenn", "Kern", "Kings", "Madera", "Merced", "Sacramento", "San Joaquin", "Solano", "Stanislaus", "Sutter", "Tulare", "Yolo", "Yuba"]
+    }
+  ],
+  "state_overrides": {
+    "Columbia Gorge": {
+      "state": "OR",
+      "owner_answer": "Oregon",
+      "question": "Columbia Gorge: key it on the map, and keep its one scoring row, under Oregon or Washington?",
+      "answered": "2026-09-29",
+      "spec": "§6.2 step 6, option (a); applies to map and scoring alike (D6)"
+    }
+  },
+  "parent_overrides": {},
+  "thresholds": {
+    "within": 0.995,
+    "overlapMin": 0.01,
+    "stateEdgeMin": 0.005,
+    "outlineKm2": 5000,
+    "containmentMin": 0.995,
+    "landShareReview": 0.5
+  }
+}

@@ -1964,6 +1964,37 @@ a raw subquery, regardless of which two tables look involved at a glance.
   asserts; every VERIFIED place must carry an article and Burgundy places a
   grape link. Any live apply must be verified with same-transaction
   assertions — version rows have been observed recorded without their DDL.
+- **USA on the map: the shared registry (US-0, 2026-09-29; spec
+  `docs/superpowers/specs/2026-09-29-usa-wine-map-design.md` §7).** Merged to
+  master before any US boundary exists live, and a hard gate for anyone who
+  dispatches a tiles run from a branch.
+  - `validate.mjs` no longer has one `COVERAGE_BBOX`. `lib.mjs`'s
+    `COVERAGE_BOXES` holds a window per country: the five European countries
+    keep the old -18..19 / 32..56 box, and `united-states` is -125.5..-66.5 /
+    24..49.5. Each archive's header must sit inside the union of its own
+    countries' boxes, and every expected label point inside its OWN country's
+    box. A country with no entry throws, so a new country adds its box in the
+    change that verifies its first place.
+  - There are two new namespaces, `UCD_TTB_AVA` (`ucd-ava`) and `TTB_AVA_MAP`
+    (`ttb-ava`).
+  - A current boundary whose `generation_parameters->>'display'` is
+    `'outline'` exports the tile property `outline: true`; every other feature
+    has no such key. `staticFillPaint` multiplies each zoom stop's base by zero
+    for it, and the selected state keeps its opacity. The factor sits inside
+    `focus(...)`, never round the top-level zoom `interpolate`, which style
+    validation rejects.
+  - The "United States" chip frames every shard (`CHIP_FIT_ALL_SHARDS`),
+    because the outlier rule would drop New York.
+  - `gen-place-profiles-migration.mjs` takes `--source` and `--bare` (no
+    `begin;`/`commit;`), and resolves the repo from `BLINDR_REPO` or the cwd.
+    Every US run passes `--bare`.
+  - The tiles workflow promotes the version it built, never "the newest
+    VALIDATED".
+  - The owner's applier refuses a file with a top-level
+    `begin`/`commit`/`rollback`/`end`/`abort` (`scripts/migration-preflight.mjs`),
+    so a `--dry` rehearsal is a real one. `--check` runs the pre-flight alone.
+  - Reverting this is safe only until the first US boundary is VALIDATED live;
+    after that it is one-way.
 - **Wine map performance** (2026-09-20; specs
   `docs/superpowers/specs/2026-09-20-wine-map-performance.md` and
   `2026-09-20-wine-map-data-latency.md`; the measured profile behind them is
