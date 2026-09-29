@@ -14,6 +14,10 @@ export const DEFAULT_THRESHOLDS = Object.freeze({
   outlineKm2: 5000,
   containmentMin: 0.995,
   landShareReview: 0.5,
+  // Review only, never a decision: a pair whose smaller side lies at least
+  // this much, but under `within`, inside the other is listed as "almost
+  // within" so a digitizing sliver can be told from a real partial overlap.
+  nearWithinReview: 0.9,
 });
 export const COUNTRY_KEY = "united-states";
 const COUNTRY_NAME = "United States";
@@ -76,12 +80,16 @@ export function buildUsaTree({ avas, pairs, config }) {
   // 2. Containment and partial overlap (§8.3).
   const containers = new Map(avas.map((a) => [a.id, []]));
   const overlaps = [];
+  const nearWithin = [];
   for (const p of pairs) {
     const a = byId.get(p.a);
     const b = byId.get(p.b);
     if (!a || !b) throw new Error(`pair names an unknown AVA: ${p.a} / ${p.b}`);
     const aInB = p.a_in_b >= t.within;
     const bInA = p.b_in_a >= t.within;
+    for (const [inner, outer, ratio] of [[a.id, b.id, p.a_in_b], [b.id, a.id, p.b_in_a]]) {
+      if (ratio >= t.nearWithinReview && ratio < t.within) nearWithin.push({ inner, outer, ratio });
+    }
     if (aInB && bInA) {
       throw new Error(`${a.name} and ${b.name} contain each other (${p.a_in_b}, ${p.b_in_a}); nearly identical outlines need an owner decision`);
     }
@@ -306,6 +314,21 @@ export function buildUsaTree({ avas, pairs, config }) {
     low_containment: avaPlaces.filter((p) => p.containment_share !== null && p.containment_share < t.containmentMin)
       .map((p) => ({ key: p.key, containment_share: p.containment_share })),
     state_list_disagreements: stateListDisagreements.sort((x, y) => x.key.localeCompare(y.key)),
+    // Placed as NOT within (the ratio is under `within`), so no parent or
+    // ALTERNATE_PARENT edge came from it; an OVERLAPS edge did. A container
+    // already on the place's primary chain (an ancestor reached another way)
+    // is left out: nothing about the placement would change.
+    near_within: nearWithin
+      .filter(({ inner, outer }) => inWave(inner) && !resolved.get(inner).chain.includes(outer))
+      .map(({ inner, outer, ratio }) => ({
+        key: keyOf(inner),
+        name: nameOf(inner),
+        container: nameOf(outer),
+        container_key: inWave(outer) ? keyOf(outer) : null,
+        ratio: round4(ratio),
+        ucd_says_within: byId.get(inner).ucd_within.some((token) => resolveToken(token) === outer),
+      }))
+      .sort((x, y) => x.key.localeCompare(y.key) || x.container.localeCompare(y.container)),
   };
   return { places: ordered, edges, deferred, deferred_edges: deferredEdges, review, thresholds: t };
 }

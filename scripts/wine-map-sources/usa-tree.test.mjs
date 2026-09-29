@@ -192,3 +192,18 @@ test("near-duplicate outlines, slug collisions, bad names and orphan nodes stop 
   const noMembers = { ...CONFIG, navigation_nodes: [{ ...CONFIG.navigation_nodes[0], counties: ["Nowhere"] }] };
   assert.throws(() => buildUsaTree({ avas: AVAS, pairs: PAIRS, config: noMembers }), /has no member/);
 });
+
+test("an almost-within pair is listed for review and still placed as not within", () => {
+  const avas = AVAS.map((a) => (a.id === "seiad" ? { ...a, ucd_within: ["North Coast"] } : a));
+  const t = buildUsaTree({ avas, pairs: [...PAIRS, pair("north_coast", "seiad", 0.0007, 0.97)], config: CONFIG });
+  assert.equal(place(t, "Seiad Valley").parent_key, "united-states.california");
+  assert.deepEqual(t.review.near_within, [{
+    key: "united-states.california.seiad-valley",
+    name: "Seiad Valley",
+    container: "North Coast",
+    container_key: "united-states.california.north-coast",
+    ratio: 0.97,
+    ucd_says_within: true,
+  }]);
+  assert.deepEqual(tree().review.near_within, []);
+});
