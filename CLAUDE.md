@@ -1253,7 +1253,9 @@ a raw subquery, regardless of which two tables look involved at a glance.
   `src/app/taste/training/map-link.tsx`) — or plain "Not on the wine map
   yet"; an expanded region group's first row (its own `<li>`, never inside
   the region row's `<button>`) names the MAP region its wines sit in
-  ("Veneto on the wine map" under Prosecco, in the explorer's English — `englishName` — since R2; `groupMapRegion`: the region
+  ("Veneto on the wine map" under Prosecco, in the explorer's English —
+  `englishName`, applied on the SERVER in `pool-shape.ts`'s `placeLinks`
+  since R2, so the dictionary stays out of the room's bundle; `groupMapRegion`: the region
   most members name, ties by key). `ArchetypeLinks`
   (`src/components/wset/archetype-links.tsx`) puts "Practise blind in the
   training room →" under `ArchetypeModal` and `/knowledge/archetypes/[id]` —
@@ -1317,10 +1319,12 @@ a raw subquery, regardless of which two tables look involved at a glance.
   and it is NEVER stored. The map is a lean MapLibre map (`TrainingMap`,
   never `TileWineMap`: no pmtiles, manifest or shards), its own chunk
   through ONE loader (`training-map-loader.ts`'s `loadTrainingMap`, used by
-  `room-map-slot.tsx`'s `next/dynamic(…, { ssr: false })` and by the Map
-  tab's warm-up on pointerenter/focus, which also `import()`s `basemap.ts`
-  to fetch the style), so the room's first load carries no MapLibre,
-  basemap or palette. It mounts only in the Map view — in the laptop column
+  `room-map-slot.tsx`'s `React.lazy` under a `Suspense` — not
+  `next/dynamic`, whose runtime alone cost ~1 KB gzip of the first load, and
+  no `ssr: false` is needed since the view starts on List — and by the Map
+  tab's warm-up on pointerenter/focus, which then calls the chunk's
+  `warmBasemap()` to fetch the style), so the room's first load carries no
+  MapLibre, basemap or palette. It mounts only in the Map view — in the laptop column
   from lg (`LG_QUERY`), in the phone sheet below it, never both (one WebGL
   context). One dot per typical wine at its home's `label_point`, else the
   nearest ancestor's, else a CURATED display-only point
@@ -1345,16 +1349,27 @@ a raw subquery, regardless of which two tables look involved at a glance.
   `mapStyle`. Camera: Europe while there is no leader; then the fit set
   (the close set's wines with a dot, ≤ 12, within 25° of the first) 600 ms
   after it last changed, until the viewer moves the map; then "Fit to the
-  closest". A dot opens the SAME detail a row does — laptop: the extracted
-  `CandidateDetailPopover`, anchored to a virtual element at the dot, closed
-  by any camera move (and dropped, never reopened, when the view, the map's
-  mount or lg changes: `targetAfterMapChange`), focus back to the map
-  container; phone: the sheet
+  closest". A dot opens the SAME detail a row does — laptop: the list's own popover
+  shell (`DetailPopover`) with its own rows and detail, rendered by the
+  map's chunk (`map-popover.tsx`) with its state IN the map, so it goes with
+  the map whenever the map unmounts (never reopened at the screen's corner),
+  anchored to a virtual element at the dot, closed by any camera move, focus
+  back to the map container; the panel HANDS the shell, the chooser rows and
+  `ArchetypeDetail` to the map (`MAP_UI`, map-types.ts's `MapPopoverUi`)
+  rather than the chunk importing them; phone: the sheet
   swaps to the detail or a "{n} wines here" chooser OVER the kept, inert
   map. Failure: a lost WebGL context or react-maplibre's constructor error
   (`onError` with `target` null) → back to List with "The map stopped
-  working"; a chunk error (`MapErrorBoundary`'s new optional `fallback`, or
-  a rejected warm-up) → "The map needs a page reload". `hover-cursor.ts`
+  working"; a chunk error (the room's own `RoomMapBoundary` — the
+  explorer's `MapErrorBoundary` is untouched —, a rejected warm-up, or
+  react-maplibre's own `import("maplibre-gl")` rejecting, which reaches
+  `onError` with `target` null too and is told apart by
+  `src/lib/chunk-load-error.ts`, the room's copy of the explorer's test) →
+  "The map needs a page reload", never a "Try again" that cannot work. The
+  hover tooltip names the ONE spot nearest the pointer (`hoverLabel`, its
+  label's own text), placed inside the map box (`tooltipPosition`). In the
+  phone sheet the map never drops under 240 px; the rows under it scroll on
+  their own instead (an iPhone SE, or every unplaced wine listed). `hover-cursor.ts`
   gained optional `isClickable`/`box`/`onHover` (the explorer passes none).
   **Kill switch:** `NEXT_PUBLIC_TRAINING_MAP=0` at BUILD time removes the
   tablist and the room is exactly R1 — an env change plus a redeploy, no
@@ -1362,10 +1377,19 @@ a raw subquery, regardless of which two tables look involved at a glance.
   stay (nullable, harmless); `scripts/training-room-map/rollback-r2.sql`
   only if the feature is abandoned. `check-display-points.mjs` is the
   pre-deploy PostgREST check. The R2 copy is provisional until the owner
-  approves spec §9's R2 rows. The room's pre-map JS grew by about 6 KB gzip
-  in the planning build, against spec §12's 3 KB: whether that stands is the
-  owner's call before the deploy (the R2 plan's "Main session afterwards",
-  step 3).
+  approves spec §9's R2 rows (the map's own lines live in
+  `src/lib/training/map-copy.ts`, the chunk's alone; the tabs and fallbacks
+  in `copy.ts`). **First-load budget (spec §12, 3 KB gzip, a §4.5 revert
+  trigger):** the room's pre-map JS is +2,992 bytes gzip over caf84e7
+  (352,670 → 355,662: the gzip of every `static/chunks/*.js` named in
+  `.next/server/app/taste/training/page_client-reference-manifest.js`,
+  default Turbopack `next build`), down from +6,246 after the R2 review's
+  trims. It is tight: **the map's chunk must import no module the room's
+  first load owns** (`candidates-panel`, `panel.ts`, `use-media`,
+  `archetype-detail`, …) — a shared module made Turbopack re-split the
+  room's chunks (+1.3 KB) or pull the module out of the room's own; hand it
+  in as a prop instead (`training-room-map-imports.test.ts` pins the list).
+  Re-measure any change to these files the same way.
 - **Aroma lexicon v2** (2026-09-29, migration
   `20260929090000_aroma_lexicon_v2.sql`, data only; spec, lexicon review and
   the typical-wine votes in `data/training/aroma-lexicon-v2-2026-09-29.json`).
