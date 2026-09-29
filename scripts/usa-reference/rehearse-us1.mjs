@@ -48,7 +48,7 @@ async function snapshot() {
     history: (await q("select version from supabase_migrations.schema_migrations where version = any ($1) order by version", [[US1_VERSION, US1_REVERT_VERSION]])).map((r) => r.version),
   };
 }
-const withoutHistory = ({ history, ...rest }) => rest;
+const withoutHistory = (s) => Object.fromEntries(Object.entries(s).filter(([k]) => k !== "history"));
 
 try {
   await c.query("begin");
