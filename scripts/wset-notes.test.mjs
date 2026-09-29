@@ -350,13 +350,19 @@ test("note-aroma with neither nose nor palate sensed is rejected", async () => {
 // 89-term seed (20260829195000), grown to 143 by the L3+L4 lexicon
 // (20260829201000), then 144 by 20260902210000_wset_aroma_coastal_terms:
 // "pear drop" left and "minerality" + "saltiness" joined PRIMARY "Other"
-// (net +1 PRIMARY). That migration asserts the same 144 and 69/25/50.
+// (net +1 PRIMARY). 20260929090000_aroma_lexicon_v2 then made it 150: apple
+// split into green apple + red apple; toast (Yeast), flint and saltiness
+// renamed to toasted bread, flint / struck match and saline; lime zest,
+// pomegranate, black and green olive, ginger (Spice), smoked meat, truffle (Red
+// and White wine), black tea and beeswax added; dried fruit, cooked fruit,
+// kerosene, graham cracker and cooked red plum removed (+4 PRIMARY, -1
+// SECONDARY, +3 TERTIARY). That migration asserts the same 150 and 73/24/53.
 
-test("aroma lexicon holds exactly 144 terms", async () => {
+test("aroma lexicon holds exactly 150 terms", async () => {
   const result = await client.query(
     "select count(*)::int as n from wset_aroma_terms",
   );
-  assert.equal(result.rows[0].n, 144);
+  assert.equal(result.rows[0].n, 150);
 });
 
 test("every term carries a legacy family from the WSET five", async () => {
@@ -377,9 +383,9 @@ test("per-origin term counts match the P/S/T mapping", async () => {
   );
   const counts = Object.fromEntries(result.rows.map((r) => [r.origin, r.n]));
   assert.deepEqual(counts, {
-    PRIMARY: 69,
-    SECONDARY: 25,
-    TERTIARY: 50,
+    PRIMARY: 73,
+    SECONDARY: 24,
+    TERTIARY: 53,
   });
 });
 

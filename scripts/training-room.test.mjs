@@ -822,8 +822,17 @@ test("the batch-1 migration lands every archetype with its links, and a second a
       t.skip("20260925120000 is neither live nor in TRAINING_ROOM_APPLY");
       return;
     }
+    // Batch 1 names the lexicon it was written against (apple, dried fruit,
+    // saltiness, flint, Yeast toast). Once 20260929090000_aroma_lexicon_v2 has
+    // renamed or removed those terms, its own check refuses to resolve them, so
+    // a replay can only fail: skip the replays and check the landing alone.
+    const lexiconV2 = (
+      await client.query(
+        "select exists (select 1 from wset_aroma_terms where group_name = 'Green fruit' and term = 'green apple') as ok",
+      )
+    ).rows[0].ok;
     const sql = readFileSync(file, "utf8");
-    if (!APPLY.some((f) => f.endsWith("20260925130000_archetypes_batch_1.sql"))) await client.query(sql);
+    if (!lexiconV2 && !APPLY.some((f) => f.endsWith("20260925130000_archetypes_batch_1.sql"))) await client.query(sql);
     const batch = JSON.parse(readFileSync("data/training/archetypes-batch-1.json", "utf8"));
     const names = batch.archetypes.map((a) => a.name);
     const totals = async () =>
@@ -835,9 +844,11 @@ test("the batch-1 migration lands every archetype with its links, and a second a
                   (select count(*)::int from wine_archetype_placements) placements`,
         )
       ).rows[0];
-    const first = await totals();
-    await client.query(sql);
-    assert.deepEqual(await totals(), first, "a second apply changes nothing");
+    if (!lexiconV2) {
+      const first = await totals();
+      await client.query(sql);
+      assert.deepEqual(await totals(), first, "a second apply changes nothing");
+    }
 
     const once = (
       await client.query("select name, count(*)::int n from wine_archetypes where name = any($1::text[]) group by name", [
