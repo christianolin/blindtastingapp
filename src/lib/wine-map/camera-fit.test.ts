@@ -8,11 +8,14 @@ import {
   CHIP_FIT_ALL_SHARDS,
   CHIP_MIN_ZOOM,
   chipFlightNeeded,
+  chipLandingZoom,
+  chipMinZoom,
   countryCameraBox,
   FIT_PADDING_PX,
   MIN_FIT_BAND_PX,
   selectionFit,
 } from "./camera-fit";
+import { SHARD_MIN_ZOOM } from "./mount-policy";
 import type { Bbox } from "./shard-specs";
 
 const PORTUGAL: Bbox[] = [
@@ -190,5 +193,54 @@ describe("countryCameraBox with keepAll (spec 2026-09-29 D26)", () => {
   });
   it("applies to the United States only", () => {
     expect([...CHIP_FIT_ALL_SHARDS]).toEqual(["united-states"]);
+  });
+});
+
+// MapLibre's cameraForBounds for a north-up map: the zoom at which the box,
+// in 512 px Web Mercator world units, fills the canvas minus the padding on
+// each side. Used only to check where a chip really lands.
+function fittedZoom(bbox: Bbox, width: number, height: number, padding = 48): number {
+  const x = (lon: number) => ((lon + 180) / 360) * 512;
+  const y = (lat: number) =>
+    ((180 - (180 / Math.PI) * Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI) / 360))) / 360) * 512;
+  const [minX, minY, maxX, maxY] = bbox;
+  const scale = Math.min(
+    (width - 2 * padding) / (x(maxX) - x(minX)),
+    (height - 2 * padding) / (y(minY) - y(maxY)),
+  );
+  return Math.log2(scale);
+}
+
+describe("where a chip lands (spec 2026-09-29 D26)", () => {
+  const lower48 = countryCameraBox(USA, { keepAll: true })!;
+  const floor = chipMinZoom("united-states");
+  it.each([
+    ["an iPhone", 375, 667],
+    ["a laptop", 1675, 900],
+  ])("the United States keeps its fitted zoom on %s, below shard zoom", (_, w, h) => {
+    const fitted = fittedZoom(lower48, w, h);
+    const landed = chipLandingZoom(fitted, floor);
+    expect(landed).toBe(fitted);
+    expect(landed).toBeLessThan(CHIP_MIN_ZOOM);
+    expect(landed).toBeLessThan(SHARD_MIN_ZOOM);
+  });
+  it("frames both coasts: the fitted box is the whole lower-48 box, not a z5.5 slice of its middle", () => {
+    // At the landed zoom on a laptop the view spans more longitude than the box.
+    const landed = chipLandingZoom(fittedZoom(lower48, 1675, 900), floor);
+    const degreesAcross = (1675 / (512 * 2 ** landed)) * 360;
+    expect(degreesAcross).toBeGreaterThan(lower48[2] - lower48[0]);
+    // What the old floor did: z5.5 shows about 26 degrees, neither California nor New York.
+    expect((1675 / (512 * 2 ** CHIP_MIN_ZOOM)) * 360).toBeLessThan(30);
+  });
+  it("every other country keeps the z5.5 floor", () => {
+    expect(chipMinZoom("portugal")).toBe(CHIP_MIN_ZOOM);
+    expect(chipMinZoom("france")).toBe(CHIP_MIN_ZOOM);
+    const portugal = countryCameraBox(PORTUGAL)!;
+    // Portugal's mainland fits deeper than z5.5 on a laptop, so the floor is idle there,
+    const laptop = fittedZoom(portugal, 1675, 900);
+    expect(chipLandingZoom(laptop, chipMinZoom("portugal"))).toBe(laptop);
+    // and a fitted zoom under it is still raised.
+    expect(chipLandingZoom(3, chipMinZoom("portugal"))).toBe(CHIP_MIN_ZOOM);
+    expect(chipLandingZoom(undefined, chipMinZoom("portugal"))).toBe(CHIP_MIN_ZOOM);
   });
 });

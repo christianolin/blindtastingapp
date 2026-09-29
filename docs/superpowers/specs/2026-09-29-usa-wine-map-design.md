@@ -303,6 +303,10 @@ Non-goals:
     48 from California to New York.
   - On a phone, that is below shard zoom, so the world archive's four state washes show first and a
     tap drills in (checked on iPhone, §15 US-2).
+  - The chip's z5.5 floor (`CHIP_MIN_ZOOM`) does not apply to these countries: `chipMinZoom(country)`
+    is 0 for them, so the camera keeps MapLibre's fitted zoom (about z4.4 on a laptop, z2 on a
+    phone). Raised to z5.5, the box would centre on its middle, the Great Plains, with neither coast
+    on screen (US-0 review fix, 2026-09-29).
   - Reason: the outlier rule would silently drop New York, the first thing a user tapping the chip
     would notice.
 
@@ -733,7 +737,7 @@ and a stated revert (§15 US-0).
 | map legend (the component that renders the classification block) | the "Classification" heading renders only when at least one of its rows does. US shards have two levels (`regional`, `subregional`), so `latchRampedRegions` ramps them, but no US row renders. The latch itself is unchanged, since changing it would change existing regions' fills | a render test with a ramped region carrying only `regional`/`subregional` |
 | `src/lib/wine-map/country-chips.ts` `LOCAL_LANG` | `"united-states": "en"` | `country-chips.test.ts` |
 | `src/lib/wine-map/localize-names.ts` | **no entry**: every US name is already English, and `englishName` falls through unchanged | — |
-| `src/lib/wine-map/camera-fit.ts` + `tile-wine-map-explorer.tsx` | `countryCameraBox(bboxes, { keepAll })`; the explorer passes `keepAll` for countries in `CHIP_FIT_ALL_SHARDS = new Set(["united-states"])` (D26) | `camera-fit.test.ts`: West Coast shards + `new-york` with `keepAll` → the box spans California to New York; without it → `new-york` is dropped (pins why the option exists); Portugal/Madeira unchanged |
+| `src/lib/wine-map/camera-fit.ts` + `tile-wine-map-explorer.tsx` | `countryCameraBox(bboxes, { keepAll })`; the explorer passes `keepAll` for countries in `CHIP_FIT_ALL_SHARDS = new Set(["united-states"])` and `minZoom: chipMinZoom(country)` (0 for them), and the map lands at `chipLandingZoom` (D26) | `camera-fit.test.ts`: West Coast shards + `new-york` with `keepAll` → the box spans California to New York; without it → `new-york` is dropped (pins why the option exists); Portugal/Madeira unchanged; the landed zoom of the lower-48 box stays the fitted one, below z5.5 and shard zoom, on a 375 px and a 1675 px canvas, while other countries keep the z5.5 floor |
 | `src/lib/wine-map/shard-layer-specs.test.ts` `SHARD_COUNTRY` | the four US shards, added with the first release that has them (the map describes a release) | itself |
 | `scripts/wine-map-sources/gen-place-profiles-migration.mjs` | `REPO = process.env.BLINDR_REPO ?? process.cwd()` (was hard-coded `C:/Users/Birchenz/blindtastingapp`), `--source <file>` (default: the old file) and `--bare` (no `begin;`/`commit;`; D24) | a dry run on both machines; agreed with the friend first (it is their script) |
 | `.github/workflows/wine-map-tiles.yml` | the "Promote release" step passes this run's own version: `node scripts/wine-map-tiles/promote.mjs "$(node -p "require('./.tiles-build/release.json').version")"`. Today it passes none, so `promote.mjs` promotes the newest VALIDATED release, whoever built it | a dispatch with `promote=false` shows the computed version in the log; agreed with the friend |

@@ -70,7 +70,7 @@ import { countryChips } from "@/lib/wine-map/country-chips";
 import {
   bboxesForCountry,
   CHIP_FIT_ALL_SHARDS,
-  CHIP_MIN_ZOOM,
+  chipMinZoom,
   countryCameraBox,
   type CameraRequest,
   type SheetPadding,
@@ -812,7 +812,7 @@ export function TileWineMapExplorer({
       if (!bbox) return;
       setCameraRequest((prev) => ({
         bbox,
-        minZoom: CHIP_MIN_ZOOM,
+        minZoom: chipMinZoom(country),
         nonce: (prev?.nonce ?? 0) + 1,
         stayIfVisible: detail === "one" ? country : null,
       }));

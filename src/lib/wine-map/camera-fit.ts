@@ -100,6 +100,22 @@ function median(values: readonly number[]): number {
     the first thing a user tapping "United States" would notice. */
 export const CHIP_FIT_ALL_SHARDS: ReadonlySet<string> = new Set(["united-states"]);
 
+/** The least zoom a country chip lands at: CHIP_MIN_ZOOM, except for a
+    CHIP_FIT_ALL_SHARDS country, where the fit must win (D26). Its box runs
+    from California to New York, and MapLibre fits that at about z4.4 on a
+    laptop and z2 on a phone; raised to z5.5 it would centre on the box's
+    middle, the bare Great Plains, with neither coast on screen. Below shard
+    zoom the world archive's state washes show first, and a tap drills in. */
+export function chipMinZoom(country: string): number {
+  return CHIP_FIT_ALL_SHARDS.has(country) ? 0 : CHIP_MIN_ZOOM;
+}
+
+/** The zoom a chip flight lands at: MapLibre's fitted zoom for the request's
+    box, raised to the request's floor. */
+export function chipLandingZoom(fittedZoom: number | undefined, minZoom: number): number {
+  return Math.max(fittedZoom ?? 0, minZoom);
+}
+
 /** The box a chip flies to: the union of the country's shard bboxes, without
     outliers unless `keepAll`. At least half the shards always survive, since
     their distance is at most the median. Null for no bboxes. */

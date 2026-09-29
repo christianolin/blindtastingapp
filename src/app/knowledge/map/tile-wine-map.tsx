@@ -30,6 +30,7 @@ import {
 } from "@/lib/wine-map/focus";
 import {
   chipFlightNeeded,
+  chipLandingZoom,
   selectionFit,
   type CameraRequest,
   type SheetPadding,
@@ -1296,7 +1297,7 @@ export function TileWineMap({
     // into a jump, which is what a chip tap should do there.
     map.easeTo({
       center: cam.center,
-      zoom: Math.max(cam.zoom ?? 0, request.minZoom),
+      zoom: chipLandingZoom(cam.zoom, request.minZoom),
       duration: 900,
     });
   }, []);
