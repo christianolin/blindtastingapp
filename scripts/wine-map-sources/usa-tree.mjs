@@ -340,8 +340,15 @@ export function buildUsaTree({ avas, pairs, config }) {
       else deferredEdges.push({ type: "ALTERNATE_PARENT", source: a.name, target: code, share: round4(share), reason: `${code} is not a wave-1 state` });
     }
   }
+  const ancestorOverlaps = [];
   for (const o of overlaps) {
     if (inWave(o.source) && inWave(o.target)) {
+      const onChain = resolved.get(o.source).chain.includes(o.target) || resolved.get(o.target).chain.includes(o.source);
+      if (onChain) {
+        const [inner, outer] = resolved.get(o.source).chain.includes(o.target) ? [o.source, o.target] : [o.target, o.source];
+        ancestorOverlaps.push({ key: keyOf(inner), name: nameOf(inner), ancestor: nameOf(outer), ancestor_key: keyOf(outer), ratio: round4(o.ratio) });
+        continue;
+      }
       edges.push({ type: "OVERLAPS", source_key: keyOf(o.source), target_key: keyOf(o.target), basis: "partial_overlap", ratio: round4(o.ratio) });
     } else {
       deferredEdges.push({ type: "OVERLAPS", source: nameOf(o.source), target: nameOf(o.target), ratio: round4(o.ratio), reason: "one side is outside wave 1" });
@@ -410,6 +417,7 @@ export function buildUsaTree({ avas, pairs, config }) {
         ucd_says_within: byId.get(inner).ucd_within.some((token) => resolveToken(token) === outer),
       }))
       .sort((x, y) => x.key.localeCompare(y.key) || x.container.localeCompare(y.container)),
+    ancestor_overlaps: ancestorOverlaps.sort((x, y) => x.key.localeCompare(y.key)),
     legal_record_nests: [...containBasis.entries()]
       .filter(([k, v]) => v.basis === "legal_record" && inWave(k.split(">")[0]))
       .map(([k, v]) => {

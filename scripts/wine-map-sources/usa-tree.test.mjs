@@ -302,3 +302,22 @@ test("a navigation node's exclude list keeps a county match out (owner 2026-09-2
   assert.throws(() => buildUsaTree({ avas, pairs: PAIRS, config: { ...config, navigation_nodes: [{ ...node, exclude: ["Nowhere"] }] } }),
     /navigation_nodes\[central-valley\]\.exclude: no AVA named "Nowhere"/);
 });
+
+test("an OVERLAPS edge to the place's own primary ancestor is dropped and listed for review", () => {
+  const OR = { OR: 1 };
+  const config = { ...CONFIG, umbrellas: { ...CONFIG.umbrellas, OR: ["Southern Oregon"] } };
+  const avas = [...AVAS,
+    ava("so", "Southern Oregon", 8000, OR),
+    ava("umpqua", "Umpqua Valley", 3000, OR, { ucd_within: ["Southern Oregon"] }),
+    ava("red_hill", "Red Hill Douglas County, Oregon", 20, OR, { ucd_within: ["Southern Oregon", "Umpqua Valley"] })];
+  const pairs = [...PAIRS, pair("umpqua", "so", 0.9827, 0.36), pair("red_hill", "umpqua", 1, 0.008), pair("red_hill", "so", 0.6775, 0.0019)];
+  const t = buildUsaTree({ avas, pairs, config });
+  const rh = place(t, "Red Hill Douglas County, Oregon");
+  assert.equal(rh.key, "united-states.oregon.southern-oregon.umpqua-valley.red-hill-douglas-county-oregon");
+  assert.deepEqual(t.edges.filter((e) => e.source_key === rh.key), []);
+  assert.deepEqual(t.review.ancestor_overlaps, [{
+    key: rh.key, name: "Red Hill Douglas County, Oregon", ancestor: "Southern Oregon",
+    ancestor_key: "united-states.oregon.southern-oregon", ratio: 0.6775,
+  }]);
+  assert.deepEqual(tree().review.ancestor_overlaps, []);
+});
