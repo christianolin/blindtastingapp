@@ -430,6 +430,11 @@ function tileProperties(row) {
     // group for fixture rows.
     area_key: row.area_key ?? row.group ?? null,
     area_name: row.area_name ?? row.group_name ?? null,
+    // Outline-only places (spec 2026-09-29 D15: the AVAs of 5,000 km² or more
+    // and the Central Valley grouping) draw their line and no fill. The key is
+    // ABSENT unless the current boundary's generation_parameters say
+    // display 'outline', so every existing feature stays byte-identical.
+    ...(row.display === "outline" ? { outline: true } : {}),
   };
 }
 

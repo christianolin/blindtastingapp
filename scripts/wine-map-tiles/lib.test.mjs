@@ -479,3 +479,15 @@ test("the US AVA namespaces resolve to their own credits and never claim a legal
     assert.doesNotMatch(text, /official/i);
   }
 });
+
+test("outline appears only for an outline boundary, on the fill and on every label", () => {
+  const outlined = placeFeature({ ...EXPORT_ROW, display: "outline" });
+  assert.equal(outlined.properties.outline, true);
+  for (const label of labelFeatures({ ...EXPORT_ROW, display: "outline" })) {
+    assert.equal(label.properties.outline, true);
+  }
+  for (const display of [undefined, null, "fill", "OUTLINE"]) {
+    const feature = placeFeature({ ...EXPORT_ROW, display });
+    assert.equal(Object.hasOwn(feature.properties, "outline"), false, String(display));
+  }
+});
