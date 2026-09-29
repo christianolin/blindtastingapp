@@ -1,0 +1,1476 @@
+{
+  "_generated_by": "scripts/wine-map-sources/usa-ava-diff.mjs",
+  "_inputs": {
+    "data/wine-map/usa-ava-ttb-list.json": "C745F493AE24E0777F1177E3056785942B6C14160AA54D348F8520220B660A87",
+    "data/wine-map/usa-ava-diff-notes.json": "E61C41E42478031EE8B84EA13BC374E1BDD4B07F3969A8940739EF44529C13F1",
+    "data/wine-map/usa-california-ava.geojson": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "data/wine-map/usa-washington-ava.geojson": "0D55D546E37CC1288DD24AEEC5DC1F303D295F72BC7A0DC6F213BB6F2DA22297",
+    "data/wine-map/usa-oregon-ava.geojson": "BF05463C00EB9D62EFFBF8A3608B10FFA798B0F84DC2B34699C49AB30863C732",
+    "data/wine-map/usa-new-york-ava.geojson": "4CF1BA9413468D7825A2E3B2EAC10D5DB2C09037718A87422C5E10D79205DBB1"
+  },
+  "counts": {
+    "ttb_in_scope": 207,
+    "matched": 205,
+    "renamed": 0,
+    "ttb_only": 2,
+    "ucd_only": 0,
+    "unexplained": 0
+  },
+  "matched": [
+    {
+      "ttb_name": "Adelaida District",
+      "ucd_id": "adelaida_district",
+      "ucd_name": "Adelaida District",
+      "cfr": "9.238",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Alexander Valley",
+      "ucd_id": "alexander_valley",
+      "ucd_name": "Alexander Valley",
+      "cfr": "9.53",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Alisos Canyon",
+      "ucd_id": "alisos_canyon",
+      "ucd_name": "Alisos Canyon",
+      "cfr": "9.270",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Alta Mesa",
+      "ucd_id": "alta_mesa",
+      "ucd_name": "Alta Mesa",
+      "cfr": "9.195",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Ancient Lakes of Columbia Valley",
+      "ucd_id": "ancient_lakes_of_columbia_valley",
+      "ucd_name": "Ancient Lakes of Columbia Valley",
+      "cfr": "9.227",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Anderson Valley",
+      "ucd_id": "anderson_valley",
+      "ucd_name": "Anderson Valley",
+      "cfr": "9.86",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Antelope Valley of the California High Desert",
+      "ucd_id": "antelope_valley_of_the_california_high_desert",
+      "ucd_name": "Antelope Valley of the California High Desert",
+      "cfr": "9.219",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Applegate Valley",
+      "ucd_id": "applegate_valley",
+      "ucd_name": "Applegate Valley",
+      "cfr": "9.165",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Arroyo Grande Valley",
+      "ucd_id": "arroyo_grande_valley",
+      "ucd_name": "Arroyo Grande Valley",
+      "cfr": "9.129",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Arroyo Seco",
+      "ucd_id": "arroyo_seco",
+      "ucd_name": "Arroyo Seco",
+      "cfr": "9.59",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Atlas Peak",
+      "ucd_id": "atlas_peak",
+      "ucd_name": "Atlas Peak",
+      "cfr": "9.140",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Ballard Canyon",
+      "ucd_id": "ballard_canyon",
+      "ucd_name": "Ballard Canyon",
+      "cfr": "9.230",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Ben Lomond Mountain",
+      "ucd_id": "ben_lomond_mountain",
+      "ucd_name": "Ben Lomond Mountain",
+      "cfr": "9.118",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Benmore Valley",
+      "ucd_id": "benmore_valley",
+      "ucd_name": "Benmore Valley",
+      "cfr": "9.138",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Bennett Valley",
+      "ucd_id": "bennett_valley",
+      "ucd_name": "Bennett Valley",
+      "cfr": "9.142",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Big Valley District-Lake County",
+      "ucd_id": "big_valley_district_lake_county",
+      "ucd_name": "Big Valley District-Lake County",
+      "cfr": "9.232",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Borden Ranch",
+      "ucd_id": "borden_ranch",
+      "ucd_name": "Borden Ranch",
+      "cfr": "9.196",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "California Shenandoah Valley",
+      "ucd_id": "california_shenandoah_valley",
+      "ucd_name": "California Shenandoah Valley",
+      "cfr": "9.37",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Calistoga",
+      "ucd_id": "calistoga",
+      "ucd_name": "Calistoga",
+      "cfr": "9.209",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Candy Mountain",
+      "ucd_id": "candy_mountain",
+      "ucd_name": "Candy Mountain",
+      "cfr": "9.272",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Capay Valley",
+      "ucd_id": "capay_valley",
+      "ucd_name": "Capay Valley",
+      "cfr": "9.176",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Carmel Valley",
+      "ucd_id": "carmel_valley",
+      "ucd_name": "Carmel Valley",
+      "cfr": "9.58",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Cayuga Lake",
+      "ucd_id": "cayuga_lake",
+      "ucd_name": "Cayuga Lake",
+      "cfr": "9.127",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Central Coast",
+      "ucd_id": "central_coast",
+      "ucd_name": "Central Coast",
+      "cfr": "9.75",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Chalk Hill",
+      "ucd_id": "chalk_hill",
+      "ucd_name": "Chalk Hill",
+      "cfr": "9.52",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Chalone",
+      "ucd_id": "chalone",
+      "ucd_name": "Chalone",
+      "cfr": "9.24",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Champlain Valley of New York",
+      "ucd_id": "champlain_valley_of_new_york",
+      "ucd_name": "Champlain Valley of New York",
+      "cfr": "9.258",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Chehalem Mountains",
+      "ucd_id": "chehalem_mountains",
+      "ucd_name": "Chehalem Mountains",
+      "cfr": "9.205",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Chiles Valley",
+      "ucd_id": "chiles_valley",
+      "ucd_name": "Chiles Valley",
+      "cfr": "9.154",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Cienega Valley",
+      "ucd_id": "cienega_valley",
+      "ucd_name": "Cienega Valley",
+      "cfr": "9.38",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Clarksburg",
+      "ucd_id": "clarksburg",
+      "ucd_name": "Clarksburg",
+      "cfr": "9.95",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Clear Lake",
+      "ucd_id": "clear_lake",
+      "ucd_name": "Clear Lake",
+      "cfr": "9.99",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Clements Hills",
+      "ucd_id": "clements_hills",
+      "ucd_name": "Clements Hills",
+      "cfr": "9.197",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Cole Ranch",
+      "ucd_id": "cole_ranch",
+      "ucd_name": "Cole Ranch",
+      "cfr": "9.42",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Columbia Gorge",
+      "ucd_id": "columbia_gorge",
+      "ucd_name": "Columbia Gorge",
+      "cfr": "9.178",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Columbia Valley",
+      "ucd_id": "columbia_valley",
+      "ucd_name": "Columbia Valley",
+      "cfr": "9.74",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Comptche",
+      "ucd_id": "comptche",
+      "ucd_name": "Comptche",
+      "cfr": "9.292",
+      "how": "name"
+    },
+    {
+      "ttb_name": "Contra Costa",
+      "ucd_id": "contra_costa",
+      "ucd_name": "Contra Costa",
+      "cfr": "9.291",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Coombsville",
+      "ucd_id": "coombsville",
+      "ucd_name": "Coombsville",
+      "cfr": "9.223",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Cosumnes River",
+      "ucd_id": "cosumnes_river",
+      "ucd_name": "Cosumnes River",
+      "cfr": "9.198",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Covelo",
+      "ucd_id": "covelo",
+      "ucd_name": "Covelo",
+      "cfr": "9.187",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Creston District",
+      "ucd_id": "creston_district",
+      "ucd_name": "Creston District",
+      "cfr": "9.239",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Crystal Springs of Napa Valley",
+      "ucd_id": "crystal_springs_of_napa_valley",
+      "ucd_name": "Crystal Springs of Napa Valley ",
+      "cfr": "9.296",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Cucamonga Valley",
+      "ucd_id": "cucamonga_valley",
+      "ucd_name": "Cucamonga Valley",
+      "cfr": "9.150",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Diablo Grande",
+      "ucd_id": "diablo_grande",
+      "ucd_name": "Diablo Grande",
+      "cfr": "9.156",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Diamond Mountain District",
+      "ucd_id": "diamond_mountain_district",
+      "ucd_name": "Diamond Mountain District",
+      "cfr": "9.166",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Dos Rios",
+      "ucd_id": "dos_rios",
+      "ucd_name": "Dos Rios",
+      "cfr": "9.175",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Dry Creek Valley",
+      "ucd_id": "dry_creek_valley",
+      "ucd_name": "Dry Creek Valley",
+      "cfr": "9.64",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Dundee Hills",
+      "ucd_id": "dundee_hills",
+      "ucd_name": "Dundee Hills",
+      "cfr": "9.180",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Dunnigan Hills",
+      "ucd_id": "dunnigan_hills",
+      "ucd_name": "Dunnigan Hills",
+      "cfr": "9.145",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Eagle Peak Mendocino County",
+      "ucd_id": "eagle_peak_mendocino_county",
+      "ucd_name": "Eagle Peak Mendocino County",
+      "cfr": "9.237",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Edna Valley",
+      "ucd_id": "edna_valley",
+      "ucd_name": "Edna Valley",
+      "cfr": "9.35",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "El Dorado",
+      "ucd_id": "el_dorado",
+      "ucd_name": "El Dorado",
+      "cfr": "9.61",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "El Pomar District",
+      "ucd_id": "el_pomar_district",
+      "ucd_name": "El Pomar District",
+      "cfr": "9.240",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Elkton Oregon",
+      "ucd_id": "elkton_oregon",
+      "ucd_name": "Elkton Oregon",
+      "cfr": "9.229",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Eola-Amity Hills",
+      "ucd_id": "eola_amity_hills",
+      "ucd_name": "Eola-Amity Hills",
+      "cfr": "9.202",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Fair Play",
+      "ucd_id": "fair_play",
+      "ucd_name": "Fair Play",
+      "cfr": "9.168",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Fiddletown",
+      "ucd_id": "fiddletown",
+      "ucd_name": "Fiddletown",
+      "cfr": "9.81",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Finger Lakes",
+      "ucd_id": "finger_lakes",
+      "ucd_name": "Finger Lakes",
+      "cfr": "9.34",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Fort Ross-Seaview",
+      "ucd_id": "fort_ross_seaview",
+      "ucd_name": "Fort Ross-Seaview",
+      "cfr": "9.221",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Fountaingrove District",
+      "ucd_id": "fountaingrove_district",
+      "ucd_name": "Fountaingrove District",
+      "cfr": "9.250",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Gabilan Mountains",
+      "ucd_id": "gabilan_mountains",
+      "ucd_name": "Gabilan Mountains",
+      "cfr": "9.288",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Goose Gap",
+      "ucd_id": "goose_gap",
+      "ucd_name": "Goose Gap",
+      "cfr": "9.277",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Green Valley of Russian River Valley",
+      "ucd_id": "green_valley_of_russian_river_valley",
+      "ucd_name": "Green Valley of Russian River Valley",
+      "cfr": "9.57",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Guenoc Valley",
+      "ucd_id": "guenoc_valley",
+      "ucd_name": "Guenoc Valley",
+      "cfr": "9.26",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Hames Valley",
+      "ucd_id": "hames_valley",
+      "ucd_name": "Hames Valley",
+      "cfr": "9.147",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Happy Canyon of Santa Barbara",
+      "ucd_id": "happy_canyon_of_santa_barbara",
+      "ucd_name": "Happy Canyon of Santa Barbara",
+      "cfr": "9.217",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "High Valley",
+      "ucd_id": "high_valley",
+      "ucd_name": "High Valley",
+      "cfr": "9.189",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Horse Heaven Hills",
+      "ucd_id": "horse_heaven_hills",
+      "ucd_name": "Horse Heaven Hills",
+      "cfr": "9.188",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Howell Mountain",
+      "ucd_id": "howell_mountain",
+      "ucd_name": "Howell Mountain",
+      "cfr": "9.94",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Hudson River Region",
+      "ucd_id": "hudson_river_region",
+      "ucd_name": "Hudson River Region",
+      "cfr": "9.47",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Inwood Valley",
+      "ucd_id": "inwood_valley",
+      "ucd_name": "Inwood Valley",
+      "cfr": "9.226",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Jahant",
+      "ucd_id": "jahant",
+      "ucd_name": "Jahant",
+      "cfr": "9.199",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Kelsey Bench-Lake County",
+      "ucd_id": "kelsey_bench_lake_county",
+      "ucd_name": "Kelsey Bench-Lake County",
+      "cfr": "9.233",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Knights Valley",
+      "ucd_id": "knights_valley",
+      "ucd_name": "Knights Valley",
+      "cfr": "9.76",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Lake Chelan",
+      "ucd_id": "lake_chelan",
+      "ucd_name": "Lake Chelan",
+      "cfr": "9.215",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Lake Erie",
+      "ucd_id": "lake_erie",
+      "ucd_name": "Lake Erie",
+      "cfr": "9.83",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Lamorinda",
+      "ucd_id": "lamorinda",
+      "ucd_name": "Lamorinda",
+      "cfr": "9.254",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Laurelwood District",
+      "ucd_id": "laurelwood_district",
+      "ucd_name": "Laurelwood District",
+      "cfr": "9.269",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Leona Valley",
+      "ucd_id": "leona_valley",
+      "ucd_name": "Leona Valley",
+      "cfr": "9.212",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Lewis-Clark Valley",
+      "ucd_id": "lewis_clark_valley",
+      "ucd_name": "Lewis-Clark Valley",
+      "cfr": "9.256",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Lime Kiln Valley",
+      "ucd_id": "lime_kiln_valley",
+      "ucd_name": "Lime Kiln Valley",
+      "cfr": "9.27",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Livermore Valley",
+      "ucd_id": "livermore_valley",
+      "ucd_name": "Livermore Valley",
+      "cfr": "9.46",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Lodi",
+      "ucd_id": "lodi",
+      "ucd_name": "Lodi",
+      "cfr": "9.107",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Long Island",
+      "ucd_id": "long_island",
+      "ucd_name": "Long Island",
+      "cfr": "9.170",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Long Valley-Lake County",
+      "ucd_id": "long_valley-lake_county",
+      "ucd_name": "Long Valley-Lake County",
+      "cfr": "9.289",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Los Carneros",
+      "ucd_id": "los_carneros",
+      "ucd_name": "Los Carneros",
+      "cfr": "9.32",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Los Olivos District",
+      "ucd_id": "los_olivos_district",
+      "ucd_name": "Los Olivos District",
+      "cfr": "9.253",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Lower Long Tom",
+      "ucd_id": "lower_long_tom",
+      "ucd_name": "Lower Long Tom",
+      "cfr": "9.281",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Madera",
+      "ucd_id": "madera",
+      "ucd_name": "Madera",
+      "cfr": "9.92",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Malibu Coast",
+      "ucd_id": "malibu_coast",
+      "ucd_name": "Malibu Coast",
+      "cfr": "9.235",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Malibu-Newton Canyon",
+      "ucd_id": "malibu_newton_canyon",
+      "ucd_name": "Malibu-Newton Canyon",
+      "cfr": "9.152",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Manton Valley",
+      "ucd_id": "manton_valley",
+      "ucd_name": "Manton Valley",
+      "cfr": "9.236",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "McDowell Valley",
+      "ucd_id": "mcdowell_valley",
+      "ucd_name": "McDowell Valley",
+      "cfr": "9.36",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "McMinnville",
+      "ucd_id": "mcminnville",
+      "ucd_name": "McMinnville",
+      "cfr": "9.181",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Mendocino",
+      "ucd_id": "mendocino",
+      "ucd_name": "Mendocino",
+      "cfr": "9.93",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Mendocino Ridge",
+      "ucd_id": "mendocino_ridge",
+      "ucd_name": "Mendocino Ridge",
+      "cfr": "9.158",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Merritt Island",
+      "ucd_id": "merritt_island",
+      "ucd_name": "Merritt Island",
+      "cfr": "9.68",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Mokelumne River",
+      "ucd_id": "mokelumne_river",
+      "ucd_name": "Mokelumne River",
+      "cfr": "9.200",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Monterey",
+      "ucd_id": "monterey",
+      "ucd_name": "Monterey",
+      "cfr": "9.98",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Moon Mountain District Sonoma County",
+      "ucd_id": "moon_mountain_district_sonoma_county",
+      "ucd_name": "Moon Mountain District Sonoma County",
+      "cfr": "9.231",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Mount Pisgah, Polk County, Oregon",
+      "ucd_id": "mount_pisgah__polk_county__oregon",
+      "ucd_name": "Mount Pisgah, Polk County, Oregon",
+      "cfr": "9.284",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Mt. Harlan",
+      "ucd_id": "mt__harlan",
+      "ucd_name": "Mt. Harlan",
+      "cfr": "9.131",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Mt. Veeder",
+      "ucd_id": "mt__veeder",
+      "ucd_name": "Mt. Veeder",
+      "cfr": "9.123",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Naches Heights",
+      "ucd_id": "naches_heights",
+      "ucd_name": "Naches Heights",
+      "cfr": "9.222",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Napa Valley",
+      "ucd_id": "napa_valley",
+      "ucd_name": "Napa Valley",
+      "cfr": "9.23",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Niagara Escarpment",
+      "ucd_id": "niagara_escarpment",
+      "ucd_name": "Niagara Escarpment",
+      "cfr": "9.186",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "North Coast",
+      "ucd_id": "north_coast",
+      "ucd_name": "North Coast",
+      "cfr": "9.30",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "North Fork of Long Island",
+      "ucd_id": "north_fork_of_long_island",
+      "ucd_name": "North Fork of Long Island",
+      "cfr": "9.113",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "North Yuba",
+      "ucd_id": "north_yuba",
+      "ucd_name": "North Yuba",
+      "cfr": "9.106",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Northern Sonoma",
+      "ucd_id": "northern_sonoma",
+      "ucd_name": "Northern Sonoma",
+      "cfr": "9.70",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Oak Knoll District of Napa Valley",
+      "ucd_id": "oak_knoll_district_of_napa_valley",
+      "ucd_name": "Oak Knoll District of Napa Valley",
+      "cfr": "9.161",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Oakville",
+      "ucd_id": "oakville",
+      "ucd_name": "Oakville",
+      "cfr": "9.134",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Pacheco Pass",
+      "ucd_id": "pacheco_pass",
+      "ucd_name": "Pacheco Pass",
+      "cfr": "9.88",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Paicines",
+      "ucd_id": "paicines",
+      "ucd_name": "Paicines",
+      "cfr": "9.39",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Palos Verdes Peninsula",
+      "ucd_id": "palos_verdes_peninsula",
+      "ucd_name": "Palos Verdes Peninsula",
+      "cfr": "9.274",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Paso Robles",
+      "ucd_id": "paso_robles",
+      "ucd_name": "Paso Robles",
+      "cfr": "9.84",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Paso Robles Estrella District",
+      "ucd_id": "paso_robles_estrella_district",
+      "ucd_name": "Paso Robles Estrella District",
+      "cfr": "9.241",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Paso Robles Geneseo District",
+      "ucd_id": "paso_robles_geneseo_district",
+      "ucd_name": "Paso Robles Geneseo District",
+      "cfr": "9.242",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Paso Robles Highlands District",
+      "ucd_id": "paso_robles_highlands_district",
+      "ucd_name": "Paso Robles Highlands District",
+      "cfr": "9.243",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Paso Robles Willow Creek District",
+      "ucd_id": "paso_robles_willow_creek_district",
+      "ucd_name": "Paso Robles Willow Creek District",
+      "cfr": "9.244",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Paulsell Valley",
+      "ucd_id": "paulsell_valley",
+      "ucd_name": "Paulsell Valley",
+      "cfr": "9.285",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Petaluma Gap",
+      "ucd_id": "petaluma_gap",
+      "ucd_name": "Petaluma Gap",
+      "cfr": "9.261",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Pine Mountain-Cloverdale Peak",
+      "ucd_id": "pine_mountain_cloverdale_peak",
+      "ucd_name": "Pine Mountain-Cloverdale Peak",
+      "cfr": "9.220",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Potter Valley",
+      "ucd_id": "potter_valley",
+      "ucd_name": "Potter Valley",
+      "cfr": "9.82",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Puget Sound",
+      "ucd_id": "puget_sound",
+      "ucd_name": "Puget Sound",
+      "cfr": "9.151",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Ramona Valley",
+      "ucd_id": "ramona_valley",
+      "ucd_name": "Ramona Valley",
+      "cfr": "9.191",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Rattlesnake Hills",
+      "ucd_id": "rattlesnake_hills",
+      "ucd_name": "Rattlesnake Hills",
+      "cfr": "9.193",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Red Hill Douglas County, Oregon",
+      "ucd_id": "red_hill_douglas_county__oregon",
+      "ucd_name": "Red Hill Douglas County, Oregon",
+      "cfr": "9.190",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Red Hills Lake County",
+      "ucd_id": "red_hills_lake_county",
+      "ucd_name": "Red Hills Lake County",
+      "cfr": "9.169",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Red Mountain",
+      "ucd_id": "red_mountain",
+      "ucd_name": "Red Mountain",
+      "cfr": "9.167",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Redwood Valley",
+      "ucd_id": "redwood_valley",
+      "ucd_name": "Redwood Valley",
+      "cfr": "9.153",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Ribbon Ridge",
+      "ucd_id": "ribbon_ridge",
+      "ucd_name": "Ribbon Ridge",
+      "cfr": "9.182",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "River Junction",
+      "ucd_id": "river_junction",
+      "ucd_name": "River Junction",
+      "cfr": "9.164",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Rockpile",
+      "ucd_id": "rockpile",
+      "ucd_name": "Rockpile",
+      "cfr": "9.173",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Rocky Reach",
+      "ucd_id": "rocky_reach",
+      "ucd_name": "Rocky Reach",
+      "cfr": "9.287",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Rogue Valley",
+      "ucd_id": "rogue_valley",
+      "ucd_name": "Rogue Valley",
+      "cfr": "9.132",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Royal Slope",
+      "ucd_id": "royal_slope",
+      "ucd_name": "Royal Slope",
+      "cfr": "9.271",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Russian River Valley",
+      "ucd_id": "russian_river_valley",
+      "ucd_name": "Russian River Valley",
+      "cfr": "9.66",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Rutherford",
+      "ucd_id": "rutherford",
+      "ucd_name": "Rutherford",
+      "cfr": "9.133",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Saddle Rock-Malibu",
+      "ucd_id": "saddle_rock_malibu",
+      "ucd_name": "Saddle Rock-Malibu",
+      "cfr": "9.203",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Salado Creek",
+      "ucd_id": "salado_creek",
+      "ucd_name": "Salado Creek",
+      "cfr": "9.163",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "San Antonio Valley",
+      "ucd_id": "san_antonio_valley",
+      "ucd_name": "San Antonio Valley",
+      "cfr": "9.194",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "San Benito",
+      "ucd_id": "san_benito",
+      "ucd_name": "San Benito",
+      "cfr": "9.110",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "San Bernabe",
+      "ucd_id": "san_bernabe",
+      "ucd_name": "San Bernabe",
+      "cfr": "9.171",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "San Francisco Bay",
+      "ucd_id": "san_francisco_bay",
+      "ucd_name": "San Francisco Bay",
+      "cfr": "9.157",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "San Juan Creek",
+      "ucd_id": "san_juan_creek",
+      "ucd_name": "San Juan Creek",
+      "cfr": "9.245",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "San Lucas",
+      "ucd_id": "san_lucas",
+      "ucd_name": "San Lucas",
+      "cfr": "9.56",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "San Luis Obispo Coast",
+      "ucd_id": "san_luis_obispo_coast",
+      "ucd_name": "San Luis Obispo Coast",
+      "cfr": "9.282",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "San Luis Rey",
+      "ucd_id": "san_luis_rey",
+      "ucd_name": "San Luis Rey",
+      "cfr": "9.295",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "San Miguel District",
+      "ucd_id": "san_miguel_district",
+      "ucd_name": "San Miguel District",
+      "cfr": "9.246",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "San Pasqual Valley",
+      "ucd_id": "san_pasqual_valley",
+      "ucd_name": "San Pasqual Valley",
+      "cfr": "9.25",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "San Ysidro District",
+      "ucd_id": "san_ysidro_district",
+      "ucd_name": "San Ysidro District",
+      "cfr": "9.130",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Santa Clara Valley",
+      "ucd_id": "santa_clara_valley",
+      "ucd_name": "Santa Clara Valley",
+      "cfr": "9.126",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Santa Cruz Mountains",
+      "ucd_id": "santa_cruz_mountains",
+      "ucd_name": "Santa Cruz Mountains",
+      "cfr": "9.31",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Santa Lucia Highlands",
+      "ucd_id": "santa_lucia_highlands",
+      "ucd_name": "Santa Lucia Highlands",
+      "cfr": "9.139",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Santa Margarita Ranch",
+      "ucd_id": "santa_margarita_ranch",
+      "ucd_name": "Santa Margarita Ranch",
+      "cfr": "9.247",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Santa Maria Valley",
+      "ucd_id": "santa_maria_valley",
+      "ucd_name": "Santa Maria Valley",
+      "cfr": "9.28",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Santa Ynez Valley",
+      "ucd_id": "santa_ynez_valley",
+      "ucd_name": "Santa Ynez Valley",
+      "cfr": "9.54",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Seiad Valley",
+      "ucd_id": "seiad_valley",
+      "ucd_name": "Seiad Valley",
+      "cfr": "9.148",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Seneca Lake",
+      "ucd_id": "seneca_lake",
+      "ucd_name": "Seneca Lake",
+      "cfr": "9.128",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Sierra Foothills",
+      "ucd_id": "sierra_foothills",
+      "ucd_name": "Sierra Foothills",
+      "cfr": "9.120",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Sierra Pelona Valley",
+      "ucd_id": "sierra_pelona_valley",
+      "ucd_name": "Sierra Pelona Valley",
+      "cfr": "9.218",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Sloughhouse",
+      "ucd_id": "sloughhouse",
+      "ucd_name": "Sloughhouse",
+      "cfr": "9.201",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Snake River Valley",
+      "ucd_id": "snake_river_valley",
+      "ucd_name": "Snake River Valley",
+      "cfr": "9.208",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Snipes Mountain",
+      "ucd_id": "snipes_mountain",
+      "ucd_name": "Snipes Mountain",
+      "cfr": "9.213",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Solano County Green Valley",
+      "ucd_id": "solano_county_green_valley",
+      "ucd_name": "Solano County Green Valley",
+      "cfr": "9.44",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Sonoma Coast",
+      "ucd_id": "sonoma_coast",
+      "ucd_name": "Sonoma Coast",
+      "cfr": "9.116",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Sonoma Mountain",
+      "ucd_id": "sonoma_mountain",
+      "ucd_name": "Sonoma Mountain",
+      "cfr": "9.102",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Sonoma Valley",
+      "ucd_id": "sonoma_valley",
+      "ucd_name": "Sonoma Valley",
+      "cfr": "9.29",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "South Coast",
+      "ucd_id": "south_coast",
+      "ucd_name": "South Coast",
+      "cfr": "9.104",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Southern Oregon",
+      "ucd_id": "southern_oregon",
+      "ucd_name": "Southern Oregon",
+      "cfr": "9.179",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Spring Mountain District",
+      "ucd_id": "spring_mountain_district",
+      "ucd_name": "Spring Mountain District",
+      "cfr": "9.143",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Squaw Valley-Miramonte",
+      "ucd_id": "squaw_valley_miramonte",
+      "ucd_name": "Squaw Valley-Miramonte",
+      "cfr": "9.251",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "St. Helena",
+      "ucd_id": "st__helena",
+      "ucd_name": "St. Helena",
+      "cfr": "9.149",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Sta. Rita Hills",
+      "ucd_id": "sta__rita_hills",
+      "ucd_name": "Sta. Rita Hills",
+      "cfr": "9.162",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Stags Leap District",
+      "ucd_id": "stags_leap_district",
+      "ucd_name": "Stags Leap District",
+      "cfr": "9.117",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Suisun Valley",
+      "ucd_id": "suisun_valley",
+      "ucd_name": "Suisun Valley",
+      "cfr": "9.45",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Tehachapi Mountains",
+      "ucd_id": "tehachapi_mountains",
+      "ucd_name": "Tehachapi Mountains",
+      "cfr": "9.273",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Temecula Valley",
+      "ucd_id": "temecula_valley",
+      "ucd_name": "Temecula Valley",
+      "cfr": "9.50",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Templeton Gap District",
+      "ucd_id": "templeton_gap_district",
+      "ucd_name": "Templeton Gap District",
+      "cfr": "9.248",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "The Burn of Columbia Valley",
+      "ucd_id": "the_burn_of_columbia_valley",
+      "ucd_name": "The Burn of Columbia Valley",
+      "cfr": "9.276",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "The Hamptons, Long Island",
+      "ucd_id": "the_hamptons_long_island",
+      "ucd_name": "The Hamptons, Long Island",
+      "cfr": "9.101",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "The Rocks District of Milton-Freewater",
+      "ucd_id": "the_rocks_district_of_milton_freewater",
+      "ucd_name": "The Rocks District of Milton-Freewater",
+      "cfr": "9.249",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Tracy Hills",
+      "ucd_id": "tracy_hills",
+      "ucd_name": "Tracy Hills",
+      "cfr": "9.204",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Trinity Lakes",
+      "ucd_id": "trinity_lakes",
+      "ucd_name": "Trinity Lakes",
+      "cfr": "9.184",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Tualatin Hills",
+      "ucd_id": "tualatin_hills",
+      "ucd_name": "Tualatin Hills",
+      "cfr": "9.268",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Umpqua Valley",
+      "ucd_id": "umpqua_valley",
+      "ucd_name": "Umpqua Valley",
+      "cfr": "9.89",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Upper Hudson",
+      "ucd_id": "upper_hudson",
+      "ucd_name": "Upper Hudson",
+      "cfr": "9.264",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Upper Lake Valley",
+      "ucd_id": "upper_lake_valley",
+      "ucd_name": "Upper Lake Valley",
+      "cfr": "9.286",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Van Duzer Corridor",
+      "ucd_id": "van_duzer_corridor",
+      "ucd_name": "Van Duzer Corridor",
+      "cfr": "9.265",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Wahluke Slope",
+      "ucd_id": "wahluke_slope",
+      "ucd_name": "Wahluke Slope",
+      "cfr": "9.192",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Walla Walla Valley",
+      "ucd_id": "walla_walla_valley",
+      "ucd_name": "Walla Walla Valley",
+      "cfr": "9.91",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "West Sonoma Coast",
+      "ucd_id": "west_sonoma_coast",
+      "ucd_name": "West Sonoma Coast",
+      "cfr": "9.283",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "White Bluffs",
+      "ucd_id": "white_bluffs",
+      "ucd_name": "White Bluffs",
+      "cfr": "9.275",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Wild Horse Valley",
+      "ucd_id": "wild_horse_valley",
+      "ucd_name": "Wild Horse Valley",
+      "cfr": "9.124",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Willamette Valley",
+      "ucd_id": "willamette_valley",
+      "ucd_name": "Willamette Valley",
+      "cfr": "9.90",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Willow Creek",
+      "ucd_id": "willow_creek",
+      "ucd_name": "Willow Creek",
+      "cfr": "9.85",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Winters Highlands",
+      "ucd_id": "winters_highlands",
+      "ucd_name": "Winters Highlands",
+      "cfr": "9.290",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Yakima Valley",
+      "ucd_id": "yakima_valley",
+      "ucd_name": "Yakima Valley",
+      "cfr": "9.69",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Yamhill-Carlton",
+      "ucd_id": "yamhill_carlton",
+      "ucd_name": "Yamhill-Carlton",
+      "cfr": "9.183",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "York Mountain",
+      "ucd_id": "york_mountain",
+      "ucd_name": "York Mountain",
+      "cfr": "9.80",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Yorkville Highlands",
+      "ucd_id": "yorkville_highlands",
+      "ucd_name": "Yorkville Highlands",
+      "cfr": "9.159",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Yountville",
+      "ucd_id": "yountville",
+      "ucd_name": "Yountville",
+      "cfr": "9.160",
+      "how": "name+cfr"
+    },
+    {
+      "ttb_name": "Yucaipa Valley",
+      "ucd_id": "yucaipa_valley",
+      "ucd_name": "Yucaipa Valley",
+      "cfr": "9.293",
+      "how": "name+cfr"
+    }
+  ],
+  "renamed": [],
+  "ttb_only": [
+    {
+      "name": "Beverly, Washington",
+      "states": [
+        "WA"
+      ],
+      "cfr": "9.297",
+      "established": "2024-10-29"
+    },
+    {
+      "name": "Columbia Hills",
+      "states": [
+        "WA"
+      ],
+      "cfr": "9.301",
+      "established": "2026-08-17"
+    }
+  ],
+  "ucd_only": []
+}
