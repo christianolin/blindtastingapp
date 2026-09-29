@@ -2554,6 +2554,21 @@ export type Database = {
         Args: { p_note: Json; p_aromas: Json; p_attempt: Json };
         Returns: Json;
       };
+      // training-room-map spec §4.1 (R1a): SECURITY INVOKER, authenticated
+      // only. One row per archetype; every column but archetype_id is null
+      // for an archetype with no map place.
+      training_archetype_places: {
+        Args: Record<string, never>;
+        Returns: {
+          archetype_id: string;
+          place_key: string | null;
+          region_key: string | null;
+          region_name: string | null;
+          point_key: string | null;
+          point_lon: number | null;
+          point_lat: number | null;
+        }[];
+      };
     };
   };
 };

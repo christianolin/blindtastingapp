@@ -1152,3 +1152,94 @@ test("training_attempts carries the two pick columns, their checks and their for
     ]);
   });
 });
+
+// --- The training room on the wine map (training-room-map spec, phase R1) --------
+// docs/superpowers/specs/2026-09-29-training-room-map-design.md §4.1, §4.2, RM9a.
+// Before R1a/R1b are live, name their files in TRAINING_ROOM_APPLY (R1a first).
+
+const PLACES_SIG = "public.training_archetype_places()";
+
+// R1b is live (or applied in this transaction) once France's Bordeaux region
+// page lists a typical wine: before R1b no placement points at it.
+async function regionPlacementsLive() {
+  return (
+    await client.query(
+      `select exists (select 1 from wine_archetype_placements x
+                        join wine_places p on p.id = x.wine_place_id
+                       where p.canonical_key = 'france.bordeaux') as live`,
+    )
+  ).rows[0].live;
+}
+
+test("training_archetype_places: one row per archetype as a signed-in reader, authenticated only", async (t) => {
+  await withRollback(async () => {
+    await asOwner();
+    if ((await client.query("select to_regprocedure($1) is not null as ok", [PLACES_SIG])).rows[0].ok === false) {
+      t.skip("R1a is neither live nor in TRAINING_ROOM_APPLY");
+      return;
+    }
+    const counts = (
+      await client.query("select count(*)::int total, count(wine_place_id)::int placed from wine_archetypes")
+    ).rows[0];
+    const grants = (
+      await client.query(
+        `select p.prosecdef as definer, p.provolatile as volatility,
+                has_function_privilege('anon', p.oid, 'EXECUTE') as anon,
+                has_function_privilege('service_role', p.oid, 'EXECUTE') as service,
+                has_function_privilege('authenticated', p.oid, 'EXECUTE') as authed,
+                exists (select 1 from aclexplode(p.proacl) x where x.grantee = 0) as public
+           from pg_proc p where p.oid = to_regprocedure($1)`,
+        [PLACES_SIG],
+      )
+    ).rows[0];
+    assert.deepEqual(grants, { definer: false, volatility: "s", anon: false, service: false, authed: true, public: false });
+
+    // Any signed-in caller: the function reads no profile, so none is made.
+    await asUser(randomUUID());
+    const got = (
+      await client.query(
+        `select count(*)::int total, count(place_key)::int with_key, count(region_key)::int with_region,
+                count(point_lon)::int with_point,
+                count(*) filter (where point_key is not null and point_key <> place_key)::int ancestor_points,
+                count(*) filter (where point_lon not between -180 and 180 or point_lat not between -90 and 90)::int bad_points
+           from training_archetype_places()`,
+      )
+    ).rows[0];
+    assert.deepEqual(got, {
+      total: counts.total,
+      with_key: counts.placed,
+      with_region: counts.placed,
+      with_point: counts.placed,
+      ancestor_points: 1,
+      bad_points: 0,
+    });
+    const picks = (
+      await client.query(
+        `select a.name, t.place_key, t.region_key, t.region_name, t.point_key
+           from training_archetype_places() t join wine_archetypes a on a.id = t.archetype_id
+          where a.name in ('A typical Prosecco', 'A typical Montepulciano d''Abruzzo', 'A typical Napa Cabernet Sauvignon')
+          order by a.name`,
+      )
+    ).rows;
+    assert.deepEqual(picks, [
+      {
+        name: "A typical Montepulciano d'Abruzzo",
+        place_key: "italy.abruzzo.montepulciano-d-abruzzo",
+        region_key: "italy.abruzzo",
+        region_name: "Abruzzo",
+        point_key: "italy.abruzzo",
+      },
+      { name: "A typical Napa Cabernet Sauvignon", place_key: null, region_key: null, region_name: null, point_key: null },
+      {
+        name: "A typical Prosecco",
+        place_key: "italy.veneto.prosecco",
+        region_key: "italy.veneto",
+        region_name: "Veneto",
+        point_key: "italy.veneto.prosecco",
+      },
+    ]);
+    await client.query("select set_config('request.jwt.claims', $1, true)", [JSON.stringify({ role: "anon" })]);
+    await client.query("set local role anon");
+    await expectError(() => client.query("select * from training_archetype_places()"), "42501");
+  });
+});
