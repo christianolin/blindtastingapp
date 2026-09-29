@@ -8,6 +8,7 @@ import {
   historyOrFilter,
   pageOf,
   parseSnapshot,
+  displayPoints,
   placeLinks,
   shapeAttemptRow,
   shapeCandidates,
@@ -126,6 +127,7 @@ function pool(overrides: Partial<PoolRaw> = {}): PoolRaw {
       ],
     },
     placeLinks: placeLinks([PAUILLAC_PLACE, NO_PLACE]),
+    displayPoints: new Map(),
     ...overrides,
   };
 }
@@ -253,6 +255,59 @@ describe("placeLinks (training-room-map spec §5, RM3a)", () => {
     for (const c of shaped) {
       expect(c).toMatchObject({ placeCanonicalKey: null, mapRegion: null, mapPoint: null });
     }
+  });
+});
+
+describe("curated display points (training-room-map spec RM12, RM23)", () => {
+  it("displayPoints keeps a whole, finite, in-range point by archetype id", () => {
+    expect(displayPoints([{ id: ARCH_BOURGOGNE, display_lon: 15.42, display_lat: 48.39 }])).toEqual(
+      new Map([[ARCH_BOURGOGNE, { lon: 15.42, lat: 48.39 }]]),
+    );
+  });
+
+  it("drops a half-set, non-finite or out-of-range point", () => {
+    for (const bad of [
+      { display_lon: 15.42, display_lat: null },
+      { display_lon: null, display_lat: 48.39 },
+      { display_lon: Number.NaN, display_lat: 48.39 },
+      { display_lon: 180.01, display_lat: 0 },
+      { display_lon: 0, display_lat: -90.5 },
+    ]) {
+      expect(displayPoints([{ id: ARCH_BOURGOGNE, ...bad }]).size).toBe(0);
+    }
+  });
+
+  it("an unplaced wine takes its curated point, as 'curated', and stays off the map's links", () => {
+    const shaped = shapeCandidates(
+      pool({ displayPoints: displayPoints([{ id: ARCH_BOURGOGNE, display_lon: 4.8, display_lat: 47.1 }]) }),
+    );
+    expect(shaped.find((c) => c.id === ARCH_BOURGOGNE)).toMatchObject({
+      placeCanonicalKey: null,
+      mapRegion: null,
+      mapPoint: { lon: 4.8, lat: 47.1, source: "curated" },
+    });
+  });
+
+  it("a place point wins over a curated one", () => {
+    const shaped = shapeCandidates(
+      pool({ displayPoints: displayPoints([{ id: ARCH_PAUILLAC, display_lon: 1, display_lat: 1 }]) }),
+    );
+    expect(shaped.find((c) => c.id === ARCH_PAUILLAC)?.mapPoint).toEqual({
+      lon: -0.7708,
+      lat: 45.1971,
+      source: "place",
+    });
+  });
+
+  it("the RPC's fail-soft path still shows the curated points, and nothing else", () => {
+    const shaped = shapeCandidates(
+      pool({
+        placeLinks: placeLinks([]),
+        displayPoints: displayPoints([{ id: ARCH_BOURGOGNE, display_lon: 4.8, display_lat: 47.1 }]),
+      }),
+    );
+    expect(shaped.find((c) => c.id === ARCH_PAUILLAC)?.mapPoint).toBeNull();
+    expect(shaped.find((c) => c.id === ARCH_BOURGOGNE)?.mapPoint?.source).toBe("curated");
   });
 });
 

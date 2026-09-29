@@ -69,7 +69,31 @@ export type PoolRaw = {
   /** By archetype id, from placeLinks(); an empty map (the RPC's fail-soft
       path, spec RM3a) leaves every candidate off the wine map. */
   placeLinks: ReadonlyMap<string, PlaceLink>;
+  /** By archetype id, from displayPoints(); an empty map (the display-point
+      read's fail-soft path, spec RM23) leaves no curated dot. */
+  displayPoints: ReadonlyMap<string, DisplayPoint>;
 };
+
+/** One row of the room's display-point read (training-room-map spec RM23). */
+export type DisplayPointRaw = { id: string; display_lon: number | null; display_lat: number | null };
+
+/** A curated, display-only map point: never a map place (spec RM7, RM23). */
+export type DisplayPoint = { lon: number; lat: number };
+
+/**
+ * The curated display points by archetype id (spec RM23). A half-set,
+ * non-finite or out-of-range point is no point: the database's check refuses
+ * one, and the room never trusts a row it did not check.
+ */
+export function displayPoints(rows: readonly DisplayPointRaw[]): Map<string, DisplayPoint> {
+  const out = new Map<string, DisplayPoint>();
+  for (const r of rows) {
+    if (inRange(r.display_lon, 180) && inRange(r.display_lat, 90)) {
+      out.set(r.id, { lon: r.display_lon, lat: r.display_lat });
+    }
+  }
+  return out;
+}
 
 /** One row of training_archetype_places() (training-room-map spec §4.1, RM3). */
 export type ArchetypePlaceRaw = {
@@ -185,6 +209,10 @@ export function shapeCandidates(raw: PoolRaw): TrainingCandidate[] {
       .filter((d): d is Named => d !== null)
       .sort((x, y) => (designationRank.get(x.id) ?? 0) - (designationRank.get(y.id) ?? 0));
 
+    // A dot's position, in order (spec RM12): the home's label point, the
+    // nearest ancestor's (both from placeLinks), else the curated point.
+    const place = raw.placeLinks.get(a.id) ?? UNPLACED;
+    const curated = raw.displayPoints.get(a.id);
     out.push({
       id: a.id,
       name: a.name,
@@ -203,7 +231,8 @@ export function shapeCandidates(raw: PoolRaw): TrainingCandidate[] {
           : null,
       sat: cleanSat(a.sat),
       aromas,
-      ...(raw.placeLinks.get(a.id) ?? UNPLACED),
+      ...place,
+      mapPoint: place.mapPoint ?? (curated ? { ...curated, source: "curated" } : null),
       qualityLow: a.quality_low,
       qualityHigh: a.quality_high,
     });

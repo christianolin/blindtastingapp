@@ -24,6 +24,7 @@ import {
   finalWineId,
   historyOrFilter,
   pageOf,
+  displayPoints,
   placeLinks,
   shapeAttemptRow,
   shapeCandidates,
@@ -36,6 +37,7 @@ import {
   type ArchetypeRaw,
   type AttemptRaw,
   type CatalogDisplayRaw,
+  type DisplayPointRaw,
   type WineDisplay,
 } from "./pool-shape";
 import type { AttemptRow, Named, TrainingCandidate } from "./types";
@@ -99,6 +101,29 @@ async function readArchetypePlaces(supabase: Client): Promise<ArchetypePlaceRaw[
   }
 }
 
+// The curated display points (training-room-map spec RM23), a separate read
+// that fails SOFT like the RPC above: it serves the likelihood map's dots
+// only. The main archetype read never selects these columns, so an app
+// deployed before 20260929150000 keeps working (the select fails, is logged
+// once, and no curated dot shows). Only rows that carry a point come back
+// (18 on 2026-09-29), far under PostgREST's 1000-row answer.
+async function readDisplayPoints(supabase: Client): Promise<DisplayPointRaw[]> {
+  try {
+    const { data, error } = await supabase
+      .from("wine_archetypes")
+      .select("id, display_lon, display_lat")
+      .not("display_lon", "is", null);
+    if (error) {
+      console.error("training pool: display points", error);
+      return [];
+    }
+    return (data ?? []) as DisplayPointRaw[];
+  } catch (error) {
+    console.error("training pool: display points", error);
+    return [];
+  }
+}
+
 const ARCHETYPE_COLUMNS: string =
   "id, name, description, colour, style, country_id, region_id, appellation_id, " +
   "primary_grape_id, secondary_grape_id, typical_age_low, typical_age_high, sat, " +
@@ -106,7 +131,7 @@ const ARCHETYPE_COLUMNS: string =
 
 /** Every archetype as a TrainingCandidate (spec §4.6). One read per table, joined in TS. */
 export const readTrainingPool = cache(async (supabase: Client): Promise<TrainingCandidate[]> => {
-  const [archetypesRaw, aromasRaw, termsRaw, designationsRaw, placeRows] = await Promise.all([
+  const [archetypesRaw, aromasRaw, termsRaw, designationsRaw, placeRows, pointRows] = await Promise.all([
     readAll("archetypes", (from, to) =>
       supabase.from("wine_archetypes").select(ARCHETYPE_COLUMNS).order("sort_order").order("id").range(from, to),
     ),
@@ -132,6 +157,8 @@ export const readTrainingPool = cache(async (supabase: Client): Promise<Training
     ),
     // First round, beside the archetypes: no extra round trip (spec RM3).
     readArchetypePlaces(supabase),
+    // Also first round, and also fail-soft (spec RM23).
+    readDisplayPoints(supabase),
   ]);
   const archetypes = archetypesRaw as unknown as ArchetypeRaw[];
   const designations = designationsRaw as unknown as ArchetypeDesignationRaw[];
@@ -169,6 +196,9 @@ export const readTrainingPool = cache(async (supabase: Client): Promise<Training
     // A map place is optional (D9): on 2026-09-29, 84 of the 102 archetypes
     // have one and 18 do not.
     placeLinks: placeLinks(placeRows),
+    // The 18 unplaced typical wines' curated dots (spec §7), used only where
+    // no place or ancestor point resolves (RM12).
+    displayPoints: displayPoints(pointRows),
   });
 });
 
