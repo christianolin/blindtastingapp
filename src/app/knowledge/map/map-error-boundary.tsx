@@ -52,6 +52,10 @@ type Props = {
   resetKey: number;
   /** Remount the map (the explorer bumps resetKey and the map's own key). */
   onRetry: () => void;
+  /** Optional, additive (training-room-map spec RM22): renders in place of
+      MapUnavailableCard. `isChunk` says whether only a page load can fix it
+      (isChunkLoadError). The explorer passes none. */
+  fallback?: (error: Error, isChunk: boolean) => ReactNode;
   children: ReactNode;
 };
 
@@ -82,6 +86,7 @@ export class MapErrorBoundary extends Component<Props, State> {
   render() {
     const { error } = this.state;
     if (!error) return this.props.children;
+    if (this.props.fallback) return this.props.fallback(error, isChunkLoadError(error));
     // React.lazy (which next/dynamic wraps) keeps a rejected import rejected,
     // so remounting would only rethrow the same chunk error; a page load is
     // what fetches the current deployment's chunks.

@@ -296,10 +296,17 @@ export function shardSourceId(key: string): string {
   return `${SHARD_SOURCE_PREFIX}${key}`;
 }
 
+/** The training room's likelihood map: its one GeoJSON source of typical-wine
+    dots (training-room-map spec RM16, RM21). Carried across a theme swap like
+    the explorer's own sources; no explorer source uses this id, so the
+    explorer is unaffected. */
+export const TRAINING_SOURCE_ID = "wine-training";
+
 /** Is this one of the map's own sources, as opposed to the basemap's? */
 export function isWineSourceId(id: string): boolean {
   return (
     id === WORLD_SOURCE_ID ||
+    id === TRAINING_SOURCE_ID ||
     (id.startsWith(SHARD_SOURCE_PREFIX) && id.length > SHARD_SOURCE_PREFIX.length)
   );
 }

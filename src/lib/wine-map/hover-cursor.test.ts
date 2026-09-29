@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { hoverIsClickable, installHoverCursor, type HoverMap, type HoverPoint } from "./hover-cursor";
+import {
+  hoverGeometry,
+  hoverIsClickable,
+  installHoverCursor,
+  type HoverGeometry,
+  type HoverMap,
+  type HoverPoint,
+} from "./hover-cursor";
 
 type Feature = { properties?: Record<string, unknown> | null };
 
@@ -26,7 +33,7 @@ function fakeMap(features: Feature[] = [], opts: { zoom?: number; layers?: strin
     zoom: opts.zoom ?? 9,
     features,
     throwOnQuery: false,
-    queries: [] as { point: [number, number]; layers: string[] }[],
+    queries: [] as { point: HoverGeometry; layers: string[] }[],
     canvas: { style: { cursor: "" } },
   };
   const map: HoverMap = {
@@ -49,7 +56,11 @@ function fakeMap(features: Feature[] = [], opts: { zoom?: number; layers?: strin
   const moveEnd = () => {
     for (const fn of [...of("moveend")]) (fn as () => void)();
   };
-  return { map, state, move, moveEnd, listeners };
+  // The pointer leaving the canvas.
+  const out = () => {
+    for (const fn of [...of("mouseout")]) (fn as () => void)();
+  };
+  return { map, state, move, moveEnd, out, listeners };
 }
 
 function frames() {
@@ -182,5 +193,107 @@ describe("installHoverCursor", () => {
     move(2, 2);
     f.flush();
     expect(state.queries).toEqual([]);
+  });
+});
+
+// The training room's options (training-room-map spec RM15, RM18): all three
+// optional; the explorer passes none and keeps every behaviour above.
+describe("installHoverCursor's room options", () => {
+  const DOTS = ["training-dots"];
+
+  it("with no new option it queries the exact point and never listens for mouseout", () => {
+    const { map, state, move, listeners } = fakeMap([{ properties: { tier: 3 } }], { layers: DOTS });
+    const f = frames();
+    installHoverCursor(map, { layers: () => DOTS, raf: f.raf, cancelRaf: f.cancelRaf });
+    expect(listeners.size).toBe(2);
+    move(10, 20);
+    f.flush();
+    expect(state.queries[0].point).toEqual([10, 20]);
+  });
+
+  it("hoverGeometry: the exact point at 0, a square of that half-size otherwise", () => {
+    expect(hoverGeometry({ x: 10, y: 20 }, 0)).toEqual([10, 20]);
+    expect(hoverGeometry({ x: 10, y: 20 }, 6)).toEqual([
+      [4, 14],
+      [16, 26],
+    ]);
+  });
+
+  it("isClickable replaces the tier rule, and box queries the square", () => {
+    // Room dots carry no tier: hoverIsClickable would say no past z5.
+    const { map, state, move } = fakeMap([{ properties: { id: "a1" } }], { zoom: 8, layers: DOTS });
+    const f = frames();
+    installHoverCursor(map, {
+      layers: () => DOTS,
+      raf: f.raf,
+      cancelRaf: f.cancelRaf,
+      isClickable: (features) => features.length > 0,
+      box: 6,
+    });
+    move(50, 60);
+    f.flush();
+    expect(state.queries).toEqual([
+      {
+        point: [
+          [44, 54],
+          [56, 66],
+        ],
+        layers: DOTS,
+      },
+    ]);
+    expect(state.canvas.style.cursor).toBe("pointer");
+  });
+
+  it("onHover gets the hits once per frame, [] over nothing, and [] when the pointer leaves", () => {
+    const { map, state, move, out, listeners } = fakeMap([{ properties: { id: "a1" } }], { layers: DOTS });
+    const f = frames();
+    const seen: { ids: unknown[]; point: HoverPoint }[] = [];
+    const dispose = installHoverCursor(map, {
+      layers: () => DOTS,
+      raf: f.raf,
+      cancelRaf: f.cancelRaf,
+      isClickable: (features) => features.length > 0,
+      onHover: (features, point) => seen.push({ ids: features.map((x) => x.properties?.id), point }),
+    });
+    expect(listeners.size).toBe(3);
+    move(1, 1);
+    move(2, 2);
+    f.flush();
+    expect(seen).toEqual([{ ids: ["a1"], point: { x: 2, y: 2 } }]);
+
+    state.features = [];
+    move(3, 3);
+    f.flush();
+    expect(seen[1]).toEqual({ ids: [], point: { x: 3, y: 3 } });
+
+    // Leaving cancels a pending frame, clears the cursor and reports nothing under it.
+    state.features = [{ properties: { id: "a1" } }];
+    move(4, 4);
+    state.canvas.style.cursor = "pointer";
+    out();
+    expect(f.pending).toBe(0);
+    expect(state.canvas.style.cursor).toBe("");
+    expect(seen[2]).toEqual({ ids: [], point: { x: 4, y: 4 } });
+
+    dispose();
+    expect(listeners.size).toBe(0);
+  });
+
+  it("a throwing query reports [] to onHover and no pointer", () => {
+    const { map, state, move } = fakeMap([{ properties: { id: "a1" } }], { layers: DOTS });
+    state.throwOnQuery = true;
+    const f = frames();
+    const seen: unknown[][] = [];
+    installHoverCursor(map, {
+      layers: () => DOTS,
+      raf: f.raf,
+      cancelRaf: f.cancelRaf,
+      isClickable: (features) => features.length > 0,
+      onHover: (features) => seen.push([...features]),
+    });
+    move(1, 1);
+    expect(() => f.flush()).not.toThrow();
+    expect(seen).toEqual([[]]);
+    expect(state.canvas.style.cursor).toBe("");
   });
 });

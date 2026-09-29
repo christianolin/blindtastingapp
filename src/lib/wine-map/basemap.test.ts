@@ -56,6 +56,7 @@ import {
   REMOVED_BASEMAP_LAYER_IDS,
   resetBasemapStyleCache,
   shardSourceId,
+  TRAINING_SOURCE_ID,
   tuneBasemapStyle,
   withWineLayers,
   WORLD_SOURCE_ID,
@@ -802,5 +803,82 @@ describe("the style diff a swap produces", () => {
       );
       expect(validateStyleMin(style)).toEqual([]);
     }
+  });
+});
+
+// The training room's likelihood map (training-room-map spec RM21) swaps its
+// basemap with the same contract: its GeoJSON source and its two layers ride
+// across in order, and the diff never names them.
+describe("the training room's dots across a swap", () => {
+  const TRAINING_SOURCE = {
+    type: "geojson",
+    data: {
+      type: "FeatureCollection",
+      features: [
+        {
+          type: "Feature",
+          geometry: { type: "Point", coordinates: [-0.77, 45.2] },
+          properties: { id: "a1", state: "scored", heat: 1, label: "Pauillac 91 %", rank: 1, sort: 1 },
+        },
+      ],
+    },
+    promoteId: "id",
+  } as const;
+  const TRAINING_LAYERS = [
+    {
+      id: "training-dots",
+      type: "circle",
+      source: TRAINING_SOURCE_ID,
+      layout: { "circle-sort-key": ["get", "sort"] },
+      paint: { "circle-radius": 6, "circle-color": "#5C1A2B" },
+    },
+    {
+      id: "training-labels",
+      type: "symbol",
+      source: TRAINING_SOURCE_ID,
+      filter: ["!=", ["get", "label"], ""],
+      layout: { "text-field": ["get", "label"], "symbol-sort-key": ["get", "rank"] },
+      paint: { "text-color": "#2b0f18" },
+    },
+  ] as LayerSpecification[];
+  const roomStyle = (basemap: StyleSpecification): StyleSpecification => {
+    const tuned = tuneBasemapStyle(basemap);
+    return {
+      ...tuned,
+      sources: { ...tuned.sources, [TRAINING_SOURCE_ID]: structuredClone(TRAINING_SOURCE) as never },
+      layers: [...tuned.layers, ...structuredClone(TRAINING_LAYERS)],
+    };
+  };
+
+  it("is one of our sources, and nothing that merely starts like it is", () => {
+    expect(TRAINING_SOURCE_ID).toBe("wine-training");
+    expect(isWineSourceId(TRAINING_SOURCE_ID)).toBe(true);
+    expect(isWineSourceId("wine-trainingx")).toBe(false);
+    expect(isWineSourceId("wine-train")).toBe(false);
+  });
+
+  it("withWineLayers carries the source and both layers, byte for byte, last and in order", () => {
+    const prev = roomStyle(positron);
+    const next = tuneBasemapStyle(darkMatter);
+    const result = withWineLayers(prev, next);
+    expect(result.sources[TRAINING_SOURCE_ID]).toEqual(prev.sources[TRAINING_SOURCE_ID]);
+    expect(result.layers.slice(-2)).toEqual(TRAINING_LAYERS);
+    expect(result.layers.slice(0, -2)).toEqual(next.layers);
+  });
+
+  it("the diff of a light-to-dark swap never names the training source or its layers", () => {
+    const prev = roomStyle(positron);
+    const next = withWineLayers(prev, tuneBasemapStyle(darkMatter));
+    const ids = [TRAINING_SOURCE_ID, ...TRAINING_LAYERS.map((l) => l.id)];
+    for (const command of diff(prev, next)) {
+      for (const id of ids) {
+        expect(JSON.stringify(command.args).includes(JSON.stringify(id)), `${command.command} names ${id}`).toBe(false);
+      }
+    }
+    expect(validateStyleMin(next)).toEqual([]);
+  });
+
+  it("basemapTweaks never touches a training layer", () => {
+    expect(basemapTweaks(TRAINING_LAYERS)).toEqual({ remove: [], zoomRanges: [] });
   });
 });
