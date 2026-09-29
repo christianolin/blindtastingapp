@@ -5,6 +5,7 @@
 import { describe, expect, it } from "vitest";
 import {
   bboxesForCountry,
+  CHIP_FIT_ALL_SHARDS,
   CHIP_MIN_ZOOM,
   chipFlightNeeded,
   countryCameraBox,
@@ -166,5 +167,28 @@ describe("selectionFit", () => {
   it("drops the sheet for a canvas with no measurable height", () => {
     expect(selectionFit({ bottom: 380 }, 0)).toEqual(PLAIN);
     expect(selectionFit({ bottom: 380 }, Number.NaN)).toEqual(PLAIN);
+  });
+});
+
+const USA: Bbox[] = [
+  [-124.41, 32.53, -114.13, 42.01], // california
+  [-79.76, 40.5, -71.86, 45.02], // new-york
+  [-124.57, 41.99, -116.46, 46.29], // oregon
+  [-124.73, 45.54, -116.92, 49.0], // washington
+];
+
+describe("countryCameraBox with keepAll (spec 2026-09-29 D26)", () => {
+  it("keeps New York when asked, so the chip frames California to New York", () => {
+    expect(countryCameraBox(USA, { keepAll: true })).toEqual([-124.73, 32.53, -71.86, 49.0]);
+  });
+  it("drops New York without it (centre 44 deg off against a 5.1 median: why the option exists)", () => {
+    expect(countryCameraBox(USA)).toEqual([-124.73, 32.53, -114.13, 49.0]);
+  });
+  it("leaves Portugal and France as they were", () => {
+    expect(countryCameraBox(PORTUGAL, { keepAll: false })).toEqual([-9.261, 37.741, -6.749, 42.154]);
+    expect(countryCameraBox(FRANCE, {})).toEqual([-2.023, 41.454, 9.49, 49.455]);
+  });
+  it("applies to the United States only", () => {
+    expect([...CHIP_FIT_ALL_SHARDS]).toEqual(["united-states"]);
   });
 });

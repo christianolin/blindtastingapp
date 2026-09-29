@@ -95,19 +95,30 @@ function median(values: readonly number[]): number {
   return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
 }
 
+/** Countries whose chip frames every shard, outliers included (spec 2026-09-29
+    D26). The outlier rule would drop New York from the three West Coast states,
+    the first thing a user tapping "United States" would notice. */
+export const CHIP_FIT_ALL_SHARDS: ReadonlySet<string> = new Set(["united-states"]);
+
 /** The box a chip flies to: the union of the country's shard bboxes, without
-    outliers. At least half the shards always survive, since their distance is
-    at most the median. Null for no bboxes. */
-export function countryCameraBox(bboxes: readonly Bbox[]): Bbox | null {
+    outliers unless `keepAll`. At least half the shards always survive, since
+    their distance is at most the median. Null for no bboxes. */
+export function countryCameraBox(
+  bboxes: readonly Bbox[],
+  opts: { keepAll?: boolean } = {},
+): Bbox | null {
   if (bboxes.length === 0) return null;
-  const centres = bboxes.map(
-    ([minX, minY, maxX, maxY]) => [(minX + maxX) / 2, (minY + maxY) / 2] as const,
-  );
-  const mx = median(centres.map(([x]) => x));
-  const my = median(centres.map(([, y]) => y));
-  const distances = centres.map(([x, y]) => Math.hypot(x - mx, y - my));
-  const limit = OUTLIER_FACTOR * median(distances);
-  const kept = bboxes.filter((_, i) => distances[i] <= limit);
+  let kept: readonly Bbox[] = bboxes;
+  if (!opts.keepAll) {
+    const centres = bboxes.map(
+      ([minX, minY, maxX, maxY]) => [(minX + maxX) / 2, (minY + maxY) / 2] as const,
+    );
+    const mx = median(centres.map(([x]) => x));
+    const my = median(centres.map(([, y]) => y));
+    const distances = centres.map(([x, y]) => Math.hypot(x - mx, y - my));
+    const limit = OUTLIER_FACTOR * median(distances);
+    kept = bboxes.filter((_, i) => distances[i] <= limit);
+  }
   return [
     Math.min(...kept.map((b) => b[0])),
     Math.min(...kept.map((b) => b[1])),
