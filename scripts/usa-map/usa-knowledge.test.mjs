@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import test from "node:test";
 import { loadTrees, us2Wave } from "./us2-wave.mjs";
 import { validateUsaProfiles, reviewMarkdown, migrationIsCurrent } from "./usa-knowledge.mjs";
@@ -78,4 +79,10 @@ test("migrationIsCurrent flags text the migration does not carry", () => {
   const s = valid();
   const sql = "insert … 'Old text' …";
   assert.ok(migrationIsCurrent(s, sql).length > 0);
+});
+
+test("the committed US knowledge file meets the US rule", async () => {
+  const source = JSON.parse(await readFile("data/wine-map/place-profiles-usa.json", "utf8"));
+  assert.deepEqual(validateUsaProfiles(source, wave), []);
+  assert.deepEqual(source.new_grapes.map((g) => g.name), ["Petite Sirah"]);
 });

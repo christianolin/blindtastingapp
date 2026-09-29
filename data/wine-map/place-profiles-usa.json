@@ -1,0 +1,532 @@
+{
+  "_provenance": {
+    "what": "Details-panel knowledge for the United States wine map, wave US-2: the country, California, New York, Oregon and Washington, their umbrella AVAs and the Central Valley grouping (spec docs/superpowers/specs/2026-09-29-usa-wine-map-design.md §10). Turned into supabase/migrations/20260930094747_usa_us2_knowledge.sql by scripts/wine-map-sources/gen-place-profiles-migration.mjs --source data/wine-map/place-profiles-usa.json --bare.",
+    "wave": "us2",
+    "status": "DRAFT",
+    "owner_approval": null,
+    "written_in_session": "2026-09-29, from public sources only (listed under each place); no API batch (AGENTS.md). Every text is provisional owner copy until the owner answers OK on data/wine-map/review/usa-us2-knowledge.md.",
+    "rules": "Plain English, no praise words, figures only where a listed source publishes them, never 'official boundary' (spec §18). Grapes are listed in the order a blind taster would reach for them; share_pct is left out everywhere because no source here publishes a per-place share for every listed grape."
+  },
+  "_owner_questions": [
+    "New York: list Concord (and other native or hybrid grapes such as Niagara and Seyval Blanc) as grapes? They dominate New York's acreage but mostly go to juice. Today the articles mention them in text only, and no catalog row is added (spec §10.1: Concord only if you want it).",
+    "Puget Sound: add Madeleine Angevine and Siegerrebe to the grape catalog and list them? They are the region's signature whites; today they are named in the text only.",
+    "Central Valley: its styles include Sweet and Fortified for Madera's dessert wines. Keep them, or keep the grouping to Red and White?"
+  ],
+  "new_grapes": [
+    {
+      "name": "Petite Sirah",
+      "color": "RED",
+      "description": "The name California uses for Durif, a French variety. DNA work at UC Davis (Meredith and others, 1999) found that 49 of 53 vines sold as Petite Sirah in California were Durif, and that Durif is most probably a seedling of Peloursin with Syrah as its other parent. It makes deeply coloured, tannic red wine, on its own or in blends.",
+      "skin_color": "blue-black",
+      "sources": [
+        { "title": "Meredith et al., The Identity and Parentage of the Variety Known in California as Petite Sirah, Am. J. Enol. Vitic. 50:3 (1999)", "url": "https://www.ajevonline.org/content/50/3/236" }
+      ]
+    }
+  ],
+  "places": {
+    "united-states": {
+      "article": {
+        "description": "Wine is made across the United States, but California alone makes about 81 per cent of it. This map covers the four states that matter most for fine wine: California, Washington, Oregon and New York. Wine regions here are American Viticultural Areas (AVAs): grape-growing areas the federal Alcohol and Tobacco Tax and Trade Bureau (TTB) defines by geography, with no rules on grapes, yields or winemaking.",
+        "climate": "Too varied for one description. The West Coast has dry summers: the cold Pacific and coastal fog cool California's coastal valleys, and the Cascade Mountains leave eastern Washington and Oregon in a dry rain shadow. New York's vineyards rely on deep lakes and the Atlantic to soften cold continental winters.",
+        "soils": "As varied as the climate: volcanic, marine sedimentary and wind-blown loess soils in Oregon's Willamette Valley; loess over Ice Age flood gravels and basalt in Washington's Columbia Valley; decomposed granite in California's Sierra Foothills; shale and glacial deposits in New York's Finger Lakes; sandy glacial soils on Long Island.",
+        "grape_varieties": "International varieties lead: Cabernet Sauvignon and Chardonnay in California and Washington, Pinot Noir in Oregon, Riesling in the Finger Lakes. Zinfandel has been grown in California since the Gold Rush.",
+        "wine_styles": "Mostly dry reds and whites, usually labelled by grape variety rather than by place. Rosé, sparkling wine, sweet wines and a few fortified wines are made too.",
+        "key_facts": [
+          "TTB lists 280 established AVAs (August 2026); California has 154 of them",
+          "An AVA name on the label means at least 85% of the grapes come from that AVA (27 CFR 4.25)",
+          "A state or county name needs 75% of the wine from that place; a grape name needs 75% of that grape (27 CFR 4.23)",
+          "The first AVA was Augusta, Missouri, established on 20 June 1980",
+          "California makes about 81% of US wine (Wine Institute)"
+        ]
+      },
+      "styles": ["RED", "WHITE", "ROSE", "SPARKLING", "SWEET"],
+      "grapes": [
+        { "name": "Cabernet Sauvignon" },
+        { "name": "Chardonnay" },
+        { "name": "Pinot Noir" },
+        { "name": "Zinfandel" },
+        { "name": "Merlot" },
+        { "name": "Riesling" },
+        { "name": "Syrah" },
+        { "name": "Sauvignon Blanc" }
+      ],
+      "sources": [
+        { "title": "TTB, Established American Viticultural Areas (updated 2026-08-18)", "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/established-avas" },
+        { "title": "TTB, AVA establishment dates", "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/ava-establishment-dates" },
+        { "title": "27 CFR 4.25, Appellation of origin (eCFR text via Cornell LII)", "url": "https://www.law.cornell.edu/cfr/text/27/4.25" },
+        { "title": "27 CFR 4.23, Varietal (grape type) labeling (eCFR text via Cornell LII)", "url": "https://www.law.cornell.edu/cfr/text/27/4.23" },
+        { "title": "Wine Institute, California and US wine production", "url": "https://wineinstitute.org/our-industry/statistics/california-us-wine-production" }
+      ]
+    },
+    "united-states.california": {
+      "article": {
+        "description": "The largest wine state by far: about 81 per cent of the country's wine, from roughly 540,000 acres of wine grapes. Its AVAs run the length of the state; this map groups them under the North Coast, Central Coast, Sierra Foothills and South Coast AVAs and the Central Valley. Napa Valley, designated in 1981, was California's first AVA.",
+        "climate": "Mediterranean: mild, wet winters and long, dry summers. Near the coast, marine air and fog from the cold Pacific move inland through gaps and valleys in the Coast Ranges, so the coolest vineyards lie closest to the ocean and the warmest in the inland valleys and the foothills.",
+        "soils": "Every kind, changing over short distances: alluvial valley floors, volcanic soils in Napa and Lake County, calcareous soils in Paso Robles, decomposed granite in the Sierra Foothills and Temecula Valley, and deep sandy loam washed down from the Sierra Nevada around Lodi.",
+        "grape_varieties": "Cabernet Sauvignon and Chardonnay are the two most planted wine grapes. Pinot Noir comes from the cooler coast, Zinfandel from Lodi, Sonoma and the Sierra Foothills, and Petite Sirah (Durif) is widely grown for deep-coloured reds.",
+        "wine_styles": "Mostly dry varietal reds and whites, from cool-coast Pinot Noir and Chardonnay to ripe Cabernet Sauvignon and Zinfandel. Sparkling wine and rosé are made too, and sweet and fortified wines in the Central Valley.",
+        "key_facts": [
+          "About 540,000 acres of wine grapes (CDFA estimate for 2025)",
+          "154 of the 280 US AVAs lie wholly or partly in California (TTB)",
+          "Wine labelled California must be made only from California grapes, stricter than the federal 75% (17 CCR 17015)",
+          "At the 1976 Paris tasting, a 1973 Stag's Leap Cabernet Sauvignon and a 1973 Chateau Montelena Chardonnay placed first",
+          "Napa Valley, designated in 1981, was California's first AVA"
+        ]
+      },
+      "styles": ["RED", "WHITE", "ROSE", "SPARKLING"],
+      "grapes": [
+        { "name": "Cabernet Sauvignon" },
+        { "name": "Chardonnay" },
+        { "name": "Pinot Noir" },
+        { "name": "Zinfandel" },
+        { "name": "Merlot" },
+        { "name": "Sauvignon Blanc" },
+        { "name": "Syrah" },
+        { "name": "Petite Sirah", "note": "Durif" }
+      ],
+      "sources": [
+        { "title": "Wine Institute, California and US wine production", "url": "https://wineinstitute.org/our-industry/statistics/california-us-wine-production" },
+        { "title": "Wine Institute, California winegrape acreage (from the CDFA Grape Acreage Report)", "url": "https://wineinstitute.org/our-industry/statistics/california-winegrape-acreage" },
+        { "title": "USDA NASS / CDFA, California Grape Acreage Report, 2024 Summary", "url": "https://www.nass.usda.gov/Statistics_by_State/California/Publications/Specialty_and_Other_Releases/Grapes/Acreage/2025/grpacSUMMARY2024Crop.pdf" },
+        { "title": "17 CCR 17015, wines bearing the appellation of origin California (via Cornell LII)", "url": "https://www.law.cornell.edu/regulations/california/17-CCR-17015" },
+        { "title": "Smithsonian National Museum of American History, Judgment of Paris", "url": "https://americanhistory.si.edu/explore/exhibitions/food/online/wine-table/judgment-paris" },
+        { "title": "Napa Valley Vintners, About the Napa Valley AVA", "url": "https://napavintners.com/napa_valley/" },
+        { "title": "UC ANR, The Climate of Napa County (Donaldson)", "url": "https://ucanr.edu/sites/default/files/2021-07/153431.pdf" },
+        { "title": "Paso Robles Wine Country Alliance, Geography and climate", "url": "https://pasowine.com/paso-robles/geography-climate/" },
+        { "title": "TTB, Established American Viticultural Areas", "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/established-avas" }
+      ]
+    },
+    "united-states.california.central-coast": {
+      "article": {
+        "description": "A long umbrella AVA, established in 1985, that runs from the San Francisco Bay area south to Santa Barbara County. It takes in, among others, the Santa Cruz Mountains, Livermore Valley, the Monterey AVAs, Paso Robles and its eleven districts, Edna Valley, and the Santa Barbara AVAs from Santa Maria Valley to Sta. Rita Hills.",
+        "climate": "Cooled by the Pacific along its whole length. Marine air from Monterey Bay gives Monterey County one of the longest growing seasons in California. In Santa Barbara County the mountains run east to west, so the valleys open straight onto the ocean and draw fog and breezes inland; Paso Robles, further from the sea, has wide swings between day and night.",
+        "soils": "Mixed: granite, marine sediments and volcanic rock. Paso Robles stands out for calcareous soils with a high pH of 7.4 to 8.6, and calcareous shale on its western hills.",
+        "grape_varieties": "Chardonnay and Pinot Noir in the cool western valleys of Monterey and Santa Barbara; Cabernet Sauvignon, Syrah, Zinfandel and Grenache in warmer Paso Robles and the eastern Santa Barbara valleys.",
+        "wine_styles": "Dry reds and whites, from cool-climate Pinot Noir and Chardonnay to Rhône and Bordeaux varieties inland; rosé and sparkling wine too.",
+        "key_facts": [
+          "Established 1985 (27 CFR 9.75)",
+          "Covers parts of ten counties, from San Francisco and Alameda south to Santa Barbara",
+          "Paso Robles has eleven nested AVAs, all established in 2014 (TTB)",
+          "Livermore Valley vineyards date from the early 1880s (Wente and Concannon)",
+          "Santa Barbara County's transverse valleys run east to west, open to Pacific fog"
+        ]
+      },
+      "styles": ["RED", "WHITE", "ROSE", "SPARKLING"],
+      "grapes": [
+        { "name": "Chardonnay" },
+        { "name": "Pinot Noir" },
+        { "name": "Cabernet Sauvignon" },
+        { "name": "Syrah" },
+        { "name": "Zinfandel" },
+        { "name": "Grenache" }
+      ],
+      "sources": [
+        { "title": "27 CFR 9.75, Central Coast (eCFR text via Cornell LII)", "url": "https://www.law.cornell.edu/cfr/text/27/9.75" },
+        { "title": "TTB, AVA establishment dates", "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/ava-establishment-dates" },
+        { "title": "Discover California Wines (Wine Institute), A wine lover's guide to Santa Barbara", "url": "https://discovercaliforniawines.com/blog/a-wine-lovers-guide-to-santa-barbara/" },
+        { "title": "Discover California Wines (Wine Institute), Central Coast: Livermore Valley", "url": "https://discovercaliforniawines.com/discover-california/central-coast/" },
+        { "title": "Paso Robles Wine Country Alliance, Geography and climate", "url": "https://pasowine.com/paso-robles/geography-climate/" }
+      ]
+    },
+    "united-states.california.central-valley": {
+      "article": {
+        "description": "Central Valley is a grouping on this map, not an AVA. It gathers the eleven AVAs of the Sacramento and San Joaquin valleys that sit in no larger umbrella AVA: Lodi, Clarksburg, Madera, Capay Valley, Diablo Grande, Dunnigan Hills, Paulsell Valley, River Junction, Salado Creek, Tracy Hills and Winters Highlands. Lodi lies where the two valleys meet, and grapes came to it with the Gold Rush.",
+        "climate": "Hot, dry summers. Around Lodi and Clarksburg, breezes from San Francisco Bay come up through the Carquinez Strait and the Sacramento-San Joaquin Delta and cool the vineyards in the evening; further south, around Madera, the valley is warmer, which suits the sweet and fortified wines made there.",
+        "soils": "Around Lodi, deep, well-drained sandy loams of granite washed down from the Sierra Nevada by the Mokelumne River; elsewhere the valley floor is alluvial.",
+        "grape_varieties": "Zinfandel above all around Lodi, much of it from old bush vines, with Cabernet Sauvignon, Chardonnay and Petite Sirah. Clarksburg is known for Chenin Blanc, and Madera for Muscat.",
+        "wine_styles": "Dry reds and whites, led by Lodi Zinfandel, plus sweet Muscat and port-style fortified wines from Madera.",
+        "key_facts": [
+          "A navigation grouping on this map, with eleven member AVAs; it has no legal status",
+          "Lodi has thousands of acres of old bush vines, most of them Zinfandel, many dry-farmed and own-rooted",
+          "Clarksburg, in the Sacramento River Delta, is known for Chenin Blanc",
+          "In Madera, Ficklin Vineyards has made port-style wine since 1948 and Quady Winery makes sweet Muscat"
+        ]
+      },
+      "styles": ["RED", "WHITE", "SWEET", "FORTIFIED"],
+      "grapes": [
+        { "name": "Zinfandel" },
+        { "name": "Cabernet Sauvignon" },
+        { "name": "Chardonnay" },
+        { "name": "Petite Sirah", "note": "Durif" },
+        { "name": "Chenin Blanc", "note": "Clarksburg's white" },
+        { "name": "Muscat", "note": "Madera's sweet wines" }
+      ],
+      "sources": [
+        { "title": "TTB, Established American Viticultural Areas (the eleven member AVAs)", "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/established-avas" },
+        { "title": "Lodi District Grape Growers Association, Lodi AVA", "url": "https://www.lodigrowers.com/lodi-ava/" },
+        { "title": "Lodi Winegrape Commission, Tokay fine sandy loam, part 1", "url": "https://www.lodiwine.com/blog/Tokay-fine-sandy-loam--part-1---the-Mokelumne-River-s-defining-natural-feature" },
+        { "title": "Discover California Wines (Wine Institute), Inland Valleys: Lodi and the Delta", "url": "https://discovercaliforniawines.com/discover-california/inland-valleys/" },
+        { "title": "Wines & Vines, Clarksburg: Chenin Blanc makes a stand in the Delta", "url": "https://winesvinesanalytics.com/features/article/50977/Clarksburg-Chenin-Blanc-makes-a-stand-in-the-Delta" },
+        { "title": "California Grown, A guide to dessert wines from California", "url": "https://californiagrown.org/blog/a-guide-to-dessert-wines-from-california/" }
+      ]
+    },
+    "united-states.california.north-coast": {
+      "article": {
+        "description": "The umbrella AVA for California's northern coastal counties, established in 1983. It covers parts of Lake, Marin, Mendocino, Napa, Solano and Sonoma counties and contains, among many others, Napa Valley, Russian River Valley, Sonoma Coast and Anderson Valley. More than half of California's wineries are in this region.",
+        "climate": "Mediterranean, and cooler toward the ocean. Marine air and fog come in from the Pacific and San Francisco Bay, so the Sonoma coast and the Carneros district by the bay are cool, while valleys and ridges further inland are warmer.",
+        "soils": "Varied over short distances: alluvial valley floors, volcanic soils on the ridges, and red volcanic soils around Mount Konocti, a dormant volcano, in Lake County.",
+        "grape_varieties": "Cabernet Sauvignon above all in Napa Valley; Chardonnay and Pinot Noir in the cooler districts near the coast and the bay; Zinfandel in Sonoma and Mendocino.",
+        "wine_styles": "Dry reds and whites, from Napa Cabernet Sauvignon to coastal Pinot Noir and Chardonnay, and sparkling wine from the cooler districts.",
+        "key_facts": [
+          "Established 1983 (27 CFR 9.30)",
+          "Covers parts of Lake, Marin, Mendocino, Napa, Solano and Sonoma counties",
+          "Contains Napa Valley, California's first AVA (1981), which grows about 4% of the state's wine grapes",
+          "Home to more than half of California's wineries (Discover California Wines)"
+        ]
+      },
+      "styles": ["RED", "WHITE", "SPARKLING"],
+      "grapes": [
+        { "name": "Cabernet Sauvignon" },
+        { "name": "Chardonnay" },
+        { "name": "Pinot Noir" },
+        { "name": "Zinfandel" },
+        { "name": "Merlot" },
+        { "name": "Sauvignon Blanc" }
+      ],
+      "sources": [
+        { "title": "27 CFR 9.30, North Coast (eCFR text via Cornell LII)", "url": "https://www.law.cornell.edu/cfr/text/27/9.30" },
+        { "title": "TTB, AVA establishment dates", "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/ava-establishment-dates" },
+        { "title": "Napa Valley Vintners, About the Napa Valley AVA", "url": "https://napavintners.com/napa_valley/" },
+        { "title": "Discover California Wines (Wine Institute), Discover California (regions)", "url": "https://discovercaliforniawines.com/discover-california/" },
+        { "title": "Discover California Wines (Wine Institute), North Coast: Lake County", "url": "https://discovercaliforniawines.com/discover-california/north-coast/" },
+        { "title": "UC ANR, The Climate of Napa County (Donaldson)", "url": "https://ucanr.edu/sites/default/files/2021-07/153431.pdf" }
+      ]
+    },
+    "united-states.california.sierra-foothills": {
+      "article": {
+        "description": "A long AVA on the western slopes of the Sierra Nevada, established in 1987 across eight counties from Yuba in the north to Mariposa in the south. Vines came with the Gold Rush, and some of the oldest Zinfandel vineyards still in production are here. It contains El Dorado, Fair Play, California Shenandoah Valley, Fiddletown and North Yuba.",
+        "climate": "Warm, dry summers, tempered by height: nearly all its Zinfandel vineyards sit between about 1,200 and 3,500 feet, where nights are cooler than on the valley floor below.",
+        "soils": "Largely decomposed granite on the foothill slopes, well drained, with volcanic soils in parts of Amador and El Dorado counties.",
+        "grape_varieties": "Zinfandel, about 40 per cent of the vineyard acreage, much of it from old vines; Barbera, Syrah and Petite Sirah are the other main reds.",
+        "wine_styles": "Mostly dry reds, above all Zinfandel, with some whites.",
+        "key_facts": [
+          "Established 1987 (27 CFR 9.120)",
+          "Eight counties: Yuba, Nevada, Placer, El Dorado, Amador, Calaveras, Tuolumne and Mariposa",
+          "Zinfandel is about 40% of the vineyard acreage (ZAP)",
+          "The Original Grandpere Vineyard, planted in 1869, is the oldest documented Zinfandel vineyard still producing"
+        ]
+      },
+      "styles": ["RED", "WHITE"],
+      "grapes": [
+        { "name": "Zinfandel" },
+        { "name": "Barbera" },
+        { "name": "Syrah" },
+        { "name": "Petite Sirah", "note": "Durif" }
+      ],
+      "sources": [
+        { "title": "27 CFR 9.120, Sierra Foothills (eCFR text via Cornell LII)", "url": "https://www.law.cornell.edu/cfr/text/27/9.120" },
+        { "title": "TTB, AVA establishment dates", "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/ava-establishment-dates" },
+        { "title": "Zinfandel Advocates & Producers (ZAP), Sierra Foothills", "url": "https://zinfandel.org/region/sierra-foothills/" },
+        { "title": "Decanter, Gold rush country: Sierra Foothills", "url": "https://www.decanter.com/features/gold-rush-country-sierra-foothills-249125/" }
+      ]
+    },
+    "united-states.california.south-coast": {
+      "article": {
+        "description": "The umbrella AVA for Southern California's vineyards, established in 1985 in parts of Orange, Riverside and San Diego counties. Its main wine district is Temecula Valley, inland in Riverside County; Ramona Valley and San Pasqual Valley are the other AVAs inside it.",
+        "climate": "Warm and sunny, cooled where the coastal mountains open. In Temecula Valley, hot air rising over the desert draws Pacific air in through the Rainbow Gap, so warm days are followed by cool nights.",
+        "soils": "Temecula Valley's vineyards are largely on well-drained decomposed granite.",
+        "grape_varieties": "Cabernet Sauvignon, Syrah, Chardonnay and Sauvignon Blanc, among some thirty varieties grown in Temecula Valley, including Sangiovese, Vermentino and Barbera.",
+        "wine_styles": "Dry reds, whites and rosé, much of it sold at the wineries themselves.",
+        "key_facts": [
+          "Established 1985 (27 CFR 9.104)",
+          "Covers parts of Orange, Riverside and San Diego counties",
+          "Temecula Valley sits between the Pacific and the desert, about an hour north-east of San Diego",
+          "Contains the Temecula Valley, Ramona Valley and San Pasqual Valley AVAs"
+        ]
+      },
+      "styles": ["RED", "WHITE", "ROSE"],
+      "grapes": [
+        { "name": "Cabernet Sauvignon" },
+        { "name": "Syrah" },
+        { "name": "Chardonnay" },
+        { "name": "Sauvignon Blanc" }
+      ],
+      "sources": [
+        { "title": "27 CFR 9.104, South Coast (eCFR text via Cornell LII)", "url": "https://www.law.cornell.edu/cfr/text/27/9.104" },
+        { "title": "TTB, AVA establishment dates", "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/ava-establishment-dates" },
+        { "title": "California Grown, Temecula wines", "url": "https://californiagrown.org/blog/temecula-wines/" }
+      ]
+    },
+    "united-states.new-york": {
+      "article": {
+        "description": "Most of New York's vineyards grow native and hybrid grapes, above all Concord, for juice and jam: Concord makes up about 80 per cent of the state's grape tonnage. Its fine wine comes from European vinifera grapes, planted with success only from the 1950s, chiefly in the Finger Lakes and on Long Island. The state has eleven AVAs, including Lake Erie and the Hudson River Region.",
+        "climate": "Continental, with cold winters once thought too harsh for European vines. The wine regions sit beside water: deep lakes store summer heat and delay spring frost in the Finger Lakes, and the Atlantic and Long Island Sound keep Long Island's winters milder than the rest of the state.",
+        "soils": "Glacial in origin almost everywhere: grey shale and silty limestone bedrock under varied glacial soils in the Finger Lakes, and sandy, well-drained glacial moraine on Long Island.",
+        "grape_varieties": "Riesling leads the vinifera in the Finger Lakes, with Chardonnay, Cabernet Franc, Pinot Noir and Gewürztraminer; Merlot and Cabernet Franc lead on Long Island. Concord, Niagara and hybrids such as Seyval Blanc cover much of the rest of the state.",
+        "wine_styles": "Dry to sweet Riesling and other aromatic whites, lighter-bodied reds, rosé and traditional-method sparkling wine.",
+        "key_facts": [
+          "Eleven AVAs lie wholly or partly in New York (TTB)",
+          "Concord is about 80% of New York's grape tonnage, grown mostly for juice and jam (Cornell, 2018)",
+          "The Lake Erie region is the largest and oldest Concord-growing area in the world",
+          "Konstantin Frank planted vinifera on Keuka Lake from 1958 and released his first wines in 1962",
+          "Long Island's first vineyard was planted in 1973"
+        ]
+      },
+      "styles": ["WHITE", "RED", "SPARKLING", "SWEET", "ROSE"],
+      "grapes": [
+        { "name": "Riesling" },
+        { "name": "Chardonnay" },
+        { "name": "Cabernet Franc" },
+        { "name": "Merlot" },
+        { "name": "Pinot Noir" },
+        { "name": "Gewürztraminer" },
+        { "name": "Blaufränkisch", "note": "Sold as Lemberger" }
+      ],
+      "sources": [
+        { "title": "TTB, Established American Viticultural Areas", "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/established-avas" },
+        { "title": "Cornell Chronicle, Cornell projects support Concord grape growers in New York (2018)", "url": "https://news.cornell.edu/stories/2018/04/cornell-projects-support-concord-grape-growers-new-york" },
+        { "title": "Dr. Konstantin Frank Winery, Konstantin's story", "url": "https://www.drfrankwines.com/konstantins-story/" },
+        { "title": "New York Wine & Grape Foundation, Finger Lakes", "url": "https://newyorkwines.org/avas/finger-lakes/" },
+        { "title": "New York Wine & Grape Foundation, Long Island", "url": "https://newyorkwines.org/avas/long-island/" },
+        { "title": "Long Island Wine Country, About", "url": "https://liwines.com/about/" }
+      ]
+    },
+    "united-states.new-york.finger-lakes": {
+      "article": {
+        "description": "An AVA in upstate New York, established in 1982, around a series of long, narrow glacial lakes, with Canandaigua, Keuka, Seneca and Cayuga at the heart of its wine growing. It has about 10,700 acres of vineyard and 144 wineries, and is known above all for Riesling. Seneca Lake and Cayuga Lake are AVAs within it.",
+        "climate": "Cool and continental. The lakes, some of the deepest in the United States, store heat from March to August and give it back for the rest of the year, which delays spring frost and stretches the growing season to about 195 days.",
+        "soils": "Devonian bedrock of grey shale and silty limestone, or of shale, siltstone, sandstone and limestone together, under glacial soils that change from site to site.",
+        "grape_varieties": "Riesling first, then Cabernet Franc, Pinot Noir, Gewürztraminer and Chardonnay; Lemberger (Blaufränkisch) is a local red. Native and hybrid grapes are still widely grown.",
+        "wine_styles": "Riesling from dry to sweet, other aromatic whites, light reds, rosé and sparkling wine.",
+        "key_facts": [
+          "Established 1982 (27 CFR 9.34)",
+          "About 10,700 acres of vineyard and 144 wineries (NYWGF)",
+          "Contains the Cayuga Lake (1988) and Seneca Lake (2003) AVAs",
+          "Growing season about 195 days, lengthened by the lakes",
+          "Konstantin Frank's vinifera plantings on Keuka Lake began in 1958"
+        ]
+      },
+      "styles": ["WHITE", "RED", "SPARKLING", "SWEET", "ROSE"],
+      "grapes": [
+        { "name": "Riesling" },
+        { "name": "Cabernet Franc" },
+        { "name": "Pinot Noir" },
+        { "name": "Gewürztraminer" },
+        { "name": "Chardonnay" },
+        { "name": "Blaufränkisch", "note": "Sold as Lemberger" }
+      ],
+      "sources": [
+        { "title": "27 CFR 9.34, Finger Lakes (eCFR text via Cornell LII)", "url": "https://www.law.cornell.edu/cfr/text/27/9.34" },
+        { "title": "TTB, AVA establishment dates", "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/ava-establishment-dates" },
+        { "title": "New York Wine & Grape Foundation, Finger Lakes", "url": "https://newyorkwines.org/avas/finger-lakes/" },
+        { "title": "Finger Lakes Wine Alliance, Quick facts", "url": "https://fingerlakeswinealliance.com/quick-facts/" },
+        { "title": "Dr. Konstantin Frank Winery, Konstantin's story", "url": "https://www.drfrankwines.com/konstantins-story/" }
+      ]
+    },
+    "united-states.new-york.long-island": {
+      "article": {
+        "description": "The Long Island AVA, established in 2001, covers Nassau and Suffolk counties, and its vineyards lie at the eastern end, on the North Fork and the South Fork. Alex and Louisa Hargrave planted the first vineyard at Cutchogue in 1973; the island now has about 1,815 acres of vines. It contains the North Fork of Long Island and The Hamptons, Long Island AVAs, both older than it.",
+        "climate": "Maritime. The Atlantic, Long Island Sound and Peconic Bay moderate the temperature: long, warm summers, mild springs and autumns, winters much milder than upstate, and a growing season of about 225 days.",
+        "soils": "Glacial and sandy: deep, well-drained soils on the northern moraine, and coarser, fast-draining soils on the southern one.",
+        "grape_varieties": "Merlot and Cabernet Franc lead the reds, with Cabernet Sauvignon; Chardonnay and Sauvignon Blanc lead the whites.",
+        "wine_styles": "Medium-bodied reds from Bordeaux varieties, crisp whites, rosé and sparkling wine.",
+        "key_facts": [
+          "Established 2001 (27 CFR 9.170); The Hamptons (1985) and North Fork (1986) AVAs came first",
+          "First vineyard planted in 1973, at Cutchogue on the North Fork",
+          "About 1,815 acres of vineyard and 82 wineries (NYWGF)",
+          "Growing season about 225 days"
+        ]
+      },
+      "styles": ["RED", "WHITE", "ROSE", "SPARKLING"],
+      "grapes": [
+        { "name": "Merlot" },
+        { "name": "Cabernet Franc" },
+        { "name": "Chardonnay" },
+        { "name": "Sauvignon Blanc" },
+        { "name": "Cabernet Sauvignon" }
+      ],
+      "sources": [
+        { "title": "27 CFR 9.170, Long Island (eCFR text via Cornell LII)", "url": "https://www.law.cornell.edu/cfr/text/27/9.170" },
+        { "title": "TTB, AVA establishment dates", "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/ava-establishment-dates" },
+        { "title": "New York Wine & Grape Foundation, Long Island", "url": "https://newyorkwines.org/avas/long-island/" },
+        { "title": "Long Island Wine Country, About", "url": "https://liwines.com/about/" }
+      ]
+    },
+    "united-states.oregon": {
+      "article": {
+        "description": "Oregon's wine is shaped by one grape: Pinot Noir covers 60 per cent of the state's 47,343 planted acres. The Willamette Valley, where David Lett planted the first Pinot Noir in 1965, holds the largest concentration of its wineries and vineyards; Southern Oregon, warmer and drier, grows a wider range. Oregon has 23 AVAs.",
+        "climate": "West of the Cascades, the Willamette Valley has cool, wet winters and warm, dry summers, and Southern Oregon is warmer and drier. In the north-east, the Columbia Valley and Walla Walla Valley AVAs cross the state line from Washington into dry country east of the mountains.",
+        "soils": "In the Willamette Valley, red volcanic Jory soils formed from Columbia River basalts, marine sedimentary soils such as Willakenzie, and wind-blown loess; in Southern Oregon, marine sediments, alluvial gravels and volcanic soils.",
+        "grape_varieties": "Pinot Noir is 60 per cent of the vineyard; Pinot Gris and Chardonnay follow in the Willamette Valley, and Southern Oregon adds Syrah, Cabernet Sauvignon, Merlot, Viognier and Tempranillo.",
+        "wine_styles": "Mostly dry Pinot Noir, Pinot Gris and Chardonnay; rosé and sparkling wine are made from the same grapes.",
+        "key_facts": [
+          "47,343 planted acres in 2024, 60% of them Pinot Noir (Oregon Vineyard and Winery Census)",
+          "23 AVAs; Mount Pisgah, Polk County, Oregon became the 23rd in 2022",
+          "A varietal wine must be at least 90% that grape, with 18 varieties allowed at 75% (Oregon rules)",
+          "An Oregon AVA or county name needs 95% of the grapes from it and 100% from Oregon",
+          "David Lett planted the Willamette Valley's first Pinot Noir in 1965"
+        ]
+      },
+      "styles": ["RED", "WHITE", "ROSE", "SPARKLING"],
+      "grapes": [
+        { "name": "Pinot Noir" },
+        { "name": "Pinot Gris" },
+        { "name": "Chardonnay" },
+        { "name": "Riesling" },
+        { "name": "Syrah" },
+        { "name": "Cabernet Sauvignon" },
+        { "name": "Tempranillo" }
+      ],
+      "sources": [
+        { "title": "Oregon Wine Board, 2024 Oregon Vineyard and Winery Census report published", "url": "https://industry.oregonwine.org/press-releases/2024-oregon-vineyard-and-winery-census-report-published/" },
+        { "title": "Oregon Wine Board, Oregon welcomes its 23rd AVA", "url": "https://industry.oregonwine.org/press-releases/oregon-welcomes-its-23rd-american-viticultural-area-ava/" },
+        { "title": "Oregon Wine Board, Labeling regulations", "url": "https://trade.oregonwine.org/resources/labeling-regulations/" },
+        { "title": "Oregon Wine Board, Willamette Valley", "url": "https://trade.oregonwine.org/resources/willamette-valley/" },
+        { "title": "Oregon Wine Board, Southern Oregon AVA", "url": "https://www.oregonwine.org/regions/avas/southern-oregon-ava/" },
+        { "title": "Washington State Wine Commission, Columbia Valley AVA", "url": "https://www.washingtonwine.org/resource/columbia-valley-ava/" }
+      ]
+    },
+    "united-states.oregon.southern-oregon": {
+      "article": {
+        "description": "An umbrella AVA established in 2004 over Oregon's south-west, from south of Eugene to the California border. It joins the Umpqua Valley and Rogue Valley AVAs with Applegate Valley, Elkton Oregon and Red Hill Douglas County. Warmer and drier than the Willamette Valley, it grows a wider range of grapes on about 9,240 planted acres.",
+        "climate": "The warmest and driest part of western Oregon, broken into many microclimates by valleys and hillsides. The Umpqua Valley is warmer than the Willamette Valley but cooler than the Rogue Valley further south.",
+        "soils": "Marine sedimentary soils, alluvial gravels and volcanic soils, varying from valley to valley.",
+        "grape_varieties": "Pinot Noir and Pinot Gris, as elsewhere in Oregon, alongside grapes that need more warmth: Syrah, Cabernet Sauvignon, Merlot, Viognier and Tempranillo.",
+        "wine_styles": "Dry reds and whites, from Pinot Noir to Syrah, Cabernet Sauvignon and Tempranillo, and rosé.",
+        "key_facts": [
+          "Established 2004 (27 CFR 9.179), in Douglas, Jackson and Josephine counties",
+          "About 2,283,600 acres in all, of which about 9,240 are planted (Oregon Wine Board)",
+          "Contains the Umpqua Valley, Rogue Valley, Applegate Valley, Elkton Oregon and Red Hill Douglas County AVAs",
+          "Abacela planted Tempranillo in the Umpqua Valley in 1995, the first varietal Tempranillo made in the Pacific Northwest"
+        ]
+      },
+      "styles": ["RED", "WHITE", "ROSE"],
+      "grapes": [
+        { "name": "Pinot Noir" },
+        { "name": "Pinot Gris" },
+        { "name": "Syrah" },
+        { "name": "Cabernet Sauvignon" },
+        { "name": "Merlot" },
+        { "name": "Viognier" },
+        { "name": "Chardonnay" },
+        { "name": "Tempranillo" }
+      ],
+      "sources": [
+        { "title": "27 CFR 9.179, Southern Oregon (eCFR text via Cornell LII)", "url": "https://www.law.cornell.edu/cfr/text/27/9.179" },
+        { "title": "Oregon Wine Board, Southern Oregon AVA", "url": "https://www.oregonwine.org/regions/avas/southern-oregon-ava/" },
+        { "title": "Oregon Wine Board, Southern Oregon (trade)", "url": "https://trade.oregonwine.org/resources/southern-oregon/" },
+        { "title": "Abacela, Planting the vineyards", "url": "https://www.abacela.com/the-abacela-story/planting-the-vineyards/" }
+      ]
+    },
+    "united-states.oregon.willamette-valley": {
+      "article": {
+        "description": "Oregon's main wine region, about 150 miles long from Portland south to Eugene, and an AVA since 1983. It has 25,450 acres under vine, more than 700 wineries and eleven nested AVAs, from the Dundee Hills and Eola-Amity Hills to Mount Pisgah, Polk County. Pinot Noir is its grape.",
+        "climate": "Cool, with cool, wet winters and warm, dry summers, and warm days and cool nights that keep acidity in the grapes. The Coast Range to the west and the Cascades to the east shelter the valley; the Van Duzer Corridor, a gap in the Coast Range, lets afternoon ocean winds into its western side.",
+        "soils": "Three main types on the hillsides: red volcanic Jory soils formed from Columbia River basalts, as in the Dundee Hills; marine sedimentary soils such as Willakenzie, as in Yamhill-Carlton; and wind-blown Laurelwood loess in the Chehalem Mountains. Most vineyards sit above about 200 feet, clear of the Missoula flood soils on the valley floor.",
+        "grape_varieties": "Pinot Noir leads, followed by Pinot Gris, Chardonnay and Riesling; roughly 30 per cent of the valley's grapes are now other varieties, Pinot Blanc among them.",
+        "wine_styles": "Dry Pinot Noir above all, with Pinot Gris and Chardonnay whites, and rosé and sparkling wine from the same grapes.",
+        "key_facts": [
+          "Established 1983 (27 CFR 9.90)",
+          "25,450 acres under vine (Oregon Wine Board)",
+          "Eleven nested AVAs, the newest Mount Pisgah, Polk County, Oregon (2022)",
+          "David Lett planted the first Pinot Noir in the Dundee Hills in 1966, at The Eyrie Vineyards",
+          "Lett's 1975 Pinot Noir placed highly at the 1979 Gault-Millau Wine Olympiad in Paris"
+        ]
+      },
+      "styles": ["RED", "WHITE", "ROSE", "SPARKLING"],
+      "grapes": [
+        { "name": "Pinot Noir" },
+        { "name": "Pinot Gris" },
+        { "name": "Chardonnay" },
+        { "name": "Riesling" },
+        { "name": "Pinot Blanc" }
+      ],
+      "sources": [
+        { "title": "27 CFR 9.90, Willamette Valley (eCFR text via Cornell LII)", "url": "https://www.law.cornell.edu/cfr/text/27/9.90" },
+        { "title": "Oregon Wine Board, Willamette Valley", "url": "https://trade.oregonwine.org/resources/willamette-valley/" },
+        { "title": "Oregon Wine Board, Dundee Hills", "url": "https://trade.oregonwine.org/resources/dundee-hills/" },
+        { "title": "Oregon Wine Board, Yamhill-Carlton", "url": "https://trade.oregonwine.org/resources/yamhill-carlton/" },
+        { "title": "Willamette Valley Wineries Association, American Viticultural Areas", "url": "https://www.willamettewines.com/about-the-valley/ava-overviews/" },
+        { "title": "Oregon Wine Board, Oregon welcomes its 23rd AVA", "url": "https://industry.oregonwine.org/press-releases/oregon-welcomes-its-23rd-american-viticultural-area-ava/" }
+      ]
+    },
+    "united-states.washington": {
+      "article": {
+        "description": "The second-largest wine-producing state, with about 35,000 acres of wine grapes and close to 1,000 wineries. Almost all of it lies east of the Cascade Mountains: over 99 per cent of the state's vineyard acreage is in the Columbia Valley AVA. Washington has 22 AVAs; Columbia Valley, Columbia Gorge and Walla Walla Valley are shared with Oregon, and Lewis-Clark Valley with Idaho.",
+        "climate": "East of the Cascades the vineyards sit in a rain shadow, with 6 to 8 inches of rain a year in the Columbia Valley, and are irrigated from the Columbia River and its tributaries. Summer days bring up to 17 hours of sunlight, and days and nights differ by 30 to 40°F. West of the Cascades, Puget Sound is cool and wet.",
+        "soils": "Wind-blown loess and sand over gravel and slackwater sediment left by the Ice Age floods, with basalt beneath. Most vines grow on their own roots rather than grafted rootstock, since phylloxera survives poorly in very sandy soils.",
+        "grape_varieties": "Cabernet Sauvignon, Chardonnay, Merlot, Riesling and Syrah lead among more than 80 varieties grown, with Cabernet Franc and Sauvignon Blanc behind them.",
+        "wine_styles": "Mostly dry reds and whites, the reds led by Cabernet Sauvignon, Merlot and Syrah; Riesling is made from dry to sweet, and some rosé.",
+        "key_facts": [
+          "The second-largest wine-producing state in the US (Washington State Wine Commission)",
+          "About 35,000 acres of wine grapes, 985 licensed wineries and 22 AVAs",
+          "Over 99% of the state's vineyard acreage is in the Columbia Valley AVA",
+          "Cabernet Sauvignon was first planted in 1941, Riesling in 1961, Chardonnay in 1964 and Merlot in 1965 (WSWC)"
+        ]
+      },
+      "styles": ["RED", "WHITE", "ROSE", "SWEET"],
+      "grapes": [
+        { "name": "Cabernet Sauvignon" },
+        { "name": "Merlot" },
+        { "name": "Chardonnay" },
+        { "name": "Riesling" },
+        { "name": "Syrah" },
+        { "name": "Cabernet Franc" },
+        { "name": "Sauvignon Blanc" }
+      ],
+      "sources": [
+        { "title": "Washington State Wine Commission, Fast facts", "url": "https://www.washingtonwine.org/fast-facts/" },
+        { "title": "Washington State Wine Commission, Regions and AVAs", "url": "https://www.washingtonwine.org/regions-and-avas/" },
+        { "title": "Washington State Wine Commission, Columbia Valley AVA", "url": "https://www.washingtonwine.org/resource/columbia-valley-ava/" },
+        { "title": "Washington State Wine Commission, History", "url": "https://www.washingtonwine.org/history/" },
+        { "title": "Soil and climate GIS-derived risk mapping for grape phylloxera in Washington State (Frontiers in Plant Science, 2022)", "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8888419/" },
+        { "title": "Washington State University Viticulture & Enology, Phylloxera", "url": "https://wine.wsu.edu/extension/pest-management/phylloxera/" }
+      ]
+    },
+    "united-states.washington.columbia-valley": {
+      "article": {
+        "description": "Washington's inland AVA, established in 1984, covering more than 11 million acres of central and south-eastern Washington and a part of north-central Oregon. It holds over 99 per cent of Washington's vineyard acreage and most of the state's other AVAs, among them Yakima Valley, Red Mountain, Horse Heaven Hills and Walla Walla Valley.",
+        "climate": "Arid and semi-arid, in the rain shadow of the Cascades, with 6 to 8 inches of rain a year; the vineyards are irrigated from the Columbia River and its tributaries. Long summer days of sunlight and a wide gap between day and night temperatures.",
+        "soils": "Loess, wind-blown sand and silt, over gravel and slackwater sediment laid down by the Ice Age floods, with basalt beneath.",
+        "grape_varieties": "Cabernet Sauvignon, Chardonnay, Merlot, Riesling and Syrah lead.",
+        "wine_styles": "Dry reds and whites above all, and Riesling in styles from dry to sweet.",
+        "key_facts": [
+          "Established 1984 (27 CFR 9.74); spans Washington and Oregon",
+          "More than 11 million acres in all (Washington State Wine Commission)",
+          "Over 99% of Washington's vineyard acreage lies inside it",
+          "Contains Yakima Valley, Washington's first AVA (1983), and Red Mountain (2001)"
+        ]
+      },
+      "styles": ["RED", "WHITE", "ROSE", "SWEET"],
+      "grapes": [
+        { "name": "Cabernet Sauvignon" },
+        { "name": "Chardonnay" },
+        { "name": "Merlot" },
+        { "name": "Riesling" },
+        { "name": "Syrah" }
+      ],
+      "sources": [
+        { "title": "27 CFR 9.74, Columbia Valley (eCFR text via Cornell LII)", "url": "https://www.law.cornell.edu/cfr/text/27/9.74" },
+        { "title": "TTB, Established American Viticultural Areas (Columbia Valley: OR, WA)", "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/established-avas" },
+        { "title": "Washington State Wine Commission, Columbia Valley AVA", "url": "https://www.washingtonwine.org/resource/columbia-valley-ava/" },
+        { "title": "Washington State Wine Commission, Regions and AVAs", "url": "https://www.washingtonwine.org/regions-and-avas/" }
+      ]
+    },
+    "united-states.washington.puget-sound": {
+      "article": {
+        "description": "An AVA west of the Cascades, established in 1995 in the lowlands around Puget Sound and its islands. It is large, about 5.5 million acres, but has only about 121 acres of vines, and it grows varieties seen nowhere else in the state, such as Madeleine Angevine and Siegerrebe.",
+        "climate": "Temperate and maritime: Washington's coolest and wettest growing region, with 15 to 60 inches of rain a year, most of it between November and April.",
+        "soils": "Laid down by the ice sheet that shaped the Sound: glacial till, which gives sandy, rocky, well-drained soils, and outwash gravels and sands left by meltwater streams.",
+        "grape_varieties": "Pinot Noir and Riesling are the main grapes, with Müller-Thurgau, Madeleine Angevine, Siegerrebe and other early-ripening varieties.",
+        "wine_styles": "Light, crisp whites and light reds, mostly Pinot Noir.",
+        "key_facts": [
+          "Established 1995 (27 CFR 9.151)",
+          "About 121 planted acres within 5.5 million acres (Washington State Wine Commission)",
+          "Washington's coolest and wettest growing region",
+          "Grows Madeleine Angevine and Siegerrebe, seen nowhere else in the state"
+        ]
+      },
+      "styles": ["WHITE", "RED"],
+      "grapes": [
+        { "name": "Pinot Noir" },
+        { "name": "Riesling" },
+        { "name": "Müller-Thurgau" }
+      ],
+      "sources": [
+        { "title": "27 CFR 9.151, Puget Sound (eCFR text via Cornell LII)", "url": "https://www.law.cornell.edu/cfr/text/27/9.151" },
+        { "title": "Washington State Wine Commission, Puget Sound AVA", "url": "https://www.washingtonwine.org/resource/puget-sound-ava/" },
+        { "title": "Washington State University (Cogger), Soils of the Puget Sound area", "url": "https://wpcdn.web.wsu.edu/wp-puyallup/uploads/sites/411/2014/12/SS_Soils_PugetSound_Jan11.pdf" }
+      ]
+    }
+  }
+}
