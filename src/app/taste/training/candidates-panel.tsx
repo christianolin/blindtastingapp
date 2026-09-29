@@ -10,14 +10,21 @@
 // An open region's first row links to the MAP region its wines sit in
 // (training-room-map spec RM8), never inside the region row's own <button>.
 // CandidateRow, RegionGroups and ShowAllRegions are shared with the phone sheet.
+// With the likelihood map on (training-room-map spec RM19), a List | Map
+// tablist sits beside the heading: the list stays mounted (hidden) under Map,
+// so its open regions and Show all come back as they were, and the map
+// mounts only while Map is open, and only here at lg+ (the phone sheet owns
+// it below lg). A dot, a spot's button or an unmapped name opens the SAME
+// popover a row does (CandidateDetailPopover), anchored to the dot.
 // Tokens only: the bars are --primary, a capped row --muted-foreground.
-import { useRef, useState } from "react";
-import { ChevronDown } from "lucide-react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { ArrowLeft, ChevronDown } from "lucide-react";
 import { Popover as PopoverPrimitive } from "@base-ui/react/popover";
 import { Eyebrow } from "@/components/overview/eyebrow";
 import { finePointer } from "@/lib/fine-pointer";
 import {
   TRAINING_COPY,
+  chooserTitle,
   groupSubLine,
   lineageLine,
   percentLabel,
@@ -38,7 +45,13 @@ import type { RankedCandidate, RegionGroup } from "@/lib/training/types";
 import type { WsetNoteState } from "@/lib/wset/types";
 import { cn } from "@/lib/utils";
 import { ArchetypeDetail } from "./archetype-detail";
+import { MapFallback } from "./map-fallback";
 import { GroupMapLink } from "./map-link";
+import { MapSwitch, panelId, tabId } from "./map-switch";
+import type { VirtualAnchor } from "./map-types";
+import { RoomMapSlot } from "./room-map-slot";
+import type { RoomMap } from "./room-map-state";
+import { LG_QUERY, useMedia } from "./use-media";
 
 // 44 px on touch, the row's own height on a laptop pointer.
 const TAP = "min-h-11 md:pointer-fine:min-h-0";
@@ -209,88 +222,297 @@ export function ShowAllRegions({ view, onShowAll }: { view: RegionPanelView; onS
   );
 }
 
-export function CandidatesPanel({ groups, note }: { groups: RegionGroup[]; note: WsetNoteState }) {
-  const [showAll, setShowAll] = useState(false);
-  const [expand, setExpand] = useState<ExpandState>({});
-  const [detail, setDetail] = useState<{ id: string; anchor: HTMLElement } | null>(null);
-  const view = regionPanelView(groups, showAll);
-  const open = detail ? findMember(groups, detail.id) : null;
+/** What the laptop popover shows and where it is anchored (training-room-map
+    spec RM18): a list row's wine, or what the map opened — a dot, a spot's
+    "Closest on the map" button or an unmapped name — which is one wine's
+    detail, or a chooser of the wines at one spot until one is chosen. */
+export type PopoverTarget =
+  | { kind: "row"; id: string; anchor: HTMLElement }
+  | {
+      kind: "map";
+      ids: string[];
+      chosen: string | null;
+      anchor: Element | VirtualAnchor;
+      returnFocus: HTMLElement;
+    };
+
+/** The wine a target shows in full; null while it is a chooser. */
+export function targetDetailId(target: PopoverTarget): string | null {
+  if (target.kind === "row") return target.id;
+  return target.chosen ?? (target.ids.length === 1 ? target.ids[0] : null);
+}
+
+/** The dots that wear the gold ring: what the map opened, while it is open. */
+export function selectedMapIds(target: PopoverTarget | null): string[] {
+  if (!target || target.kind !== "map") return [];
+  return target.chosen ? [target.chosen] : target.ids;
+}
+
+/** A target the current view can still show: a row's popover needs the list,
+    a map's needs the map (the other view's anchor is hidden or gone). */
+export function visibleTarget(target: PopoverTarget | null, mapView: boolean): PopoverTarget | null {
+  if (!target) return null;
+  return (target.kind === "map") === mapView ? target : null;
+}
+
+/** "{n} wines here": the wines a tap hit, as the list's own rows, best first (RM18). */
+export function MapChooser({ wines, onChoose }: { wines: RankedCandidate[]; onChoose: (id: string) => void }) {
+  return (
+    <ul className="flex flex-col">
+      {wines.map((r) => (
+        <li key={r.candidate.id}>
+          <CandidateRow r={r} onOpen={() => onChoose(r.candidate.id)} />
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/**
+ * The laptop column's one popover (extracted for training-room-map spec
+ * RM18): a list row's detail anchored to the row, as before, or what the map
+ * opened, anchored to the dot's point (a virtual element) or the button
+ * pressed. A row's own press toggles it (pressOnOwningRow); a map target has
+ * no row, so any press outside closes it. On a fine pointer focus moves in,
+ * and on close goes back to the row, the map container (tabIndex -1) or the
+ * button — never to <body>.
+ */
+export function CandidateDetailPopover({
+  target,
+  lookup,
+  note,
+  onChoose,
+  onBack,
+  onClose,
+}: {
+  target: PopoverTarget | null;
+  lookup: (id: string) => RankedCandidate | null;
+  note: WsetNoteState;
+  /** A chooser row: show that wine. */
+  onChoose: (id: string) => void;
+  /** Back from a chosen wine to its chooser. */
+  onBack: () => void;
+  onClose: () => void;
+}) {
   const popupRef = useRef<HTMLDivElement>(null);
-  // The row the open popover belongs to, and why it last closed: kept outside
-  // `detail`, which is already null by the time the focus goes back.
-  const anchorRef = useRef<HTMLElement | null>(null);
+  // Why it last closed, and what it belonged to: kept outside `target`, which
+  // is already null by the time the focus goes back.
   const closeReason = useRef<string | null>(null);
+  const owner = useRef<{ row: HTMLElement | null; returnFocus: HTMLElement | null }>({ row: null, returnFocus: null });
+  useEffect(() => {
+    if (!target) return;
+    closeReason.current = null;
+    owner.current =
+      target.kind === "row"
+        ? { row: target.anchor, returnFocus: target.anchor }
+        : { row: null, returnFocus: target.returnFocus };
+  }, [target]);
+
+  const detailId = target ? targetDetailId(target) : null;
+  const detail = detailId ? lookup(detailId) : null;
+  const chooser =
+    target && target.kind === "map" && detailId === null
+      ? target.ids.map(lookup).filter((r): r is RankedCandidate => r !== null)
+      : null;
+  const canGoBack = target?.kind === "map" && target.chosen !== null && target.ids.length > 1;
+  // After a swap inside the popup, keep focus in it (fine pointer only).
+  const refocus = () => {
+    if (finePointer()) requestAnimationFrame(() => popupRef.current?.focus());
+  };
 
   return (
-    <section
-      aria-labelledby="training-candidates"
-      className="flex flex-col gap-2 rounded-[12px] border border-border bg-card p-2"
+    <PopoverPrimitive.Root
+      open={detail !== null || chooser !== null}
+      onOpenChange={(next, details) => {
+        if (next) return;
+        // A press on the owning row is the row's to handle: its click, which
+        // follows, closes the popover (the panel's onOpen).
+        const pressed = details.event?.target;
+        if (pressOnOwningRow(details.reason, owner.current.row, pressed instanceof Node ? pressed : null)) {
+          details.cancel();
+          return;
+        }
+        closeReason.current = details.reason;
+        onClose();
+      }}
+      modal={false}
     >
-      <h2 id="training-candidates" className="px-3 pt-2 font-heading text-[19px] font-semibold">
-        {TRAINING_COPY.candidatesHeading}
-      </h2>
-      {view.before ? (
+      <PopoverPrimitive.Portal>
+        <PopoverPrimitive.Positioner
+          anchor={target?.anchor ?? null}
+          positionMethod="fixed"
+          side="left"
+          align="start"
+          sideOffset={12}
+          collisionPadding={16}
+          className="z-50"
+        >
+          <PopoverPrimitive.Popup
+            ref={popupRef}
+            aria-label={chooser ? chooserTitle(chooser.length) : detail ? detail.candidate.name : undefined}
+            initialFocus={() => (finePointer() ? popupRef.current : false)}
+            finalFocus={() =>
+              detailReturnsFocus(closeReason.current, finePointer()) ? (owner.current.returnFocus ?? false) : false
+            }
+            className="max-h-[80vh] w-[560px] overflow-y-auto overscroll-contain rounded-2xl bg-background p-4 shadow-lg ring-1 ring-foreground/10 outline-hidden"
+          >
+            {chooser ? (
+              <div className="flex flex-col gap-2">
+                <p className="px-3 font-heading text-[17px] font-semibold">{chooserTitle(chooser.length)}</p>
+                <MapChooser
+                  wines={chooser}
+                  onChoose={(id) => {
+                    onChoose(id);
+                    refocus();
+                  }}
+                />
+              </div>
+            ) : detail ? (
+              <div className="flex flex-col gap-2">
+                {canGoBack ? (
+                  <button
+                    type="button"
+                    aria-label={TRAINING_COPY.back}
+                    onClick={() => {
+                      onBack();
+                      refocus();
+                    }}
+                    className="-ml-2 inline-flex size-11 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring md:pointer-fine:size-8"
+                  >
+                    <ArrowLeft aria-hidden className="size-5" />
+                  </button>
+                ) : null}
+                <ArchetypeDetail candidate={detail.candidate} note={note} />
+              </div>
+            ) : null}
+          </PopoverPrimitive.Popup>
+        </PopoverPrimitive.Positioner>
+      </PopoverPrimitive.Portal>
+    </PopoverPrimitive.Root>
+  );
+}
+
+export function CandidatesPanel({
+  groups,
+  ranked,
+  note,
+  roomMap,
+}: {
+  groups: RegionGroup[];
+  ranked: RankedCandidate[];
+  note: WsetNoteState;
+  /** The List | Map switch's state (training-room-map spec RM19); null when
+      NEXT_PUBLIC_TRAINING_MAP=0, and the column is exactly R1's. */
+  roomMap: RoomMap | null;
+}) {
+  const [showAll, setShowAll] = useState(false);
+  const [expand, setExpand] = useState<ExpandState>({});
+  const [target, setTarget] = useState<PopoverTarget | null>(null);
+  const idBase = useId();
+  // Only the laptop column mounts the map here: below lg this aside is
+  // display:none and the phone sheet owns the map (one WebGL context).
+  const wide = useMedia(LG_QUERY, false);
+  const view = regionPanelView(groups, showAll);
+  const byId = useMemo(() => new Map(ranked.map((r) => [r.candidate.id, r] as const)), [ranked]);
+  const lookup = (id: string) => byId.get(id) ?? findMember(groups, id);
+  const mapView = roomMap?.state.view === "map";
+  const shown = visibleTarget(target, mapView);
+  const openRowId = shown?.kind === "row" ? shown.id : null;
+
+  const list = (
+    <>
+      {view.before && !mapView ? (
         <p className="px-3 text-[12.5px] text-muted-foreground">{TRAINING_COPY.beforeAnswers}</p>
       ) : null}
       <RegionGroups
         view={view}
         expand={expand}
         onToggle={(key) => setExpand((e) => toggleGroup(e, key, view.topKey))}
-        openId={open ? open.candidate.id : null}
+        openId={openRowId}
         onOpen={(id, anchor) => {
           // The open popover's own row toggles it closed, as a trigger would.
-          if (detail?.id === id) {
-            closeReason.current = "trigger-press";
-            setDetail(null);
+          if (openRowId === id) {
+            setTarget(null);
             return;
           }
-          anchorRef.current = anchor;
-          closeReason.current = null;
-          setDetail({ id, anchor });
+          setTarget({ kind: "row", id, anchor });
         }}
       />
       <ShowAllRegions view={view} onShowAll={() => setShowAll(true)} />
+    </>
+  );
 
-      <PopoverPrimitive.Root
-        open={open !== null}
-        onOpenChange={(next, details) => {
-          if (next) return;
-          // A press on the owning row is the row's to handle: its click, which
-          // follows, closes the popover (onOpen above).
-          const target = details.event?.target;
-          if (pressOnOwningRow(details.reason, anchorRef.current, target instanceof Node ? target : null)) {
-            details.cancel();
-            return;
-          }
-          closeReason.current = details.reason;
-          setDetail(null);
-        }}
-        modal={false}
-      >
-        <PopoverPrimitive.Portal>
-          <PopoverPrimitive.Positioner
-            anchor={detail?.anchor ?? null}
-            positionMethod="fixed"
-            side="left"
-            align="start"
-            sideOffset={12}
-            collisionPadding={16}
-            className="z-50"
+  return (
+    <section
+      aria-labelledby="training-candidates"
+      className="flex flex-col gap-2 rounded-[12px] border border-border bg-card p-2"
+    >
+      {roomMap ? (
+        <>
+          <div className="flex items-center gap-2 px-3 pt-2">
+            <h2 id="training-candidates" className="min-w-0 flex-1 font-heading text-[19px] font-semibold">
+              {TRAINING_COPY.candidatesHeading}
+            </h2>
+            <MapSwitch
+              idBase={idBase}
+              view={roomMap.state.view}
+              onSelect={(v) => roomMap.dispatch({ type: "select", view: v })}
+              onWarm={roomMap.warm}
+            />
+          </div>
+          <div
+            role="tabpanel"
+            id={panelId(idBase, "list")}
+            aria-labelledby={tabId(idBase, "list")}
+            hidden={mapView}
+            className="flex flex-col gap-2"
           >
-            <PopoverPrimitive.Popup
-              ref={popupRef}
-              aria-label={open ? open.candidate.name : undefined}
-              initialFocus={() => (finePointer() ? popupRef.current : false)}
-              finalFocus={() =>
-                detailReturnsFocus(closeReason.current, finePointer()) ? (anchorRef.current ?? false) : false
-              }
-              className="max-h-[80vh] w-[560px] overflow-y-auto overscroll-contain rounded-2xl bg-background p-4 shadow-lg ring-1 ring-foreground/10 outline-hidden"
-            >
-              {open ? <ArchetypeDetail candidate={open.candidate} note={note} /> : null}
-            </PopoverPrimitive.Popup>
-          </PopoverPrimitive.Positioner>
-        </PopoverPrimitive.Portal>
-      </PopoverPrimitive.Root>
+            {roomMap.state.fault === "stopped" ? (
+              <div className="px-1">
+                <MapFallback kind="stopped" onRetry={() => roomMap.dispatch({ type: "retry" })} />
+              </div>
+            ) : null}
+            {list}
+          </div>
+          <div
+            role="tabpanel"
+            id={panelId(idBase, "map")}
+            aria-labelledby={tabId(idBase, "map")}
+            hidden={!mapView}
+            className="flex flex-col gap-2 px-1 pb-1"
+          >
+            {mapView && wide ? (
+              <RoomMapSlot
+                roomMap={roomMap}
+                ranked={ranked}
+                layout="column"
+                selectedIds={selectedMapIds(shown)}
+                onOpen={(request) =>
+                  setTarget({ kind: "map", chosen: null, ...request })
+                }
+                // Any camera move: the dot's point would drift under the popover.
+                onMoveStart={() => setTarget((t) => (t?.kind === "map" ? null : t))}
+              />
+            ) : null}
+          </div>
+        </>
+      ) : (
+        <>
+          <h2 id="training-candidates" className="px-3 pt-2 font-heading text-[19px] font-semibold">
+            {TRAINING_COPY.candidatesHeading}
+          </h2>
+          {list}
+        </>
+      )}
+
+      <CandidateDetailPopover
+        target={shown}
+        lookup={lookup}
+        note={note}
+        onChoose={(id) => setTarget((t) => (t?.kind === "map" ? { ...t, chosen: id } : t))}
+        onBack={() => setTarget((t) => (t?.kind === "map" ? { ...t, chosen: null } : t))}
+        onClose={() => setTarget(null)}
+      />
     </section>
   );
 }

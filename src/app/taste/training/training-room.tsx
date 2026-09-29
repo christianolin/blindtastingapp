@@ -11,10 +11,19 @@
 // change (D6). Every switch between the three starts at the top of the app
 // shell's content column, the page's scroll container (the window never
 // scrolls in this app), with keyboard focus on the new view's heading.
+//
+// The candidates' List | Map choice (training-room-map spec RM19, RM22) is
+// state HERE, not in the panel or the sheet: it survives the phone sheet
+// closing and reopening and a new session started without a reload, resets
+// with the page, and is never written to browser storage. With
+// NEXT_PUBLIC_TRAINING_MAP=0 at build, no tablist renders and the room is R1.
+// Pointing at or focusing the Map tab warms the map's code and the basemap
+// style (RM24), both by dynamic import, so neither enters this first load.
 import {
   useCallback,
   useEffect,
   useMemo,
+  useReducer,
   useRef,
   useState,
   useSyncExternalStore,
@@ -61,6 +70,7 @@ import type {
 } from "@/lib/training/types";
 import { aromasToPayload, emptyNoteState, noteToPayload } from "@/lib/wset/note-state";
 import type { AromaTerm, WineColour, WineStyle, WsetNoteState } from "@/lib/wset/types";
+import { themeOfRoot } from "@/lib/rendered-theme";
 import { cn } from "@/lib/utils";
 import { finishTrainingSession, loadTrainingAttempt } from "./actions";
 import { CandidatesPanel } from "./candidates-panel";
@@ -68,6 +78,8 @@ import { CandidatesSheet } from "./candidates-sheet";
 import { CandidatesStrip } from "./candidates-strip";
 import { HistoryList } from "./history-list";
 import { ResultView } from "./result-view";
+import { ROOM_MAP_START, TRAINING_MAP_ENABLED, roomMapReducer, type RoomMap } from "./room-map-state";
+import { loadTrainingMap } from "./training-map-loader";
 import { YourCall } from "./your-call";
 
 const TAP = "min-h-11 md:pointer-fine:min-h-0";
@@ -202,6 +214,25 @@ export function TrainingRoom({
   );
   // The same ranking by region (region-guess addendum R1-R3).
   const groups = useMemo(() => groupRanking(ranked), [ranked]);
+
+  // List | Map (training-room-map spec RM19, RM22, RM24).
+  const [mapState, mapDispatch] = useReducer(roomMapReducer, ROOM_MAP_START);
+  const warmed = useRef(false);
+  const warmMap = useCallback(() => {
+    if (warmed.current) return;
+    warmed.current = true;
+    // A rejected import stays rejected: opening Map then says to reload.
+    loadTrainingMap().catch(() => mapDispatch({ type: "chunkFailed" }));
+    import("@/lib/wine-map/basemap").then(
+      // One shared request per theme; a failed style fetch is the map's own to handle.
+      (m) => m.loadBasemapStyle(themeOfRoot(document.documentElement)).catch(() => {}),
+      () => mapDispatch({ type: "chunkFailed" }),
+    );
+  }, []);
+  const roomMap = useMemo<RoomMap | null>(
+    () => (TRAINING_MAP_ENABLED ? { state: mapState, dispatch: mapDispatch, warm: warmMap } : null),
+    [mapState, warmMap],
+  );
 
   // Functional updates: the sheet's onChange and a Bubbles/Fortified tap can
   // land in the same tick, and neither may overwrite the other.
@@ -410,14 +441,16 @@ export function TrainingRoom({
               only once the page reaches its end. training-room-layout.test.ts
               pins it. */}
           <aside className="sticky top-[72px] hidden max-h-[calc(100dvh-88px)] self-start overflow-y-auto lg:block">
-            <CandidatesPanel groups={groups} note={session.note} />
+            <CandidatesPanel groups={groups} ranked={ranked} note={session.note} roomMap={roomMap} />
           </aside>
         </div>
         <CandidatesSheet
           open={sheetOpen}
           onOpenChange={setSheetOpen}
           groups={groups}
+          ranked={ranked}
           note={session.note}
+          roomMap={roomMap}
           returnFocusRef={stripRef}
         />
       </>
