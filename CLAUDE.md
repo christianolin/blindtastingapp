@@ -1248,7 +1248,8 @@ a raw subquery, regardless of which two tables look involved at a glance.
   likelihood, room map or matcher output in a tasting, a lobby or the play
   page. Links both ways: a typical wine's detail in the room (laptop popover
   and phone sheet, `ArchetypeDetail`) ends with "See it on the wine map" — a
-  NEW TAB (owner O1) to `/knowledge/map?place=<home key>` (`placeHref`,
+  NEW TAB (owner O1) to `/knowledge/map?place=<home key>` (`placeHref` in
+  `src/lib/training/copy.ts`, rendered by
   `src/app/taste/training/map-link.tsx`) — or plain "Not on the wine map
   yet"; an expanded region group's first row (its own `<li>`, never inside
   the region row's `<button>`) names the MAP region its wines sit in
@@ -1285,9 +1286,23 @@ a raw subquery, regardless of which two tables look involved at a glance.
   drift guard fails when a placed wine lacks it — an editor re-home
   (`updateArchetype` leaves placements alone) or a migration that places an
   archetype without it (the USA wave: Napa → its California REGION); the fix
-  is a placement add in `/admin/archetypes`. Nothing here writes
+  is a placement add in `/admin/archetypes`. Placing Napa also breaks the
+  batch-1 test's `{ wine_place_id: null, placements: 0 }` Napa assertion in
+  the same suite (the one Napa assertion; the RPC test's unplaced pick is
+  Mendoza on purpose), which that wave must update. Nothing here writes
   `wine_places` or `wine_place_boundaries` (no neighbour refresh, no tiles
-  run) or recreates a shared map function.
+  run) or recreates a shared map function. **Rollout order:** R1a first
+  (dry-run, the DB suite with `TRAINING_ROOM_APPLY`, apply), then
+  `check-rpc.mjs`, then the app deploy; the app tolerates the reverse order
+  (the fail-soft read), but ship it in this order. R1b is independent of
+  the app and ships on its own. **Rollback:** revert the app first, then
+  `scripts/training-room-map/rollback-r1a.sql` (dropping the function under
+  a deployed app turns every wine into "Not on the wine map yet");
+  `rollback-r1b.sql` any time. R1a's own assert signs in as a fake reader
+  and puts `request.jwt.claims` back before it ends — `reset role` alone
+  leaves `auth.uid()` as the zero UUID for the rest of the applier's
+  transaction, and the suite's first R1 test fails if any file under test
+  does that.
 - **Aroma lexicon v2** (2026-09-29, migration
   `20260929090000_aroma_lexicon_v2.sql`, data only; spec, lexicon review and
   the typical-wine votes in `data/training/aroma-lexicon-v2-2026-09-29.json`).
