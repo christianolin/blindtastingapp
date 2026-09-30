@@ -1,0 +1,598 @@
+{
+  "_generated_by": "scripts/usa-map/rehearse-us2.mjs",
+  "git_head": "3108e4b043e0bd34eff03951f9840f2ca1b27ea2",
+  "rehearsed_at": "2026-09-30T05:36:54.972Z",
+  "cache_before": {
+    "fresh": false,
+    "built_at": "2026-09-20T13:39:14.163Z"
+  },
+  "applied_in_transaction": [
+    "supabase/migrations/20260930084747_usa_us2_catalog.sql",
+    "supabase/migrations/20260930094747_usa_us2_knowledge.sql",
+    "stageWave",
+    "supabase/migrations/20260930104747_usa_us2_promote.sql",
+    "supabase/migrations/20260930114747_usa_archetype_links_1.sql"
+  ],
+  "catalog_refresh_rows": 15217,
+  "promote_refresh_rows": 15232,
+  "timings_s": {
+    "catalog": 65.8,
+    "catalog_refresh_s": 65.6,
+    "contexts": 0.3,
+    "drill_remove": 66.4,
+    "drill_unpublish": 64.4,
+    "drill_unstage": 64,
+    "export_preview": 0.1,
+    "knowledge": 0.2,
+    "links": 0.2,
+    "promote": 73.1,
+    "promote_refresh_s": 71.8,
+    "shortlists_after": 0.7,
+    "shortlists_before": 0.7,
+    "stage": 5
+  },
+  "refusals": {
+    "A_promote_before_stage": "US-2 promote: expected exactly one DRAFT, non-current boundary per place (run stage-usa-ava.mjs --stage first): united-states, united-states.california, united-states.california.central-coast, united-states.california.central-valley, united-states.california.north-coast, united-states.california.sierra-foothills, united-states.california.south-coast, united-states.new-york, united-states.new-york.finger-lakes, united-states.new-york.long-island, united-states.oregon, united-states.oregon.southern-oregon, united-states.oregon.willamette-valley, united-states.washington, united-states.washington.columbia-valley, united-states.washington.puget-sound",
+    "B_links_before_promote": "US archetype links: united-states.california, united-states.california.north-coast, united-states.oregon, united-states.oregon.willamette-valley is not VERIFIED with a current boundary (apply after the US-2 promote)",
+    "C_stage_twice": "16 united-states boundaries already exist",
+    "D_unpublish_before_promote": "US-2 unpublish: not VERIFIED with one current boundary: united-states, united-states.california, united-states.california.central-coast, united-states.california.central-valley, united-states.california.north-coast, united-states.california.sierra-foothills, united-states.california.south-coast, united-states.new-york, united-states.new-york.finger-lakes, united-states.new-york.long-island, united-states.oregon, united-states.oregon.southern-oregon, united-states.oregon.willamette-valley, united-states.washington, united-states.washington.columbia-valley, united-states.washington.puget-sound",
+    "E_remove_after_promote": "US-2 remove: keys are locked (the promote ran): use the unpublish file instead (united-states, united-states.california, united-states.california.central-coast, united-states.california.central-valley, united-states.california.north-coast, united-states.california.sierra-foothills, united-states.california.south-coast, united-states.new-york, united-states.new-york.finger-lakes, united-states.new-york.long-island, united-states.oregon, united-states.oregon.southern-oregon, united-states.oregon.willamette-valley, united-states.washington, united-states.washington.columbia-valley, united-states.washington.puget-sound)"
+  },
+  "rollbacks": {
+    "unstage": {
+      "us_boundaries": 0,
+      "draft_places": 16,
+      "fresh": true,
+      "refresh_s": 63.9
+    },
+    "remove": {
+      "us_places": 0,
+      "history_rows": 0,
+      "fresh": true,
+      "refresh_s": 66.2
+    },
+    "unpublish": {
+      "verified": 0,
+      "us_placements": 0,
+      "null_homes": 3,
+      "points_restored": true,
+      "with_point": 18,
+      "fresh": true,
+      "refresh_s": 64.2
+    }
+  },
+  "facts": {
+    "places": 16,
+    "verified": 16,
+    "current_validated": 16,
+    "draft_boundaries": 0,
+    "relationships": 1,
+    "fresh": true,
+    "locked": 16,
+    "outline": 10
+  },
+  "contexts": {
+    "united-states": {
+      "article": true,
+      "grapes": 8,
+      "styles": 5,
+      "children": 4
+    },
+    "united-states.california": {
+      "article": true,
+      "grapes": 8,
+      "styles": 4,
+      "children": 5
+    },
+    "united-states.washington": {
+      "article": true,
+      "grapes": 7,
+      "styles": 4,
+      "children": 2
+    },
+    "united-states.oregon": {
+      "article": true,
+      "grapes": 7,
+      "styles": 4,
+      "children": 2
+    },
+    "united-states.new-york": {
+      "article": true,
+      "grapes": 7,
+      "styles": 5,
+      "children": 2
+    },
+    "united-states.california.central-valley": {
+      "article": true,
+      "grapes": 6,
+      "styles": 4,
+      "children": 0
+    }
+  },
+  "shortlist": {
+    "California": {
+      "before_source": "region_grapes",
+      "before": [
+        "Cabernet Sauvignon",
+        "Chardonnay",
+        "Zinfandel"
+      ],
+      "after_source": "map",
+      "after": [
+        "Cabernet Sauvignon",
+        "Chardonnay",
+        "Zinfandel",
+        "Syrah",
+        "Petite Sirah",
+        "Pinot Noir",
+        "Sauvignon Blanc",
+        "Merlot",
+        "Barbera",
+        "Chenin Blanc",
+        "Grenache",
+        "Muscat"
+      ],
+      "after_place": "California"
+    },
+    "Washington": {
+      "before_source": "region_grapes",
+      "before": [
+        "Cabernet Sauvignon",
+        "Merlot",
+        "Riesling",
+        "Syrah"
+      ],
+      "after_source": "map",
+      "after": [
+        "Riesling",
+        "Cabernet Sauvignon",
+        "Chardonnay",
+        "Merlot",
+        "Syrah",
+        "Cabernet Franc",
+        "Müller-Thurgau",
+        "Pinot Noir",
+        "Sauvignon Blanc"
+      ],
+      "after_place": "Washington"
+    },
+    "Oregon": {
+      "before_source": "region_grapes",
+      "before": [
+        "Pinot Noir",
+        "Pinot Gris"
+      ],
+      "after_source": "map",
+      "after": [
+        "Chardonnay",
+        "Pinot Gris",
+        "Pinot Noir",
+        "Cabernet Sauvignon",
+        "Riesling",
+        "Syrah",
+        "Tempranillo",
+        "Merlot",
+        "Pinot Blanc",
+        "Viognier"
+      ],
+      "after_place": "Oregon"
+    },
+    "New York": {
+      "before_source": "region_grapes",
+      "before": [
+        "Riesling",
+        "Cabernet Franc"
+      ],
+      "after_source": "map",
+      "after": [
+        "Cabernet Franc",
+        "Chardonnay",
+        "Blaufränkisch",
+        "Gewürztraminer",
+        "Merlot",
+        "Pinot Noir",
+        "Riesling",
+        "Cabernet Sauvignon",
+        "Sauvignon Blanc"
+      ],
+      "after_place": "New York"
+    }
+  },
+  "export_preview": {
+    "world": [
+      "united-states",
+      "united-states.california",
+      "united-states.new-york",
+      "united-states.oregon",
+      "united-states.washington"
+    ],
+    "shards": {
+      "california": {
+        "keys": [
+          "united-states.california",
+          "united-states.california.central-coast",
+          "united-states.california.central-valley",
+          "united-states.california.north-coast",
+          "united-states.california.sierra-foothills",
+          "united-states.california.south-coast"
+        ],
+        "bytes": 248822,
+        "max_zoom": 7
+      },
+      "new-york": {
+        "keys": [
+          "united-states.new-york",
+          "united-states.new-york.finger-lakes",
+          "united-states.new-york.long-island"
+        ],
+        "bytes": 174996,
+        "max_zoom": 7
+      },
+      "oregon": {
+        "keys": [
+          "united-states.oregon",
+          "united-states.oregon.southern-oregon",
+          "united-states.oregon.willamette-valley"
+        ],
+        "bytes": 482576,
+        "max_zoom": 7
+      },
+      "washington": {
+        "keys": [
+          "united-states.washington",
+          "united-states.washington.columbia-valley",
+          "united-states.washington.puget-sound"
+        ],
+        "bytes": 261041,
+        "max_zoom": 7
+      }
+    },
+    "outline": [
+      "united-states.california.central-coast",
+      "united-states.california.central-valley",
+      "united-states.california.north-coast",
+      "united-states.california.sierra-foothills",
+      "united-states.california.south-coast",
+      "united-states.new-york.finger-lakes",
+      "united-states.oregon.southern-oregon",
+      "united-states.oregon.willamette-valley",
+      "united-states.washington.columbia-valley",
+      "united-states.washington.puget-sound"
+    ],
+    "outside": []
+  },
+  "archetypes": {
+    "links": [
+      {
+        "id": "75e4e467-3929-4844-bbc4-ffe8b12523a1",
+        "name": "A typical Napa Cabernet Sauvignon",
+        "home": "united-states.california.north-coast",
+        "placements": [
+          "united-states.california",
+          "united-states.california.north-coast"
+        ]
+      },
+      {
+        "id": "c4ea77f3-5599-43dd-bdc3-4287c1e0ea15",
+        "name": "A typical Sonoma Chardonnay",
+        "home": "united-states.california.north-coast",
+        "placements": [
+          "united-states.california",
+          "united-states.california.north-coast"
+        ]
+      },
+      {
+        "id": "bab8537e-b0bc-4f7c-8547-242537322f8a",
+        "name": "A typical Willamette Pinot Noir",
+        "home": "united-states.oregon.willamette-valley",
+        "placements": [
+          "united-states.oregon",
+          "united-states.oregon.willamette-valley"
+        ]
+      }
+    ],
+    "room": [
+      {
+        "archetype_id": "75e4e467-3929-4844-bbc4-ffe8b12523a1",
+        "place_key": "united-states.california.north-coast",
+        "region_key": "united-states.california"
+      },
+      {
+        "archetype_id": "bab8537e-b0bc-4f7c-8547-242537322f8a",
+        "place_key": "united-states.oregon.willamette-valley",
+        "region_key": "united-states.oregon"
+      },
+      {
+        "archetype_id": "c4ea77f3-5599-43dd-bdc3-4287c1e0ea15",
+        "place_key": "united-states.california.north-coast",
+        "region_key": "united-states.california"
+      }
+    ],
+    "points": {
+      "with_point": 15,
+      "placed_with_point": 0
+    }
+  },
+  "stage_report": [
+    {
+      "key": "united-states",
+      "role": "ne-country",
+      "npoints": 3229,
+      "nparts": 66,
+      "km2": 7784485.57,
+      "raw_km2": 7784485.57,
+      "drift": null,
+      "containment": null,
+      "datum_m": null,
+      "bbox": [
+        -124.71,
+        24.5423,
+        -66.987,
+        49.3697
+      ]
+    },
+    {
+      "key": "united-states.california",
+      "role": "ne-state",
+      "npoints": 306,
+      "nparts": 7,
+      "km2": 409550.132,
+      "raw_km2": 409550.132,
+      "drift": null,
+      "containment": null,
+      "datum_m": null,
+      "bbox": [
+        -124.3717,
+        32.5334,
+        -114.125,
+        42.0008
+      ]
+    },
+    {
+      "key": "united-states.california.central-coast",
+      "role": "ucd",
+      "npoints": 3976,
+      "nparts": 1,
+      "km2": 27490.49,
+      "raw_km2": 27490.268,
+      "drift": 0.00001,
+      "containment": 1,
+      "datum_m": 16.5,
+      "bbox": [
+        -122.52088,
+        34.39482,
+        -119.56523,
+        38.0583
+      ]
+    },
+    {
+      "key": "united-states.california.central-valley",
+      "role": "derived",
+      "npoints": 3225,
+      "nparts": 10,
+      "km2": 5595.458,
+      "raw_km2": 5594.183,
+      "drift": 0.00023,
+      "containment": 1,
+      "datum_m": 16.5,
+      "bbox": [
+        -122.42282,
+        36.76313,
+        -119.69137,
+        38.92509
+      ]
+    },
+    {
+      "key": "united-states.california.north-coast",
+      "role": "ucd",
+      "npoints": 2281,
+      "nparts": 1,
+      "km2": 13333.608,
+      "raw_km2": 13333.128,
+      "drift": 0.00004,
+      "containment": 1,
+      "datum_m": 16.5,
+      "bbox": [
+        -123.82851,
+        37.92745,
+        -122.04629,
+        39.59608
+      ]
+    },
+    {
+      "key": "united-states.california.sierra-foothills",
+      "role": "ucd",
+      "npoints": 992,
+      "nparts": 1,
+      "km2": 10645.405,
+      "raw_km2": 10645.608,
+      "drift": 0.00002,
+      "containment": 1,
+      "datum_m": 16.5,
+      "bbox": [
+        -121.35149,
+        37.18179,
+        -119.72328,
+        39.45517
+      ]
+    },
+    {
+      "key": "united-states.california.south-coast",
+      "role": "ucd",
+      "npoints": 499,
+      "nparts": 1,
+      "km2": 8701.344,
+      "raw_km2": 8701.122,
+      "drift": 0.00003,
+      "containment": 1,
+      "datum_m": 16.5,
+      "bbox": [
+        -118.11512,
+        32.53415,
+        -116.61544,
+        33.94683
+      ]
+    },
+    {
+      "key": "united-states.new-york",
+      "role": "ne-state",
+      "npoints": 298,
+      "nparts": 4,
+      "km2": 126571.417,
+      "raw_km2": 126571.417,
+      "drift": null,
+      "containment": null,
+      "datum_m": null,
+      "bbox": [
+        -79.763,
+        40.5187,
+        -71.9032,
+        45.0054
+      ]
+    },
+    {
+      "key": "united-states.new-york.finger-lakes",
+      "role": "ucd",
+      "npoints": 492,
+      "nparts": 1,
+      "km2": 8967.598,
+      "raw_km2": 8967.635,
+      "drift": 0,
+      "containment": 1,
+      "datum_m": 15.7,
+      "bbox": [
+        -77.83524,
+        42.27183,
+        -76.10908,
+        43.11801
+      ]
+    },
+    {
+      "key": "united-states.new-york.long-island",
+      "role": "ucd",
+      "npoints": 7552,
+      "nparts": 159,
+      "km2": 3146.735,
+      "raw_km2": 3146.686,
+      "drift": 0.00002,
+      "containment": 0.99995,
+      "datum_m": 15.7,
+      "bbox": [
+        -73.76693,
+        40.57341,
+        -71.85569,
+        41.29233
+      ]
+    },
+    {
+      "key": "united-states.oregon",
+      "role": "ne-state",
+      "npoints": 130,
+      "nparts": 1,
+      "km2": 251702.507,
+      "raw_km2": 251702.507,
+      "drift": null,
+      "containment": null,
+      "datum_m": null,
+      "bbox": [
+        -124.5396,
+        42.0006,
+        -116.477,
+        46.2255
+      ]
+    },
+    {
+      "key": "united-states.oregon.southern-oregon",
+      "role": "ucd",
+      "npoints": 8091,
+      "nparts": 1,
+      "km2": 8130.225,
+      "raw_km2": 8130.316,
+      "drift": 0.00001,
+      "containment": 1,
+      "datum_m": 15.4,
+      "bbox": [
+        -123.82848,
+        41.99978,
+        -122.52182,
+        43.77943
+      ]
+    },
+    {
+      "key": "united-states.oregon.willamette-valley",
+      "role": "ucd",
+      "npoints": 13876,
+      "nparts": 1,
+      "km2": 14034.527,
+      "raw_km2": 14034.069,
+      "drift": 0.00003,
+      "containment": 1,
+      "datum_m": 15.4,
+      "bbox": [
+        -123.7319,
+        43.57615,
+        -122.12779,
+        45.76716
+      ]
+    },
+    {
+      "key": "united-states.washington",
+      "role": "ne-state",
+      "npoints": 341,
+      "nparts": 9,
+      "km2": 173852.414,
+      "raw_km2": 173852.414,
+      "drift": null,
+      "containment": null,
+      "datum_m": null,
+      "bbox": [
+        -124.71,
+        45.5911,
+        -116.8965,
+        48.9931
+      ]
+    },
+    {
+      "key": "united-states.washington.columbia-valley",
+      "role": "ucd",
+      "npoints": 10451,
+      "nparts": 1,
+      "km2": 46744.567,
+      "raw_km2": 46744.617,
+      "drift": 0,
+      "containment": 1,
+      "datum_m": 14.6,
+      "bbox": [
+        -121.2971,
+        45.21838,
+        -117.03877,
+        48.29212
+      ]
+    },
+    {
+      "key": "united-states.washington.puget-sound",
+      "role": "ucd",
+      "npoints": 1151,
+      "nparts": 1,
+      "km2": 18091.18,
+      "raw_km2": 18091.022,
+      "drift": 0.00001,
+      "containment": 1,
+      "datum_m": 14.6,
+      "bbox": [
+        -123.5771,
+        46.76083,
+        -121.88269,
+        49.00255
+      ]
+    }
+  ],
+  "notices": [
+    "US-2 catalog: neighbour refresh 15217 rows in 65.6 s",
+    "US-2 unstage: neighbour refresh 15217 rows in 63.9 s",
+    "US-2 remove: neighbour refresh 15217 rows in 66.2 s",
+    "US-2 promote: neighbour refresh 15232 rows in 71.8 s",
+    "US-2 unpublish: neighbour refresh 15217 rows in 64.2 s"
+  ],
+  "total_s": 344.4
+}

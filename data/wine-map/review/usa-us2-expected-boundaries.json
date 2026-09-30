@@ -1,0 +1,146 @@
+[
+  {
+    "canonical_key": "united-states",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "ne_50m_admin_0_countries_lakes:USA",
+    "normalized_checksum_sha256": "CF02FF8E8B44CE08745CA75A1BE72F4F0654F81E7B5553502560E80E603BB0D4",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "ne_50m_admin_1_states_provinces_lakes:US-CA",
+    "normalized_checksum_sha256": "C651A0E44CD9561A4AF642B7E7C46C599A5F9C2EECC78159DA92646FFD87F218",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.central-coast",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "central_coast",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.central-valley",
+    "boundary_method": "DERIVED_FROM_DESCENDANTS",
+    "source_feature_id": "derived:central-valley",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.north-coast",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "north_coast",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.sierra-foothills",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "sierra_foothills",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.south-coast",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "south_coast",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.new-york",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "ne_50m_admin_1_states_provinces_lakes:US-NY",
+    "normalized_checksum_sha256": "C651A0E44CD9561A4AF642B7E7C46C599A5F9C2EECC78159DA92646FFD87F218",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.new-york.finger-lakes",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "finger_lakes",
+    "normalized_checksum_sha256": "4CF1BA9413468D7825A2E3B2EAC10D5DB2C09037718A87422C5E10D79205DBB1",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/NY_avas.geojson",
+    "raw_checksum_sha256": "8BE8F4D385229441461D67FA33A24B169C227DA5C44BC67B717368FC3BAA8E66",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.new-york.long-island",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "long_island",
+    "normalized_checksum_sha256": "4CF1BA9413468D7825A2E3B2EAC10D5DB2C09037718A87422C5E10D79205DBB1",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/NY_avas.geojson",
+    "raw_checksum_sha256": "8BE8F4D385229441461D67FA33A24B169C227DA5C44BC67B717368FC3BAA8E66",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.oregon",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "ne_50m_admin_1_states_provinces_lakes:US-OR",
+    "normalized_checksum_sha256": "C651A0E44CD9561A4AF642B7E7C46C599A5F9C2EECC78159DA92646FFD87F218",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.oregon.southern-oregon",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "southern_oregon",
+    "normalized_checksum_sha256": "BF05463C00EB9D62EFFBF8A3608B10FFA798B0F84DC2B34699C49AB30863C732",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/OR_avas.geojson",
+    "raw_checksum_sha256": "37AF8C156A0A55584C39890606D16A8EBA753E604531E1577CAE1DCAA0A32B55",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.oregon.willamette-valley",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "willamette_valley",
+    "normalized_checksum_sha256": "BF05463C00EB9D62EFFBF8A3608B10FFA798B0F84DC2B34699C49AB30863C732",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/OR_avas.geojson",
+    "raw_checksum_sha256": "37AF8C156A0A55584C39890606D16A8EBA753E604531E1577CAE1DCAA0A32B55",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.washington",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "ne_50m_admin_1_states_provinces_lakes:US-WA",
+    "normalized_checksum_sha256": "C651A0E44CD9561A4AF642B7E7C46C599A5F9C2EECC78159DA92646FFD87F218",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.washington.columbia-valley",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "columbia_valley",
+    "normalized_checksum_sha256": "0D55D546E37CC1288DD24AEEC5DC1F303D295F72BC7A0DC6F213BB6F2DA22297",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/WA_avas.geojson",
+    "raw_checksum_sha256": "A66B99F05BFB83CB408294134546CD20D8CBCDB96BA9D2DC5A6F02DA41AE2363",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.washington.puget-sound",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "puget_sound",
+    "normalized_checksum_sha256": "0D55D546E37CC1288DD24AEEC5DC1F303D295F72BC7A0DC6F213BB6F2DA22297",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/WA_avas.geojson",
+    "raw_checksum_sha256": "A66B99F05BFB83CB408294134546CD20D8CBCDB96BA9D2DC5A6F02DA41AE2363",
+    "documented": true
+  }
+]
