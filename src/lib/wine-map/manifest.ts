@@ -16,7 +16,8 @@ export const WINE_MAP_TILES_ORIGIN = new URL(DEFAULT_WINE_MAP_MANIFEST_URL).orig
     purpose: a LOCAL build that loads a tiles release that was never promoted
     (a draft, built by the Wine Map Tiles workflow with promote=false), so it
     can be checked before tiles/manifest.json points at it. Production never
-    sets it. Only an absolute http(s) URL or a root-relative path is taken;
+    sets it, and a Vercel production build with it set fails at next.config.ts
+    (manifest-guard.ts). Only an absolute http(s) URL or a root-relative path is taken;
     anything else, empty included, falls back to the default. A backslash or a
     control character is refused anywhere: a URL parser reads "/\host" as
     "//host", another host (the lesson of lib/auth/login-copy.ts sameSiteNext). */

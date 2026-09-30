@@ -31,17 +31,21 @@ export const CAMERA_MAX_ZOOM_RULE_OFF = 16;
     more is drawn there by its ordinary fill; a sparser one is drawn by the
     selected-place overlay fill (shard-specs selectedFillFilter).
 
-    Parent: the old framing (deepest child + 0.5; the fit to its bbox usually
-    lands shallower), never below its own tile zoom floor(min_zoom): the old
+    Parent: the fit to its bbox decides, capped only at CAMERA_MAX_ZOOM
+    (review 2026-09-30). The old cap, the deepest child's min_zoom + 0.5,
+    assumed the children are drawn from their min_zoom; under the rule they
+    come later, so it landed Napa Valley at z7.5 on a laptop, a small patch in
+    a wide frame with none of its fifteen AVAs drawn, where its own fit
+    (z8.97) draws ten of them. A country keeps the old cap (its regions are
+    exempt from the rule, and a country's fit would mount its shards).
+    A parent never lands below its own tile zoom floor(min_zoom): the old
     floor 0 let six picks (Chablis 1er Cru, Corton, ...) land where nothing is
-    drawn, not even the ring, and the cap never undercuts that floor, whatever
-    its children's min_zoom. It is raised further only if even its bbox is
+    drawn, not even the ring. It is raised further only if even its bbox is
     under N px there: its footprint is no bigger than its bbox, so the parent
-    then really is size-delayed. A parent drawn at the old landing is not
-    moved (Libournais, Montalcino, Malibu Coast). The landing does not wait
-    for every child: a parent that fits the screen can hold children under
-    N px, which come in as the viewer zooms (the status line says so,
-    detail-status.ts); a region's subregions come in together (reveal.ts).
+    then really is size-delayed. The landing does not wait for every child:
+    a parent that fits the screen can hold children under N px, which come
+    in as the viewer zooms (the status line says so, detail-status.ts); a
+    region's subregions come in together (reveal.ts).
 
     The floors are judged from the bbox, which the camera has, not from the
     tile's reveal_area, which it does not: a ribbon the size rule draws by its
@@ -69,7 +73,7 @@ export function selectionZooms(input: {
     const deepest = Math.max(...input.childMinZooms) + 0.5;
     if (!on) return { minZoom: 0, maxZoom: Math.min(cap, deepest) };
     const floor = Math.max(Math.floor(input.minZoom), n > 0 ? bboxZoomForPx(input.bbox, n) : 0);
-    const maxZoom = Math.min(cap, Math.max(deepest, floor + 0.5));
+    const maxZoom = input.tier >= 1 ? cap : Math.min(cap, Math.max(deepest, floor + 0.5));
     return { minZoom: Math.min(floor, maxZoom), maxZoom };
   }
   const sizeFloor = n > 0 ? bboxZoomForPx(input.bbox, 2 * n) : 0;

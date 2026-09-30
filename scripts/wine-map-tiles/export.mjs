@@ -18,6 +18,7 @@ import {
   placeFeatures,
   releaseVersion,
   REVEAL_RULE,
+  revealFamilyReport,
   revealPlan,
   shardKeyFor,
   withRevealArea,
@@ -231,6 +232,33 @@ const plan = revealPlan(rows, (row) => {
   const bbox = shards[shardKeyFor(row.canonical_key)].bbox;
   return (bbox[1] + bbox[3]) / 2;
 });
+// A name comes with the ground under it: the part a label point lies in
+// carries the place's value (lib.mjs revealPlan), never a later one.
+for (const row of rows) {
+  const entry = plan.get(row.id);
+  if (!entry || entry.labelPart < 0) continue;
+  assert.equal(
+    entry.parts[entry.labelPart].revealArea,
+    entry.revealArea,
+    `${row.canonical_key}: its label would come before the part under it`,
+  );
+}
+// The family median makes one subregion's zoom depend on its siblings: say
+// which members sit near the cut, and fail on a pinned region (Burgundy's
+// six districts at the Burgundy view) whose subregions no longer come in
+// together. Reshaping or adding a district is then an owner decision, not a
+// silent change.
+const families = revealFamilyReport(rows, plan);
+for (const near of families.nearCut) {
+  console.log(
+    `reveal family: ${near.key} is ${near.ratio} of ${near.parent}'s median subregion (cut 0.5, ${near.pulled ? "pulled" : "not pulled"})`,
+  );
+}
+assert.deepEqual(
+  families.pinFailures,
+  [],
+  `subregions of a pinned region no longer appear together: ${JSON.stringify(families.pinFailures)}`,
+);
 const outputs = [
   ["world-places.geojson", featureCollection(world.rows.map(placeFeature))],
   ["world-labels.geojson", featureCollection(world.rows.flatMap(labelFeatures))],

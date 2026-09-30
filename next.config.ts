@@ -1,4 +1,11 @@
 import type { NextConfig } from "next";
+import { manifestOverrideBuildError } from "./src/lib/wine-map/manifest-guard";
+
+// The wine map's draft-manifest override must never reach a production build
+// (src/lib/wine-map/manifest-guard.ts): fail the build rather than ship a map
+// that loads a manifest the deployment does not have.
+const manifestOverrideError = manifestOverrideBuildError(process.env);
+if (manifestOverrideError) throw new Error(manifestOverrideError);
 
 const nextConfig: NextConfig = {
   // Keep build and pipeline inputs out of the deployed server functions. The

@@ -4,7 +4,7 @@
 // country with no subregion places gets an honest "nothing mapped here" line
 // instead of a "zoom in" hint that would no longer be true.
 import { describe, expect, it } from "vitest";
-import { DETAIL_WARNING, detailStatus } from "./detail-status";
+import { DETAIL_WARNING, detailStatus, selectionCueText } from "./detail-status";
 import { NEIGHBOUR_MIN_ZOOM } from "./mount-policy";
 import { scanPastDepthZoom } from "./focus";
 
@@ -165,5 +165,24 @@ describe("detailStatus with a selection whose children are size-hidden", () => {
     expect(detailStatus({ ...shown, selection, tree: "failed" }).retry).toBe(true);
     expect(detailStatus({ ...shown, selection, fellBack: true }).text).toMatch(/^Switched/);
     expect(detailStatus({ ...shown, selection, detail: "all" }).text).toMatch(/^Subregions for all countries/);
+  });
+
+  // Review 2026-09-30: the map counts a selection's size-hidden children in
+  // All mode too, but the status line never said so.
+  it("follows the All countries warning with the cue in All mode", () => {
+    expect(
+      detailStatus({ ...shown, detail: "all", selection: { name: "Napa Valley", drawn: 0, hidden: 15 } }).text,
+    ).toBe("Subregions for all countries. Uses more resources and can cause lag. Zoom in to see the subregions of Napa Valley.");
+    expect(detailStatus({ ...shown, detail: "all", selection: { name: "Napa Valley", drawn: 15, hidden: 0 } }).text).toBe(
+      "Subregions for all countries. Uses more resources and can cause lag.",
+    );
+  });
+
+  it("selectionCueText is the cue alone, or null", () => {
+    expect(selectionCueText(null)).toBeNull();
+    expect(selectionCueText(undefined)).toBeNull();
+    expect(selectionCueText({ name: "Napa Valley", drawn: 3, hidden: 0 })).toBeNull();
+    expect(selectionCueText({ name: "Napa Valley", drawn: 0, hidden: 15 })).toBe("Zoom in to see the subregions of Napa Valley.");
+    expect(selectionCueText({ name: "Bourgogne", drawn: 2, hidden: 4 })).toBe("Zoom in to see all the subregions of Bourgogne.");
   });
 });

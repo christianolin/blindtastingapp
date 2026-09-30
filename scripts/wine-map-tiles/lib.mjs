@@ -463,11 +463,15 @@ export function placeFeature(row) {
 // minimum-area enclosing rectangle:
 //     size(q) = max( sqrt(A), min( L / REVEAL_LENGTH_RATIO, REVEAL_THICKNESS_RATIO * A / L ) )
 // A part is big enough once the square of its area is N px across (the plain
-// rule), OR once it is REVEAL_LENGTH_RATIO * N px long AND N /
+// rule), OR, for a RIBBON, once it is REVEAL_LENGTH_RATIO * N px long AND N /
 // REVEAL_THICKNESS_RATIO px thick on average (A / L is its mean thickness).
-// A part at most twice as long as its equal-area square (L <= 2 sqrt(A):
-// every compact shape) gets exactly the plain rule; only real ribbons are
-// measured by their length (evidence: docs/superpowers/specs/
+// A ribbon is a part at least RIBBON_MIN_ASPECT times as long as it is thick
+// (L / (A / L) = L² / A >= 8). Every other part gets exactly the plain rule:
+// the length clause alone would already beat sqrt(A) at an aspect over 4, and
+// that let oblong but compact places in a zoom early (review 2026-09-30:
+// Hermitage, 51 x 10 px and 22.8 px square at z10, aspect 5.0, came at z10
+// against the owner-approved z11; "only compact specks wait"). Only real
+// ribbons are measured by their length (evidence: docs/superpowers/specs/
 // 2026-09-30-wine-map-reveal-by-size.md §11: Côte de Nuits is 54 px long and
 // 3.7 px thick at the Burgundy view; Rockpile, 40 px and 6.5 px at z7, must
 // still wait for z8).
@@ -486,8 +490,13 @@ export function placeFeature(row) {
 // Per part: the anchor (the part with the largest size) takes the place's
 // side; every other part min(place side, PIECE_PX_RATIO * sqrt(A_q)), so a
 // small piece of a scattered place waits until its own square is
-// N / PIECE_PX_RATIO across and never comes before its place (no confetti). A
-// label takes the place's side, so a name comes with its shape.
+// N / PIECE_PX_RATIO across and never comes before its place (no confetti).
+// A label takes the place's side, so a name comes with its shape, and so does
+// the part its point lies in (the label part): the name is drawn over its own
+// ground, never over a piece of it still waiting (review 2026-09-30: in ten
+// places, Paradiesgarten and Weinhex among them, the label point lies in a
+// small non-anchor part, and the name was drawn 1-2 zooms before the part
+// under it, up to 19 px from anything of its place).
 // Finally reveal_area = (r * 360/512)^2 * cos(shard mid-latitude): the tile's
 // own `area` unit (planar deg²) at the latitude the app's K is built for, so
 // the app's test is exact. Every step is a ratio of N, so REVEAL_MIN_PX and
@@ -504,6 +513,7 @@ export function placeFeature(row) {
 export const REVEAL_RULE = 1;
 export const REVEAL_LENGTH_RATIO = 2;
 export const REVEAL_THICKNESS_RATIO = 8;
+export const RIBBON_MIN_ASPECT = 8;
 export const SUBREGION_FAMILY_RATIO = 2;
 export const PIECE_PX_RATIO = 3;
 
@@ -598,12 +608,14 @@ export function partMeasure(polygon) {
   return { area, long: minAreaRectangle(convexHull(rings[0])).long };
 }
 
-/** A part's size in z0 px (see above): its equal-area side, or, for a long
-    thin part, min(length / REVEAL_LENGTH_RATIO, REVEAL_THICKNESS_RATIO x mean
-    thickness), whichever is larger. */
+/** A part's size in z0 px (see above): its equal-area side, or, for a
+    ribbon (length / mean thickness >= RIBBON_MIN_ASPECT), min(length /
+    REVEAL_LENGTH_RATIO, REVEAL_THICKNESS_RATIO x mean thickness), whichever
+    is larger. */
 export function partSize({ area, long }) {
   const side = Math.sqrt(Math.max(0, area));
   if (!(long > 0) || !(area > 0)) return side;
+  if ((long * long) / area < RIBBON_MIN_ASPECT) return side;
   return Math.max(side, Math.min(long / REVEAL_LENGTH_RATIO, (REVEAL_THICKNESS_RATIO * area) / long));
 }
 
@@ -619,6 +631,34 @@ export function revealAreaFromSide(side, latitude) {
   return roundArea(((side * 360) / 512) ** 2 * Math.cos((latitude * Math.PI) / 180));
 }
 
+/** Whether a lon/lat point lies inside one GeoJSON polygon (outer ring, not
+    in a hole). Ray casting; a point on an edge may land either way. */
+export function pointInPolygon([x, y], polygon) {
+  const inRing = (ring) => {
+    let inside = false;
+    for (let i = 0, j = ring.length - 1; i < ring.length; j = i, i += 1) {
+      const [xi, yi] = ring[i];
+      const [xj, yj] = ring[j];
+      if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) inside = !inside;
+    }
+    return inside;
+  };
+  if (!polygon?.[0] || !inRing(polygon[0])) return false;
+  return !polygon.slice(1).some(inRing);
+}
+
+/** The index of the part a row's label_point lies in, or -1. */
+export function labelPartIndex(row, polygons) {
+  let point;
+  try {
+    point = JSON.parse(row.label_point)?.coordinates;
+  } catch {
+    return -1;
+  }
+  if (!Array.isArray(point) || point.length < 2) return -1;
+  return polygons.findIndex((polygon) => pointInPolygon(point, polygon));
+}
+
 function median(values) {
   const sorted = [...values].sort((x, y) => x - y);
   const mid = sorted.length >> 1;
@@ -626,8 +666,11 @@ function median(values) {
 }
 
 /** The reveal plan of every tier >= 2 export row (above): id -> { side,
-    revealArea, anchor, parts: [{ side, revealArea }] }, sides in z0 px, parts
-    in the row's geometry order. `latitudeOf(row)` is the mid-latitude of the
+    revealArea, anchor, labelPart, family, parts: [{ side, revealArea }] },
+    sides in z0 px, parts in the row's geometry order. `labelPart` is the
+    part the label point lies in (-1 for none); `family`, for a region's
+    SUBREGION child in a family of two or more, is { parentId, median, own }
+    (revealFamilyReport reads it). `latitudeOf(row)` is the mid-latitude of the
     row's shard bbox, the one the manifest hands the app. Fails closed on a
     value that is not a finite number. */
 export function revealPlan(rows, latitudeOf) {
@@ -643,7 +686,8 @@ export function revealPlan(rows, latitudeOf) {
       if (size > sizes[anchor] || (size === sizes[anchor] && parts[i].area > parts[anchor].area)) anchor = i;
     });
     const total = Math.sqrt(parts.reduce((sum, part) => sum + part.area, 0));
-    measured.set(row.id, { parts, anchor, own: Math.max(total, sizes.length ? sizes[anchor] : 0) });
+    const labelPart = labelPartIndex(row, polygons);
+    measured.set(row.id, { parts, anchor, labelPart, own: Math.max(total, sizes.length ? sizes[anchor] : 0) });
   }
   // Subregions come with their region: the SUBREGION children of one tier-1 region.
   const families = new Map();
@@ -656,11 +700,13 @@ export function revealPlan(rows, latitudeOf) {
     families.set(parent.id, family);
   }
   const placeSide = new Map([...measured].map(([id, m]) => [id, m.own]));
-  for (const family of families.values()) {
+  const familyOf = new Map();
+  for (const [parentId, family] of families) {
     if (family.length < 2) continue;
     const m = median(family.map((id) => measured.get(id).own));
     for (const id of family) {
       const own = measured.get(id).own;
+      familyOf.set(id, { parentId, median: m, own });
       if (own >= m / SUBREGION_FAMILY_RATIO) placeSide.set(id, Math.max(own, m));
     }
   }
@@ -671,16 +717,86 @@ export function revealPlan(rows, latitudeOf) {
     const latitude = latitudeOf(row);
     const side = placeSide.get(row.id);
     const parts = m.parts.map((part, i) => {
-      const partSide = i === m.anchor ? side : Math.min(side, PIECE_PX_RATIO * Math.sqrt(part.area));
+      const carries = i === m.anchor || i === m.labelPart;
+      const partSide = carries ? side : Math.min(side, PIECE_PX_RATIO * Math.sqrt(part.area));
       return { side: partSide, revealArea: revealAreaFromSide(partSide, latitude) };
     });
-    const entry = { side, revealArea: revealAreaFromSide(side, latitude), anchor: m.anchor, parts };
+    const entry = {
+      side,
+      revealArea: revealAreaFromSide(side, latitude),
+      anchor: m.anchor,
+      labelPart: m.labelPart,
+      family: familyOf.get(row.id) ?? null,
+      parts,
+    };
     for (const value of [entry.revealArea, ...parts.map((part) => part.revealArea)]) {
       assert.ok(Number.isFinite(value) && value >= 0, `${row.canonical_key}: reveal_area ${value}`);
     }
     plan.set(row.id, entry);
   }
   return plan;
+}
+
+/** The threshold the export's own checks judge at: the app's REVEAL_MIN_PX
+    (src/lib/wine-map/reveal.ts; lib.test.mjs holds the two equal). */
+export const REVEAL_CHECK_PX = 24;
+/** The app's REVEAL_CAP_ZOOM: every place is drawn from here, whatever its size. */
+export const REVEAL_CAP_ZOOM = 16;
+
+/** The first whole zoom a place of reveal side `side` (z0 px) is drawn at
+    with a threshold of `px`: side * 2^z >= px (the app's test, the shard
+    latitude cancelling out), never before its tile zoom floor(min_zoom) or the
+    z5 shard mount, and at REVEAL_CAP_ZOOM at the latest. */
+export function firstDrawnZoom(side, minZoom, px = REVEAL_CHECK_PX) {
+  let z = Math.max(5, Math.floor(Number(minZoom) || 0));
+  while (z < REVEAL_CAP_ZOOM && !(side * 2 ** z >= px)) z += 1;
+  return z;
+}
+
+/** Regions whose SUBREGION children must all be drawn at one zoom, or the
+    export fails: Burgundy's six districts at the Burgundy view (owner
+    acceptance, 2026-09-30). Grand Auxerrois gets there only through the
+    family median (0.545 of it against a 0.5 cut), so a new or reshaped
+    Burgundy district could otherwise silently leave it a zoom behind. */
+export const REVEAL_FAMILY_PINS = ["france.bourgogne"];
+/** A family member whose own size is within this factor of its cut, either
+    side, is reported as near the cut. */
+export const FAMILY_MARGIN_REPORT = 1.2;
+
+/** What the family rule did, for the export log and its gate: `nearCut`
+    lists every family member within FAMILY_MARGIN_REPORT of its cut (median /
+    SUBREGION_FAMILY_RATIO), pulled or not, with own / median; `pinFailures`
+    names each REVEAL_FAMILY_PINS region whose SUBREGION children do not
+    share one first drawn zoom at REVEAL_CHECK_PX. */
+export function revealFamilyReport(rows, plan) {
+  const byId = new Map(rows.map((row) => [row.id, row]));
+  const nearCut = [];
+  const zoomsByParent = new Map();
+  for (const row of rows) {
+    const entry = plan.get(row.id);
+    if (!entry?.family) continue;
+    const { parentId, median: m, own } = entry.family;
+    const cut = m / SUBREGION_FAMILY_RATIO;
+    if (own <= cut * FAMILY_MARGIN_REPORT && own >= cut / FAMILY_MARGIN_REPORT) {
+      nearCut.push({
+        key: row.canonical_key,
+        parent: byId.get(parentId)?.canonical_key ?? parentId,
+        ratio: Number((own / m).toFixed(3)),
+        pulled: own >= cut,
+      });
+    }
+    const zooms = zoomsByParent.get(parentId) ?? [];
+    zooms.push({ key: row.canonical_key, zoom: firstDrawnZoom(entry.side, row.min_zoom) });
+    zoomsByParent.set(parentId, zooms);
+  }
+  const pinFailures = [];
+  for (const pin of REVEAL_FAMILY_PINS) {
+    const parent = rows.find((row) => row.canonical_key === pin);
+    const zooms = parent ? zoomsByParent.get(parent.id) : undefined;
+    if (!zooms) continue; // not in this catalogue (a fixture, or a future move)
+    if (new Set(zooms.map((z) => z.zoom)).size > 1) pinFailures.push({ parent: pin, zooms });
+  }
+  return { nearCut, pinFailures };
 }
 
 /** A feature with reveal_area set (a new object; the input is left alone). */

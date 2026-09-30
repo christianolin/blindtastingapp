@@ -875,7 +875,7 @@ A review of the prototype (`f2c902c`) confirmed eleven findings. The fixes:
 ## 11. The rule as built: owner decisions and the ribbon rule (2026-09-30, third commit on `map-reveal`)
 
 **Where this section and §0-§10 disagree, this section wins.** It supersedes §10.9's family rule and makes the tiles
-release the switch.
+release the switch. §11.8 (the review fixes, fourth commit) amends §11.2-§11.4; the §11.7 table is after them.
 
 ### 11.1 Owner decisions (2026-09-30, after before/after screenshots at 16/24/32 px)
 
@@ -899,8 +899,9 @@ is its z0 length × 2^z). N = the threshold (24). Computed by the tile export (`
    on its convex hull):
    `size(q) = max( sqrt(A), min( L / 2, 8 × A / L ) )`
    A part counts once its equal-area square is N px (the plain rule), **or**, if it is a ribbon, once it is **2N long
-   and N/8 thick** on average (A / L = mean thickness; `REVEAL_LENGTH_RATIO` 2, `REVEAL_THICKNESS_RATIO` 8). A part at
-   most twice as long as its equal-area square (L ≤ 2√A: every compact shape) gets exactly the plain rule.
+   and N/8 thick** on average (A / L = mean thickness; `REVEAL_LENGTH_RATIO` 2, `REVEAL_THICKNESS_RATIO` 8). A ribbon
+   is a part at least 8 times as long as it is thick (L² / A ≥ 8, `RIBBON_MIN_ASPECT`, §11.8); every other part gets
+   exactly the plain rule.
 2. **Per place** p: `own(p) = max( sqrt(total area), max over its parts of size(q) )`. The whole footprint still
    counts (a cluster of parcels); a length is only measured within one part, never across a scattered multipart bbox.
 3. **Subregions come with their region**: the SUBREGION-kind children of one region (tier 1) are a family; a member
@@ -908,7 +909,8 @@ is its z0 length × 2^z). N = the threshold (24). Computed by the tile export (`
 4. **Parts**: every tier ≥ 2 place is one feature per polygon part (geometry order). The anchor (the part with the
    largest size) carries the place's side; every other part `min(place side, 3 × sqrt(A_part))`
    (`PIECE_PX_RATIO` 3): it waits until its own square is N/3 and never comes before its place.
-5. **Labels** carry the place's side, so a name comes with its shape.
+5. **Labels** carry the place's side, so a name comes with its shape; so does the part the label point lies in
+   (§11.8), so the name is never drawn over a piece of its place that is still waiting.
 6. **The number in the tile**: `reveal_area = (side × 360/512)² × cos(shard mid-latitude)`, the unit of the tile's
    `area` at the latitude the app's `revealK` uses (the manifest bbox's), so `reveal_area × 4^z ≥ K(N)` ⟺
    `side × 2^z ≥ N` exactly. Every step is a ratio of N, so `?revealPx=16|32` scale the same numbers.
@@ -951,11 +953,12 @@ is its z0 length × 2^z). N = the threshold (24). Computed by the tile export (`
 - **The owner's North Coast views** (centred on Napa Valley): no place under 24 px, and **no part under 8 px**
   (today 72-86; the plain rule 72 at z7.5, all Mendocino Ridge); Mendocino Ridge shows 3 of its 75 parts at z7.5.
   Drawn at the 769×654 Napa fit: 38 (today 81, plain 38).
-- **Ribbons**: Côte de Nuits, Côte de Beaune, Côte Chalonnaise z7; Saint-Joseph z7 and Rhône septentrional z6; La
-  Grande Rue z13; Hermitage z10 (plain z11); Monthoux z14 (plain z15); Brauneberger Juffer-Sonnenuhr z12. Côte-Rôtie
-  and Condrieu z9 as before (their length clause is met at z9 too).
-- **Map-wide** (3,388 subregions): 892 later than today, none earlier; 95 earlier than the plain rule, 2 later (exact
-  Mercator vs the plain rule's shard-latitude approximation: Sta. Rita Hills 23.9 px, Sierra Pelona Valley 23.8 px).
+- **Ribbons**: Côte de Nuits, Côte de Beaune, Côte Chalonnaise z7; Saint-Joseph z7 and Rhône septentrional z6;
+  Monthoux z14 (plain z15); Brauneberger Juffer-Sonnenuhr z12. Côte-Rôtie and Condrieu z9 as before. Hermitage (z11)
+  and La Grande Rue (z14) are not ribbons since §11.8.
+- **Map-wide** (3,388 subregions, after §11.8): 914 later than today, none earlier; 59 earlier than the plain rule,
+  5 later (exact Mercator vs the plain rule's shard-latitude approximation, 23.71-23.98 px: Sta. Rita Hills, Sierra
+  Pelona Valley, Leona Valley, San Pasqual Valley, Sankt Goarer Frohwingert).
 
 ### 11.5 Tiles: parts, bytes, validation, max_zoom
 
@@ -986,7 +989,44 @@ is its z0 length × 2^z). N = the threshold (24). Computed by the tile export (`
    loads it through `NEXT_PUBLIC_WINE_MAP_MANIFEST_URL` (steps in `reveal/build/draft-test.md`).
 3. **Promote** that release: the manifest's `reveal_rule` switches the rule on, shard by shard.
 
+### 11.8 Review fixes (2026-09-30, fourth commit on `map-reveal`)
+
+- **A ribbon needs an aspect of at least 8.** `L / 2 > √A` is an aspect over 4, so the length clause alone let 36
+  oblong but compact places in a zoom early, Hermitage among them (51 × 10 px, 22.8 px square at z10, aspect 5.0,
+  against the approved table's z11). Only parts with `L² / A ≥ 8` (`RIBBON_MIN_ASPECT`) are measured by their length
+  now. Côte de Nuits (14.6), Côte de Beaune (10.1), Côte Chalonnaise (11.1), Saint-Joseph (25.9) and Rhône
+  septentrional (18.3) are unaffected; Burgundy stays 6/6. 39 places move exactly one zoom later, none earlier
+  (Hermitage z11, La Grande Rue z14, Sancerre z8, ...). Monthoux stays z14 (aspect 19: a real ribbon).
+- **The part under a label comes with the name.** In ten places (Paradiesgarten, Weinhex, Scharzberg, Goldbäumchen,
+  Vom heissen Stein, Lago di Caldaro and four Lagen) the label point lies in a small non-anchor part, so the name
+  came 1-2 zooms before the ground under it, 2-19 px from anything drawn of its place. That part now carries the
+  place's side too (`labelPartIndex`); export.mjs asserts it for every place. Now 0.
+- **The family median is guarded.** Grand Auxerrois reaches the Burgundy view only at 0.545 of the median (cut 0.5),
+  so a reshaped or added district could leave it a zoom behind. export.mjs now logs every family member within 1.2×
+  of its cut (today: Grand Auxerrois 0.545, Centre-Loire 0.57, Diois 0.579 pulled; Ruwer 0.452, Paiva 0.441 not) and
+  FAILS the export when the SUBREGIONs of a pinned region (`REVEAL_FAMILY_PINS`: `france.bourgogne`) no longer share
+  one first zoom at 24 px — then it is an owner decision, not a silent change.
+- **A parent's pick is its bbox fit.** The parent cap (deepest child min_zoom + 0.5) assumed children are drawn from
+  their min_zoom; under the rule they come later, so Napa Valley landed at z7.5 on a laptop with none of its 15 AVAs
+  drawn, where its own fit (z8.97) draws ten. With the rule on, a parent below a country is capped only at z17 and
+  floored as before; a country keeps the old cap. Rule off: unchanged.
+- **The cue reaches phones and All countries.** On a phone the status line lives in the closed Map options sheet, so
+  the same cue text is shown over the map (one `role="status"` region at a time: only while that sheet is closed).
+  In All countries mode the cue follows the owner's All warning ("Subregions for all countries. Uses more resources
+  and can cause lag. Zoom in to see the subregions of Napa Valley."): two approved sentences joined, no new copy.
+- **The draft-manifest override cannot reach production.** `next.config.ts` fails a build with
+  `VERCEL_ENV=production` and `NEXT_PUBLIC_WINE_MAP_MANIFEST_URL` set (`manifest-guard.ts`). A local
+  `next build` of a draft is unaffected (no `VERCEL_ENV`).
+- **Mendocino Ridge's overlay parts** (28 of 32 loaded parts at z7.5 are drawn only by the selected-place fill) go
+  when another place is selected; there is no plain deselect in the explorer (an empty-map tap and closing Details
+  keep the selection), so this is the rule working, not a pop-out. Recorded, no change.
+- **Open for the draft check** (not code): the CI draft run is the first real tippecanoe build of split parts.
+  Compare its archive sizes with `reveal/build/bytes-table.md` (California ≤ 3 MB) and time the first idle at the
+  Mosel and Pfalz landings on phone emulation, draft manifest vs live, before promoting; nothing in CI checks sizes.
+
 ### 11.7 The named places at 24 px (read-only export dry run of the live catalogue, 2026-09-30)
+
+Re-run after §11.8 (`dry-fix`).
 
 today = first zoom drawn before any size rule; plain = the whole-footprint rule of §0-§10 on today's tiles; new =
 this build (shape, and the name when later). Sizes on screen at the new zoom, CSS px, true Web Mercator: √area of
@@ -1006,7 +1046,7 @@ in (not delayed = drawn at its tile zoom).
 | Condrieu | t3 · 2 | z7 | z9 | **z9** | 24.8 · 118 × 4.6 | 25.9 | by its area |
 | Château-Grillet | t3 · 1 | z7 | z13 | **z13** | 31.5 · 45.9 × 21.6 | 2.1 | by its area |
 | Saint-Joseph | t3 · 3 | z7 | z8 | **z7** | 19.2 · 86.5 × 3.3 | 25.9 | by its length (ribbon) |
-| Hermitage | t3 · 1 | z7 | z11 | **z10** | 22.8 · 51.0 × 10.2 | 5.0 | by its length (ribbon) |
+| Hermitage | t3 · 1 | z7 | z11 | **z11** | 45.6 · 102 × 20.4 | 5.0 | by its area |
 | Crozes-Hermitage | t3 · 1 | z7 | z8 | **z8** | 37.2 · 77.2 × 17.9 | 4.3 | by its area |
 | Cornas | t3 · 1 | z7 | z10 | **z10** | 43.8 · 54.5 × 35.1 | 1.6 | by its area |
 | Baixo Corgo | t2 · 1 | z5 | z7 | **z6** | 21.8 · 28.8 × 16.6 | 1.7 | with its region's subregions |
@@ -1019,7 +1059,7 @@ in (not delayed = drawn at its tile zoom).
 | Ruwer | t2 · 1 | z7 | z9 | **z9** | 34.8 · 67.2 × 18.1 | 3.7 | by its area |
 | Nahetal | t2 · 11 | z7 | z7 | **z7** | 37.0 · 68.9 × 14.7 | 4.7 | not delayed |
 | Walporzheim/Ahrtal | t2 · 2 | z7 | z8 | **z8** | 26.6 · 63.7 × 10.0 | 6.4 | by its area |
-| Loreley | t2 · 8 | z7 | z8 | **z8** | 40.3 · 57.5 × 8.8 | 6.5 | by its area |
+| Loreley | t2 · 8 | z7 | z8 | **z8** | 40.3 · 49.1 × 12.0 | 4.1 | by its area |
 | Bernkasteler Doctor | t4 · 1 | z12 | z13 | **z13** | 29.5 · 43.6 × 19.9 | 2.2 | by its area |
 | Brauneberger Juffer-Sonnenuhr | t4 · 2 | z12 | z12 | **z12** | 26.8 · 74.3 × 5.1 | 14.6 | not delayed |
 | Piesporter Goldtröpfchen | t4 · 3 | z12 | z12 | **z12** | 74.8 · 254 × 21.7 | 11.7 | not delayed |
@@ -1037,7 +1077,7 @@ in (not delayed = drawn at its tile zoom).
 | Canon-Fronsac | t3 · 1 | z7 | z10 | **z10** | 42.0 · 45.9 × 38.4 | 1.2 | by its area |
 | Monthoux (smallest place) | t2 · 1 | z7 | z15 | **z14** | 14.9 · 64.9 × 3.4 | 19.0 | by its length (ribbon) |
 | Romanée-Conti | t4 · 1 | z13 | z14 | **z14** | 41.7 · 53.6 × 32.4 | 1.7 | by its area |
-| La Grande Rue | t4 · 1 | z13 | z14 | **z13** | 19.7 · 50.4 × 7.7 | 6.5 | by its length (ribbon) |
+| La Grande Rue | t4 · 1 | z13 | z14 | **z14** | 39.4 · 101 × 15.4 | 6.5 | by its area |
 | La Tâche | t4 · 1 | z13 | z13 | **z13** | 37.9 · 63.2 × 22.7 | 2.8 | not delayed |
 | Clos de Vougeot | t4 · 1 | z13 | z13 | **z13** | 110 · 147 × 82.7 | 1.8 | not delayed |
 | Les Amoureuses (1er cru) | t5 · 1 | z14 | z14 | **z14** | 75.0 · 92.6 × 60.8 | 1.5 | not delayed |

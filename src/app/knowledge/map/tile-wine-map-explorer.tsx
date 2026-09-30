@@ -76,7 +76,7 @@ import { WineMapTree } from "./wine-map-tree";
 import { MapDetailControls } from "./map-detail-controls";
 import { CountryChips } from "./country-chips";
 import { useDetailMode } from "@/lib/wine-map/detail-mode";
-import { detailStatus } from "@/lib/wine-map/detail-status";
+import { detailStatus, selectionCueText } from "@/lib/wine-map/detail-status";
 import { countryChips } from "@/lib/wine-map/country-chips";
 import {
   bboxesForCountry,
@@ -876,6 +876,12 @@ export function TileWineMapExplorer({
     selection: selectionCue,
   });
   const markedChip = detail === "one" && depthShown ? report.focusCountry : null;
+  // A phone's status line lives in the Map options sheet, closed by default,
+  // so the selection cue is also shown over the map there (review
+  // 2026-09-30: a Napa Valley pick landed with none of its AVAs drawn and
+  // nothing on screen said to zoom in). Same text, and only while the sheet
+  // is closed, so there is one role="status" region at a time.
+  const phoneCue = isPhone && !optionsOpen ? selectionCueText(selectionCue) : null;
 
   const article =
     context?.article && context.article.editorial_status !== "PLACEHOLDER"
@@ -1447,7 +1453,21 @@ export function TileWineMapExplorer({
                 modes. A definite height from the page's flex chain, never a
                 percentage of an indefinite parent (the "map collapsed to
                 zero" trap) and never a calc. */}
-            <div className="max-md:h-auto max-md:min-h-0 max-md:flex-1 md:min-h-0 md:flex-1">
+            <div className="relative max-md:h-auto max-md:min-h-0 max-md:flex-1 md:min-h-0 md:flex-1">
+            {isPhone && !optionsOpen ? (
+              // Between the zoom buttons (top left) and the expand button
+              // (top right); never takes a tap from the map.
+              <div
+                role="status"
+                className="pointer-events-none absolute inset-x-14 top-2 z-10 flex justify-center"
+              >
+                {phoneCue ? (
+                  <span className="rounded-full border border-border bg-background/90 px-3 py-1 text-center text-xs leading-snug text-foreground shadow-sm backdrop-blur-sm">
+                    {phoneCue}
+                  </span>
+                ) : null}
+              </div>
+            ) : null}
             {manifest ? (
               // Any render or effect error inside the map (or a failed
               // next/dynamic chunk after a deploy) lands here instead of

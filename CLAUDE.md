@@ -2215,22 +2215,31 @@ a raw subquery, regardless of which two tables look involved at a glance.
       8 * A / L))` with L the long side of the part's minimum-area rectangle
       and A / L its mean thickness: a part counts once its equal-area square
       is N px, or, if it is a ribbon, once it is 2N long and N/8 thick
-      (`REVEAL_LENGTH_RATIO` 2, `REVEAL_THICKNESS_RATIO` 8). A part at most
-      twice as long as its equal-area square gets exactly the square rule, so
+      (`REVEAL_LENGTH_RATIO` 2, `REVEAL_THICKNESS_RATIO` 8). A ribbon is a
+      part at least 8 times as long as it is thick (`L² / A >= 8`,
+      `RIBBON_MIN_ASPECT`); every other part gets exactly the square rule, so
       compact specks keep the 24 px table (Cole Ranch z11, Benmore Valley
-      z10, Rockpile and High Valley z8, Oakville z9). A place is
+      z10, Rockpile and High Valley z8, Oakville z9, Hermitage z11). Never
+      drop that aspect test: the length clause alone beats the square at an
+      aspect over 4 and let 36 compact oblongs in a zoom early. A place is
       `max(sqrt(total A), its best part)`; a region's SUBREGION-kind children
       at least half their median sibling come in with it
       (`SUBREGION_FAMILY_RATIO` 2: Burgundy's compact Grand Auxerrois comes
       in with its ribbons); every part is its own feature, the anchor part
       with its place, the others once their own square is N/3
       (`PIECE_PX_RATIO` 3: no Mendocino Ridge confetti); a label carries its
-      place's value. Everything is a ratio of N, so `?revealPx=` keeps its
+      place's value, and so does the part its point lies in (a name is never
+      drawn over a piece of its place still waiting; export.mjs asserts it). Everything is a ratio of N, so `?revealPx=` keeps its
       meaning. The table of ~50 named places is in the spec, §11.
     - **Do not bring back a general family rule.** A "comes in with its
       family's median member" rule for every family (review round, never
       shipped) pulled Cole Ranch, Benmore Valley, Oakville and Stags Leap a
-      zoom early. Only a region's subregions come in together.
+      zoom early. Only a region's subregions come in together. That median
+      makes a member's zoom depend on its siblings (Grand Auxerrois sits at
+      0.545 of Burgundy's, cut 0.5): export.mjs logs every member within 1.2x
+      of its cut and FAILS when a `REVEAL_FAMILY_PINS` region's subregions
+      (`france.bourgogne`) stop sharing one zoom. A failure there is an owner
+      decision about the new district, not something to relax silently.
     - **Fail open, and the manifest switches it on.** A feature without a
       numeric `reveal_area` is never delayed (`area` is never read), and a
       shard applies the rule only when its manifest entry carries
@@ -2272,13 +2281,18 @@ a raw subquery, regardless of which two tables look involved at a glance.
       skips the fill, so a shard added later lands below the casing.
     - **Picks.** Tree, search and `?place=` picks land where the place is drawn
       (`selectionZooms`, `camera-fit.ts`, bbox-based; a ribbon may land a zoom
-      deeper than it needs). A parent's floor is its own tile zoom, and its
-      cap never undercuts that floor; it is raised further only when even its
-      bbox is under N px (a parent drawn at its old landing is not moved). A
-      parent that fits the screen can still hold children under N px; the
-      status line then says "Zoom in to see the subregions of {place}." (or
-      "Zoom in to see all the subregions of {place}." when some are drawn;
-      owner-approved), from the idle scan's `familyInView` probe.
+      deeper than it needs). A parent's floor is its own tile zoom, raised
+      further only when even its bbox is under N px; below a country, its fit
+      to its bbox decides the landing (capped at z17 only): the old cap,
+      children's min_zoom + 0.5, landed Napa Valley at z7.5 with none of its
+      AVAs drawn. A country keeps the old cap. A parent that fits the screen
+      can still hold children under N px; the status line then says "Zoom in
+      to see the subregions of {place}." (or "Zoom in to see all the
+      subregions of {place}." when some are drawn; owner-approved), from the
+      idle scan's `familyInView` probe (`selectionCueText`). In All countries
+      it follows the All warning; on a phone, whose status line is in the
+      closed Map options sheet, the same text shows over the map while that
+      sheet is closed (one `role="status"` region at a time).
     - **Status line.** The "No subregions mapped here" line checks with
       `querySourceFeatures` (`sizeHiddenInView`) that nothing in view is only
       size-hidden.
@@ -2296,8 +2310,9 @@ a raw subquery, regardless of which two tables look involved at a glance.
       manifest promote.mjs would (`manifestForRelease`, read-only) to
       `public/wine-map-draft/manifest.json` (gitignored) and build with
       `NEXT_PUBLIC_WINE_MAP_MANIFEST_URL=/wine-map-draft/manifest.json`
-      (`src/lib/wine-map/manifest.ts`; production never sets it; anything
-      but an http(s) URL or a /path is refused). In Git Bash prefix the build
+      (`src/lib/wine-map/manifest.ts`; production never sets it, and a
+      `VERCEL_ENV=production` build with it set fails in next.config.ts,
+      `manifest-guard.ts`; anything but an http(s) URL or a /path is refused). In Git Bash prefix the build
       with `MSYS_NO_PATHCONV=1`, or MSYS rewrites the path to
       `C:/Program Files/Git/wine-map-draft/...`, which is refused and the
       live manifest loads: the console says `[wine-map] manifest override:`

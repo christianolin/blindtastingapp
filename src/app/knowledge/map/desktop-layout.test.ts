@@ -150,7 +150,7 @@ const PHONE_EXACT_STRINGS: readonly [string, string][] = [
   [`${MAP}/tile-wine-map-explorer.tsx`, "order-1 min-w-0 flex-1 overflow-hidden max-md:min-h-0 max-md:gap-0 max-md:rounded-none max-md:bg-transparent max-md:py-0 max-md:ring-0 md:col-start-2 md:row-start-1 md:row-span-2 md:min-h-0 md:gap-0 md:overflow-visible md:rounded-none md:bg-transparent md:py-0 md:ring-0 xl:order-2"],
   [`${MAP}/tile-wine-map-explorer.tsx`, "pt-4 max-md:flex max-md:min-h-0 max-md:flex-1 max-md:flex-col max-md:px-0 max-md:pt-0 md:flex md:min-h-0 md:flex-1 md:flex-col md:px-0 md:pt-0"],
   [`${MAP}/tile-wine-map-explorer.tsx`, "mb-2 flex flex-wrap items-center gap-2 max-md:mb-0 max-md:shrink-0 max-md:flex-nowrap max-md:px-3 max-md:py-1.5 md:h-8 md:shrink-0 md:flex-nowrap"],
-  [`${MAP}/tile-wine-map-explorer.tsx`, "max-md:h-auto max-md:min-h-0 max-md:flex-1 md:min-h-0 md:flex-1"],
+  [`${MAP}/tile-wine-map-explorer.tsx`, "relative max-md:h-auto max-md:min-h-0 max-md:flex-1 md:min-h-0 md:flex-1"],
   [`${MAP}/map-bottom-sheet.tsx`, "absolute inset-x-0 bottom-0 z-30 flex flex-col overflow-hidden rounded-t-2xl border-t border-border bg-card text-card-foreground shadow-[0_-8px_24px_rgba(0,0,0,0.10)] transition-[height] duration-200 ease-out motion-reduce:transition-none md:hidden"],
   [`${MAP}/map-options-sheet.tsx`, "inset-x-0 top-auto bottom-0 flex max-w-none translate-x-0 translate-y-0 flex-col gap-3 rounded-t-2xl rounded-b-none p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:max-w-none"],
   [`${MAP}/map-detail-controls.tsx`, "min-h-11 rounded px-2 py-1 outline-none focus-visible:outline-solid transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring md:min-h-0"],

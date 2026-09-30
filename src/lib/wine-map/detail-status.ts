@@ -11,6 +11,22 @@ export const DETAIL_WARNING = "Uses more resources and can cause lag.";
 
 export type DetailStatus = { text: string; retry: boolean };
 
+/** The selected place, when some of its own children in view are hidden only
+    by the size rule (reveal.ts): a drill-down landed before they are big
+    enough to draw (review 2026-09-30, Northern Rhône at z7.5). */
+export type SelectionCue = { name: string; drawn: number; hidden: number };
+
+/** The zoom-in cue for a selection, or null when nothing of it waits.
+    Owner-approved copy (2026-09-30: "Yes, use it"). It is part of
+    detailStatus's line and, on a phone, where that line lives in the closed
+    Map options sheet, it is also shown over the map on its own. */
+export function selectionCueText(selection: SelectionCue | null | undefined): string | null {
+  if (!selection || !(selection.hidden > 0)) return null;
+  return selection.drawn > 0
+    ? `Zoom in to see all the subregions of ${selection.name}.`
+    : `Zoom in to see the subregions of ${selection.name}.`;
+}
+
 /**
  * `focusName` is the focus country as the viewer sees it (local or English).
  * `depthVisible` means the map's scan saw that country's tier >= 2 features
@@ -39,10 +55,8 @@ export function detailStatus(input: {
   depthVisible: boolean;
   otherCountriesInView: boolean;
   pastDepthZoom: boolean;
-  /** The selected place, when some of its own children in view are hidden
-      only by the size rule (reveal.ts): a drill-down landed before they are
-      big enough to draw (review 2026-09-30, Northern Rhône at z7.5). */
-  selection?: { name: string; drawn: number; hidden: number } | null;
+  /** See SelectionCue. */
+  selection?: SelectionCue | null;
 }): DetailStatus {
   if (input.tree === "loading") return { text: "", retry: false };
   if (input.tree === "failed") {
@@ -51,19 +65,15 @@ export function detailStatus(input: {
   if (input.fellBack) {
     return { text: "Switched to One country after a problem last time.", retry: false };
   }
+  const cue = selectionCueText(input.selection);
   if (input.detail === "all") {
-    return { text: `Subregions for all countries. ${DETAIL_WARNING}`, retry: false };
+    // The All warning always shows while All is on; the size rule hides small
+    // children in All mode too, so the cue follows it (review 2026-09-30:
+    // an All-mode drill-down into Napa Valley got no zoom-in hint).
+    const all = `Subregions for all countries. ${DETAIL_WARNING}`;
+    return { text: cue ? `${all} ${cue}` : all, retry: false };
   }
-  if (input.selection && input.selection.hidden > 0) {
-    // Owner-approved copy (2026-09-30: "Yes, use it").
-    return {
-      text:
-        input.selection.drawn > 0
-          ? `Zoom in to see all the subregions of ${input.selection.name}.`
-          : `Zoom in to see the subregions of ${input.selection.name}.`,
-      retry: false,
-    };
-  }
+  if (cue) return { text: cue, retry: false };
   if (!input.focusName) {
     return {
       text: "Zoom in on a country, or tap one below, to see its subregions.",

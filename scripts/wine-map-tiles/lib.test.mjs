@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { readFileSync } from "node:fs";
 import {
   ATTRIBUTION,
   attributionKeyFor,
@@ -26,6 +27,15 @@ import {
   featureOutsideCoverage,
   placeFeatures,
   PIECE_PX_RATIO,
+  FAMILY_MARGIN_REPORT,
+  firstDrawnZoom,
+  labelPartIndex,
+  pointInPolygon,
+  REVEAL_CAP_ZOOM,
+  REVEAL_CHECK_PX,
+  REVEAL_FAMILY_PINS,
+  revealFamilyReport,
+  RIBBON_MIN_ASPECT,
   REVEAL_LENGTH_RATIO,
   REVEAL_RULE,
   REVEAL_THICKNESS_RATIO,
@@ -590,6 +600,12 @@ test("partSize: compact shapes get the plain rule; ribbons their length, capped 
   assert.equal(partSize({ area: 180, long: 60 }), 24); // 60 x 3: min(60/2, 8 x 3)
   assert.equal(partSize({ area: 400, long: 60 }), 30); // 60 x 6.7: its length decides
   assert.equal(partSize({ area: 100, long: 100 }), 10); // 100 x 1: too thin, the plain rule
+  // Review 2026-09-30: an aspect over 4 alone is not a ribbon. Hermitage is
+  // 51 x 10 px (aspect 5.0) and must wait like any compact hill.
+  close(partSize({ area: 51 * 10.2, long: 51 }), Math.sqrt(51 * 10.2));
+  close(partSize({ area: 50 * 7, long: 50 }), Math.sqrt(350)); // aspect 7.1: plain
+  assert.equal(partSize({ area: 800, long: 80 }), 40); // 80 x 10, aspect 8: a ribbon, min(80/2, 8 x 10)
+  close(partSize({ area: 53.8 * 3.68, long: 53.8 }), 26.9); // Côte de Nuits, aspect 14.6: 53.8 / 2
   assert.equal(partSize({ area: 0, long: 5 }), 0);
   assert.equal(partSize({ area: 4, long: 0 }), 2);
 });
@@ -756,4 +772,89 @@ test("validate: a shard with reveal_rule refuses a subregion without a numeric r
   checkTileFeature({ ...base, tier: 1 }, opts); // regions are exempt
   checkTileFeature(base, { ...opts, revealRule: false }); // an archive from before the rule
   assert.throws(() => checkTileFeature({ ...base, id: "b", reveal_area: 1 }, opts), /unexpected feature id b/);
+});
+
+test("reveal check constants follow the app (reveal.ts); a ribbon is at least 8 times as long as thick", () => {
+  const app = readFileSync(new URL("../../src/lib/wine-map/reveal.ts", import.meta.url), "utf8");
+  assert.equal(Number(/export const REVEAL_MIN_PX = (\d+);/.exec(app)?.[1]), REVEAL_CHECK_PX);
+  assert.equal(Number(/export const REVEAL_CAP_ZOOM = (\d+);/.exec(app)?.[1]), REVEAL_CAP_ZOOM);
+  assert.equal(RIBBON_MIN_ASPECT, 8);
+  assert.deepEqual(REVEAL_FAMILY_PINS, ["france.bourgogne"]);
+  assert.equal(FAMILY_MARGIN_REPORT, 1.2);
+});
+
+test("pointInPolygon and labelPartIndex: the outer ring counts, a hole does not", () => {
+  const withHole = [rect(0, 0, 1, 1)[0], rect(0.4, 0.4, 0.2, 0.2)[0]];
+  assert.equal(pointInPolygon([0.1, 0.1], withHole), true);
+  assert.equal(pointInPolygon([0.5, 0.5], withHole), false);
+  assert.equal(pointInPolygon([2, 2], withHole), false);
+  const polygons = [rect(0, 0, 1, 1), rect(3, 3, 0.1, 0.1)];
+  const at = (lon, lat) => ({ label_point: JSON.stringify({ type: "Point", coordinates: [lon, lat] }) });
+  assert.equal(labelPartIndex(at(0.5, 0.5), polygons), 0);
+  assert.equal(labelPartIndex(at(3.05, 3.05), polygons), 1);
+  assert.equal(labelPartIndex(at(9, 9), polygons), -1);
+  assert.equal(labelPartIndex({ label_point: null }, polygons), -1);
+  assert.equal(labelPartIndex({ label_point: "not json" }, polygons), -1);
+});
+
+// Review 2026-09-30: ten places (Paradiesgarten, Weinhex, Lago di Caldaro...)
+// have their label point in a small non-anchor part; the name came 1-2 zooms
+// before the part under it.
+test("revealPlan: the part under the label comes with the name", () => {
+  const polygons = [rect(0, 0, 0.3, 0.3), rect(1, 1, 0.01, 0.01), rect(2, 2, 0.01, 0.01)];
+  const label = (lon, lat) => JSON.stringify({ type: "Point", coordinates: [lon, lat] });
+  const plan = revealPlan([placeRow("scatter", polygons, { label_point: label(1.005, 1.005) })], () => 47).get("scatter");
+  assert.equal(plan.anchor, 0);
+  assert.equal(plan.labelPart, 1);
+  assert.equal(plan.parts[1].side, plan.side);
+  assert.equal(plan.parts[1].revealArea, plan.revealArea);
+  close(plan.parts[2].side, 3 * 0.01 * PX_PER_DEG, 1e-3); // the other piece still waits
+  // A label on the anchor, or outside every part: only the anchor carries the place.
+  for (const point of [label(0.1, 0.1), label(9, 9)]) {
+    const other = revealPlan([placeRow("scatter", polygons, { label_point: point })], () => 47).get("scatter");
+    assert.equal(other.parts[1].side < other.side, true);
+    assert.equal(other.parts[0].side, other.side);
+  }
+});
+
+test("firstDrawnZoom: the app's test, floored at the tile zoom and the z5 mount, capped at z16", () => {
+  assert.equal(firstDrawnZoom(24 / 2 ** 7, 4), 7);
+  assert.equal(firstDrawnZoom((24 / 2 ** 7) * 0.999, 4), 8);
+  assert.equal(firstDrawnZoom(100, 7.35), 7);
+  assert.equal(firstDrawnZoom(100, 2), 5);
+  assert.equal(firstDrawnZoom(1e-9, 7), 16);
+  assert.equal(firstDrawnZoom(0, 7), 16);
+  assert.equal(firstDrawnZoom(24 / 2 ** 6, 4, 12), 5);
+});
+
+// Review 2026-09-30: Grand Auxerrois reaches the Burgundy view only through
+// the family median (0.545 of it); a sibling change could leave it behind,
+// and nothing said so. The export now reports members near the cut and fails
+// when a pinned region's subregions no longer come in together.
+test("revealFamilyReport: members near the cut, and a pinned region whose subregions split", () => {
+  const sub = (id, polygons) => placeRow(id, polygons, { kind: "SUBREGION", display_tier: 2 });
+  const districts = [
+    sub("chablis", [rect(0.1, 0.1, 0.3, 0.3)]),
+    sub("auxerrois", [rect(0.5, 0.1, 0.17, 0.17)]), // 0.17 of a 0.3 median: pulled, near the cut
+    sub("nuits", [rect(0.1, 0.5, 0.8, 0.03)]),
+    sub("beaune", [rect(1, 0.1, 0.9, 0.05)]),
+    sub("chalonnaise", [rect(1, 0.3, 0.8, 0.045)]),
+    sub("maconnais", [rect(2, 0.1, 0.32, 0.32)]),
+  ];
+  const rows = [REGION, ...districts];
+  const plan = revealPlan(rows, () => 0);
+  const report = revealFamilyReport(rows, plan);
+  assert.deepEqual(report.pinFailures, []);
+  assert.deepEqual(report.nearCut, [{ key: "france.bourgogne.auxerrois", parent: "france.bourgogne", ratio: 0.548, pulled: true }]);
+  // Two big new districts raise the median past twice Auxerrois: it is left a zoom behind.
+  const grown = [...rows, sub("new1", [rect(3, 0.1, 0.6, 0.6)]), sub("new2", [rect(4, 0.1, 0.6, 0.6)])];
+  const split = revealFamilyReport(grown, revealPlan(grown, () => 0));
+  assert.equal(split.pinFailures.length, 1);
+  assert.equal(split.pinFailures[0].parent, "france.bourgogne");
+  const zoomOf = Object.fromEntries(split.pinFailures[0].zooms.map((z) => [z.key, z.zoom]));
+  assert.equal(zoomOf["france.bourgogne.auxerrois"] > zoomOf["france.bourgogne.chablis"], true);
+  // An unpinned region is only reported, never failed.
+  const other = { ...REGION, id: "loire", canonical_key: "france.loire" };
+  const moved = grown.map((row) => (row.primary_parent_id === "bourgogne" ? { ...row, primary_parent_id: "loire" } : row));
+  assert.deepEqual(revealFamilyReport([other, ...moved], revealPlan([other, ...moved], () => 0)).pinFailures, []);
 });
