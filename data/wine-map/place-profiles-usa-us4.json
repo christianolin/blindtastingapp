@@ -180,7 +180,8 @@
           "name": "Riesling"
         },
         {
-          "name": "Pinot Noir"
+          "name": "Pinot Noir",
+          "role": "ACCESSORY"
         },
         {
           "name": "Cabernet Franc",
@@ -238,10 +239,6 @@
           "name": "Riesling"
         },
         {
-          "name": "Blaufränkisch",
-          "note": "Sold as Lemberger"
-        },
-        {
           "name": "Chardonnay",
           "role": "ACCESSORY"
         },
@@ -256,6 +253,11 @@
         {
           "name": "Gewürztraminer",
           "role": "ACCESSORY"
+        },
+        {
+          "name": "Blaufränkisch",
+          "role": "ACCESSORY",
+          "note": "Sold as Lemberger"
         }
       ],
       "sources": [
@@ -363,7 +365,8 @@
           "name": "Merlot"
         },
         {
-          "name": "Cabernet Franc"
+          "name": "Cabernet Franc",
+          "role": "ACCESSORY"
         },
         {
           "name": "Chardonnay",

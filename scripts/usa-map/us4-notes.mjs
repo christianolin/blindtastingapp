@@ -7,6 +7,14 @@ import { US4_STATES } from "./us4-wave.mjs";
 const short = (k) => k.replace(/^united-states\./, "");
 const shares = (s) => Object.entries(s).sort(([a], [b]) => a.localeCompare(b)).map(([c, v]) => `${c} ${pct(v)}`).join(", ");
 
+// Where UC Davis's county field and the CFR text disagree, the fact sheet
+// footnotes the row; the knowledge text follows the CFR.
+export const COUNTY_NOTES = Object.freeze({
+  "united-states.oregon.willamette-valley.tualatin-hills":
+    "UC Davis's county field lists Multnomah and Washington; 27 CFR 9.268(c) adds Clackamas, and the knowledge text follows the CFR.",
+});
+const noteLabel = (key) => key.split(".").pop();
+
 export async function loadProps() {
   const props = new Map();
   for (const slug of ["washington", "oregon", "new-york"]) {
@@ -32,9 +40,11 @@ export function factSheetMarkdown({ wave, trees, props }) {
       const edges = allEdges.filter((e) => e.source_key === p.key || e.target_key === p.key)
         .map((e) => `${e.type} ${short(e.source_key === p.key ? e.target_key : e.source_key)}${e.share != null ? ` (${pct(e.share)} of its land)` : ""}${e.ratio != null ? ` ${pct(e.ratio)}` : ""}`)
         .join("; ");
-      L.push(`| \`${p.key}\` | ${p.name} | ${u.cfr_section} | ${u.established} | ${(props.get(p.ucd_ava_id)?.county ?? "").split("|").join(", ")} | ${p.legal_states.join(", ")} | ${Math.round(p.area_km2)} | ${parent} | ${edges || "none"} |`);
+      L.push(`| \`${p.key}\` | ${p.name} | ${u.cfr_section} | ${u.established} | ${(props.get(p.ucd_ava_id)?.county ?? "").split("|").join(", ")}${COUNTY_NOTES[p.key] ? `[^${noteLabel(p.key)}]` : ""} | ${p.legal_states.join(", ")} | ${Math.round(p.area_km2)} | ${parent} | ${edges || "none"} |`);
     }
     L.push("");
+    const noted = list.filter((p) => COUNTY_NOTES[p.key]);
+    if (noted.length) L.push(...noted.map((p) => `[^${noteLabel(p.key)}]: ${COUNTY_NOTES[p.key]}`), "");
   }
   return `${L.join("\n")}\n`;
 }

@@ -62,11 +62,11 @@ Name: **Cayuga Lake** · key `united-states.new-york.finger-lakes.cayuga-lake` �
 
 **Grapes**, as the details panel lists them (signature grapes first, then the ones it tags "accessory"; each group alphabetically):
 
-- Pinot Noir
 - Riesling
 - Cabernet Franc · accessory
 - Chardonnay · accessory
 - Gewürztraminer · accessory
+- Pinot Noir · accessory
 
 **Styles:** White, Red
 
@@ -100,8 +100,8 @@ Name: **Seneca Lake** · key `united-states.new-york.finger-lakes.seneca-lake` �
 
 **Grapes**, as the details panel lists them (signature grapes first, then the ones it tags "accessory"; each group alphabetically):
 
-- Blaufränkisch (Sold as Lemberger)
 - Riesling
+- Blaufränkisch (Sold as Lemberger) · accessory
 - Cabernet Franc · accessory
 - Chardonnay · accessory
 - Gewürztraminer · accessory
@@ -178,8 +178,8 @@ Name: **North Fork of Long Island** · key `united-states.new-york.long-island.n
 
 **Grapes**, as the details panel lists them (signature grapes first, then the ones it tags "accessory"; each group alphabetically):
 
-- Cabernet Franc
 - Merlot
+- Cabernet Franc · accessory
 - Cabernet Sauvignon · accessory
 - Chardonnay · accessory
 - Sauvignon Blanc · accessory
@@ -315,12 +315,12 @@ Measured in the rolled-back rehearsal of 2026-09-30, as a signed-in reader. "Bef
 
 | Surface | Before | After |
 |---|---|---|
-| Guess ladder (the whole list) | Riesling, Cabernet Franc, Chardonnay, Merlot, Blaufränkisch, Gewürztraminer, Pinot Noir, Cabernet Sauvignon, Sauvignon Blanc | Riesling (5), Cabernet Franc (4), Chardonnay (3), Merlot (3), Frontenac (2), La Crescent (2), Marquette (2), Pinot Noir (2), Blaufränkisch (1), Seyval Blanc (1), Gewürztraminer (4, accessory), Cabernet Sauvignon (3, accessory), Sauvignon Blanc (3, accessory), Baco Noir (1, accessory), Vidal Blanc (1, accessory) |
-| By-hand chips, no colour yet | Riesling, Cabernet Franc, Chardonnay, Merlot, Blaufränkisch | Riesling, Cabernet Franc, Chardonnay, Merlot, Frontenac; the last chip is one of Frontenac, La Crescent, Marquette, Pinot Noir (tied) |
+| Guess ladder (the whole list) | Riesling, Cabernet Franc, Chardonnay, Merlot, Blaufränkisch, Gewürztraminer, Pinot Noir, Cabernet Sauvignon, Sauvignon Blanc | Riesling (5), Cabernet Franc (3), Chardonnay (3), Merlot (3), Frontenac (2), La Crescent (2), Marquette (2), Pinot Noir (1), Blaufränkisch (3, accessory), Seyval Blanc (1), Gewürztraminer (4, accessory), Cabernet Sauvignon (3, accessory), Sauvignon Blanc (3, accessory), Baco Noir (1, accessory), Vidal Blanc (1, accessory) |
+| By-hand chips, no colour yet | Riesling, Cabernet Franc, Chardonnay, Merlot, Blaufränkisch | Riesling, Cabernet Franc, Chardonnay, Merlot, Frontenac; the last chip is one of Frontenac, La Crescent, Marquette (tied) |
 | By-hand chips, red | Cabernet Franc, Merlot, Blaufränkisch, Pinot Noir, Cabernet Sauvignon | Cabernet Franc, Merlot, Frontenac, Marquette, Pinot Noir |
 | By-hand chips, white | Riesling, Chardonnay, Gewürztraminer, Sauvignon Blanc | Riesling, Chardonnay, La Crescent, Seyval Blanc, Gewürztraminer |
 
-Against New York's own list (its first three: Riesling, Chardonnay, Cabernet Franc): Chardonnay (2nd on the state's own list) moves down to 3rd to 4th (a 2-way tie).
+Against New York's own list (its first three: Riesling, Chardonnay, Cabernet Franc): none moves down or drops.
 
 ## Nearby chips (spec §8.7)
 

@@ -19,6 +19,15 @@ test("the fact sheet: one row per AVA with CFR section, TTB date, counties and T
   assert.match(md, /\| `united-states\.washington\.columbia-valley\.walla-walla-valley` \| Walla Walla Valley \| 9\.91 \| 1984-02-06 \| Umatilla, Walla Walla \| OR, WA \|/);
 });
 
+test("the fact sheet footnotes Tualatin Hills' counties: UC Davis's field vs 27 CFR 9.268(c)", () => {
+  const md = factSheetMarkdown({ wave, trees, props });
+  assert.match(md, /\| `united-states\.oregon\.willamette-valley\.tualatin-hills` \| Tualatin Hills \| 9\.268 \| 2020-06-03 \| Multnomah, Washington\[\^tualatin-hills\] \| OR \|/);
+  const defs = md.match(/^\[\^[a-z-]+\]: .*$/gm) ?? [];
+  assert.deepEqual(defs, ["[^tualatin-hills]: UC Davis's county field lists Multnomah and Washington; 27 CFR 9.268(c) adds Clackamas, and the knowledge text follows the CFR."]);
+  // the definition sits under the Oregon table, before the Washington heading
+  assert.match(md, /## Oregon \(18 places\)[^#]*\n\n\[\^tualatin-hills\]: [^\n]+\n\n## Washington/);
+});
+
 test("Review Focus 1: the tree review lists every lock a reader may not expect, with its figure", () => {
   const md = treeReviewMarkdown({ wave, trees });
   for (const line of [

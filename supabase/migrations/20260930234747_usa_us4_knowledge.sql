@@ -75,7 +75,7 @@ select p.id, g.id, 'PRINCIPAL', true, null, null, 'PUBLISHED'
   from public.wine_places p, public.grapes g
  where p.canonical_key = 'united-states.new-york.finger-lakes.cayuga-lake' and g.name = 'Riesling';
 insert into public.wine_place_grapes (wine_place_id, grape_id, role, permitted, share_pct, local_note, editorial_status)
-select p.id, g.id, 'PRINCIPAL', true, null, null, 'PUBLISHED'
+select p.id, g.id, 'ACCESSORY', true, null, null, 'PUBLISHED'
   from public.wine_places p, public.grapes g
  where p.canonical_key = 'united-states.new-york.finger-lakes.cayuga-lake' and g.name = 'Pinot Noir';
 insert into public.wine_place_grapes (wine_place_id, grape_id, role, permitted, share_pct, local_note, editorial_status)
@@ -106,10 +106,6 @@ select p.id, g.id, 'PRINCIPAL', true, null, null, 'PUBLISHED'
   from public.wine_places p, public.grapes g
  where p.canonical_key = 'united-states.new-york.finger-lakes.seneca-lake' and g.name = 'Riesling';
 insert into public.wine_place_grapes (wine_place_id, grape_id, role, permitted, share_pct, local_note, editorial_status)
-select p.id, g.id, 'PRINCIPAL', true, null, 'Sold as Lemberger', 'PUBLISHED'
-  from public.wine_places p, public.grapes g
- where p.canonical_key = 'united-states.new-york.finger-lakes.seneca-lake' and g.name = 'Blaufränkisch';
-insert into public.wine_place_grapes (wine_place_id, grape_id, role, permitted, share_pct, local_note, editorial_status)
 select p.id, g.id, 'ACCESSORY', true, null, null, 'PUBLISHED'
   from public.wine_places p, public.grapes g
  where p.canonical_key = 'united-states.new-york.finger-lakes.seneca-lake' and g.name = 'Chardonnay';
@@ -125,6 +121,10 @@ insert into public.wine_place_grapes (wine_place_id, grape_id, role, permitted, 
 select p.id, g.id, 'ACCESSORY', true, null, null, 'PUBLISHED'
   from public.wine_places p, public.grapes g
  where p.canonical_key = 'united-states.new-york.finger-lakes.seneca-lake' and g.name = 'Gewürztraminer';
+insert into public.wine_place_grapes (wine_place_id, grape_id, role, permitted, share_pct, local_note, editorial_status)
+select p.id, g.id, 'ACCESSORY', true, null, 'Sold as Lemberger', 'PUBLISHED'
+  from public.wine_places p, public.grapes g
+ where p.canonical_key = 'united-states.new-york.finger-lakes.seneca-lake' and g.name = 'Blaufränkisch';
 
 -- united-states.new-york.hudson-river-region
 insert into public.wine_place_articles (wine_place_id, description, climate, soils, grape_varieties, wine_styles, key_facts, editorial_status)
@@ -176,7 +176,7 @@ select p.id, g.id, 'PRINCIPAL', true, null, null, 'PUBLISHED'
   from public.wine_places p, public.grapes g
  where p.canonical_key = 'united-states.new-york.long-island.north-fork-of-long-island' and g.name = 'Merlot';
 insert into public.wine_place_grapes (wine_place_id, grape_id, role, permitted, share_pct, local_note, editorial_status)
-select p.id, g.id, 'PRINCIPAL', true, null, null, 'PUBLISHED'
+select p.id, g.id, 'ACCESSORY', true, null, null, 'PUBLISHED'
   from public.wine_places p, public.grapes g
  where p.canonical_key = 'united-states.new-york.long-island.north-fork-of-long-island' and g.name = 'Cabernet Franc';
 insert into public.wine_place_grapes (wine_place_id, grape_id, role, permitted, share_pct, local_note, editorial_status)

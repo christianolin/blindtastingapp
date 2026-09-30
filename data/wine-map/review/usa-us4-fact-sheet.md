@@ -34,9 +34,11 @@ Rendered by `scripts/usa-map/render-us4-notes.mjs` from the three tree reports, 
 | `united-states.oregon.willamette-valley.lower-long-tom` | Lower Long Tom | 9.281 | 2021-11-10 | Benton, Lane | OR | 117 | oregon.willamette-valley (legal_record, 99.32%) | none |
 | `united-states.oregon.willamette-valley.mcminnville` | McMinnville | 9.181 | 2005-01-18 | Yamhill | OR | 149 | oregon.willamette-valley (legal_record, 98.09%) | none |
 | `united-states.oregon.willamette-valley.mount-pisgah-polk-county-oregon` | Mount Pisgah, Polk County, Oregon | 9.284 | 2022-06-03 | Polk | OR | 23 | oregon.willamette-valley (measured, 100.00%) | none |
-| `united-states.oregon.willamette-valley.tualatin-hills` | Tualatin Hills | 9.268 | 2020-06-03 | Multnomah, Washington | OR | 581 | oregon.willamette-valley (measured, 100.00%) | none |
+| `united-states.oregon.willamette-valley.tualatin-hills` | Tualatin Hills | 9.268 | 2020-06-03 | Multnomah, Washington[^tualatin-hills] | OR | 581 | oregon.willamette-valley (measured, 100.00%) | none |
 | `united-states.oregon.willamette-valley.van-duzer-corridor` | Van Duzer Corridor | 9.265 | 2018-12-14 | Polk, Yamhill | OR | 228 | oregon.willamette-valley (measured, 100.00%) | none |
 | `united-states.oregon.willamette-valley.yamhill-carlton` | Yamhill-Carlton | 9.183 | 2004-12-09 | Washington, Yamhill | OR | 233 | oregon.willamette-valley (measured, 99.86%) | none |
+
+[^tualatin-hills]: UC Davis's county field lists Multnomah and Washington; 27 CFR 9.268(c) adds Clackamas, and the knowledge text follows the CFR.
 
 ## Washington (16 places)
 
