@@ -8,5 +8,907 @@
     "rules": "Plain English, no praise words, figures only where a listed source publishes them, never 'official boundary' (spec §18). Exactly one key fact 'Established YYYY (27 CFR 9.N)', as TTB lists it. Descriptions of 2-4 sentences, at most 700 characters. At most 8 grapes; the 1-3 signature grapes are PRINCIPAL and the rest ACCESSORY. At least two sources per place, one of them the CFR section or the Federal Register final rule. share_pct is left out."
   },
   "new_grapes": [],
-  "places": {}
+  "places": {
+    "united-states.california.north-coast.napa-valley": {
+      "article": {
+        "description": "California's first AVA, a valley about 30 miles long between the Mayacamas Mountains to the west and the Vaca Range to the east, in Napa County. Fifteen smaller AVAs lie within it, from Calistoga at the northern end to Coombsville and Oak Knoll District near the city of Napa, and Los Carneros and Wild Horse Valley overlap its southern edge. It is known above all for Cabernet Sauvignon.",
+        "climate": "A dry Mediterranean climate: warm, rainless summers and mild, wet winters. Fog and wind from San Pablo Bay cool the southern end, and the valley grows warmer toward Calistoga in the north; the mountain AVAs above the fog line see fewer swings between day and night.",
+        "soils": "Very varied over short distances: gravelly and sandy alluvial fans and river deposits on the valley floor, volcanic soils from ash and lava on the eastern side and in the hills, and marine sedimentary soils on the western slopes.",
+        "grape_varieties": "Cabernet Sauvignon above all, with Merlot, Cabernet Franc and the other Bordeaux varieties; Chardonnay and Sauvignon Blanc for whites; Zinfandel and Pinot Noir in smaller amounts.",
+        "wine_styles": "Dry red wines, mostly Cabernet Sauvignon and Bordeaux-style blends, dry whites from Chardonnay and Sauvignon Blanc, and sparkling wine from the cooler south.",
+        "key_facts": [
+          "Established 1981 (27 CFR 9.23)",
+          "California's first AVA",
+          "About 30 miles long and a few miles wide (Napa Valley Vintners)",
+          "Grows about 4% of California's wine grapes (Napa Valley Vintners)",
+          "Wines naming an AVA wholly inside Napa County must also show \"Napa Valley\" on the label (Cal. Bus. & Prof. Code §25240)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE",
+        "SPARKLING"
+      ],
+      "grapes": [
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Merlot",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Chardonnay",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Sauvignon Blanc",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Cabernet Franc",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Zinfandel",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Pinot Noir",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.23, Napa Valley (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.23"
+        },
+        {
+          "title": "TTB, AVA establishment dates",
+          "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/ava-establishment-dates"
+        },
+        {
+          "title": "Napa Valley Vintners, About the Napa Valley AVA",
+          "url": "https://napavintners.com/napa_valley/"
+        },
+        {
+          "title": "California Business and Professions Code §25240 (Napa Valley conjunctive labeling)",
+          "url": "https://california.public.law/codes/business_and_professions_code_section_25240"
+        }
+      ]
+    },
+    "united-states.california.north-coast.napa-valley.atlas-peak": {
+      "article": {
+        "description": "A mountain AVA on the western slopes of the Vaca Range, east of the Stags Leap District and the city of Napa, named after the 2,663-foot Atlas Peak. Most of the area lies above 1,400 feet, above much of the valley fog. Wines labelled Atlas Peak must also carry the Napa Valley name.",
+        "climate": "A cool mountain climate with less fog than the valley floor: summer days are about 10 to 15 °F cooler than on the valley floor and rarely pass 90 °F, and the difference between day and night is wide.",
+        "soils": "Volcanic soils, often red and basaltic, shallow and quick-draining, so vineyards usually need irrigation.",
+        "grape_varieties": "Mainly Cabernet Sauvignon and Chardonnay.",
+        "wine_styles": "Dry red wines, above all Cabernet Sauvignon, and dry Chardonnay.",
+        "key_facts": [
+          "Established 1992 (27 CFR 9.140)",
+          "Part of its boundary follows the 1,600-foot contour line (27 CFR 9.140)",
+          "Elevations from about 760 to 2,600 feet; most of the area lies above 1,400 feet (Napa Valley Vintners)",
+          "Labels must also show \"Napa Valley\" (Cal. Bus. & Prof. Code §25240)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Chardonnay",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.140, Atlas Peak (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.140"
+        },
+        {
+          "title": "TTB, AVA establishment dates",
+          "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/ava-establishment-dates"
+        },
+        {
+          "title": "Napa Valley Vintners, Atlas Peak AVA",
+          "url": "https://napavintners.com/napa_valley/atlas-peak-ava/"
+        },
+        {
+          "title": "California Business and Professions Code §25240 (Napa Valley conjunctive labeling)",
+          "url": "https://california.public.law/codes/business_and_professions_code_section_25240"
+        }
+      ]
+    },
+    "united-states.california.north-coast.napa-valley.calistoga": {
+      "article": {
+        "description": "The northernmost AVA on the Napa Valley floor, around the town of Calistoga below Mount St. Helena, closed in by mountains on three sides. It is the warmest part of the valley floor, and its soils are largely volcanic. Wines labelled Calistoga must also carry the Napa Valley name.",
+        "climate": "Warm to hot days, with summer peaks above 100 °F, and cold nights that can fall to the low 40s °F as air drains down from the surrounding mountains; one of the widest day-to-night swings in Napa Valley.",
+        "soils": "Mostly volcanic: rocky and stony loams on the hillsides, gravelly and cobbly loams on the alluvial fans, and heavier clay and silt toward the centre of the valley.",
+        "grape_varieties": "Cabernet Sauvignon first, with Zinfandel, Petite Sirah, Merlot, Cabernet Franc and Sauvignon Blanc.",
+        "wine_styles": "Dry red wines, from Cabernet Sauvignon to Zinfandel and Petite Sirah, and some Sauvignon Blanc.",
+        "key_facts": [
+          "Established 2009 (27 CFR 9.209)",
+          "Elevations from about 300 to 1,200 feet (Napa Valley Vintners)",
+          "The town was named in 1867 by Samuel Brannan (Napa Valley Vintners)",
+          "Labels must also show \"Napa Valley\" (Cal. Bus. & Prof. Code §25240)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Zinfandel",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Petite Sirah",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Merlot",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Cabernet Franc",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Sauvignon Blanc",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.209, Calistoga (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.209"
+        },
+        {
+          "title": "TTB, AVA establishment dates",
+          "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/ava-establishment-dates"
+        },
+        {
+          "title": "Napa Valley Vintners, Calistoga AVA",
+          "url": "https://napavintners.com/napa_valley/calistoga-ava"
+        },
+        {
+          "title": "California Business and Professions Code §25240 (Napa Valley conjunctive labeling)",
+          "url": "https://california.public.law/codes/business_and_professions_code_section_25240"
+        }
+      ]
+    },
+    "united-states.california.north-coast.napa-valley.chiles-valley": {
+      "article": {
+        "description": "A long, narrow valley in the Vaca Range in the northeast of Napa County, higher and set apart from the main Napa Valley. It has more vineyards than wineries, and it is named after Joseph Ballinger Chiles, who received a land grant here in 1841. Wines labelled Chiles Valley must also carry the Napa Valley name.",
+        "climate": "Warm summer days, typically in the mid-80s °F, and cool nights below 50 °F because of the elevation; winters and springs are colder than on the Napa Valley floor, and harvest comes later.",
+        "soils": "Mostly of marine origin: fertile alluvial silty clay on the valley floor and clay loams and stony clays on the hillsides, with some volcanic outcrops.",
+        "grape_varieties": "Cabernet Sauvignon, Merlot and Zinfandel, with some Cabernet Franc and Sauvignon Blanc.",
+        "wine_styles": "Dry red wines, mainly Cabernet Sauvignon, Merlot and Zinfandel.",
+        "key_facts": [
+          "Established 1999 (27 CFR 9.154)",
+          "Elevations from about 600 to 1,200 feet (Napa Valley Vintners)",
+          "The first winery here was founded in the 1870s by Francis Sievers (Napa Valley Vintners)",
+          "Labels must also show \"Napa Valley\" (Cal. Bus. & Prof. Code §25240)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Merlot",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Zinfandel",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Cabernet Franc",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Sauvignon Blanc",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.154, Chiles Valley (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.154"
+        },
+        {
+          "title": "TTB, AVA establishment dates",
+          "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/ava-establishment-dates"
+        },
+        {
+          "title": "Napa Valley Vintners, Chiles Valley AVA",
+          "url": "https://napavintners.com/napa_valley/chiles-valley-ava"
+        },
+        {
+          "title": "California Business and Professions Code §25240 (Napa Valley conjunctive labeling)",
+          "url": "https://california.public.law/codes/business_and_professions_code_section_25240"
+        }
+      ]
+    },
+    "united-states.california.north-coast.napa-valley.coombsville": {
+      "article": {
+        "description": "A horseshoe of hills directly east of the city of Napa, at the foot of the Vaca Range, near the southern end of Napa Valley. It is mostly vineyards, with few wineries, and was known first for Chardonnay and Pinot Noir before Cabernet Sauvignon took over. Wines labelled Coombsville must also carry the Napa Valley name.",
+        "climate": "Cool for Napa Valley: San Pablo Bay is close, marine fog comes in most days of the growing season, and in the hottest months average highs can run up to 10 °F below those of other Napa AVAs.",
+        "soils": "Largely volcanic: rhyolitic tuff and old lava flows with plenty of rock, gravel and ash on the uplands, and alluvial soils in the lower parts.",
+        "grape_varieties": "Cabernet Sauvignon, Chardonnay and Merlot, with Pinot Noir and Syrah.",
+        "wine_styles": "Dry red wines, above all Cabernet Sauvignon, and dry Chardonnay.",
+        "key_facts": [
+          "Established 2011 (27 CFR 9.223)",
+          "Elevations from about 100 to 1,000 feet (Napa Valley Vintners)",
+          "Rainfall up to about 25 inches a year (Napa Valley Vintners)",
+          "Labels must also show \"Napa Valley\" (Cal. Bus. & Prof. Code §25240)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Chardonnay"
+        },
+        {
+          "name": "Merlot",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Pinot Noir",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Syrah",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.223, Coombsville (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.223"
+        },
+        {
+          "title": "TTB, AVA establishment dates",
+          "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/ava-establishment-dates"
+        },
+        {
+          "title": "Napa Valley Vintners, Coombsville AVA",
+          "url": "https://napavintners.com/napa_valley/coombsville-ava"
+        },
+        {
+          "title": "California Business and Professions Code §25240 (Napa Valley conjunctive labeling)",
+          "url": "https://california.public.law/codes/business_and_professions_code_section_25240"
+        }
+      ]
+    },
+    "united-states.california.north-coast.napa-valley.crystal-springs-of-napa-valley": {
+      "article": {
+        "description": "A hillside AVA of about 4,000 acres on the western face of the Vaca Range, east of St. Helena and south of Howell Mountain. It covers slopes between 400 and 1,400 feet, with no flat ground, and about 230 acres of vineyard in some 30 commercial vineyards when it was established in 2024. It was Napa Valley's first new AVA in 13 years.",
+        "climate": "The slopes face west and southwest and receive more sun than north- or east-facing ground; below 1,400 feet they keep a maritime influence, and the final rule notes that ground above and below the band is more prone to frost.",
+        "soils": "Thin, well-drained volcanic soils, with volcanic ash on slopes of 15 to 40 percent.",
+        "grape_varieties": "Mainly Cabernet Sauvignon, planted on the hillside vineyards.",
+        "wine_styles": "Dry red wines, chiefly Cabernet Sauvignon.",
+        "key_facts": [
+          "Established 2024 (27 CFR 9.296)",
+          "About 4,000 acres, with about 230 acres of vineyard at establishment (TTB final rule)",
+          "The 1,400-foot upper edge matches Howell Mountain's southern boundary (TTB final rule)",
+          "The same rule redrew Calistoga's boundary to put the Crystal Springs Vineyard wholly in this AVA"
+        ]
+      },
+      "styles": [
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Cabernet Sauvignon"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.296, Crystal Springs of Napa Valley (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.296"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), T.D. TTB-199, Crystal Springs of Napa Valley (2024)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2024-10-16/html/2024-23655.htm"
+        },
+        {
+          "title": "Napa Valley Vintners, Crystal Springs of Napa Valley AVA",
+          "url": "https://napavintners.com/napa_valley/crystal-springs-ava/"
+        }
+      ]
+    },
+    "united-states.california.north-coast.napa-valley.diamond-mountain-district": {
+      "article": {
+        "description": "A mountain AVA in the Mayacamas range just south of Calistoga, at the northwest end of Napa Valley. Its name comes from shards of volcanic glass in the soil. Jacob Schram planted vines here in 1862. Wines labelled Diamond Mountain District must also carry the Napa Valley name.",
+        "climate": "Mostly above the fog line: summer days rarely pass 90 °F and run 10 to 15 °F cooler than on the valley floor, with smaller swings between day and night; Diamond Creek's drainage brings cool air.",
+        "soils": "Reddish, fine-grained volcanic soils, sometimes gritty, weathered from uplifted volcanic and sedimentary rock; porous and quick-draining.",
+        "grape_varieties": "Cabernet Sauvignon dominates, with Cabernet Franc, Merlot and Petit Verdot.",
+        "wine_styles": "Dry red wines, chiefly Cabernet Sauvignon and Bordeaux-style blends.",
+        "key_facts": [
+          "Established 2001 (27 CFR 9.166)",
+          "Elevations from about 400 to 2,200 feet (Napa Valley Vintners)",
+          "Named for the reflective volcanic glass in its soils (Napa Valley Vintners)",
+          "Labels must also show \"Napa Valley\" (Cal. Bus. & Prof. Code §25240)"
+        ]
+      },
+      "styles": [
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Cabernet Franc",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Merlot",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Petit Verdot",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.166, Diamond Mountain District (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.166"
+        },
+        {
+          "title": "TTB, AVA establishment dates",
+          "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/ava-establishment-dates"
+        },
+        {
+          "title": "Napa Valley Vintners, Diamond Mountain District AVA",
+          "url": "https://napavintners.com/napa_valley/diamond-mountain-district-ava"
+        },
+        {
+          "title": "California Business and Professions Code §25240 (Napa Valley conjunctive labeling)",
+          "url": "https://california.public.law/codes/business_and_professions_code_section_25240"
+        }
+      ]
+    },
+    "united-states.california.north-coast.napa-valley.howell-mountain": {
+      "article": {
+        "description": "A plateau in the Vaca Range above St. Helena, around the village of Angwin, and the first AVA established inside Napa Valley. Its southern edge was set at 1,400 feet, where the fog tops out, so its vineyards lie above the valley's fog. Wines labelled Howell Mountain must also carry the Napa Valley name.",
+        "climate": "Above the fog line on the eastern side of the valley: warmer and drier than much of Napa Valley, with more hours of sun and little marine influence.",
+        "soils": "Shallow volcanic soils of low fertility that drain freely, from iron-rich red soils to white compressed volcanic ash (tuff).",
+        "grape_varieties": "Cabernet Sauvignon above all, with Merlot, Zinfandel and Cabernet Franc; a little Chardonnay and Viognier.",
+        "wine_styles": "Dry red wines, mostly Cabernet Sauvignon and Zinfandel, and a few whites.",
+        "key_facts": [
+          "Established 1983 (27 CFR 9.94)",
+          "The first sub-appellation of Napa Valley (Napa Valley Vintners)",
+          "Elevations from about 1,400 to 2,600 feet (Napa Valley Vintners)",
+          "Labels must also show \"Napa Valley\" (Cal. Bus. & Prof. Code §25240)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Merlot",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Zinfandel",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Cabernet Franc",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Chardonnay",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Viognier",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.94, Howell Mountain (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.94"
+        },
+        {
+          "title": "TTB, AVA establishment dates",
+          "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/ava-establishment-dates"
+        },
+        {
+          "title": "Napa Valley Vintners, Howell Mountain AVA",
+          "url": "https://napavintners.com/napa_valley/howell-mountain-ava"
+        },
+        {
+          "title": "California Business and Professions Code §25240 (Napa Valley conjunctive labeling)",
+          "url": "https://california.public.law/codes/business_and_professions_code_section_25240"
+        }
+      ]
+    },
+    "united-states.california.north-coast.napa-valley.mt-veeder": {
+      "article": {
+        "description": "A mountain AVA on the eastern slopes of the Mayacamas range, northwest of the city of Napa, along the line between Napa and Sonoma. It is one of the larger Napa sub-AVAs but among the least planted, because the ground is steep and wooded. It is named after the 1850s pastor Peter Veeder. Wines labelled Mt. Veeder must also carry the Napa Valley name.",
+        "climate": "Cool for Napa: summer days run 10 to 15 °F below the valley floor, with mid-summer highs around 85 °F, and most vineyards sit above the fog line.",
+        "soils": "Shallow, acidic, sandy and sandy-loam soils of marine sedimentary origin, an old seabed with Franciscan mélange beneath and rare volcanic pockets; well drained and low in fertility.",
+        "grape_varieties": "Cabernet Sauvignon above all, with Zinfandel, Merlot, Chardonnay and Syrah.",
+        "wine_styles": "Dry red wines, mainly Cabernet Sauvignon and Zinfandel, and dry Chardonnay.",
+        "key_facts": [
+          "Established 1990 (27 CFR 9.123)",
+          "Elevations from about 500 to 2,600 feet; most above 1,400 feet (Napa Valley Vintners)",
+          "Over 1,000 acres planted (Napa Valley Vintners)",
+          "Labels must also show \"Napa Valley\" (Cal. Bus. & Prof. Code §25240)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Zinfandel",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Merlot",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Chardonnay",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Syrah",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.123, Mt. Veeder (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.123"
+        },
+        {
+          "title": "TTB, AVA establishment dates",
+          "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/ava-establishment-dates"
+        },
+        {
+          "title": "Napa Valley Vintners, Mount Veeder AVA",
+          "url": "https://napavintners.com/napa_valley/mount-veeder-ava/"
+        },
+        {
+          "title": "California Business and Professions Code §25240 (Napa Valley conjunctive labeling)",
+          "url": "https://california.public.law/codes/business_and_professions_code_section_25240"
+        }
+      ]
+    },
+    "united-states.california.north-coast.napa-valley.oak-knoll-district-of-napa-valley": {
+      "article": {
+        "description": "A flat stretch of the valley floor at the southern end of central Napa Valley, just north of the city of Napa. Joseph Osborne planted vinifera vines here in 1851. The legal name ends in \"of Napa Valley\", so it already carries the valley's name.",
+        "climate": "Cool and even: daily fog from San Pablo Bay and afternoon breezes give one of the valley's coolest sub-AVAs and a long growing season; mid-summer highs reach about 92 °F and nights fall to about 50 °F.",
+        "soils": "River-laid soils in the centre, gravelly alluvial fans on the west side below Mt. Veeder, and silty clay loams toward the river in the south and east.",
+        "grape_varieties": "Cabernet Sauvignon, Chardonnay and Merlot, with Sauvignon Blanc and Riesling.",
+        "wine_styles": "Dry red wines from Cabernet Sauvignon and Merlot, and dry whites from Chardonnay, Sauvignon Blanc and Riesling.",
+        "key_facts": [
+          "Established 2004 (27 CFR 9.161)",
+          "Over 4,150 acres planted (Napa Valley Vintners)",
+          "Elevations from sea level to about 800 feet (Napa Valley Vintners)",
+          "Growing season averages about eight months (Napa Valley Vintners)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Chardonnay"
+        },
+        {
+          "name": "Merlot",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Sauvignon Blanc",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Riesling",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.161, Oak Knoll District of Napa Valley (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.161"
+        },
+        {
+          "title": "TTB, AVA establishment dates",
+          "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/ava-establishment-dates"
+        },
+        {
+          "title": "Napa Valley Vintners, Oak Knoll District AVA",
+          "url": "https://napavintners.com/napa_valley/oak-knoll-district-ava"
+        },
+        {
+          "title": "California Business and Professions Code §25240 (Napa Valley conjunctive labeling)",
+          "url": "https://california.public.law/codes/business_and_professions_code_section_25240"
+        }
+      ]
+    },
+    "united-states.california.north-coast.napa-valley.oakville": {
+      "article": {
+        "description": "A valley-floor AVA in the middle of Napa Valley, running from the Mayacamas foothills on the west to the Vaca foothills on the east, between Yountville and Rutherford. About three quarters of its vineyard is Cabernet Sauvignon. Wines labelled Oakville must also carry the Napa Valley name.",
+        "climate": "Moderately warm, with summer days commonly in the mid-90s °F; evening and early-morning fog keeps acidity in the grapes, and the eastern side gets more afternoon sun.",
+        "soils": "Gravelly, sedimentary alluvial loams on the western side and heavier volcanic soils on the eastern side; fairly deep and well drained.",
+        "grape_varieties": "Cabernet Sauvignon above all, with Merlot, Cabernet Franc and Sauvignon Blanc.",
+        "wine_styles": "Dry red wines, mainly Cabernet Sauvignon and Bordeaux-style blends, and dry Sauvignon Blanc.",
+        "key_facts": [
+          "Established 1993 (27 CFR 9.134)",
+          "Over 5,000 acres planted; about 75% Cabernet Sauvignon (Napa Valley Vintners)",
+          "Elevations from about 130 to 1,000 feet (Napa Valley Vintners)",
+          "Labels must also show \"Napa Valley\" (Cal. Bus. & Prof. Code §25240)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Merlot",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Cabernet Franc",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Sauvignon Blanc",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.134, Oakville (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.134"
+        },
+        {
+          "title": "TTB, AVA establishment dates",
+          "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/ava-establishment-dates"
+        },
+        {
+          "title": "Napa Valley Vintners, Oakville AVA",
+          "url": "https://napavintners.com/napa_valley/oakville-ava"
+        },
+        {
+          "title": "California Business and Professions Code §25240 (Napa Valley conjunctive labeling)",
+          "url": "https://california.public.law/codes/business_and_professions_code_section_25240"
+        }
+      ]
+    },
+    "united-states.california.north-coast.napa-valley.rutherford": {
+      "article": {
+        "description": "A valley-floor AVA at the widest point of Napa Valley, between Oakville and St. Helena, from the Mayacamas benchland on the west to the Vaca foothills on the east. Georges de Latour's Beaulieu winery made its name here after Prohibition. Wines labelled Rutherford must also carry the Napa Valley name.",
+        "climate": "Moderately warm, with summer peaks in the mid-90s °F, early-morning fog and a wide difference between day and night; the western bench is cooled by afternoon marine wind.",
+        "soils": "Sedimentary, gravelly and sandy alluvial soils on the western benchland and moderately deep volcanic soils on the eastern side; locals speak of \"Rutherford dust\" for the fine-grained tannin of the bench wines.",
+        "grape_varieties": "Cabernet Sauvignon dominates, with Merlot, Cabernet Franc and Sauvignon Blanc.",
+        "wine_styles": "Dry red wines, mostly Cabernet Sauvignon and Bordeaux-style blends, and dry Sauvignon Blanc.",
+        "key_facts": [
+          "Established 1993 (27 CFR 9.133)",
+          "Elevations from about 155 to 500 feet (Napa Valley Vintners)",
+          "Rainfall up to about 38 inches a year (Napa Valley Vintners)",
+          "Labels must also show \"Napa Valley\" (Cal. Bus. & Prof. Code §25240)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Merlot",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Cabernet Franc",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Sauvignon Blanc",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.133, Rutherford (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.133"
+        },
+        {
+          "title": "TTB, AVA establishment dates",
+          "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/ava-establishment-dates"
+        },
+        {
+          "title": "Napa Valley Vintners, Rutherford AVA",
+          "url": "https://napavintners.com/napa_valley/rutherford-ava"
+        },
+        {
+          "title": "California Business and Professions Code §25240 (Napa Valley conjunctive labeling)",
+          "url": "https://california.public.law/codes/business_and_professions_code_section_25240"
+        }
+      ]
+    },
+    "united-states.california.north-coast.napa-valley.spring-mountain-district": {
+      "article": {
+        "description": "A mountain AVA on the eastern slopes of the Mayacamas range directly west of St. Helena, with small vineyards cut into forest on steep, mostly east-facing ground. Charles Lemme is the first documented grape grower here, in 1874. Wines labelled Spring Mountain District must also carry the Napa Valley name.",
+        "climate": "Cool to moderate depending on height and aspect: warmer nights and cooler days than the valley floor, and the coolest, wettest of the Napa sub-AVAs.",
+        "soils": "Mostly sedimentary: weathered sandstone and shale, loamy and friable, well drained and low in fertility, over Franciscan mélange in the south; volcanic soils toward the north end.",
+        "grape_varieties": "Cabernet Sauvignon first, with Merlot, Cabernet Franc, Petite Sirah, Chardonnay and Riesling.",
+        "wine_styles": "Dry red wines, mainly Cabernet Sauvignon, and some dry Chardonnay and Riesling.",
+        "key_facts": [
+          "Established 1993 (27 CFR 9.143)",
+          "Elevations from about 600 to 2,600 feet (Napa Valley Vintners)",
+          "About 30 miles from the Pacific (Napa Valley Vintners)",
+          "Labels must also show \"Napa Valley\" (Cal. Bus. & Prof. Code §25240)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Merlot",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Cabernet Franc",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Petite Sirah",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Chardonnay",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Riesling",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.143, Spring Mountain District (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.143"
+        },
+        {
+          "title": "TTB, AVA establishment dates",
+          "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/ava-establishment-dates"
+        },
+        {
+          "title": "Napa Valley Vintners, Spring Mountain District AVA",
+          "url": "https://napavintners.com/napa_valley/spring-mountain-district-ava"
+        },
+        {
+          "title": "California Business and Professions Code §25240 (Napa Valley conjunctive labeling)",
+          "url": "https://california.public.law/codes/business_and_professions_code_section_25240"
+        }
+      ]
+    },
+    "united-states.california.north-coast.napa-valley.st-helena": {
+      "article": {
+        "description": "An hourglass-shaped AVA around the town of St. Helena, taking in the narrowest part of Napa Valley between Rutherford and Calistoga. Charles Krug founded his winery here in 1861. Wines labelled St. Helena must also carry the Napa Valley name.",
+        "climate": "One of the warmer parts of the Napa Valley floor, at times hotter than Calistoga, with rainfall of about 40 inches a year.",
+        "soils": "Alluvial fans from both sides of the valley: gravelly loams on the western side and volcanic soils washed down from the eastern hills.",
+        "grape_varieties": "Cabernet Sauvignon first, with Merlot, Cabernet Franc, Zinfandel, Sauvignon Blanc and Chardonnay.",
+        "wine_styles": "Dry red wines, mostly Cabernet Sauvignon, and dry whites.",
+        "key_facts": [
+          "Established 1995 (27 CFR 9.149)",
+          "Over 6,800 acres of vines in more than 400 vineyards (Napa Valley Vintners)",
+          "Elevations from about 400 to 800 feet (Napa Valley Vintners)",
+          "Labels must also show \"Napa Valley\" (Cal. Bus. & Prof. Code §25240)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Merlot",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Cabernet Franc",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Zinfandel",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Sauvignon Blanc",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Chardonnay",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.149, St. Helena (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.149"
+        },
+        {
+          "title": "TTB, AVA establishment dates",
+          "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/ava-establishment-dates"
+        },
+        {
+          "title": "Napa Valley Vintners, St. Helena AVA",
+          "url": "https://napavintners.com/napa_valley/saint-helena-ava/"
+        },
+        {
+          "title": "California Business and Professions Code §25240 (Napa Valley conjunctive labeling)",
+          "url": "https://california.public.law/codes/business_and_professions_code_section_25240"
+        }
+      ]
+    },
+    "united-states.california.north-coast.napa-valley.stags-leap-district": {
+      "article": {
+        "description": "A small AVA on the east side of Napa Valley, about six miles north of the city of Napa, some three miles long and one mile wide between the Stags Leap palisades and the Napa River. In the 1976 Paris tasting a Stag's Leap Wine Cellars Cabernet Sauvignon placed first among the reds. Wines labelled Stags Leap District must also carry the Napa Valley name.",
+        "climate": "Moderately warm, with mid-summer highs in the mid-90s °F and up to 100 °F; the palisades funnel cool afternoon air from San Pablo Bay through the district and cool the nights.",
+        "soils": "Volcanic gravelly loams on the valley floor and rocky hillsides, of low to moderate fertility over hard clay subsoils.",
+        "grape_varieties": "Cabernet Sauvignon dominates, with Merlot, Cabernet Franc, Petit Verdot and some Sauvignon Blanc.",
+        "wine_styles": "Dry red wines, chiefly Cabernet Sauvignon and Bordeaux-style blends.",
+        "key_facts": [
+          "Established 1989 (27 CFR 9.117)",
+          "About 2,700 acres, over half planted (Napa Valley Vintners)",
+          "Elevations from sea level to about 400 feet (Napa Valley Vintners)",
+          "Labels must also show \"Napa Valley\" (Cal. Bus. & Prof. Code §25240)"
+        ]
+      },
+      "styles": [
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Merlot",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Cabernet Franc",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Petit Verdot",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Sauvignon Blanc",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.117, Stags Leap District (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.117"
+        },
+        {
+          "title": "TTB, AVA establishment dates",
+          "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/ava-establishment-dates"
+        },
+        {
+          "title": "Napa Valley Vintners, Stags Leap District AVA",
+          "url": "https://napavintners.com/napa_valley/stags-leap-district-ava"
+        },
+        {
+          "title": "California Business and Professions Code §25240 (Napa Valley conjunctive labeling)",
+          "url": "https://california.public.law/codes/business_and_professions_code_section_25240"
+        }
+      ]
+    },
+    "united-states.california.north-coast.napa-valley.yountville": {
+      "article": {
+        "description": "A valley-floor AVA around the town of Yountville and its low hills, in the southern part of Napa Valley between Oak Knoll District and Oakville. It is named after George C. Yount, who planted the first vines here in the 1840s. Wines labelled Yountville must also carry the Napa Valley name.",
+        "climate": "Moderate, with a cool marine influence: fog and strong breezes from San Pablo Bay keep mid-summer peaks in the low 90s °F, and nights fall to the mid-50s °F.",
+        "soils": "Mainly gravelly silt loams of sedimentary origin and rocky alluvial soils of moderate fertility.",
+        "grape_varieties": "Cabernet Sauvignon and Merlot, with Chardonnay and Sauvignon Blanc.",
+        "wine_styles": "Dry red wines from Cabernet Sauvignon and Merlot, and dry whites.",
+        "key_facts": [
+          "Established 1999 (27 CFR 9.160)",
+          "Over 3,000 acres planted (Napa Valley Vintners)",
+          "Elevations from about 20 to 200 feet (Napa Valley Vintners)",
+          "Labels must also show \"Napa Valley\" (Cal. Bus. & Prof. Code §25240)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Merlot",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Chardonnay",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Sauvignon Blanc",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.160, Yountville (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.160"
+        },
+        {
+          "title": "TTB, AVA establishment dates",
+          "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/ava-establishment-dates"
+        },
+        {
+          "title": "Napa Valley Vintners, Yountville AVA",
+          "url": "https://napavintners.com/napa_valley/yountville-ava"
+        },
+        {
+          "title": "California Business and Professions Code §25240 (Napa Valley conjunctive labeling)",
+          "url": "https://california.public.law/codes/business_and_professions_code_section_25240"
+        }
+      ]
+    }
+  }
 }
