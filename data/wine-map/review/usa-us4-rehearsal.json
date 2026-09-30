@@ -1,8 +1,8 @@
 {
   "_generated_by": "scripts/usa-map/rehearse-us4.mjs",
   "wave": "us4",
-  "git_head": "e16ea65688e55dc8974a11108345f392bb4433a6",
-  "rehearsed_at": "2026-09-30T12:35:25.570Z",
+  "git_head": "268a0a35d5ee1852bda5ca0adf40e690ac06dfe9",
+  "rehearsed_at": "2026-09-30T12:58:06.540Z",
   "cache_before": {
     "fresh": true,
     "built_at": "2026-09-30T10:33:04.578Z"
@@ -17,50 +17,50 @@
     "US-4 promote: state share united-states.washington.columbia-valley.walla-walla-valley in united-states.oregon 0.3102, tree 0.3101"
   ],
   "timings_s": {
-    "catalog": 66.1,
-    "details": 1.3,
-    "drill_reapply_catalog": 66.1,
-    "drill_reapply_knowledge": 0.3,
-    "drill_remove": 66.6,
-    "drill_restage": 24,
-    "drill_unpublish": 74.2,
-    "drill_unstage": 70.3,
-    "drill_unstage_again": 69.7,
+    "catalog": 66.4,
+    "details": 1.5,
+    "drill_reapply_catalog": 65.7,
+    "drill_reapply_knowledge": 0.4,
+    "drill_remove": 66.2,
+    "drill_restage": 25,
+    "drill_unpublish": 65.7,
+    "drill_unstage": 74.4,
+    "drill_unstage_again": 70.4,
     "export_preview": 0.2,
     "knowledge": 0.2,
-    "promote": 67.6,
+    "promote": 67.4,
     "shortlists_after": 0.7,
-    "shortlists_before": 0.8,
-    "stage": 20.8
+    "shortlists_before": 0.9,
+    "stage": 25.3
   },
   "refreshes": {
     "catalog": {
       "rows": 15711,
-      "seconds": 66.1
+      "seconds": 66.2
     },
     "drill_reapply_catalog": {
       "rows": 15711,
-      "seconds": 65.9
+      "seconds": 65.4
     },
     "drill_remove": {
       "rows": 15711,
-      "seconds": 66.2
+      "seconds": 65.7
     },
     "drill_unpublish": {
       "rows": 15711,
-      "seconds": 74
+      "seconds": 65.5
     },
     "drill_unstage": {
       "rows": 15711,
-      "seconds": 70
+      "seconds": 74
     },
     "drill_unstage_again": {
       "rows": 15711,
-      "seconds": 69.2
+      "seconds": 70.1
     },
     "promote": {
       "rows": 15783,
-      "seconds": 66.1
+      "seconds": 65.8
     }
   },
   "refusals": {
@@ -481,9 +481,9 @@
         "La Crescent",
         "Marquette",
         "Pinot Noir",
-        "Blaufränkisch",
         "Seyval Blanc",
         "Gewürztraminer",
+        "Blaufränkisch",
         "Cabernet Sauvignon",
         "Sauvignon Blanc",
         "Baco Noir",
@@ -1321,16 +1321,16 @@
     }
   ],
   "notices": [
-    "US-4 catalog: neighbour refresh 15711 rows in 66.1 s",
-    "US-4 unstage: neighbour refresh 15711 rows in 70.0 s",
-    "US-4 unstage: neighbour refresh 15711 rows in 69.2 s",
-    "US-4 remove: neighbour refresh 15711 rows in 66.2 s",
-    "US-4 catalog: neighbour refresh 15711 rows in 65.9 s",
+    "US-4 catalog: neighbour refresh 15711 rows in 66.2 s",
+    "US-4 unstage: neighbour refresh 15711 rows in 74.0 s",
+    "US-4 unstage: neighbour refresh 15711 rows in 70.1 s",
+    "US-4 remove: neighbour refresh 15711 rows in 65.7 s",
+    "US-4 catalog: neighbour refresh 15711 rows in 65.4 s",
     "US-4 promote: state share united-states.oregon.columbia-gorge in united-states.washington 0.3479, tree 0.348",
     "US-4 promote: state share united-states.washington.columbia-valley.walla-walla-valley in united-states.oregon 0.3102, tree 0.3101",
-    "US-4 promote: neighbour refresh 15783 rows in 66.1 s",
-    "US-4 unpublish: neighbour refresh 15711 rows in 74.0 s"
+    "US-4 promote: neighbour refresh 15783 rows in 65.8 s",
+    "US-4 unpublish: neighbour refresh 15711 rows in 65.5 s"
   ],
-  "total_s": 536.6,
+  "total_s": 537.9,
   "mode": "pre-sitting"
 }

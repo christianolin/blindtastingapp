@@ -315,7 +315,7 @@ Measured in the rolled-back rehearsal of 2026-09-30, as a signed-in reader. "Bef
 
 | Surface | Before | After |
 |---|---|---|
-| Guess ladder (the whole list) | Riesling, Cabernet Franc, Chardonnay, Merlot, Blaufränkisch, Gewürztraminer, Pinot Noir, Cabernet Sauvignon, Sauvignon Blanc | Riesling (5), Cabernet Franc (3), Chardonnay (3), Merlot (3), Frontenac (2), La Crescent (2), Marquette (2), Pinot Noir (1), Blaufränkisch (3, accessory), Seyval Blanc (1), Gewürztraminer (4, accessory), Cabernet Sauvignon (3, accessory), Sauvignon Blanc (3, accessory), Baco Noir (1, accessory), Vidal Blanc (1, accessory) |
+| Guess ladder (the whole list) | Riesling, Cabernet Franc, Chardonnay, Merlot, Blaufränkisch, Gewürztraminer, Pinot Noir, Cabernet Sauvignon, Sauvignon Blanc | Riesling (5), Cabernet Franc (3), Chardonnay (3), Merlot (3), Frontenac (2), La Crescent (2), Marquette (2), Pinot Noir (1), Seyval Blanc (1), Gewürztraminer (4, accessory), Blaufränkisch (3, accessory), Cabernet Sauvignon (3, accessory), Sauvignon Blanc (3, accessory), Baco Noir (1, accessory), Vidal Blanc (1, accessory) |
 | By-hand chips, no colour yet | Riesling, Cabernet Franc, Chardonnay, Merlot, Blaufränkisch | Riesling, Cabernet Franc, Chardonnay, Merlot, Frontenac; the last chip is one of Frontenac, La Crescent, Marquette (tied) |
 | By-hand chips, red | Cabernet Franc, Merlot, Blaufränkisch, Pinot Noir, Cabernet Sauvignon | Cabernet Franc, Merlot, Frontenac, Marquette, Pinot Noir |
 | By-hand chips, white | Riesling, Chardonnay, Gewürztraminer, Sauvignon Blanc | Riesling, Chardonnay, La Crescent, Seyval Blanc, Gewürztraminer |
