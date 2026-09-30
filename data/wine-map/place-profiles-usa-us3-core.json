@@ -357,6 +357,714 @@
         }
       ]
     },
+    "united-states.california.central-coast.paso-robles": {
+      "article": {
+        "description": "A large inland AVA in northern San Luis Obispo County, about 614,000 acres east of the Santa Lucia Range, with more than 40,000 acres of vines and over 200 wineries. It is split by the Salinas River into a cooler, hillier west side and warmer rolling plains in the east. In 2014 eleven smaller AVAs were established within it.",
+        "climate": "Warm, dry days and cool nights, with some of the widest day-to-night swings in California; marine air reaches the west through the Templeton Gap and other passes in the Santa Lucia Range, while the east is warmer and more continental.",
+        "soils": "Very varied: calcareous shale and limestone-derived soils on the western hills, and alluvial terraces and fans of the Salinas and Estrella rivers in the east.",
+        "grape_varieties": "Cabernet Sauvignon is about 39% of the vineyard, then Merlot, Syrah and Zinfandel, with Grenache, Mourvèdre, Petite Sirah and Viognier among many others.",
+        "wine_styles": "Dry red wines from Cabernet Sauvignon, Zinfandel and Rhône varieties, Rhône-style whites and dry rosé.",
+        "key_facts": [
+          "Established 1983 (27 CFR 9.84)",
+          "About 614,000 acres with more than 40,000 acres of vines (Paso Robles Wine Country Alliance)",
+          "Eleven AVAs were established within it in 2014 (T.D. TTB-125)",
+          "Planted: Cabernet Sauvignon 39%, Merlot 14%, Syrah 9%, Zinfandel 8% (Paso Robles Wine Country Alliance)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE",
+        "ROSE"
+      ],
+      "grapes": [
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Zinfandel"
+        },
+        {
+          "name": "Merlot",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Syrah",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Grenache",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Mourvèdre",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Petite Sirah",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Viognier",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.84, Paso Robles (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.84"
+        },
+        {
+          "title": "TTB, AVA establishment dates",
+          "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/ava-establishment-dates"
+        },
+        {
+          "title": "Paso Robles Wine Country Alliance, Varieties produced",
+          "url": "https://pasowine.com/paso-robles/varieties-produced/"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), T.D. TTB-125, eleven Paso Robles viticultural areas (2014)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2014-10-09/html/2014-24169.htm"
+        },
+        {
+          "title": "California Business and Professions Code §25244 (Paso Robles conjunctive labeling)",
+          "url": "https://california.public.law/codes/business_and_professions_code_section_25244"
+        }
+      ]
+    },
+    "united-states.california.central-coast.paso-robles.adelaida-district": {
+      "article": {
+        "description": "The most northwestern of the Paso Robles districts, about 53,100 acres in the southern Santa Lucia Range, with the highest ground in the Paso Robles AVA at about 2,200 feet. Its limestone-rich hills are home to both Rhône and Bordeaux varieties, and Tablas Creek brought Rhône cuttings here.",
+        "climate": "Region II–III with a modest marine influence: cooling winds and fog from Estero Bay to the west, around 25 to 30 inches of rain, and summer swings from about 50 °F at dawn to 95 °F in the afternoon.",
+        "soils": "Shallow residual soils over bedrock from the middle member of the Monterey Formation, largely calcareous, with white chalky rock and limestone.",
+        "grape_varieties": "Cabernet Sauvignon and Syrah, with Grenache, Mourvèdre, Zinfandel, Roussanne and other Rhône and Bordeaux varieties.",
+        "wine_styles": "Dry red wines from Rhône and Bordeaux varieties, and Rhône-style whites.",
+        "key_facts": [
+          "Established 2014 (27 CFR 9.238)",
+          "About 53,100 acres; elevations from about 900 to 2,200 feet (Paso Robles Wine Country Alliance)",
+          "Rainfall about 25 inches a year in the rule's comparison (T.D. TTB-125)",
+          "Labels must also show \"Paso Robles\" (Cal. Bus. & Prof. Code §25244)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Syrah"
+        },
+        {
+          "name": "Grenache",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Mourvèdre",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Zinfandel",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Roussanne",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.238, Adelaida District (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.238"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), T.D. TTB-125, eleven Paso Robles viticultural areas (2014)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2014-10-09/html/2014-24169.htm"
+        },
+        {
+          "title": "Paso Robles Wine Country Alliance, Adelaida District AVA",
+          "url": "https://pasowine.com/adelaida-district-2/"
+        },
+        {
+          "title": "Wine Folly Paso Robles guide, Adelaida District",
+          "url": "https://paso.guides.winefolly.com/regions/adelaida-district/"
+        },
+        {
+          "title": "California Business and Professions Code §25244 (Paso Robles conjunctive labeling)",
+          "url": "https://california.public.law/codes/business_and_professions_code_section_25244"
+        }
+      ]
+    },
+    "united-states.california.central-coast.paso-robles.creston-district": {
+      "article": {
+        "description": "A district of about 47,000 acres in the southeast of the Paso Robles AVA, on an old erosional plateau at the base of the La Panza Range, drained by Huerhuero Creek. About 1,400 acres are planted, mostly between 1,000 and 1,300 feet, and Bordeaux varieties lead, above all Cabernet Sauvignon.",
+        "climate": "Region III, with about 11.5 inches of rain a year and day-to-night swings of about 25 to 35 °F; Pacific air through the Templeton Gap and cold air draining from the La Panza Range cool it.",
+        "soils": "Old, well-developed terrace and hillside soils from granitic and sedimentary rocks: sandy loams below and clay loams on the terraces and hillsides.",
+        "grape_varieties": "Mostly Bordeaux varieties, above all Cabernet Sauvignon, with Merlot, Syrah and Zinfandel.",
+        "wine_styles": "Dry red wines, mainly Cabernet Sauvignon and Bordeaux-style blends.",
+        "key_facts": [
+          "Established 2014 (27 CFR 9.239)",
+          "About 47,000 acres with 1,400 or more planted (Paso Robles Wine Country Alliance)",
+          "Rainfall about 11.5 inches a year (T.D. TTB-125)",
+          "Labels must also show \"Paso Robles\" (Cal. Bus. & Prof. Code §25244)"
+        ]
+      },
+      "styles": [
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Merlot",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Syrah",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Zinfandel",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.239, Creston District (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.239"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), T.D. TTB-125, eleven Paso Robles viticultural areas (2014)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2014-10-09/html/2014-24169.htm"
+        },
+        {
+          "title": "Paso Robles Wine Country Alliance, Creston District AVA",
+          "url": "https://pasowine.com/creston-district-2/"
+        },
+        {
+          "title": "California Business and Professions Code §25244 (Paso Robles conjunctive labeling)",
+          "url": "https://california.public.law/codes/business_and_professions_code_section_25244"
+        }
+      ]
+    },
+    "united-states.california.central-coast.paso-robles.el-pomar-district": {
+      "article": {
+        "description": "A district of about 21,300 acres in the centre of the Paso Robles AVA, south of the town of Paso Robles, on high older terraces, fans and hills from about 740 feet by the Salinas River to 1,600 feet. Slightly over 2,000 acres are planted.",
+        "climate": "Region II, cool for Paso Robles: marine air through the Templeton Gap, about 15 inches of rain and day-to-night swings of 20 to 35 °F in the warmer months.",
+        "soils": "Quaternary alluvial soils, loams to clay loams, some calcareous: Linne Calodo alkaline clay loams on the hillsides and Lockwood-Concepcion shaly loams lower down.",
+        "grape_varieties": "Bordeaux varieties, including Cabernet Sauvignon, Merlot and Cabernet Franc, and Rhône varieties such as Syrah and Grenache.",
+        "wine_styles": "Dry red wines from Bordeaux and Rhône varieties.",
+        "key_facts": [
+          "Established 2014 (27 CFR 9.240)",
+          "About 21,300 acres, slightly over 2,000 planted (Paso Robles Wine Country Alliance)",
+          "Elevations from about 740 to 1,600 feet (T.D. TTB-125)",
+          "Labels must also show \"Paso Robles\" (Cal. Bus. & Prof. Code §25244)"
+        ]
+      },
+      "styles": [
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Merlot"
+        },
+        {
+          "name": "Cabernet Franc",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Syrah",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Grenache",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.240, El Pomar District (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.240"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), T.D. TTB-125, eleven Paso Robles viticultural areas (2014)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2014-10-09/html/2014-24169.htm"
+        },
+        {
+          "title": "Paso Robles Wine Country Alliance, El Pomar District AVA",
+          "url": "https://pasowine.com/el-pomar-district-2/"
+        },
+        {
+          "title": "California Business and Professions Code §25244 (Paso Robles conjunctive labeling)",
+          "url": "https://california.public.law/codes/business_and_professions_code_section_25244"
+        }
+      ]
+    },
+    "united-states.california.central-coast.paso-robles.paso-robles-estrella-district": {
+      "article": {
+        "description": "The rolling plains and terraces of the Estrella River valley in the northeast of the Paso Robles AVA, about 66,800 acres from 745 to 1,800 feet. The name, Spanish for \"star\", refers to ridgelines that meet like the rays of a star. Estrella River Winery planted Syrah here in 1975, the source of the Estrella clone.",
+        "climate": "Region III with a modest marine influence: warm summer days cooled by sea breezes through the Templeton Gap and winds off the eastern ranges, 12.5 to 15.5 inches of rain, and day-to-night swings of 35 to 40 °F.",
+        "soils": "Quaternary alluvial soils of different ages on younger and older terraces, from fine sandy loams to clay loams.",
+        "grape_varieties": "Cabernet Sauvignon, Syrah, Merlot and Petite Sirah, with Sauvignon Blanc, Viognier and Chardonnay.",
+        "wine_styles": "Dry red wines from Cabernet Sauvignon and Syrah, and some whites.",
+        "key_facts": [
+          "Established 2014 (27 CFR 9.241)",
+          "About 66,800 acres (Paso Robles Wine Country Alliance)",
+          "Estrella River Winery planted Syrah here in 1975 (Paso Robles Wine Country Alliance)",
+          "The legal name already includes \"Paso Robles\""
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Syrah"
+        },
+        {
+          "name": "Merlot",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Petite Sirah",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Sauvignon Blanc",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Viognier",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Chardonnay",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.241, Paso Robles Estrella District (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.241"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), T.D. TTB-125, eleven Paso Robles viticultural areas (2014)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2014-10-09/html/2014-24169.htm"
+        },
+        {
+          "title": "Paso Robles Wine Country Alliance, Estrella District",
+          "url": "https://pasowine.com/estrella-district-2/"
+        }
+      ]
+    },
+    "united-states.california.central-coast.paso-robles.paso-robles-geneseo-district": {
+      "article": {
+        "description": "A district of about 17,300 acres east of the town of Paso Robles, on upfaulted hills and old river terraces along the Huerhuero–La Panza fault, from 740 to 1,300 feet. German settlers founded the Geneseo community in the 1880s, and the Ernst family planted vines in 1884; some of Paso Robles's oldest Syrah grows here.",
+        "climate": "Region III–IV, with about 13 to 14 inches of rain; the Templeton Gap brings Pacific air, and day-to-night swings reach up to 50 °F.",
+        "soils": "Old alluvial terrace and residual hillside soils of moderate depth, often cemented: silty clays and clay loams with calcareous material beneath.",
+        "grape_varieties": "Bordeaux varieties and Rhône varieties, especially Syrah, with Cabernet Sauvignon and Zinfandel.",
+        "wine_styles": "Dry red wines from Bordeaux and Rhône varieties.",
+        "key_facts": [
+          "Established 2014 (27 CFR 9.242)",
+          "About 17,300 acres; elevations 740 to 1,300 feet (Paso Robles Wine Country Alliance)",
+          "The Ernst family planted the first vines in 1884 (Paso Robles Wine Country Alliance)",
+          "The legal name already includes \"Paso Robles\""
+        ]
+      },
+      "styles": [
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Syrah"
+        },
+        {
+          "name": "Zinfandel",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.242, Paso Robles Geneseo District (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.242"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), T.D. TTB-125, eleven Paso Robles viticultural areas (2014)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2014-10-09/html/2014-24169.htm"
+        },
+        {
+          "title": "Paso Robles Wine Country Alliance, Geneseo District",
+          "url": "https://pasowine.com/geneseo-district-2/"
+        }
+      ]
+    },
+    "united-states.california.central-coast.paso-robles.paso-robles-highlands-district": {
+      "article": {
+        "description": "The second-largest Paso Robles district, about 60,300 acres in the far southeast, some 33 miles from the ocean, on an old erosional surface from 1,160 to 2,086 feet. Most vineyards lie between 1,200 and 1,600 feet, and harvest can come two to four weeks earlier than elsewhere in Paso Robles.",
+        "climate": "Region IV, warmer and more continental, with about 12 inches of rain and the widest swings in the AVA: summer highs around 100 °F and lows around 50 °F.",
+        "soils": "Deep, sometimes cemented alluvial soils and old leached alkaline soils: sandy loams by the creeks, loams on small fans, and coarse sandy loams to clay loams on the hillsides.",
+        "grape_varieties": "Cabernet Sauvignon, Petite Sirah and Syrah, with Zinfandel, Chardonnay and Sauvignon Blanc among more than 20 varieties.",
+        "wine_styles": "Dry red wines from Cabernet Sauvignon, Petite Sirah and Syrah.",
+        "key_facts": [
+          "Established 2014 (27 CFR 9.243)",
+          "About 60,300 acres, the second-largest Paso Robles district (Paso Robles Wine Country Alliance)",
+          "Day-to-night swings of 50 °F or more in the rule's comparison (T.D. TTB-125)",
+          "The legal name already includes \"Paso Robles\""
+        ]
+      },
+      "styles": [
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Petite Sirah",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Syrah",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Zinfandel",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.243, Paso Robles Highlands District (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.243"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), T.D. TTB-125, eleven Paso Robles viticultural areas (2014)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2014-10-09/html/2014-24169.htm"
+        },
+        {
+          "title": "Paso Robles Wine Country Alliance, Highlands District",
+          "url": "https://pasowine.com/highlands-district/"
+        }
+      ]
+    },
+    "united-states.california.central-coast.paso-robles.paso-robles-willow-creek-district": {
+      "article": {
+        "description": "A small, mountainous district west of the town of Paso Robles, named after the Willow Creek watershed at its centre, with conical hills from about 960 to 1,900 feet. It holds the Ueberroth Vineyard, planted in the late 1880s and called the oldest in the Paso Robles region; about 1,400 acres are planted.",
+        "climate": "Region II, among the coolest parts of Paso Robles: fog and breezes from the Templeton Gap, and 24 to 30 inches of rain, with day-to-night swings of about 20 °F.",
+        "soils": "Mostly shallow residual soils over bedrock from the middle and lower Monterey Formation, largely calcareous loams to clay loams.",
+        "grape_varieties": "Rhône varieties lead, Syrah, Grenache and Mourvèdre, with Zinfandel, Cabernet Sauvignon, Viognier and Roussanne.",
+        "wine_styles": "Dry Rhône-style reds and whites, Zinfandel and some dry rosé.",
+        "key_facts": [
+          "Established 2014 (27 CFR 9.244)",
+          "About 1,400 acres under vine (Paso Robles Wine Country Alliance)",
+          "Rainfall 24 to 30 inches a year (T.D. TTB-125)",
+          "The legal name already includes \"Paso Robles\""
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE",
+        "ROSE"
+      ],
+      "grapes": [
+        {
+          "name": "Syrah"
+        },
+        {
+          "name": "Grenache"
+        },
+        {
+          "name": "Zinfandel"
+        },
+        {
+          "name": "Mourvèdre",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Cabernet Sauvignon",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Viognier",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Roussanne",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.244, Paso Robles Willow Creek District (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.244"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), T.D. TTB-125, eleven Paso Robles viticultural areas (2014)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2014-10-09/html/2014-24169.htm"
+        },
+        {
+          "title": "Paso Robles Wine Country Alliance, Willow Creek District",
+          "url": "https://pasowine.com/willow-creek-district/"
+        },
+        {
+          "title": "Wine Folly Paso Robles guide, Paso Robles Willow Creek District",
+          "url": "https://paso.guides.winefolly.com/regions/paso-robles-willow-creek-district/"
+        }
+      ]
+    },
+    "united-states.california.central-coast.paso-robles.san-juan-creek": {
+      "article": {
+        "description": "A district of about 26,000 acres in the far east of the Paso Robles AVA, on the young river valleys, terraces and fans of San Juan Creek, a tributary of the upper Estrella River, from 980 to 1,600 feet. A little over 3,000 acres are planted.",
+        "climate": "Warm, Region III–IV, and dry, with about 10 inches of rain a year, but nights stay cool: day-to-night swings average 35 to 40 °F.",
+        "soils": "Deep, well to moderately drained alluvial soils: loamy sands, gravelly to sandy clay loams and a few clays.",
+        "grape_varieties": "Cabernet Sauvignon, Merlot and Cabernet Franc, with Petite Sirah and Zinfandel.",
+        "wine_styles": "Dry red wines from Bordeaux varieties and Petite Sirah.",
+        "key_facts": [
+          "Established 2014 (27 CFR 9.245)",
+          "About 26,000 acres, a little over 3,000 planted (Paso Robles Wine Country Alliance)",
+          "Rainfall about 10.4 inches a year (T.D. TTB-125)",
+          "Labels must also show \"Paso Robles\" (Cal. Bus. & Prof. Code §25244)"
+        ]
+      },
+      "styles": [
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Merlot",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Cabernet Franc",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Petite Sirah",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Zinfandel",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.245, San Juan Creek (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.245"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), T.D. TTB-125, eleven Paso Robles viticultural areas (2014)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2014-10-09/html/2014-24169.htm"
+        },
+        {
+          "title": "Paso Robles Wine Country Alliance, San Juan Creek District",
+          "url": "https://pasowine.com/san-juan-creek-district-2/"
+        },
+        {
+          "title": "California Business and Professions Code §25244 (Paso Robles conjunctive labeling)",
+          "url": "https://california.public.law/codes/business_and_professions_code_section_25244"
+        }
+      ]
+    },
+    "united-states.california.central-coast.paso-robles.san-miguel-district": {
+      "article": {
+        "description": "The northern tip of the Paso Robles AVA, around the town of San Miguel, on the footslopes of the Santa Lucia Range and the terraces of the Salinas and Estrella rivers, from 580 to 1,600 feet. Some of the area's first grapes were planted at Mission San Miguel.",
+        "climate": "Region III, with about 11.4 inches of rain and day-to-night swings of 30 to 35 °F.",
+        "soils": "Deep alluvial sandy loams to loams and a few clay loams, from the river bottoms up onto higher terraces.",
+        "grape_varieties": "Cabernet Sauvignon and Zinfandel, with Syrah, Petite Sirah, Mourvèdre and Italian varieties such as Sangiovese and Aglianico.",
+        "wine_styles": "Dry red wines from Cabernet Sauvignon, Zinfandel and Rhône and Italian varieties.",
+        "key_facts": [
+          "Established 2014 (27 CFR 9.246)",
+          "Elevations from about 580 to 1,600 feet (T.D. TTB-125)",
+          "Mission San Miguel's vines were among the area's first (Paso Robles Wine Country Alliance)",
+          "Labels must also show \"Paso Robles\" (Cal. Bus. & Prof. Code §25244)"
+        ]
+      },
+      "styles": [
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Zinfandel"
+        },
+        {
+          "name": "Syrah",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Petite Sirah",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Mourvèdre",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Sangiovese",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Aglianico",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.246, San Miguel District (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.246"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), T.D. TTB-125, eleven Paso Robles viticultural areas (2014)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2014-10-09/html/2014-24169.htm"
+        },
+        {
+          "title": "Paso Robles Wine Country Alliance, San Miguel District",
+          "url": "https://pasowine.com/san-miguel-district/"
+        },
+        {
+          "title": "Wine Folly Paso Robles guide, San Miguel District",
+          "url": "https://paso.guides.winefolly.com/regions/san-miguel-district/"
+        },
+        {
+          "title": "California Business and Professions Code §25244 (Paso Robles conjunctive labeling)",
+          "url": "https://california.public.law/codes/business_and_professions_code_section_25244"
+        }
+      ]
+    },
+    "united-states.california.central-coast.paso-robles.santa-margarita-ranch": {
+      "article": {
+        "description": "The southernmost Paso Robles district and the only one that borders no other district, on the steep slopes and old river terraces of the upper Salinas River near the town of Santa Margarita. Its only vineyard is Ancient Peaks Winery's Margarita Vineyard, planted in 1999, with blocks on fossil oyster-bed soils.",
+        "climate": "Region II, one of the coolest parts of Paso Robles, with about 29 inches of rain and day-to-night swings of about 25 °F; the growing season is long.",
+        "soils": "Deep alluvial soils of many rock types and textures, with patchy residual soils on the slopes, including calcareous fossil oyster beds.",
+        "grape_varieties": "Cabernet Sauvignon, Syrah and Zinfandel, with Merlot, Pinot Noir and Chardonnay.",
+        "wine_styles": "Dry red wines from Cabernet Sauvignon, Syrah and Zinfandel, and some whites.",
+        "key_facts": [
+          "Established 2014 (27 CFR 9.247)",
+          "Elevations from about 900 to 1,400 feet (T.D. TTB-125)",
+          "Its only vineyard, the Margarita Vineyard, was planted in 1999 (Ancient Peaks Winery)",
+          "Labels must also show \"Paso Robles\" (Cal. Bus. & Prof. Code §25244)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Syrah"
+        },
+        {
+          "name": "Zinfandel"
+        },
+        {
+          "name": "Merlot",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Pinot Noir",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Chardonnay",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.247, Santa Margarita Ranch (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.247"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), T.D. TTB-125, eleven Paso Robles viticultural areas (2014)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2014-10-09/html/2014-24169.htm"
+        },
+        {
+          "title": "Paso Robles Wine Country Alliance, Santa Margarita Ranch AVA",
+          "url": "https://pasowine.com/santa-margarita-district/"
+        },
+        {
+          "title": "Ancient Peaks Winery, Our land",
+          "url": "https://ancientpeaks.com/land/"
+        },
+        {
+          "title": "California Business and Professions Code §25244 (Paso Robles conjunctive labeling)",
+          "url": "https://california.public.law/codes/business_and_professions_code_section_25244"
+        }
+      ]
+    },
+    "united-states.california.central-coast.paso-robles.templeton-gap-district": {
+      "article": {
+        "description": "A district of about 35,000 acres in the southwest of the Paso Robles AVA, around Templeton, where gaps in the Santa Lucia Range let cool afternoon air from the Pacific flow inland. Adolph Siot planted the first vineyard here in 1856, and the name \"Templeton Gap\" was coined in 1982.",
+        "climate": "Region II, about 2,900 growing degree days: cool afternoon winds through the passes in the Santa Lucia Range, about 20 inches of rain and day-to-night swings of about 20 °F; harvest can come up to two weeks later than nearby.",
+        "soils": "Alluvial terraces and fans of Paso Robles Creek and the Salinas River over bedrock, shallow to moderately deep, sandy to silty clay loams, calcareous in places.",
+        "grape_varieties": "Zinfandel and Cabernet Sauvignon, with Syrah and Merlot, and some Pinot Noir and Chardonnay in the coolest spots.",
+        "wine_styles": "Dry red wines from Zinfandel, Cabernet Sauvignon and Syrah.",
+        "key_facts": [
+          "Established 2014 (27 CFR 9.248)",
+          "About 35,000 acres and some 20 wineries (Paso Robles Wine Country Alliance)",
+          "Adolph Siot planted the first vineyard in 1856 (Paso Robles Wine Country Alliance)",
+          "Labels must also show \"Paso Robles\" (Cal. Bus. & Prof. Code §25244)"
+        ]
+      },
+      "styles": [
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Zinfandel"
+        },
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Syrah",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Merlot",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.248, Templeton Gap District (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.248"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), T.D. TTB-125, eleven Paso Robles viticultural areas (2014)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2014-10-09/html/2014-24169.htm"
+        },
+        {
+          "title": "Paso Robles Wine Country Alliance, Templeton Gap District",
+          "url": "https://pasowine.com/templeton-gap-district/"
+        },
+        {
+          "title": "California Business and Professions Code §25244 (Paso Robles conjunctive labeling)",
+          "url": "https://california.public.law/codes/business_and_professions_code_section_25244"
+        }
+      ]
+    },
     "united-states.california.central-coast.san-francisco-bay": {
       "article": {
         "description": "A large AVA around San Francisco Bay, mainly in San Francisco, San Mateo, Santa Clara, Alameda and Contra Costa counties and partly in Santa Cruz and San Benito. It groups the bay's wine areas, including Livermore Valley, Santa Clara Valley, Lamorinda and the Santa Cruz Mountains, which overlap it. When it was established, nearly 5,800 acres were planted and over 39 wineries operated.",
@@ -516,6 +1224,157 @@
         {
           "title": "Santa Cruz Mountains Winegrowers Association (Wines of the Santa Cruz Mountains)",
           "url": "https://winesofthesantacruzmountains.com/"
+        }
+      ]
+    },
+    "united-states.california.central-coast.san-luis-obispo-coast": {
+      "article": {
+        "description": "A coastal AVA of about 408,500 acres along the San Luis Obispo County coast, from coastal terraces and foothills to small valleys that open westward to the Pacific. It holds Edna Valley and Arroyo Grande Valley, and 97% of it lies at or below 1,800 feet, about the limit of the ocean's influence. At establishment it had about 78 vineyards on 3,942 acres.",
+        "climate": "Region I on the Winkler scale, about 2,493 growing degree days: marine air moderates both heat and cold, and fog covers the coast on 35 to 55 percent of growing-season nights.",
+        "soils": "Four main groups: Franciscan sandstone and shale, marine sandy loams and loams, soils from volcanic intrusions, and wind-blown coastal sands.",
+        "grape_varieties": "Chardonnay (43%) and Pinot Noir (35%) dominate, with Syrah, Albariño, Riesling and Grenache.",
+        "wine_styles": "Dry Chardonnay and Pinot Noir, aromatic whites, and some Syrah.",
+        "key_facts": [
+          "Established 2022 (27 CFR 9.282)",
+          "About 408,505 acres; 97% at or below 1,800 feet (TTB final rule)",
+          "About 78 vineyards on 3,942 acres; Chardonnay 43%, Pinot Noir 35% (TTB final rule)",
+          "May also be labelled \"SLO Coast\" (TTB final rule)"
+        ]
+      },
+      "styles": [
+        "WHITE",
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Chardonnay"
+        },
+        {
+          "name": "Pinot Noir"
+        },
+        {
+          "name": "Syrah",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Albariño",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.282, San Luis Obispo Coast (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.282"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), T.D. TTB-177, San Luis Obispo Coast (2022)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2022-03-09/html/2022-05000.htm"
+        }
+      ]
+    },
+    "united-states.california.central-coast.san-luis-obispo-coast.arroyo-grande-valley": {
+      "article": {
+        "description": "A valley south of Edna Valley that runs inland from the coast near Arroyo Grande, within the SLO Coast AVA. It grows Pinot Noir, Chardonnay and Zinfandel, and sparkling wine is made here; Talley and Laetitia are among its producers.",
+        "climate": "Fog covers the parts nearest the ocean much of the day and keeps them mild and steady; the valley's inland reaches are more sheltered from direct marine influence.",
+        "soils": "Clay and loam soils shared with the SLO Coast, on terraces and valley floors.",
+        "grape_varieties": "Pinot Noir and Chardonnay, with Zinfandel and Syrah.",
+        "wine_styles": "Dry Pinot Noir and Chardonnay, Zinfandel, and sparkling wine.",
+        "key_facts": [
+          "Established 1990 (27 CFR 9.129)",
+          "More sheltered from direct marine influence than the open coast (T.D. TTB-177)",
+          "Lies within the San Luis Obispo Coast AVA"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE",
+        "SPARKLING"
+      ],
+      "grapes": [
+        {
+          "name": "Pinot Noir"
+        },
+        {
+          "name": "Chardonnay"
+        },
+        {
+          "name": "Zinfandel",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Syrah",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.129, Arroyo Grande Valley (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.129"
+        },
+        {
+          "title": "TTB, AVA establishment dates",
+          "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/ava-establishment-dates"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), T.D. TTB-177, San Luis Obispo Coast (2022)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2022-03-09/html/2022-05000.htm"
+        },
+        {
+          "title": "Tasting Table, Everything you need to know about SLO Coast wine",
+          "url": "https://www.tastingtable.com/947801/everything-you-need-to-know-about-slo-coast-wine"
+        }
+      ]
+    },
+    "united-states.california.central-coast.san-luis-obispo-coast.edna-valley": {
+      "article": {
+        "description": "A small valley southeast of the city of San Luis Obispo, open to marine air, within the SLO Coast AVA. It is known above all for Chardonnay; the Paragon Vineyard, planted in 1973, began its modern era.",
+        "climate": "Cool and marine: mostly Region II with Region I pockets, with ocean air that keeps acidity high in the grapes.",
+        "soils": "Clay and loam soils of marine sedimentary origin, with limestone in places.",
+        "grape_varieties": "Chardonnay above all, with Pinot Noir, Syrah and Albariño.",
+        "wine_styles": "Dry Chardonnay and Pinot Noir, and aromatic whites.",
+        "key_facts": [
+          "Established 1982 (27 CFR 9.35)",
+          "Mostly Region II, with Region I pockets (T.D. TTB-177)",
+          "The Paragon Vineyard was planted in 1973 (Tasting Table)",
+          "Lies within the San Luis Obispo Coast AVA"
+        ]
+      },
+      "styles": [
+        "WHITE",
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Chardonnay"
+        },
+        {
+          "name": "Pinot Noir"
+        },
+        {
+          "name": "Syrah",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Albariño",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.35, Edna Valley (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.35"
+        },
+        {
+          "title": "TTB, AVA establishment dates",
+          "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/ava-establishment-dates"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), T.D. TTB-177, San Luis Obispo Coast (2022)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2022-03-09/html/2022-05000.htm"
+        },
+        {
+          "title": "Tasting Table, Everything you need to know about SLO Coast wine",
+          "url": "https://www.tastingtable.com/947801/everything-you-need-to-know-about-slo-coast-wine"
         }
       ]
     },
