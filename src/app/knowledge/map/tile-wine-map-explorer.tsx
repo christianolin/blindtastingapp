@@ -63,7 +63,7 @@ import { useWinePlacePrefetch } from "@/lib/wine-map/use-place-prefetch";
 import type { WinePlaceTreeNode } from "@/lib/wine-map/tree";
 import { englishName } from "@/lib/wine-map/localize-names";
 import { deepLinkAction } from "@/lib/wine-map/deep-link";
-import { currentRevealPx } from "@/lib/wine-map/reveal";
+import { currentRevealPx, placeRevealPx } from "@/lib/wine-map/reveal";
 import { fallbackFromContext } from "@/lib/wine-map/selection-state";
 import { areaSlugsByShard } from "@/lib/wine-map/shard-specs";
 import {
@@ -775,7 +775,10 @@ export function TileWineMapExplorer({
   // than showing the whole parent region. Either way the landing is where
   // the place itself is drawn: past its own tile zoom and, below region
   // level, past the zoom the size rule reveals it at (selectionZooms,
-  // lib/wine-map/camera-fit.ts; reveal.ts).
+  // lib/wine-map/camera-fit.ts; reveal.ts). The rule counts only where the
+  // manifest says the place's shard carries it (placeRevealPx), exactly as
+  // the map's filters do; elsewhere, and before the manifest is here (the map
+  // is not mounted then), the camera is the one from before the rule.
   const cameraTarget = useMemo<CameraTarget | null>(() => {
     if (!context?.boundary) return null;
     const { minZoom, maxZoom } = selectionZooms({
@@ -783,7 +786,7 @@ export function TileWineMapExplorer({
       minZoom: context.place.min_zoom,
       childMinZooms: context.children.map((c) => c.min_zoom),
       bbox: context.boundary.bbox,
-      revealPx,
+      revealPx: manifest ? placeRevealPx(manifest.shards, context.place.key, revealPx) : 0,
     });
     return {
       bbox: context.boundary.bbox,
@@ -794,7 +797,7 @@ export function TileWineMapExplorer({
       // height free at the bottom, so the place lands in the visible half.
       padding: sheetCameraPadding(selectSnapRef.current),
     };
-  }, [context, revealPx]);
+  }, [context, revealPx, manifest]);
 
   // The map's selection emphasis while the tree is missing (loading, failed,
   // or older than the tiles): the context's children and parent — and only

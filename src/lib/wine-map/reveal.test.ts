@@ -1,13 +1,16 @@
 // When a subregion appears on the wine map (owner, 2026-09-30: "you need to
-// zoom further in before smaller places appear"). The rule's expression runs
-// in MapLibre's worker, its JS mirror in the camera and the status line, so
-// both are pinned against each other through BOTH expression engines, and the
-// owner-approved table of named places (design-final §2.1) is pinned as data:
-// a future change to the rule shows up here as a diff.
+// zoom further in before smaller places appear"; 24 px and "keep ribbons
+// visible" chosen the same day). The rule's expression runs in MapLibre's
+// worker, its JS mirror in the camera and the status line, so both are pinned
+// against each other through BOTH expression engines, and the table of named
+// places is pinned as data: a future change to the rule shows up here as a
+// diff.
 //
-// Areas, tiers, min_zooms and bboxes are the live catalogue's (release
-// 20260930T132635Z, one read-only SELECT); latitudes are each shard's
-// manifest bbox mid-latitude.
+// Each place's reveal_area is what the tile export (scripts/wine-map-tiles/
+// lib.mjs revealPlan) wrote for it in a read-only dry run over the live
+// catalogue on 2026-09-30 (the label's value, which is the place's); tiers and
+// min_zooms are the catalogue's, latitudes each shard's manifest bbox
+// mid-latitude. `area` is kept on the fixtures to show it is never read.
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { featureFilter } from "@maplibre/maplibre-gl-style-spec";
 import { bundledStyleEngine } from "../testing/bundled-style-engine";
@@ -15,15 +18,18 @@ import {
   bboxZoomForPx,
   currentRevealPx,
   familyInView,
+  placeRevealPx,
   REVEAL_CAP_ZOOM,
   REVEAL_MIN_PX,
   REVEAL_PX_MAX,
+  REVEAL_RULE_VERSION,
   revealK,
   revealLatitude,
   revealPasses,
   revealPxFromSearch,
   revealTerm,
   revealZoom,
+  shardRevealPx,
   sizeHiddenInView,
 } from "./reveal";
 import type { Bbox } from "./shard-specs";
@@ -66,50 +72,68 @@ type Place = {
   shard: Shard;
   tier: number;
   min_zoom: number;
+  /** The tile's whole-footprint size (planar deg²): never read by the rule. */
   area: number;
+  /** What the export wrote (the label's, i.e. the place's), or none. */
+  reveal_area?: number;
   bbox: Bbox;
-  /** First zoom drawn today, then at 16 / 24 / 32 px (design-final §2.1). */
+  /** First zoom drawn before the rule, then at 16 / 24 / 32 px. */
   today: number;
   at: { 16: number; 24: number; 32: number };
 };
 
 const PLACES: Place[] = [
-  { name: "Cole Ranch", shard: "california", tier: 3, min_zoom: 6, area: 0.00008013, bbox: [-123.23493, 39.05565, -123.21377, 39.06551], today: 6, at: { 16: 11, 24: 11, 32: 12 } },
-  { name: "Benmore Valley", shard: "california", tier: 3, min_zoom: 6, area: 0.00054262, bbox: [-123.04102, 38.99665, -123.00207, 39.02382], today: 6, at: { 16: 9, 24: 10, 32: 10 } },
-  { name: "Rockpile", shard: "california", tier: 3, min_zoom: 6, area: 0.00616419, bbox: [-123.24641, 38.70886, -123.05546, 38.80911], today: 6, at: { 16: 7, 24: 8, 32: 8 } },
-  { name: "High Valley", shard: "california", tier: 3, min_zoom: 6, area: 0.00686257, bbox: [-122.76342, 39.00863, -122.59051, 39.08274], today: 6, at: { 16: 7, 24: 8, 32: 8 } },
-  { name: "Los Carneros", shard: "california", tier: 3, min_zoom: 6, area: 0.01551156, bbox: [-122.54487, 38.15078, -122.28244, 38.30364], today: 6, at: { 16: 7, 24: 7, 32: 8 } },
-  { name: "Mendocino Ridge", shard: "california", tier: 3, min_zoom: 6, area: 0.03528304, bbox: [-123.70138, 38.77659, -123.31982, 39.15532], today: 6, at: { 16: 6, 24: 7, 32: 7 } },
-  { name: "Napa Valley", shard: "california", tier: 3, min_zoom: 6, area: 0.16727936, bbox: [-122.64675, 38.15506, -122.0614, 38.76833], today: 6, at: { 16: 6, 24: 6, 32: 6 } },
-  { name: "Oakville", shard: "california", tier: 4, min_zoom: 7, area: 0.00283441, bbox: [-122.43791, 38.39871, -122.33021, 38.465], today: 7, at: { 16: 8, 24: 9, 32: 9 } },
-  { name: "Stags Leap District", shard: "california", tier: 4, min_zoom: 7, area: 0.00127251, bbox: [-122.35186, 38.37813, -122.2981, 38.43076], today: 7, at: { 16: 9, 24: 9, 32: 10 } },
-  { name: "Russian River Valley", shard: "california", tier: 4, min_zoom: 7, area: 0.07142019, bbox: [-123.03101, 38.30056, -122.67373, 38.65234], today: 7, at: { 16: 7, 24: 7, 32: 7 } },
-  { name: "Pauillac", shard: "bordeaux", tier: 3, min_zoom: 9, area: 0.00206397, bbox: [-0.7933, 45.1667, -0.7403, 45.2279], today: 9, at: { 16: 9, 24: 9, 32: 9 } },
-  { name: "Canon-Fronsac", shard: "bordeaux", tier: 3, min_zoom: 7, area: 0.00058909, bbox: [-0.3046, 44.9217, -0.2734, 44.9452], today: 7, at: { 16: 9, 24: 10, 32: 10 } },
-  { name: "Hermitage", shard: "rhone", tier: 3, min_zoom: 7, area: 0.00017304, bbox: [4.8301, 45.0713, 4.8652, 45.0815], today: 7, at: { 16: 10, 24: 11, 32: 11 } },
-  { name: "Monthoux", shard: "savoie", tier: 2, min_zoom: 7, area: 2.9e-7, bbox: [5.8364, 45.7003, 5.837, 45.7022], today: 7, at: { 16: 15, 24: 15, 32: 16 } },
-  { name: "Romanée-Conti", shard: "bourgogne", tier: 4, min_zoom: 13, area: 0.00000218, bbox: [4.9485, 47.161, 4.9508, 47.1623], today: 13, at: { 16: 13, 24: 14, 32: 14 } },
-  { name: "La Tâche", shard: "bourgogne", tier: 4, min_zoom: 13, area: 0.00000718, bbox: [4.9469, 47.158817, 4.9523, 47.1607], today: 13, at: { 16: 13, 24: 13, 32: 13 } },
-  { name: "Clos de Vougeot", shard: "bourgogne", tier: 4, min_zoom: 13, area: 0.00006083, bbox: [4.9535, 47.1676, 4.9633, 47.1764], today: 13, at: { 16: 13, 24: 13, 32: 13 } },
-  { name: "Les Amoureuses", shard: "bourgogne", tier: 5, min_zoom: 14, area: 0.00000704, bbox: [4.9558, 47.1784, 4.9596, 47.1811], today: 14, at: { 16: 14, 24: 14, 32: 14 } },
-  { name: "Bernkasteler Doctor", shard: "mosel", tier: 4, min_zoom: 12, area: 0.00000413, bbox: [7.076351, 49.915349, 7.079655, 49.917562], today: 12, at: { 16: 13, 24: 13, 32: 14 } },
-  { name: "Piesporter Goldtröpfchen", shard: "mosel", tier: 4, min_zoom: 12, area: 0.00010614, bbox: [6.893171, 49.876892, 6.937059, 49.889914], today: 12, at: { 16: 12, 24: 12, 32: 12 } },
-  { name: "Barolo", shard: "piemonte", tier: 3, min_zoom: 7, area: 0.00803822, bbox: [7.89369, 44.57208, 8.01172, 44.67766], today: 7, at: { 16: 7, 24: 8, 32: 8 } },
-  { name: "Barbaresco", shard: "piemonte", tier: 3, min_zoom: 7, area: 0.00453445, bbox: [8.05704, 44.65791, 8.15292, 44.75724], today: 7, at: { 16: 8, 24: 8, 32: 9 } },
-  { name: "Lugana", shard: "veneto", tier: 2, min_zoom: 6, area: 0.00084366, bbox: [10.62313, 45.42293, 10.68244, 45.45747], today: 6, at: { 16: 9, 24: 9, 32: 10 } },
-  // Regions: 2 to 8 px at their own zoom, and exempt.
+  // The owner's photo: compact specks still wait (the design's 24 px table).
+  { name: "Cole Ranch", shard: "california", tier: 3, min_zoom: 6, area: 0.00008013, reveal_area: 0.0000905261, bbox: [-123.23493, 39.05565, -123.21377, 39.06551], today: 6, at: { 16: 11, 24: 11, 32: 12 } },
+  { name: "Benmore Valley", shard: "california", tier: 3, min_zoom: 6, area: 0.00054262, reveal_area: 0.000555734, bbox: [-123.04102, 38.99665, -123.00207, 39.02382], today: 6, at: { 16: 9, 24: 10, 32: 10 } },
+  { name: "Rockpile", shard: "california", tier: 3, min_zoom: 6, area: 0.00616419, reveal_area: 0.00986153, bbox: [-123.24641, 38.70886, -123.05546, 38.80911], today: 6, at: { 16: 7, 24: 8, 32: 8 } },
+  { name: "High Valley", shard: "california", tier: 3, min_zoom: 6, area: 0.00686257, reveal_area: 0.007032, bbox: [-122.76342, 39.00863, -122.59051, 39.08274], today: 6, at: { 16: 7, 24: 8, 32: 8 } },
+  { name: "Los Carneros", shard: "california", tier: 3, min_zoom: 6, area: 0.01551156, reveal_area: 0.0157173, bbox: [-122.54487, 38.15078, -122.28244, 38.30364], today: 6, at: { 16: 7, 24: 7, 32: 8 } },
+  { name: "Mendocino Ridge", shard: "california", tier: 3, min_zoom: 6, area: 0.03528304, reveal_area: 0.0379064, bbox: [-123.70138, 38.77659, -123.31982, 39.15532], today: 6, at: { 16: 6, 24: 7, 32: 7 } },
+  { name: "Napa Valley", shard: "california", tier: 3, min_zoom: 6, area: 0.16727936, reveal_area: 0.170011, bbox: [-122.64675, 38.15506, -122.0614, 38.76833], today: 6, at: { 16: 6, 24: 6, 32: 6 } },
+  { name: "Oakville", shard: "california", tier: 4, min_zoom: 7, area: 0.00283441, reveal_area: 0.00287976, bbox: [-122.43791, 38.39871, -122.33021, 38.465], today: 7, at: { 16: 8, 24: 9, 32: 9 } },
+  { name: "Stags Leap District", shard: "california", tier: 4, min_zoom: 7, area: 0.00127251, reveal_area: 0.00129226, bbox: [-122.35186, 38.37813, -122.2981, 38.43076], today: 7, at: { 16: 9, 24: 9, 32: 10 } },
+  { name: "Russian River Valley", shard: "california", tier: 4, min_zoom: 7, area: 0.07142019, reveal_area: 0.0726055, bbox: [-123.03101, 38.30056, -122.67373, 38.65234], today: 7, at: { 16: 7, 24: 7, 32: 7 } },
+  { name: "Pauillac", shard: "bordeaux", tier: 3, min_zoom: 9, area: 0.00206397, reveal_area: 0.00207395, bbox: [-0.7933, 45.1667, -0.7403, 45.2279], today: 9, at: { 16: 9, 24: 9, 32: 9 } },
+  { name: "Canon-Fronsac", shard: "bordeaux", tier: 3, min_zoom: 7, area: 0.00058909, reveal_area: 0.000589226, bbox: [-0.3046, 44.9217, -0.2734, 44.9452], today: 7, at: { 16: 9, 24: 10, 32: 10 } },
+  { name: "Romanée-Conti", shard: "bourgogne", tier: 4, min_zoom: 13, area: 0.00000218, reveal_area: 0.00000217984, bbox: [4.9485, 47.161, 4.9508, 47.1623], today: 13, at: { 16: 13, 24: 14, 32: 14 } },
+  { name: "La Tâche", shard: "bourgogne", tier: 4, min_zoom: 13, area: 0.00000718, reveal_area: 0.00000718945, bbox: [4.9469, 47.158817, 4.9523, 47.1607], today: 13, at: { 16: 13, 24: 13, 32: 13 } },
+  { name: "Clos de Vougeot", shard: "bourgogne", tier: 4, min_zoom: 13, area: 0.00006083, reveal_area: 0.0000609537, bbox: [4.9535, 47.1676, 4.9633, 47.1764], today: 13, at: { 16: 13, 24: 13, 32: 13 } },
+  { name: "Les Amoureuses", shard: "bourgogne", tier: 5, min_zoom: 14, area: 0.00000704, reveal_area: 0.00000706032, bbox: [4.9558, 47.1784, 4.9596, 47.1811], today: 14, at: { 16: 14, 24: 14, 32: 14 } },
+  { name: "Bernkasteler Doctor", shard: "mosel", tier: 4, min_zoom: 12, area: 0.00000413, reveal_area: 0.00000412195, bbox: [7.076351, 49.915349, 7.079655, 49.917562], today: 12, at: { 16: 13, 24: 13, 32: 14 } },
+  { name: "Barolo", shard: "piemonte", tier: 3, min_zoom: 7, area: 0.00803822, reveal_area: 0.00794956, bbox: [7.89369, 44.57208, 8.01172, 44.67766], today: 7, at: { 16: 7, 24: 8, 32: 8 } },
+  { name: "Barbaresco", shard: "piemonte", tier: 3, min_zoom: 7, area: 0.00453445, reveal_area: 0.00449139, bbox: [8.05704, 44.65791, 8.15292, 44.75724], today: 7, at: { 16: 8, 24: 8, 32: 9 } },
+  { name: "Lugana", shard: "veneto", tier: 2, min_zoom: 6, area: 0.00084366, reveal_area: 0.000839222, bbox: [10.62313, 45.42293, 10.68244, 45.45747], today: 6, at: { 16: 9, 24: 9, 32: 10 } },
+  // Ribbons are measured by their length (2N long, N/8 thick): Burgundy's
+  // Côtes, Saint-Joseph, Hermitage's hill, Monthoux's strip, Goldtröpfchen.
+  { name: "Côte de Nuits", shard: "bourgogne", tier: 2, min_zoom: 7, area: 0.00406179, reveal_area: 0.0167765, bbox: [4.9224, 47.1059, 5.0045, 47.3001], today: 7, at: { 16: 7, 24: 7, 32: 8 } },
+  { name: "Côte de Beaune", shard: "bourgogne", tier: 2, min_zoom: 7, area: 0.00847429, reveal_area: 0.0214284, bbox: [4.6482, 46.896, 4.8977, 47.0915], today: 7, at: { 16: 7, 24: 7, 32: 7 } },
+  { name: "Saint-Joseph", shard: "rhone", tier: 3, min_zoom: 7, area: 0.0078069, reveal_area: 0.0153478, bbox: [4.7075, 44.916, 4.8571, 45.4383], today: 7, at: { 16: 7, 24: 7, 32: 8 } },
+  { name: "Hermitage", shard: "rhone", tier: 3, min_zoom: 7, area: 0.00017304, reveal_area: 0.000218128, bbox: [4.8301, 45.0713, 4.8652, 45.0815], today: 7, at: { 16: 10, 24: 10, 32: 11 } },
+  { name: "Monthoux", shard: "savoie", tier: 2, min_zoom: 7, area: 2.9e-7, reveal_area: 9.55093e-7, bbox: [5.8364, 45.7003, 5.837, 45.7022], today: 7, at: { 16: 14, 24: 14, 32: 15 } },
+  { name: "Piesporter Goldtröpfchen", shard: "mosel", tier: 4, min_zoom: 12, area: 0.00010614, reveal_area: 0.000306584, bbox: [6.893171, 49.876892, 6.937059, 49.889914], today: 12, at: { 16: 12, 24: 12, 32: 12 } },
+  // Burgundy's compact Grand Auxerrois comes in with its region's subregions.
+  { name: "Grand Auxerrois", shard: "bourgogne", tier: 2, min_zoom: 7, area: 0.00492077, reveal_area: 0.0167765, bbox: [3.6088, 47.4435, 3.8162, 47.7705], today: 7, at: { 16: 7, 24: 7, 32: 8 } },
+  // Regions are exempt (2 to 8 px at their own zoom), and carry no reveal_area.
   { name: "Ahr", shard: "ahr", tier: 1, min_zoom: 4, area: 0.00491713, bbox: [6.9791, 50.50258, 7.20678, 50.56153], today: 4, at: { 16: 4, 24: 4, 32: 4 } },
   { name: "Rheingau", shard: "rheingau", tier: 1, min_zoom: 4, area: 0.0138727, bbox: [7.781571, 49.970016, 9.433746, 51.161362], today: 4, at: { 16: 4, 24: 4, 32: 4 } },
 ];
 
-const propsOf = (p: Place): Props => ({ key: p.name, tier: p.tier, area: p.area, min_zoom: p.min_zoom });
+const propsOf = (p: Place): Props => ({
+  key: p.name,
+  tier: p.tier,
+  area: p.area,
+  min_zoom: p.min_zoom,
+  ...(p.reveal_area === undefined ? {} : { reveal_area: p.reveal_area }),
+});
 const THRESHOLDS = [16, 24, 32] as const;
 
 describe("reveal: the owner's knob", () => {
-  it("defaults to 24 px (WCAG 2.2's minimum target size), with a z16 net", () => {
+  it("is 24 px (WCAG 2.2's minimum target size), with a z16 net and rule version 1", () => {
     expect(REVEAL_MIN_PX).toBe(24);
     expect(REVEAL_CAP_ZOOM).toBe(16);
     expect(REVEAL_PX_MAX).toBe(64);
+    expect(REVEAL_RULE_VERSION).toBe(1);
   });
 
   it("reads ?revealPx= for one visit, clamped, falling back to the knob", () => {
@@ -128,6 +152,35 @@ describe("reveal: the owner's knob", () => {
   it("a shard's latitude is its bbox's mid-latitude, 45 without one", () => {
     expect(revealLatitude([-124.6, 32.5, -114.1, 42.03])).toBeCloseTo(37.265, 9);
     expect(revealLatitude(undefined)).toBe(45);
+  });
+});
+
+// The deploy order (owner, 2026-09-30): the app first, with no visible change,
+// then the tiles release that switches the rule on. A shard applies the rule
+// only when its manifest entry says its tiles carry it.
+describe("shardRevealPx / placeRevealPx: the manifest switches the rule on, shard by shard", () => {
+  const on = { reveal_rule: 1 };
+  const off = {};
+  it("a shard applies the visit's threshold only with reveal_rule 1", () => {
+    expect(shardRevealPx(on, 24)).toBe(24);
+    expect(shardRevealPx(on, 16)).toBe(16);
+    expect(shardRevealPx(on, 0)).toBe(0); // the kill switch wins
+    expect(shardRevealPx(off, 24)).toBe(0); // today's releases
+    expect(shardRevealPx(undefined, 24)).toBe(0);
+    expect(shardRevealPx({ reveal_rule: 2 }, 24)).toBe(0); // a rule this app does not know
+    expect(shardRevealPx({ reveal_rule: "1" }, 24)).toBe(0);
+  });
+
+  it("a place takes its shard's; a country, the visit's once any shard carries the rule", () => {
+    const shards = { bourgogne: on, bordeaux: off };
+    expect(placeRevealPx(shards, "france.bourgogne.cote-de-nuits", 24)).toBe(24);
+    expect(placeRevealPx(shards, "france.bourgogne", 24)).toBe(24);
+    expect(placeRevealPx(shards, "france.bordeaux.haut-medoc.pauillac", 24)).toBe(0);
+    expect(placeRevealPx(shards, "france.nowhere.x", 24)).toBe(0);
+    expect(placeRevealPx(shards, "france.constructor.x", 24)).toBe(0);
+    expect(placeRevealPx(shards, "france", 24)).toBe(24);
+    expect(placeRevealPx({ bordeaux: off }, "france", 24)).toBe(0);
+    expect(placeRevealPx(shards, "france", 0)).toBe(0);
   });
 });
 
@@ -163,21 +216,34 @@ describe("revealTerm", () => {
       }
     });
 
-    it(`fails open on odd properties, and never hides a country or region (${engine.name})`, () => {
+    it(`fails open: no numeric reveal_area, no delay; countries and regions never delayed (${engine.name})`, () => {
       const k = revealK(24, 45);
       const f = engine.compile(revealTerm(k, 24));
       const row = (props: Props) => [0, 5, 10, 15, 16].map((z) => (f(props, z) ? 1 : 0)).join("");
-      expect(row({ tier: 3 })).toBe("11111"); // no area
-      expect(row({ tier: 3, area: null })).toBe("11111");
-      expect(row({ tier: 3, area: "0.00008" })).toBe("11111"); // string area
-      expect(row({ tier: 3, area: 0 })).toBe("00001"); // only the net draws it
-      expect(row({ area: 1e-9 })).toBe("11111"); // no tier
-      expect(row({ tier: "3", area: 1e-9 })).toBe("11111"); // string tier
-      expect(row({ tier: 0, area: 1e-12 })).toBe("11111");
-      expect(row({ tier: 1, area: 1e-12 })).toBe("11111");
-      expect(row({ tier: 2, area: 1e-12 })).toBe("00001");
+      // Tiles from before the rule: `area` alone is never read.
+      expect(row({ tier: 3 })).toBe("11111");
+      expect(row({ tier: 3, area: 1e-9 })).toBe("11111");
+      expect(row({ tier: 3, area: 0 })).toBe("11111");
+      expect(row({ tier: 3, reveal_area: null, area: 1e-9 })).toBe("11111");
+      expect(row({ tier: 3, reveal_area: "0.00008", area: 1e-9 })).toBe("11111"); // string
+      // Tiles with the rule.
+      expect(row({ tier: 3, reveal_area: 0, area: 1 })).toBe("00001"); // only the net draws it
+      expect(row({ tier: 2, reveal_area: 1e-12 })).toBe("00001");
+      expect(row({ tier: 3, reveal_area: 1000, area: 1e-12 })).toBe("11111"); // a big place, whatever its area
+      expect(row({ reveal_area: 1e-9 })).toBe("11111"); // no tier
+      expect(row({ tier: "3", reveal_area: 1e-9 })).toBe("11111"); // string tier
+      expect(row({ tier: 0, reveal_area: 1e-12 })).toBe("11111");
+      expect(row({ tier: 1, reveal_area: 1e-12 })).toBe("11111");
       // The JS mirror says the same.
-      for (const props of [{ tier: 3 }, { tier: 3, area: 0 }, { area: 1e-9 }, { tier: "3", area: 1e-9 }, { tier: 1, area: 1e-12 }]) {
+      for (const props of [
+        { tier: 3 },
+        { tier: 3, area: 1e-9 },
+        { tier: 3, reveal_area: "0.1", area: 1e-9 },
+        { tier: 3, reveal_area: 0 },
+        { reveal_area: 1e-9 },
+        { tier: "3", reveal_area: 1e-9 },
+        { tier: 1, reveal_area: 1e-12 },
+      ]) {
         expect([0, 5, 10, 15, 16].map((z) => (revealPasses(props, z, k, 24) ? 1 : 0)).join(""), JSON.stringify(props)).toBe(row(props));
       }
     });
@@ -198,14 +264,24 @@ describe("revealTerm", () => {
   }
 
   it("with the rule off, revealPasses passes everything", () => {
-    expect(revealPasses({ tier: 5, area: 0 }, 0, 1, 0)).toBe(true);
+    expect(revealPasses({ tier: 5, reveal_area: 0 }, 0, 1, 0)).toBe(true);
   });
 });
 
-describe("revealZoom: the owner-approved table (design-final §2.1)", () => {
+describe("revealZoom: the named places (the export's reveal_area, 2026-09-30)", () => {
   it("is today's first zoom with the rule off", () => {
     for (const place of PLACES) {
       expect(revealZoom(propsOf(place), revealK(24, LAT[place.shard]), 0), place.name).toBe(place.today);
+    }
+  });
+
+  it("is today's first zoom on tiles from before the rule (no reveal_area), at any threshold", () => {
+    for (const px of THRESHOLDS) {
+      for (const place of PLACES) {
+        const { reveal_area: _dropped, ...before } = propsOf(place);
+        void _dropped;
+        expect(revealZoom(before, revealK(px, LAT[place.shard]), px), `${place.name} ${px}`).toBe(place.today);
+      }
     }
   });
 
@@ -259,7 +335,7 @@ describe("sizeHiddenInView", () => {
   const k = revealK(64, 45.9313);
   const view: Bbox = [5.7, 45.5, 6.2, 45.9];
   const roussette = {
-    properties: { key: "france.savoie.roussette-de-savoie", tier: 2, area: 0.02 }, // 62 px at z8
+    properties: { key: "france.savoie.roussette-de-savoie", tier: 2, reveal_area: 0.02 }, // 62 px at z8
     geometry: { type: "Polygon", coordinates: [[[5.8, 45.6], [5.9, 45.6], [5.9, 45.7], [5.8, 45.6]]] },
   };
   const base = { view, tileZoom: 8, k, px: 64, visibleKeys: null };
@@ -281,6 +357,11 @@ describe("sizeHiddenInView", () => {
     expect(
       sizeHiddenInView({ ...base, visibleKeys: new Set([roussette.properties.key]), features: [roussette] }),
     ).toBe(true);
+  });
+
+  it("finds nothing on tiles from before the rule (no reveal_area): no cue before the tiles release", () => {
+    const before = { ...roussette, properties: { key: roussette.properties.key, tier: 2, area: 0.0001 } };
+    expect(sizeHiddenInView({ ...base, features: [before] })).toBe(false);
   });
 
   it("counts a feature whose geometry it cannot read (it errs towards 'Zoom in')", () => {
@@ -323,38 +404,21 @@ describe("currentRevealPx", () => {
   });
 });
 
-// reveal_area (scripts/wine-map-tiles/lib.mjs revealAreas): tiles built after
-// 2026-09-30 carry it and the term reads it first; older tiles carry only
-// `area`, and then nothing changes.
-describe("revealTerm reads reveal_area before area", () => {
-  const k = revealK(24, 47.0641);
-  // Romanée-Conti: 21 px at z13 by its own area, so it waits for z14 ...
-  const alone = { tier: 4, area: 0.00000218, min_zoom: 13 };
-  // ... unless its family's median grand cru is 24 px at z13 (reveal_area =
-  // min(family median, 4 x its area)), when it comes in with them.
-  const withFamily = { ...alone, reveal_area: 4 * 0.00000218 };
-
+// Parts (scripts/wine-map-tiles/lib.mjs placeFeatures): a place with several
+// polygons arrives as one feature per part, sharing its key, id and `area`, each
+// with its own reveal_area; the anchor part carries the place's value.
+describe("parts of one place", () => {
+  const k = revealK(24, LAT.california);
+  const place = { key: "united-states.california.north-coast.mendocino-ridge", tier: 3, area: 0.03528304 };
+  const anchor = { ...place, reveal_area: 0.0379064 };
+  const sliver = { ...place, reveal_area: 4.0671e-9 };
   for (const engine of engines) {
-    it(`agrees with revealPasses on reveal_area, area and odd values (${engine.name})`, () => {
+    it(`the anchor comes with its place, a sliver waits (${engine.name})`, () => {
       const f = engine.compile(revealTerm(k, 24));
-      const cases: Props[] = [
-        alone,
-        withFamily,
-        { tier: 4, reveal_area: 1e-9, area: 1 }, // a small piece of a big place: reveal_area wins
-        { tier: 4, reveal_area: "0.1", area: 1e-9 }, // a non-number reveal_area falls back to area
-        { tier: 4, reveal_area: null },
-        { tier: 1, reveal_area: 1e-12 }, // regions stay exempt
-      ];
-      for (const props of cases) {
-        for (let z = 0; z <= 17; z += 1) {
-          expect(f(props, z), `${JSON.stringify(props)} z${z}`).toBe(revealPasses(props, z, k, 24));
-        }
-      }
-      expect(revealZoom(alone, k, 24)).toBe(14);
-      expect(revealZoom(withFamily, k, 24)).toBe(13);
-      expect(f({ tier: 4, reveal_area: 1e-9, area: 1 }, 12)).toBe(false);
-      expect(f({ tier: 4, reveal_area: "0.1", area: 1e-9 }, 12)).toBe(false);
-      expect(f({ tier: 4, reveal_area: null }, 5)).toBe(true);
+      expect([6, 7, 8].map((z) => f(anchor, z))).toEqual([false, true, true]);
+      expect([7, 12, 15, 16].map((z) => f(sliver, z))).toEqual([false, false, false, true]);
+      // With the rule off every part is drawn: together they are the place.
+      expect(revealTerm(k, 0)).toBeNull();
     });
   }
 });
@@ -363,14 +427,14 @@ describe("familyInView (the selection cue's probe)", () => {
   const k = revealK(24, 44.595);
   const view: Bbox = [4.5, 44.8, 5.2, 45.6];
   const square = (x: number, y: number) => ({ type: "Polygon", coordinates: [[[x, y], [x + 0.02, y], [x + 0.02, y + 0.02], [x, y]]] });
-  const hermitage = { properties: { key: "hermitage", tier: 3, area: 0.00017304 }, geometry: square(4.83, 45.07) };
-  const crozes = { properties: { key: "crozes", tier: 3, area: 0.02 }, geometry: square(4.85, 45.1) };
-  const far = { properties: { key: "far", tier: 3, area: 0.00017304 }, geometry: square(3, 43) };
+  const hermitage = { properties: { key: "hermitage", tier: 3, reveal_area: 0.000218128 }, geometry: square(4.83, 45.07) };
+  const crozes = { properties: { key: "crozes", tier: 3, reveal_area: 0.02 }, geometry: square(4.85, 45.1) };
+  const far = { properties: { key: "far", tier: 3, reveal_area: 0.000218128 }, geometry: square(3, 43) };
 
   it("counts drawn and size-hidden children in view, per key", () => {
     expect(familyInView({ features: [hermitage, crozes, far], view, tileZoom: 8, k, px: 24, visibleKeys: null })).toEqual({ drawn: 1, hidden: 1 });
     expect(familyInView({ features: [hermitage, far], view, tileZoom: 7, k, px: 24, visibleKeys: null })).toEqual({ drawn: 0, hidden: 1 });
-    expect(familyInView({ features: [hermitage, crozes], view, tileZoom: 11, k, px: 24, visibleKeys: null })).toEqual({ drawn: 2, hidden: 0 });
+    expect(familyInView({ features: [hermitage, crozes], view, tileZoom: 10, k, px: 24, visibleKeys: null })).toEqual({ drawn: 2, hidden: 0 });
   });
 
   it("a place drawn in one of its features is drawn (pieces, tile edges)", () => {
@@ -378,8 +442,10 @@ describe("familyInView (the selection cue's probe)", () => {
     expect(familyInView({ features: [smallPiece, crozes], view, tileZoom: 8, k, px: 24, visibleKeys: null })).toEqual({ drawn: 1, hidden: 0 });
   });
 
-  it("ignores grape-filtered children, and says nothing with the rule off", () => {
+  it("ignores grape-filtered children, and says nothing with the rule off or on tiles without it", () => {
     expect(familyInView({ features: [hermitage], view, tileZoom: 8, k, px: 24, visibleKeys: new Set(["crozes"]) })).toEqual({ drawn: 0, hidden: 0 });
     expect(familyInView({ features: [hermitage], view, tileZoom: 8, k, px: 0, visibleKeys: null })).toEqual({ drawn: 1, hidden: 0 });
+    const before = { ...hermitage, properties: { key: "hermitage", tier: 3, area: 0.00017304 } };
+    expect(familyInView({ features: [before], view, tileZoom: 7, k, px: 24, visibleKeys: null })).toEqual({ drawn: 1, hidden: 0 });
   });
 });

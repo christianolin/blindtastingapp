@@ -48,3 +48,7 @@ scripts/scratch-apply.mjs
 # Python bytecode from the wine-map extraction scripts.
 __pycache__/
 *.pyc
+
+# A local check of a draft (never promoted) wine-map tiles release writes its
+# manifest here (NEXT_PUBLIC_WINE_MAP_MANIFEST_URL=/wine-map-draft/manifest.json).
+/public/wine-map-draft/

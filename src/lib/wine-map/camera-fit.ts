@@ -41,19 +41,25 @@ export const CAMERA_MAX_ZOOM_RULE_OFF = 16;
     moved (Libournais, Montalcino, Malibu Coast). The landing does not wait
     for every child: a parent that fits the screen can hold children under
     N px, which come in as the viewer zooms (the status line says so,
-    detail-status.ts), or with their family once the tiles carry reveal_area
-    (reveal.ts).
+    detail-status.ts); a region's subregions come in together (reveal.ts).
+
+    The floors are judged from the bbox, which the camera has, not from the
+    tile's reveal_area, which it does not: a ribbon the size rule draws by its
+    length (reveal.ts) is drawn at or before its floor, so a pick of one lands
+    where it is drawn, if a zoom deeper than it needs.
 
     Countries and regions (tier <= 1) get no size floor: the rule exempts them.
-    With the rule off (revealPx 0) this is exactly the old camera: a parent's
-    floor is 0 and the cap is z16. */
+    With the rule off (revealPx 0: the kill switch, or a shard whose tiles do
+    not carry the rule, reveal.ts placeRevealPx) this is exactly the old
+    camera: a parent's floor is 0 and the cap is z16. */
 export function selectionZooms(input: {
   tier: number;
   /** The place's catalogue min_zoom. */
   minZoom: number;
   childMinZooms: readonly number[];
   bbox: Bbox;
-  /** reveal.ts's threshold for this visit (0 = the rule is off). */
+  /** reveal.ts's threshold for this place (placeRevealPx: the visit's, or 0
+      where the rule is off or its shard's tiles do not carry it). */
   revealPx: number;
 }): { minZoom: number; maxZoom: number } {
   const on = input.revealPx > 0;

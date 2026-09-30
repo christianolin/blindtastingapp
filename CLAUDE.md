@@ -2199,32 +2199,64 @@ a raw subquery, regardless of which two tables look involved at a glance.
     debounce/defer attempt the same way before believing it.
   - **When a place appears** (2026-09-30, owner: "you need to zoom further
     in before smaller places appear"; design
-    `docs/superpowers/specs/2026-09-30-wine-map-reveal-by-size.md`).
-    - **The rule.** A subregion (tier >= 2) is drawn from the first whole zoom
-      at which it is at least `REVEAL_MIN_PX` CSS px across
-      (`src/lib/wine-map/reveal.ts`; 24 is the DEFAULT, not yet the owner's
-      pick: 16/24/32 wait on his live `?revealPx=` comparison; 0 = off).
-      "Across" is the side of a square of its on-screen area, from the tile's
-      size (below) and a per-shard latitude constant (`revealK`, the shard's
-      manifest bbox mid-latitude). Filters see only the tile's WHOLE zoom, so
-      what appears is at least N px, but between whole zooms a place still
-      hidden can be up to 2N on screen (Romanée-Conti: 21 px at z13, hidden
-      until z14, 39 px at z13.9). That errs later, which is the ask.
-    - **The size is `reveal_area`, else `area`.** Tiles exported after
-      2026-09-30 (`scripts/wine-map-tiles/lib.mjs`'s `familyRevealAreas` /
-      `placeFeatures`) give every tier >= 2 feature a `reveal_area`: a place
-      comes in with its family (siblings under one parent) once the family's
-      MEDIAN member is N px, if it is itself at least N/2 (no holes in a
-      vineyard mosaic: Vosne-Romanée's grands crus), and every part of a
-      multi-part subregion is its own feature, a part other than the largest
-      waiting until it is N/3 (no confetti: Mendocino Ridge's 71 slivers).
-      `area` stays the whole footprint on every part (click resolution uses
-      it). The key is absent where it would equal `area`, and regions and
-      countries are never split, so older tiles and the world archive behave
-      exactly as before. Takes effect with the first tiles release after
-      this change; until then the app reads `area` alone.
+    `docs/superpowers/specs/2026-09-30-wine-map-reveal-by-size.md`, §11 is
+    the rule as built). Owner decisions the same day: **24 px**; **keep
+    ribbons visible** (long thin places such as Burgundy's districts appear
+    with their region, only compact specks wait); the cue copy below; and
+    "ship when it passes" in two steps, the app first, then a tiles release.
+    - **The rule.** A subregion (tier >= 2) is drawn from the first whole
+      zoom at which it is `REVEAL_MIN_PX` (24) CSS px across
+      (`src/lib/wine-map/reveal.ts`; 0 = off). The size is worked out by the
+      tile export, which has the geometry (`scripts/wine-map-tiles/lib.mjs`
+      `revealPlan`), and reaches the app as ONE number per feature,
+      `reveal_area` (planar deg² at the shard's manifest-bbox mid-latitude, so
+      the app's `reveal_area * 4^z >= K` is exact). The export's rule, per
+      polygon part, in z0 Web-Mercator px: `size = max(sqrt(A), min(L / 2,
+      8 * A / L))` with L the long side of the part's minimum-area rectangle
+      and A / L its mean thickness: a part counts once its equal-area square
+      is N px, or, if it is a ribbon, once it is 2N long and N/8 thick
+      (`REVEAL_LENGTH_RATIO` 2, `REVEAL_THICKNESS_RATIO` 8). A part at most
+      twice as long as its equal-area square gets exactly the square rule, so
+      compact specks keep the 24 px table (Cole Ranch z11, Benmore Valley
+      z10, Rockpile and High Valley z8, Oakville z9). A place is
+      `max(sqrt(total A), its best part)`; a region's SUBREGION-kind children
+      at least half their median sibling come in with it
+      (`SUBREGION_FAMILY_RATIO` 2: Burgundy's compact Grand Auxerrois comes
+      in with its ribbons); every part is its own feature, the anchor part
+      with its place, the others once their own square is N/3
+      (`PIECE_PX_RATIO` 3: no Mendocino Ridge confetti); a label carries its
+      place's value. Everything is a ratio of N, so `?revealPx=` keeps its
+      meaning. The table of ~50 named places is in the spec, §11.
+    - **Do not bring back a general family rule.** A "comes in with its
+      family's median member" rule for every family (review round, never
+      shipped) pulled Cole Ranch, Benmore Valley, Oakville and Stags Leap a
+      zoom early. Only a region's subregions come in together.
+    - **Fail open, and the manifest switches it on.** A feature without a
+      numeric `reveal_area` is never delayed (`area` is never read), and a
+      shard applies the rule only when its manifest entry carries
+      `reveal_rule: 1` (`REVEAL_RULE`/`REVEAL_RULE_VERSION`;
+      `shardRevealPx`, `placeRevealPx`). export.mjs flags every shard,
+      publish.mjs keeps the flag in `tile_checksums`, promote.mjs
+      (`manifestForRelease`) copies it into the manifest. Without it the
+      shard's filters, the selection camera and the status probes are the
+      map from before the rule, so the app deploys first with no visible
+      change, and promoting an older release switches the rule off.
+      validate.mjs refuses a flagged shard whose subregions lack
+      `reveal_area` (`checkTileFeature`).
+    - **Parts.** A tier >= 2 place is split into one feature per polygon,
+      each with the place's properties (`area` still the whole footprint, so
+      smallest-wins clicks are unchanged), same `key`/`id` (promoteId `key`:
+      feature-state, the ring, the grape gate and the legend scan all work by
+      place). Labels are not split. Under the kill switch the parts together
+      are the place. Byte cost: +4.6 % California, +7.7 % over all shards
+      (estimate from the production archives); the world archive is
+      byte-identical.
     - **Never earlier than `floor(min_zoom)`.** So `min_zoom` now means
       "never before"; read reveal zooms through `reveal.ts` (`revealZoom`).
+      A reveal zoom above a shard's `max_zoom` is fine: MapLibre overzooms
+      the max-zoom tile and evaluates filters at the overscaled zoom; the
+      export asserts every place's tile zoom is within its shard's
+      `max_zoom`, so every feature is in its archive.
     - **Exemptions and the net.** Countries and regions are exempt, so the
       world archive's layers are untouched. Everything is drawn by z16
       (`REVEAL_CAP_ZOOM`).
@@ -2239,13 +2271,14 @@ a raw subquery, regardless of which two tables look involved at a glance.
       zoom); the casing, ring and label stay on top, and `firstOverlayId`
       skips the fill, so a shard added later lands below the casing.
     - **Picks.** Tree, search and `?place=` picks land where the place is drawn
-      (`selectionZooms`, `camera-fit.ts`). A parent's floor is its own tile
-      zoom, and its cap never undercuts that floor; it is raised further only
-      when even its bbox is under N px (a parent drawn at its old landing is
-      not moved). A parent that fits the screen can still hold children under
-      N px; the status line then says "Zoom in to see the subregions of
-      {place}." (or "all the subregions" when some are drawn), from the idle
-      scan's `familyInView` probe of the selected place's children.
+      (`selectionZooms`, `camera-fit.ts`, bbox-based; a ribbon may land a zoom
+      deeper than it needs). A parent's floor is its own tile zoom, and its
+      cap never undercuts that floor; it is raised further only when even its
+      bbox is under N px (a parent drawn at its old landing is not moved). A
+      parent that fits the screen can still hold children under N px; the
+      status line then says "Zoom in to see the subregions of {place}." (or
+      "Zoom in to see all the subregions of {place}." when some are drawn;
+      owner-approved), from the idle scan's `familyInView` probe.
     - **Status line.** The "No subregions mapped here" line checks with
       `querySourceFeatures` (`sizeHiddenInView`) that nothing in view is only
       size-hidden.
@@ -2253,9 +2286,22 @@ a raw subquery, regardless of which two tables look involved at a glance.
       the explorer reads it once when it mounts (`currentRevealPx`, never
       cached at module level: a module outlives a client-side navigation) and
       hands the same value to the map (`revealPx` prop) and its camera.
-    - **Kill switch.** `REVEAL_MIN_PX = 0` (or `?revealPx=0`) is the map from
-      before the rule: filters, the parent floor 0 and the z16 camera cap
-      (`CAMERA_MAX_ZOOM_RULE_OFF`); no selection cue.
+    - **Kill switch / rollback.** `REVEAL_MIN_PX = 0` (or `?revealPx=0`) is
+      the map from before the rule: filters, the parent floor 0 and the z16
+      camera cap (`CAMERA_MAX_ZOOM_RULE_OFF`); no selection cue. Promoting
+      the previous tiles release does the same from the data side.
+    - **Checking a draft tiles release locally.** A Wine Map Tiles run with
+      promote=false uploads `tiles/releases/<version>/*.pmtiles` and a
+      VALIDATED `wine_map_releases` row but writes no manifest. Write the
+      manifest promote.mjs would (`manifestForRelease`, read-only) to
+      `public/wine-map-draft/manifest.json` (gitignored) and build with
+      `NEXT_PUBLIC_WINE_MAP_MANIFEST_URL=/wine-map-draft/manifest.json`
+      (`src/lib/wine-map/manifest.ts`; production never sets it; anything
+      but an http(s) URL or a /path is refused). In Git Bash prefix the build
+      with `MSYS_NO_PATHCONV=1`, or MSYS rewrites the path to
+      `C:/Program Files/Git/wine-map-draft/...`, which is refused and the
+      live manifest loads: the console says `[wine-map] manifest override:`
+      only when the override took.
     - **Do not.** Never bake the rule into tippecanoe `minzoom`: the ring could
       no longer draw a small selected place, and shard `max_zoom` would drop
       features.

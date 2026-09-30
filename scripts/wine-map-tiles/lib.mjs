@@ -448,39 +448,176 @@ export function placeFeature(row) {
 }
 
 // ---------------------------------------------------------------------------
-// reveal_area (owner, 2026-09-30: "you need to zoom further in before smaller
-// places appear"). The app draws a subregion (tier >= 2) from the first whole
-// zoom at which it is N CSS px across, judging size by a feature's planar deg²
-// (src/lib/wine-map/reveal.ts: area · 4^z >= K). Judged by `area` alone, two
-// things go wrong, and both need knowledge only the export has:
+// reveal_area: WHEN a subregion appears on the map (owner, 2026-09-30: "you
+// need to zoom further in before smaller places appear"; his decisions the
+// same day: 24 px, and "keep ribbons visible": long thin places such as Côte
+// de Nuits appear with their region, only compact specks wait). The app draws
+// a tier >= 2 feature from the first whole zoom z at which
+//     reveal_area * 4^z >= K(N, shard mid-latitude)     (src/lib/wine-map/reveal.ts)
+// that is, at which its REVEAL SIDE r is N CSS px: r * 2^z >= N. The side
+// needs geometry only the export has, so it is worked out here, in
+// Web-Mercator CSS px at z0 (the world is 512 px wide; Mercator is conformal,
+// so every length on screen is its z0 length times 2^z, exactly).
 //
-// - FAMILIES. A vineyard mosaic comes in piece by piece: Vosne-Romanée's
-//   grands crus land with Romanée-Conti, La Grande Rue and La Romanée missing,
-//   holes in the strip. A place therefore also comes in with its family (the
-//   tier >= 2 places sharing its primary parent) once the family's MEDIAN
-//   member is N px across, provided it is itself at least N/FAMILY_PX_RATIO.
-//   The median, not the largest, so a county with one huge AVA does not pull
-//   its specks in (Cole Ranch, Rockpile and High Valley stay back in the
-//   owner's North Coast view).
-// - PIECES. A multi-part place is drawn with all its parts, so a scattered
-//   AVA throws confetti (Mendocino Ridge: 71 slivers under 8 px at z7.5). Each
-//   part of a tier >= 2 place becomes its own feature, same properties, and a
-//   part other than the largest waits until it is N/PIECE_PX_RATIO across; the
-//   largest always comes with its place.
+// Per polygon part q, with area A (px²) and L the long side of the part's
+// minimum-area enclosing rectangle:
+//     size(q) = max( sqrt(A), min( L / REVEAL_LENGTH_RATIO, REVEAL_THICKNESS_RATIO * A / L ) )
+// A part is big enough once the square of its area is N px across (the plain
+// rule), OR once it is REVEAL_LENGTH_RATIO * N px long AND N /
+// REVEAL_THICKNESS_RATIO px thick on average (A / L is its mean thickness).
+// A part at most twice as long as its equal-area square (L <= 2 sqrt(A):
+// every compact shape) gets exactly the plain rule; only real ribbons are
+// measured by their length (evidence: docs/superpowers/specs/
+// 2026-09-30-wine-map-reveal-by-size.md §11: Côte de Nuits is 54 px long and
+// 3.7 px thick at the Burgundy view; Rockpile, 40 px and 6.5 px at z7, must
+// still wait for z8).
+// Per place p:
+//     own(p) = max( sqrt(sum of its parts' A), max over its parts of size(q) )
+//   The whole footprint still counts as one (a cluster of vineyard parcels),
+//   but a length is measured within ONE part, never across a scattered
+//   multipart bbox (Mendocino Ridge's 75 fragments are not one long place).
+//   SUBREGIONS COME WITH THEIR REGION: the SUBREGION-kind children of one
+//   region (tier 1) are a family; one whose own() is at least
+//   1/SUBREGION_FAMILY_RATIO of the family's median own() takes max(own,
+//   median), so it comes in with the median subregion (Burgundy's compact
+//   Grand Auxerrois comes in with its ribbons at the Burgundy view). Nothing
+//   else is pulled by a family: a broader family rule brought Cole Ranch,
+//   Benmore Valley and Oakville in a zoom early (spec §11.3).
+// Per part: the anchor (the part with the largest size) takes the place's
+// side; every other part min(place side, PIECE_PX_RATIO * sqrt(A_q)), so a
+// small piece of a scattered place waits until its own square is
+// N / PIECE_PX_RATIO across and never comes before its place (no confetti). A
+// label takes the place's side, so a name comes with its shape.
+// Finally reveal_area = (r * 360/512)^2 * cos(shard mid-latitude): the tile's
+// own `area` unit (planar deg²) at the latitude the app's K is built for, so
+// the app's test is exact. Every step is a ratio of N, so REVEAL_MIN_PX and
+// ?revealPx= keep meaning what they say.
 //
-// Both reduce to ONE number per feature, `reveal_area`, which the app's
-// filter reads in place of `area` (and falls back from, so older tiles are
-// unchanged):
-//   place:  max(area, min(familyMedian, FAMILY_PX_RATIO² · area))
-//   piece:  largest -> place; other -> min(place, PIECE_PX_RATIO² · piece area)
-// Both are ratios of N, so the app's knob (REVEAL_MIN_PX) and ?revealPx= keep
-// meaning what they say. `area` itself stays the whole footprint on every
-// piece (click resolution picks the smallest overlapping place by it). The
-// key is ABSENT wherever it would equal `area`, and countries and regions
-// (tier <= 1, exempt from the rule) are never split, so the world archive and
-// every single-part place without a family effect stay byte-identical.
-export const FAMILY_PX_RATIO = 2;
+// EVERY tier >= 2 feature carries reveal_area, since the app fails open on a
+// feature without one (every release before this rule), and the release flags
+// each shard `reveal_rule: REVEAL_RULE` in its manifest entry, which is what
+// turns the rule on for that shard in the app (its filters, the selection
+// camera's floor and the status probes). `area`
+// stays the whole footprint on every part (click resolution picks the
+// smallest place by it). Countries and regions (tier <= 1) are exempt and
+// never split, so the world archive is byte-identical.
+export const REVEAL_RULE = 1;
+export const REVEAL_LENGTH_RATIO = 2;
+export const REVEAL_THICKNESS_RATIO = 8;
+export const SUBREGION_FAMILY_RATIO = 2;
 export const PIECE_PX_RATIO = 3;
+
+/** A lon/lat position in Web-Mercator CSS px at z0 (the world is 512 px). */
+export function mercatorPx(lon, lat) {
+  const s = Math.sin((lat * Math.PI) / 180);
+  return [((lon + 180) / 360) * 512, (0.5 - Math.log((1 + s) / (1 - s)) / (4 * Math.PI)) * 512];
+}
+
+function shoelace(ring) {
+  let sum = 0;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i, i += 1) {
+    sum += (ring[j][0] + ring[i][0]) * (ring[j][1] - ring[i][1]);
+  }
+  return Math.abs(sum) / 2;
+}
+
+function turn(o, a, b) {
+  return (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+}
+
+/** The convex hull of a point set (Andrew's monotone chain), counter-clockwise,
+    without repeated or collinear points. */
+export function convexHull(points) {
+  const sorted = [...points].sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+  const pts = sorted.filter((p, i) => i === 0 || p[0] !== sorted[i - 1][0] || p[1] !== sorted[i - 1][1]);
+  if (pts.length < 3) return pts;
+  const lower = [];
+  for (const p of pts) {
+    while (lower.length >= 2 && turn(lower[lower.length - 2], lower[lower.length - 1], p) <= 0) lower.pop();
+    lower.push(p);
+  }
+  const upper = [];
+  for (let i = pts.length - 1; i >= 0; i -= 1) {
+    while (upper.length >= 2 && turn(upper[upper.length - 2], upper[upper.length - 1], pts[i]) <= 0) upper.pop();
+    upper.push(pts[i]);
+  }
+  lower.pop();
+  upper.pop();
+  return lower.concat(upper);
+}
+
+/** The minimum-area rectangle round a convex hull: its { long, short } sides.
+    One side of it lies along a hull edge, so every edge is tried. */
+export function minAreaRectangle(hull) {
+  if (hull.length < 2) return { long: 0, short: 0 };
+  if (hull.length === 2) {
+    return { long: Math.hypot(hull[1][0] - hull[0][0], hull[1][1] - hull[0][1]), short: 0 };
+  }
+  let best = null;
+  for (let i = 0; i < hull.length; i += 1) {
+    const a = hull[i];
+    const b = hull[(i + 1) % hull.length];
+    const edge = Math.hypot(b[0] - a[0], b[1] - a[1]);
+    if (edge === 0) continue;
+    const ux = (b[0] - a[0]) / edge;
+    const uy = (b[1] - a[1]) / edge;
+    let minU = Infinity;
+    let maxU = -Infinity;
+    let minV = Infinity;
+    let maxV = -Infinity;
+    for (const [x, y] of hull) {
+      const u = x * ux + y * uy;
+      const v = y * ux - x * uy;
+      minU = Math.min(minU, u);
+      maxU = Math.max(maxU, u);
+      minV = Math.min(minV, v);
+      maxV = Math.max(maxV, v);
+    }
+    const w = maxU - minU;
+    const h = maxV - minV;
+    if (!best || w * h < best.area) best = { area: w * h, long: Math.max(w, h), short: Math.min(w, h) };
+  }
+  return best ? { long: best.long, short: best.short } : { long: 0, short: 0 };
+}
+
+/** One GeoJSON polygon part (lon/lat rings, outer first) in z0 Mercator px:
+    its area (outer ring minus holes, px²) and the long side of its
+    minimum-area rectangle (px). Measured from the part's first vertex, so
+    small parts keep their precision. */
+export function partMeasure(polygon) {
+  const first = polygon?.[0]?.[0];
+  if (!first) return { area: 0, long: 0 };
+  const [ox, oy] = mercatorPx(first[0], first[1]);
+  const rings = polygon.map((ring) =>
+    ring.map(([lon, lat]) => {
+      const [x, y] = mercatorPx(lon, lat);
+      return [x - ox, y - oy];
+    }),
+  );
+  const area = Math.max(0, rings.reduce((sum, ring, i) => sum + (i === 0 ? shoelace(ring) : -shoelace(ring)), 0));
+  return { area, long: minAreaRectangle(convexHull(rings[0])).long };
+}
+
+/** A part's size in z0 px (see above): its equal-area side, or, for a long
+    thin part, min(length / REVEAL_LENGTH_RATIO, REVEAL_THICKNESS_RATIO x mean
+    thickness), whichever is larger. */
+export function partSize({ area, long }) {
+  const side = Math.sqrt(Math.max(0, area));
+  if (!(long > 0) || !(area > 0)) return side;
+  return Math.max(side, Math.min(long / REVEAL_LENGTH_RATIO, (REVEAL_THICKNESS_RATIO * area) / long));
+}
+
+// Six significant digits: the tiny grands crus are 1e-6 deg², where the
+// export's fixed 8 decimals of `area` would leave two.
+function roundArea(value) {
+  return Number(value.toPrecision(6));
+}
+
+/** A reveal side (z0 Mercator px) as reveal_area: planar deg² at the shard's
+    mid-latitude, the unit of the tile's `area` and of the app's K. */
+export function revealAreaFromSide(side, latitude) {
+  return roundArea(((side * 360) / 512) ** 2 * Math.cos((latitude * Math.PI) / 180));
+}
 
 function median(values) {
   const sorted = [...values].sort((x, y) => x - y);
@@ -488,75 +625,83 @@ function median(values) {
   return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
 }
 
-// Six significant digits: the tiny grands crus are 1e-6 deg², where area's
-// fixed 8 decimals would leave two.
-function roundArea(value) {
-  return Number(value.toPrecision(6));
-}
-
-/** id -> reveal_area for every tier >= 2 row whose family moves it. Rows are
-    export rows (id, display_tier, primary_parent_id, area). */
-export function familyRevealAreas(rows) {
+/** The reveal plan of every tier >= 2 export row (above): id -> { side,
+    revealArea, anchor, parts: [{ side, revealArea }] }, sides in z0 px, parts
+    in the row's geometry order. `latitudeOf(row)` is the mid-latitude of the
+    row's shard bbox, the one the manifest hands the app. Fails closed on a
+    value that is not a finite number. */
+export function revealPlan(rows, latitudeOf) {
+  const byId = new Map(rows.map((row) => [row.id, row]));
+  const measured = new Map();
+  for (const row of rows) {
+    if (row.display_tier < 2) continue;
+    const polygons = JSON.parse(row.geometry).coordinates ?? [];
+    const parts = polygons.map((polygon) => partMeasure(polygon));
+    const sizes = parts.map((part) => partSize(part));
+    let anchor = 0;
+    sizes.forEach((size, i) => {
+      if (size > sizes[anchor] || (size === sizes[anchor] && parts[i].area > parts[anchor].area)) anchor = i;
+    });
+    const total = Math.sqrt(parts.reduce((sum, part) => sum + part.area, 0));
+    measured.set(row.id, { parts, anchor, own: Math.max(total, sizes.length ? sizes[anchor] : 0) });
+  }
+  // Subregions come with their region: the SUBREGION children of one tier-1 region.
   const families = new Map();
   for (const row of rows) {
-    if (row.display_tier < 2 || !row.primary_parent_id) continue;
-    const list = families.get(row.primary_parent_id) ?? [];
-    list.push(row);
-    families.set(row.primary_parent_id, list);
+    if (!measured.has(row.id) || row.kind !== "SUBREGION") continue;
+    const parent = byId.get(row.primary_parent_id);
+    if (!parent || parent.display_tier !== 1) continue;
+    const family = families.get(parent.id) ?? [];
+    family.push(row.id);
+    families.set(parent.id, family);
   }
-  const out = new Map();
-  const factor = FAMILY_PX_RATIO ** 2;
-  for (const list of families.values()) {
-    if (list.length < 2) continue;
-    const m = median(list.map((row) => Number(row.area ?? 0)));
-    for (const row of list) {
-      const area = Number(row.area ?? 0);
-      const reveal = Math.max(area, Math.min(m, factor * area));
-      if (reveal > area) out.set(row.id, roundArea(reveal));
+  const placeSide = new Map([...measured].map(([id, m]) => [id, m.own]));
+  for (const family of families.values()) {
+    if (family.length < 2) continue;
+    const m = median(family.map((id) => measured.get(id).own));
+    for (const id of family) {
+      const own = measured.get(id).own;
+      if (own >= m / SUBREGION_FAMILY_RATIO) placeSide.set(id, Math.max(own, m));
     }
   }
-  return out;
-}
-
-// Planar deg² of one polygon (outer ring minus holes), the unit ST_Area gives
-// for SRID 4326 and the export's `area` is in.
-function ringArea(ring) {
-  let sum = 0;
-  for (let i = 0, j = ring.length - 1; i < ring.length; j = i, i += 1) {
-    sum += (ring[j][0] + ring[i][0]) * (ring[j][1] - ring[i][1]);
+  const plan = new Map();
+  for (const row of rows) {
+    const m = measured.get(row.id);
+    if (!m) continue;
+    const latitude = latitudeOf(row);
+    const side = placeSide.get(row.id);
+    const parts = m.parts.map((part, i) => {
+      const partSide = i === m.anchor ? side : Math.min(side, PIECE_PX_RATIO * Math.sqrt(part.area));
+      return { side: partSide, revealArea: revealAreaFromSide(partSide, latitude) };
+    });
+    const entry = { side, revealArea: revealAreaFromSide(side, latitude), anchor: m.anchor, parts };
+    for (const value of [entry.revealArea, ...parts.map((part) => part.revealArea)]) {
+      assert.ok(Number.isFinite(value) && value >= 0, `${row.canonical_key}: reveal_area ${value}`);
+    }
+    plan.set(row.id, entry);
   }
-  return Math.abs(sum) / 2;
-}
-function polygonArea(polygon) {
-  return polygon.reduce((total, ring, i) => total + (i === 0 ? ringArea(ring) : -ringArea(ring)), 0);
+  return plan;
 }
 
-/** A place's tile features: one, or for a multi-part tier >= 2 place one per
-    part, largest first, each with its reveal_area (see above). `familyArea`
-    is familyRevealAreas' value for the row, if any. */
-export function placeFeatures(row, familyArea) {
+/** A feature with reveal_area set (a new object; the input is left alone). */
+export function withRevealArea(feature, revealArea) {
+  return { ...feature, properties: { ...feature.properties, reveal_area: revealArea } };
+}
+
+/** A place's tile features. A country or region: placeFeature, unchanged. A
+    subregion: one feature per polygon part, in geometry order, each with the
+    place's properties (`area` still the whole footprint) plus that part's
+    reveal_area from `planEntry` (revealPlan's value for the row). */
+export function placeFeatures(row, planEntry) {
   const feature = placeFeature(row);
   if (row.display_tier < 2) return [feature];
-  const area = Number(row.area ?? 0);
-  const placeReveal = typeof familyArea === "number" && familyArea > area ? familyArea : area;
-  const geometry = feature.geometry;
-  const parts = geometry?.type === "MultiPolygon" ? geometry.coordinates : null;
-  if (!parts || parts.length < 2) {
-    if (placeReveal > area) feature.properties.reveal_area = placeReveal;
-    return [feature];
-  }
-  const factor = PIECE_PX_RATIO ** 2;
-  return parts
-    .map((polygon) => ({ polygon, area: polygonArea(polygon) }))
-    .sort((a, b) => b.area - a.area)
-    .map(({ polygon, area: partArea }, i) => {
-      const reveal = i === 0 ? placeReveal : Math.min(placeReveal, roundArea(factor * partArea));
-      return {
-        ...feature,
-        properties: { ...feature.properties, ...(reveal !== area ? { reveal_area: reveal } : {}) },
-        geometry: { type: "MultiPolygon", coordinates: [polygon] },
-      };
-    });
+  assert.ok(planEntry, `${row.canonical_key}: no reveal plan`);
+  const polygons = feature.geometry.coordinates;
+  assert.equal(polygons.length, planEntry.parts.length, `${row.canonical_key}: reveal plan out of step`);
+  return polygons.map((polygon, i) => ({
+    ...withRevealArea(feature, planEntry.parts[i].revealArea),
+    geometry: { type: "MultiPolygon", coordinates: [polygon] },
+  }));
 }
 
 // Ranked per-island labels (owner brief: one label per region at everyday
@@ -614,9 +759,42 @@ export function buildManifest({ version, generatedAt, world, shards, attribution
     release_version: version,
     generated_at: generatedAt,
     world, // { url, checksum_sha256, bytes }
-    shards, // { <key>: { url, checksum_sha256, bytes, bbox:[w,s,e,n], min_zoom, max_zoom } }
+    shards, // { <key>: { url, checksum_sha256, bytes, bbox:[w,s,e,n], min_zoom, max_zoom, reveal_rule? } }
     attribution,
   };
+}
+
+/** The manifest that makes a release live: every archive in a
+    wine_map_releases row's tile_checksums (publish.mjs), at its public URL.
+    promote.mjs uploads it as tiles/manifest.json; the same object built for a
+    release that was never promoted is what a local draft check loads. A
+    shard's reveal_rule (REVEAL_RULE: its subregions carry reveal_area) passes
+    through, and is absent for every release published before it. */
+export function manifestForRelease({ version, tileChecksums, generatedAt }) {
+  const shards = {};
+  for (const [key, entry] of Object.entries(tileChecksums)) {
+    if (key === "world") continue;
+    shards[key] = {
+      url: storagePublicUrl(entry.path),
+      checksum_sha256: entry.checksum_sha256,
+      bytes: entry.bytes,
+      bbox: entry.bbox,
+      min_zoom: entry.min_zoom,
+      max_zoom: entry.max_zoom,
+      ...(entry.reveal_rule !== undefined ? { reveal_rule: entry.reveal_rule } : {}),
+    };
+  }
+  return buildManifest({
+    version,
+    generatedAt,
+    world: {
+      url: storagePublicUrl(tileChecksums.world.path),
+      checksum_sha256: tileChecksums.world.checksum_sha256,
+      bytes: tileChecksums.world.bytes,
+    },
+    shards,
+    attribution: attributionDisplayMap(),
+  });
 }
 
 // Secrets pasted through dashboard/CI UIs can arrive wrapped in quotes or

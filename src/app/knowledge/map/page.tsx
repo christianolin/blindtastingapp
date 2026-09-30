@@ -2,16 +2,18 @@ import { redirect } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
 import { createClient } from "@/lib/supabase/server";
 import { BASEMAP_ORIGIN, BASEMAP_STYLE_URL } from "@/lib/wine-map/basemap";
-import { WINE_MAP_MANIFEST_URL } from "@/lib/wine-map/manifest";
+import { WINE_MAP_MANIFEST_URL, WINE_MAP_TILES_ORIGIN } from "@/lib/wine-map/manifest";
 import { TileWineMapExplorer } from "./tile-wine-map-explorer";
 
 // The map's first paint waits on two cross-origin fetches it cannot start until
 // the bundle has parsed: the basemap style and the tile manifest. Warming the
 // connections here gets DNS + TLS out of the way in parallel with the JS, which
-// is pure latency saved on a cold visit. Derived from the manifest URL so it
-// cannot drift from wherever the tiles actually live; BASEMAP_ORIGIN is where
-// both basemap styles (light Positron, dark Dark Matter) are served from.
-const TILE_ORIGIN = new URL(WINE_MAP_MANIFEST_URL).origin;
+// is pure latency saved on a cold visit. The tiles' origin comes from the live
+// manifest's URL (manifest.ts), so it cannot drift from wherever the archives
+// actually live, even when a local build loads a draft manifest from its own
+// origin; BASEMAP_ORIGIN is where both basemap styles (light Positron, dark
+// Dark Matter) are served from.
+const TILE_ORIGIN = WINE_MAP_TILES_ORIGIN;
 
 export const metadata = {
   title: "Wine map · Blindr",

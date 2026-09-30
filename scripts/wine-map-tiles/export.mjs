@@ -16,8 +16,11 @@ import {
   pgConfig,
   placeFeature,
   placeFeatures,
-  familyRevealAreas,
   releaseVersion,
+  REVEAL_RULE,
+  revealPlan,
+  shardKeyFor,
+  withRevealArea,
 } from "./lib.mjs";
 
 const EXPORT_SQL = `
@@ -196,11 +199,38 @@ assert.ok(
 assertMultiCountryArchive(rows);
 assert.ok(world.rows.length >= 2 && Object.keys(shards).length >= 1, "empty archive");
 
+// Content-driven ceiling: deepest label reveal + 2 zooms of headroom
+// (MapLibre overzooms past the archive max), capped at the envelope. Keeps
+// shallow shards (Bordeaux, z9 reveals) from emitting tens of thousands of
+// empty z16 tiles.
+for (const bucket of Object.values(shards)) {
+  bucket.maxZoom = Math.min(
+    SHARD_TARGET.maxZoom,
+    Math.max(SHARD_TARGET.minZoom + 1, Math.ceil(bucket.maxLabelZoom) + 2),
+  );
+  // Every place must reach its archive: tippecanoe drops a feature whose
+  // minzoom is above the archive's max zoom. Past max_zoom MapLibre overzooms
+  // the max-zoom tile and evaluates filters at the overscaled zoom, so a
+  // reveal zoom above max_zoom (the app's size rule) is still drawn, from the
+  // max-zoom geometry; only a feature never written would be lost.
+  for (const row of bucket.rows) {
+    assert.ok(
+      Math.max(0, Math.floor(Number(row.min_zoom))) <= bucket.maxZoom,
+      `${row.canonical_key}: min_zoom ${row.min_zoom} is above its shard's max_zoom ${bucket.maxZoom}`,
+    );
+  }
+}
+
 await mkdir(WORK_DIR, { recursive: true });
-// reveal_area (lib.mjs): each subregion's family effect, from every row, and
-// its parts as their own features. The world archive holds countries and
-// regions only, which are never split.
-const familyAreas = familyRevealAreas(rows);
+// reveal_area (lib.mjs revealPlan): when each subregion appears, judged at its
+// shard's mid-latitude, the one the manifest bbox hands the app. Every tier
+// >= 2 feature carries it, and a subregion is split into one feature per
+// part. The world archive holds countries and regions only (exempt, never
+// split), so it is written exactly as before.
+const plan = revealPlan(rows, (row) => {
+  const bbox = shards[shardKeyFor(row.canonical_key)].bbox;
+  return (bbox[1] + bbox[3]) / 2;
+});
 const outputs = [
   ["world-places.geojson", featureCollection(world.rows.map(placeFeature))],
   ["world-labels.geojson", featureCollection(world.rows.flatMap(labelFeatures))],
@@ -208,7 +238,7 @@ const outputs = [
 for (const [key, bucket] of Object.entries(shards)) {
   outputs.push([
     `${key}-places.geojson`,
-    featureCollection(bucket.rows.flatMap((row) => placeFeatures(row, familyAreas.get(row.id)))),
+    featureCollection(bucket.rows.flatMap((row) => placeFeatures(row, plan.get(row.id)))),
   ]);
   outputs.push([
     `${key}-labels.geojson`,
@@ -217,10 +247,13 @@ for (const [key, bucket] of Object.entries(shards)) {
         // Ranked per-island labels only for countries/regions (tier <= 1):
         // rank 1 = the dominant island at everyday zooms, deeper ranks
         // reveal when zoomed into that island (see labelFeatures). A
-        // district or appellation gets exactly one canonical label point.
+        // district or appellation gets exactly one canonical label point,
+        // with its place's reveal_area, so a name comes with its shape.
         row.display_tier <= 1
           ? labelFeatures(row)
-          : labelFeatures({ ...row, component_labels: null }),
+          : labelFeatures({ ...row, component_labels: null }).map((feature) =>
+              withRevealArea(feature, plan.get(row.id).revealArea),
+            ),
       ),
     ),
   ]);
@@ -248,14 +281,11 @@ const release = {
         place_ids: bucket.ids,
         bbox: bucket.bbox,
         min_zoom: SHARD_TARGET.minZoom,
-        // Content-driven ceiling: deepest label reveal + 2 zooms of headroom
-        // (MapLibre overzooms past the archive max), capped at the envelope.
-        // Keeps shallow shards (Bordeaux, z9 reveals) from emitting tens of
-        // thousands of empty z16 tiles.
-        max_zoom: Math.min(
-          SHARD_TARGET.maxZoom,
-          Math.max(SHARD_TARGET.minZoom + 1, Math.ceil(bucket.maxLabelZoom) + 2),
-        ),
+        max_zoom: bucket.maxZoom,
+        // Its subregions carry reveal_area: publish.mjs keeps this in
+        // tile_checksums and promote.mjs in the manifest, where it turns the
+        // app's size rule on for this shard (src/lib/wine-map/reveal.ts).
+        reveal_rule: REVEAL_RULE,
       },
     ]),
   ),

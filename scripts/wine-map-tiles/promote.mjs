@@ -5,8 +5,7 @@
 import assert from "node:assert/strict";
 import pg from "pg";
 import {
-  attributionDisplayMap,
-  buildManifest,
+  manifestForRelease,
   pgConfig,
   sha256hex,
   storagePublicUrl,
@@ -33,28 +32,13 @@ try {
     `release ${row.version} is ${row.status}; cannot promote a FAILED/BUILDING release`,
   );
 
-  const shards = {};
-  for (const [key, entry] of Object.entries(row.tile_checksums)) {
-    if (key === "world") continue;
-    shards[key] = {
-      url: storagePublicUrl(entry.path),
-      checksum_sha256: entry.checksum_sha256,
-      bytes: entry.bytes,
-      bbox: entry.bbox,
-      min_zoom: entry.min_zoom,
-      max_zoom: entry.max_zoom,
-    };
-  }
-  const manifest = buildManifest({
+  // lib.mjs manifestForRelease: every archive at its public URL, plus each
+  // shard's reveal_rule when the release carries one (none before 2026-09-30,
+  // so promoting an older release for a rollback turns the size rule off).
+  const manifest = manifestForRelease({
     version: row.version,
+    tileChecksums: row.tile_checksums,
     generatedAt: new Date().toISOString(),
-    world: {
-      url: storagePublicUrl(row.tile_checksums.world.path),
-      checksum_sha256: row.tile_checksums.world.checksum_sha256,
-      bytes: row.tile_checksums.world.bytes,
-    },
-    shards,
-    attribution: attributionDisplayMap(),
   });
   const body = Buffer.from(`${JSON.stringify(manifest, null, 2)}\n`);
   await uploadObject("tiles/manifest.json", body, {

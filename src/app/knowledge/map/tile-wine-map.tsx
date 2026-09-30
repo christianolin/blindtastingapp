@@ -26,6 +26,7 @@ import {
   REVEAL_MIN_PX,
   revealK,
   revealLatitude,
+  shardRevealPx,
   sizeHiddenInView,
 } from "@/lib/wine-map/reveal";
 import { allModeHealthy } from "@/lib/wine-map/detail-mode";
@@ -331,7 +332,9 @@ export function TileWineMap({
   /** reveal.ts's threshold for this visit (?revealPx= or the knob; 0 = off).
       The explorer reads it once when it mounts and hands the same value to
       its camera, so the map's filters and the camera always agree, and a
-      client-side navigation to a new visit reads the URL again. */
+      client-side navigation to a new visit reads the URL again. A shard
+      applies it only when its manifest entry says its tiles carry the rule
+      (shardRevealPx), and the explorer's camera asks the same question. */
   revealPx?: number;
   /** One country (default): subregion depth for the focus country alone, and
       other countries' shards mounted only from z8. All countries: depth for
@@ -507,13 +510,18 @@ export function TileWineMap({
   // When a subregion appears (lib/wine-map/reveal.ts; owner, 2026-09-30: "you
   // need to zoom further in before smaller places appear"): from the first
   // whole zoom at which it is revealPx CSS px across. The threshold is the
-  // explorer's (a prop, fixed for the visit); each shard's constant K comes
-  // from its manifest bbox's mid-latitude.
-  const revealKs = useMemo(
+  // explorer's (a prop, fixed for the visit), applied only to shards whose
+  // manifest entry says their tiles carry the rule (shardRevealPx; px 0 is
+  // the map from before it); each shard's constant K comes from its manifest
+  // bbox's mid-latitude, the one the export judged its features at.
+  const revealByShard = useMemo(
     () =>
       Object.fromEntries(
-        shardEntries.map(([key, shard]) => [key, revealK(revealPx, revealLatitude(shard.bbox))]),
-      ) as Record<string, number>,
+        shardEntries.map(([key, shard]) => {
+          const px = shardRevealPx(shard, revealPx);
+          return [key, { px, k: revealK(px, revealLatitude(shard.bbox)) }];
+        }),
+      ) as Record<string, { px: number; k: number }>,
     [shardEntries, revealPx],
   );
 
@@ -1069,13 +1077,19 @@ export function TileWineMap({
     // deeper, so "No subregions mapped here" needs this check to stay honest.
     const focusNow = focusRef.current;
     const zoomNow = map.getZoom();
+    // Each shard's own threshold: 0 (no probe, no cue) where its tiles carry
+    // no rule, so the status line is today's until the tiles release.
+    const revealOf = (key: string) =>
+      Object.hasOwn(revealByShard, key) ? revealByShard[key] : { px: 0, k: 0 };
     let hidden = false;
-    if (focusNow !== null && !depth.has(focusNow) && zoomNow >= NEIGHBOUR_MIN_ZOOM && revealPx > 0) {
+    if (focusNow !== null && !depth.has(focusNow) && zoomNow >= NEIGHBOUR_MIN_ZOOM) {
       try {
         const b = map.getBounds();
         const view: Bbox = [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()];
         for (const key of mountedShards) {
           if (countryOfShard(shardCountries, key) !== focusNow) continue;
+          const reveal = revealOf(key);
+          if (!(reveal.px > 0)) continue;
           const source = shardSourceId(key);
           if (!map.getSource(source)) continue;
           const features = map.querySourceFeatures(source, {
@@ -1087,8 +1101,8 @@ export function TileWineMap({
               features,
               view,
               tileZoom: Math.floor(zoomNow),
-              k: revealKs[key] ?? revealK(revealPx, 45),
-              px: revealPx,
+              k: reveal.k,
+              px: reveal.px,
               visibleKeys: visibleKeySet,
             })
           ) {
@@ -1107,10 +1121,11 @@ export function TileWineMap({
     let family: DetailReport["selectionFamily"] = null;
     const selKey = selectedKeyRef.current;
     const selShard = selKey ? (selKey.split(".")[1] ?? null) : null;
+    const selReveal = selShard !== null ? revealOf(selShard) : { px: 0, k: 0 };
     if (
       selKey !== null &&
       selShard !== null &&
-      revealPx > 0 &&
+      selReveal.px > 0 &&
       mountedShards.includes(selShard) &&
       (detail === "all" || countryOfShard(shardCountries, selShard) === focusNow)
     ) {
@@ -1131,8 +1146,8 @@ export function TileWineMap({
               }),
               view: [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()],
               tileZoom: Math.floor(zoomNow),
-              k: revealKs[selShard] ?? revealK(revealPx, 45),
-              px: revealPx,
+              k: selReveal.k,
+              px: selReveal.px,
               visibleKeys: visibleKeySet,
             });
             family = { key: selKey, ...counts };
@@ -1168,7 +1183,7 @@ export function TileWineMap({
     // world-fills and the legend would never see a shard layer. It tracks the
     // viewport-gated mount set, so the scan queries only layers that actually
     // exist; scanView is passed straight to onIdle, which re-binds for free.
-  }, [mountedShards, noFills, shardCountries, revealPx, revealKs, visibleKeySet, detail]);
+  }, [mountedShards, noFills, shardCountries, revealByShard, visibleKeySet, detail]);
 
   // queryRenderedFeatures over every fill layer is not cheap, and onIdle fires
   // at the end of each gesture — so a burst of small pans/zooms ran a full
@@ -1566,14 +1581,13 @@ export function TileWineMap({
         ramp: rampedRegions.includes(key),
         palette,
         fillsVisible: !noFills,
-        // The size rule: fixed for the visit, so these never trigger a rewrite.
-        revealK: Object.prototype.hasOwnProperty.call(revealKs, key)
-          ? revealKs[key]
-          : revealK(revealPx, 45),
-        revealPx,
+        // The size rule: fixed for the visit, so these never trigger a
+        // rewrite; px 0 (today's filters) where the shard's tiles carry none.
+        revealK: Object.hasOwn(revealByShard, key) ? revealByShard[key].k : 0,
+        revealPx: Object.hasOwn(revealByShard, key) ? revealByShard[key].px : 0,
       }),
     }),
-    [mountedShards, shardUrls, selectedShard, palette, shardCountries, areaSlugsByShard, rampedRegions, noFills, revealKs, revealPx],
+    [mountedShards, shardUrls, selectedShard, palette, shardCountries, areaSlugsByShard, rampedRegions, noFills, revealByShard],
   );
   // onLoad reads this: the effect below may run before the map exists.
   const shardDesiredRef = useRef(shardDesired);

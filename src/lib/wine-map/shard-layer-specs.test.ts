@@ -231,7 +231,10 @@ describe("shardLayerSpecs", () => {
         }
       }
     }
-  });
+    // 16 full styles of every shard's layers and overlays: about 3.6 s alone
+    // and 4.7-6.3 s in the full parallel run (2026-09-30), past vitest's 5 s
+    // default, so it gets room of its own rather than failing on load.
+  }, 30_000);
 });
 
 describe("shardOverlaySpecs", () => {
@@ -414,7 +417,8 @@ describe("the size rule in the shard specs", () => {
     const ordinary = shardFilter("united-states", { k: K, px: 24 });
     const overlay = selectedFillFilter(i)!;
     const COLE = "united-states.california.north-coast.cole-ranch";
-    const cole = { key: COLE, tier: 3, area: 0.00008013, region: "california" };
+    // The export's reveal_area for Cole Ranch (2026-09-30 dry run): drawn from z11 at 24 px.
+    const cole = { key: COLE, tier: 3, area: 0.00008013, reveal_area: 0.0000905261, region: "california" };
     const deep = { [deepStateName("united-states")]: true };
     const cases: { name: string; state: Record<string, unknown>; props: Record<string, unknown>; want: string }[] = [
       // P = ordinary fill, O = overlay fill, - = neither, ! = both (never).

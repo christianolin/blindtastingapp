@@ -55,7 +55,7 @@ export function detailStatus(input: {
     return { text: `Subregions for all countries. ${DETAIL_WARNING}`, retry: false };
   }
   if (input.selection && input.selection.hidden > 0) {
-    // New copy (2026-09-30), awaiting the owner's approval like the rest.
+    // Owner-approved copy (2026-09-30: "Yes, use it").
     return {
       text:
         input.selection.drawn > 0

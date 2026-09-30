@@ -26,6 +26,28 @@ import {
 // check below; these catch wildly misplaced geometry (e.g. 0,0) and a place
 // keyed under the wrong country.
 
+/** The checks every decoded feature of one archive must pass. Pure, so the
+    tests run it without an archive. A place split into one feature per part
+    (lib.mjs placeFeatures) decodes as several features with one id; the id
+    sets count it once, so parts need nothing here beyond what a whole place
+    needs. In a shard whose release entry carries reveal_rule, every subregion
+    (tier >= 2), polygon or label, must carry a numeric reveal_area: the app
+    reads a feature without one as "no size delay", so a gap here would put a
+    speck back on the map with nothing to say why. */
+export function checkTileFeature(properties, { name, layer, allExpectedIds, revealRule }) {
+  assert.ok(allExpectedIds.has(properties.id), `${name}/${layer}: unexpected feature id ${properties.id}`);
+  assert.equal(typeof properties.key, "string", `${name}/${layer}: missing key`);
+  assert.equal(typeof properties.tier, "number", `${name}/${layer}: missing tier`);
+  if (revealRule && properties.tier >= 2) {
+    assert.ok(
+      typeof properties.reveal_area === "number" &&
+        Number.isFinite(properties.reveal_area) &&
+        properties.reveal_area >= 0,
+      `${name}/${layer}: ${properties.key} has no reveal_area`,
+    );
+  }
+}
+
 export async function validateArchives(sources, release) {
   const idSets = expectedIdSets(release);
   const allExpectedIds = new Set([
@@ -68,7 +90,8 @@ export async function validateArchives(sources, release) {
     assert.deepEqual(layerNames, ["labels", "places"], `${name}: vector layers`);
     gates.push(`${name}: layers ok`);
 
-    const seen ={ places: new Set(), labels: new Set() };
+    const seen = { places: new Set(), labels: new Set() };
+    const revealRule = name !== "world" && release.shards[name].reveal_rule !== undefined;
     const expectedRows = release.expected.filter(({ id }) => expectedIds.has(id));
     for (const row of expectedRows) {
       const { z, x, y } = lonLatToTile(row.label_lon, row.label_lat, spec.maxZoom);
@@ -78,10 +101,7 @@ export async function validateArchives(sources, release) {
       for (const layer of ["places", "labels"]) {
         for (const properties of layers[layer] ?? []) {
           if (expectedIds.has(properties.id)) seen[layer].add(properties.id);
-          assert.ok(allExpectedIds.has(properties.id),
-            `${name}/${layer}: unexpected feature id ${properties.id}`);
-          assert.equal(typeof properties.key, "string", `${name}/${layer}: missing key`);
-          assert.equal(typeof properties.tier, "number", `${name}/${layer}: missing tier`);
+          checkTileFeature(properties, { name, layer, allExpectedIds, revealRule });
         }
       }
     }
@@ -91,6 +111,7 @@ export async function validateArchives(sources, release) {
     }
     featureCounts[name] = { places: seen.places.size, labels: seen.labels.size };
     gates.push(`${name}: all ${expectedIds.size} ids present in places+labels`);
+    if (revealRule) gates.push(`${name}: every subregion decoded carries reveal_area`);
   }
   return { gates, featureCounts };
 }

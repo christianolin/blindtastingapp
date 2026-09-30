@@ -24,10 +24,21 @@ import {
   countryOfKey,
   coverageBoxFor,
   featureOutsideCoverage,
-  familyRevealAreas,
   placeFeatures,
-  FAMILY_PX_RATIO,
   PIECE_PX_RATIO,
+  REVEAL_LENGTH_RATIO,
+  REVEAL_RULE,
+  REVEAL_THICKNESS_RATIO,
+  SUBREGION_FAMILY_RATIO,
+  convexHull,
+  manifestForRelease,
+  mercatorPx,
+  minAreaRectangle,
+  partMeasure,
+  partSize,
+  revealAreaFromSide,
+  revealPlan,
+  withRevealArea,
 } from "./lib.mjs";
 
 const EXPORT_ROW = {
@@ -496,108 +507,253 @@ test("outline appears only for an outline boundary, on the fill and on every lab
   }
 });
 
-// reveal_area (owner, 2026-09-30; src/lib/wine-map/reveal.ts reads it first).
-const square = (x, y, s) => [[[x, y], [x + s, y], [x + s, y + s], [x, y + s], [x, y]]];
-const subregion = (id, area, parent = "vosne", extra = {}) => ({
+// ---------------------------------------------------------------------------
+// reveal_area (owner, 2026-09-30: small places later, ribbons still with their
+// region). src/lib/wine-map/reveal.ts judges a tier >= 2 feature by
+// reveal_area * 4^z >= K(N, shard mid-latitude); these pin what the export
+// hands it. Near the equator a degree is 512/360 z0 px on both axes, which
+// keeps the fixtures readable.
+const PX_PER_DEG = 512 / 360;
+const rect = (x, y, w, h) => [[[x, y], [x + w, y], [x + w, y + h], [x, y + h], [x, y]]];
+const rotated = (cx, cy, w, h, degrees) => {
+  const t = (degrees * Math.PI) / 180;
+  const corner = ([u, v]) => [cx + u * Math.cos(t) - v * Math.sin(t), cy + u * Math.sin(t) + v * Math.cos(t)];
+  const ring = [[-w / 2, -h / 2], [w / 2, -h / 2], [w / 2, h / 2], [-w / 2, h / 2]].map(corner);
+  return [[...ring, ring[0]]];
+};
+const placeRow = (id, polygons, extra = {}) => ({
   ...EXPORT_ROW,
   id,
   canonical_key: `france.bourgogne.${id}`,
-  display_tier: 4,
-  primary_parent_id: parent,
-  area: String(area),
-  geometry: JSON.stringify({ type: "MultiPolygon", coordinates: [square(0, 0, Math.sqrt(area))] }),
+  name: id,
+  kind: "APPELLATION",
+  display_tier: 3,
+  primary_parent_id: "bourgogne",
+  geometry: JSON.stringify({ type: "MultiPolygon", coordinates: polygons }),
   ...extra,
 });
+const REGION = { ...EXPORT_ROW, id: "bourgogne", canonical_key: "france.bourgogne", display_tier: 1, kind: "REGION" };
+const close = (actual, expected, tolerance = 1e-6) =>
+  assert.ok(Math.abs(actual - expected) <= tolerance * Math.max(1, Math.abs(expected)), `${actual} != ${expected}`);
+// reveal.ts's K and test, restated.
+const appK = (px, latitude) => ((px * 360) / 512) ** 2 * Math.cos((latitude * Math.PI) / 180);
+const appPasses = (revealArea, z, px, latitude) => revealArea * 4 ** z >= appK(px, latitude);
 
-test("reveal ratios are 2 (family) and 3 (pieces) of the app's threshold", () => {
-  assert.equal(FAMILY_PX_RATIO, 2);
+test("reveal constants: rule 1; ribbons 2N long and N/8 thick; subregions at half their median; pieces at N/3", () => {
+  assert.equal(REVEAL_RULE, 1);
+  assert.equal(REVEAL_LENGTH_RATIO, 2);
+  assert.equal(REVEAL_THICKNESS_RATIO, 8);
+  assert.equal(SUBREGION_FAMILY_RATIO, 2);
   assert.equal(PIECE_PX_RATIO, 3);
 });
 
-test("familyRevealAreas: a small place comes in with its family's median member, never under half the threshold", () => {
-  // Vosne-Romanée's grands crus (deg², live catalogue): the median is ~7e-6.
-  const rows = [
-    subregion("romanee-conti", 0.00000218),
-    subregion("la-romanee", 0.00000085),
-    subregion("la-tache", 0.00000718),
-    subregion("richebourg", 0.00000958),
-    subregion("echezeaux", 0.0000445),
-  ];
-  const out = familyRevealAreas(rows);
-  // Romanée-Conti: 4 x its area (8.72e-6) is above the median 7.18e-6 -> the median.
-  assert.equal(out.get("romanee-conti"), 0.00000718);
-  // La Romanée: 4 x 8.5e-7 = 3.4e-6, under the median -> capped at 4 x its area.
-  assert.equal(out.get("la-romanee"), 0.0000034);
-  // At or above the median: no key (reveal_area would equal area).
-  assert.equal(out.has("la-tache"), false);
-  assert.equal(out.has("richebourg"), false);
-  assert.equal(out.has("echezeaux"), false);
+test("mercatorPx maps lon/lat onto the 512 px z0 world", () => {
+  assert.deepEqual(mercatorPx(0, 0), [256, 256]);
+  close(mercatorPx(180, 0)[0], 512);
+  close(mercatorPx(-180, 0)[0], 0);
+  close(mercatorPx(0, 85.0511287798066)[1], 0, 1e-9);
+  // Conformal: at 60 degrees a degree of latitude is twice a degree of longitude.
+  const [x0, y0] = mercatorPx(10, 60);
+  const [x1, y1] = mercatorPx(10.001, 60.001);
+  close((y0 - y1) / (x1 - x0), 2, 1e-3);
 });
 
-test("familyRevealAreas ignores lone children, regions and countries", () => {
-  const rows = [
-    subregion("alone", 0.00001, "p1"),
-    { ...subregion("region-a", 0.1, "fr"), display_tier: 1 },
-    { ...subregion("region-b", 0.000001, "fr"), display_tier: 1 },
-    subregion("no-parent", 0.000001, null),
-    subregion("no-parent-2", 0.1, null),
-  ];
-  assert.equal(familyRevealAreas(rows).size, 0);
+test("convexHull and minAreaRectangle measure a rotated rectangle exactly", () => {
+  const ring = rotated(3, 4, 10, 2, 30)[0];
+  const hull = convexHull([...ring, [3, 4], [3.5, 4.1]]);
+  assert.equal(hull.length, 4);
+  const { long, short } = minAreaRectangle(hull);
+  close(long, 10, 1e-9);
+  close(short, 2, 1e-9);
+  assert.deepEqual(minAreaRectangle(convexHull([[0, 0], [3, 4]])), { long: 5, short: 0 });
+  assert.deepEqual(minAreaRectangle(convexHull([[1, 1], [1, 1]])), { long: 0, short: 0 });
+  assert.deepEqual(minAreaRectangle([]), { long: 0, short: 0 });
 });
 
-test("placeFeatures leaves countries, regions and plain single-part places byte-identical", () => {
-  assert.deepEqual(placeFeatures(EXPORT_ROW), [placeFeature(EXPORT_ROW)]);
-  const single = subregion("single", 0.0001);
-  assert.deepEqual(placeFeatures(single), [placeFeature(single)]);
-  assert.deepEqual(placeFeatures(single, 0.00005), [placeFeature(single)]); // a family value below area is ignored
-  const withFamily = placeFeatures(single, 0.0002);
-  assert.equal(withFamily.length, 1);
-  assert.equal(withFamily[0].properties.reveal_area, 0.0002);
-  assert.equal(withFamily[0].properties.area, 0.0001);
-  // A multi-part region is never split.
-  const region = { ...EXPORT_ROW, geometry: JSON.stringify({ type: "MultiPolygon", coordinates: [square(0, 0, 1), square(3, 3, 0.01)] }) };
-  assert.deepEqual(placeFeatures(region), [placeFeature(region)]);
+test("partMeasure: z0 Mercator area (holes out) and the long side, at any latitude", () => {
+  const square = partMeasure(rect(0.1, 0.1, 0.01, 0.01));
+  close(square.area, (0.01 * PX_PER_DEG) ** 2, 1e-4);
+  close(square.long, 0.01 * PX_PER_DEG, 1e-4);
+  const holed = partMeasure([rect(0, 0, 0.02, 0.02)[0], rect(0.005, 0.005, 0.01, 0.01)[0]]);
+  close(holed.area, (0.02 * PX_PER_DEG) ** 2 - (0.01 * PX_PER_DEG) ** 2, 1e-4);
+  close(holed.long, 0.02 * PX_PER_DEG, 1e-4);
+  // A degree square at 60 N is twice as tall as wide on screen.
+  const north = partMeasure(rect(5, 60, 0.01, 0.01));
+  close(north.long, 2 * 0.01 * PX_PER_DEG, 1e-3);
+  close(north.area, 2 * (0.01 * PX_PER_DEG) ** 2, 1e-3);
+  assert.deepEqual(partMeasure([]), { area: 0, long: 0 });
 });
 
-test("placeFeatures splits a scattered subregion: the largest part comes with its place, a small one waits until a third of the threshold", () => {
-  // Mendocino Ridge-like: one 0.01 deg² part and two slivers.
-  const parts = [square(5, 5, 0.001), square(0, 0, 0.1), square(3, 3, 0.02)];
-  const total = 0.01 + 0.0004 + 0.000001;
-  const row = subregion("ridge", total, "mendocino", {
-    geometry: JSON.stringify({ type: "MultiPolygon", coordinates: parts }),
-  });
-  const features = placeFeatures(row);
-  assert.equal(features.length, 3);
-  // Largest first, carrying the place's own size (no key: it equals area).
-  assert.deepEqual(features[0].geometry, { type: "MultiPolygon", coordinates: [parts[1]] });
-  assert.equal("reveal_area" in features[0].properties, false);
-  // Each other part: 9 x its own area, never more than the place's.
-  assert.equal(features[1].properties.reveal_area, 0.0036);
-  assert.equal(features[2].properties.reveal_area, 0.000009);
-  for (const f of features) {
-    assert.equal(f.properties.area, total); // every piece keeps the whole footprint
-    assert.equal(f.properties.key, "france.bourgogne.ridge");
-    assert.deepEqual(f.tippecanoe, placeFeature(row).tippecanoe);
+test("partSize: compact shapes get the plain rule; ribbons their length, capped by their thickness", () => {
+  assert.equal(partSize({ area: 100, long: 10 }), 10); // a square
+  assert.equal(partSize({ area: 100, long: 20 }), 10); // twice as long as its square: still plain
+  assert.equal(partSize({ area: 180, long: 60 }), 24); // 60 x 3: min(60/2, 8 x 3)
+  assert.equal(partSize({ area: 400, long: 60 }), 30); // 60 x 6.7: its length decides
+  assert.equal(partSize({ area: 100, long: 100 }), 10); // 100 x 1: too thin, the plain rule
+  assert.equal(partSize({ area: 0, long: 5 }), 0);
+  assert.equal(partSize({ area: 4, long: 0 }), 2);
+});
+
+test("revealAreaFromSide is exactly the app's test at the shard latitude", () => {
+  for (const latitude of [0, 37.27, 47.06, 50.53]) {
+    for (const px of [16, 24, 32]) {
+      for (const z of [6, 7, 13]) {
+        const edge = px / 2 ** z;
+        assert.equal(appPasses(revealAreaFromSide(edge * 1.001, latitude), z, px, latitude), true);
+        assert.equal(appPasses(revealAreaFromSide(edge * 0.999, latitude), z, px, latitude), false);
+        assert.equal(appPasses(revealAreaFromSide(edge * 0.999, latitude), z + 1, px, latitude), true);
+      }
+    }
   }
-  // With a family value, the largest part takes it, and no part exceeds it.
-  const fam = placeFeatures(row, 0.02);
-  assert.equal(fam[0].properties.reveal_area, 0.02);
-  assert.equal(fam[1].properties.reveal_area, 0.0036);
-  // A part bigger than a ninth of the place is capped at the place.
-  const even = subregion("even", 0.02, "p", {
-    geometry: JSON.stringify({ type: "MultiPolygon", coordinates: [square(0, 0, 0.1), square(1, 1, 0.1)] }),
-  });
-  const [a, b] = placeFeatures(even);
-  assert.equal("reveal_area" in a.properties, false);
-  assert.equal("reveal_area" in b.properties, false);
+  assert.equal(revealAreaFromSide(0, 45), 0);
 });
 
-test("placeFeatures subtracts holes from a part's area", () => {
-  const withHole = [[[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]], [[0.25, 0.25], [0.75, 0.25], [0.75, 0.75], [0.25, 0.75], [0.25, 0.25]]];
-  const row = subregion("holed", 2, "p", {
-    geometry: JSON.stringify({ type: "MultiPolygon", coordinates: [withHole, square(5, 5, 0.1)] }),
+test("revealPlan: a region's subregions at least half its median subregion come in with it", () => {
+  const sub = (id, polygons) => placeRow(id, polygons, { kind: "SUBREGION", display_tier: 2 });
+  const rows = [
+    REGION,
+    sub("chablis", [rect(0.1, 0.1, 0.3, 0.3)]), // 0.3 (in degrees; x PX_PER_DEG for px)
+    sub("auxerrois", [rect(0.5, 0.1, 0.18, 0.18)]), // 0.18: compact, but at least half the median
+    sub("nuits", [rect(0.1, 0.5, 0.8, 0.03)]), // a ribbon: min(0.8/2, 8 x 0.03) = 0.24
+    sub("beaune", [rect(1, 0.1, 0.9, 0.05)]), // min(0.45, 0.4) = 0.4
+    sub("chalonnaise", [rect(1, 0.3, 0.8, 0.045)]), // min(0.4, 0.36) = 0.36
+    sub("maconnais", [rect(2, 0.1, 0.7, 0.7)]), // 0.7
+    sub("speck", [rect(3, 0.1, 0.05, 0.05)]), // 0.05: under half the median, on its own
+    placeRow("appellation", [rect(3.2, 0.1, 0.1, 0.1)]), // an APPELLATION of the region: no family
+    { ...sub("nested", [rect(3.4, 0.1, 0.1, 0.1)]), primary_parent_id: "chablis" }, // a district's SUBREGION: no family
+  ];
+  const plan = revealPlan(rows, () => 0);
+  const side = (id) => plan.get(id).side / PX_PER_DEG;
+  // The median of [0.3, 0.18, 0.24, 0.4, 0.36, 0.7, 0.05] is 0.3.
+  close(side("auxerrois"), 0.3, 1e-3);
+  close(side("nuits"), 0.3, 1e-3);
+  close(side("chablis"), 0.3, 1e-3);
+  close(side("beaune"), 0.4, 1e-3);
+  close(side("chalonnaise"), 0.36, 1e-3);
+  close(side("maconnais"), 0.7, 1e-3);
+  close(side("speck"), 0.05, 1e-3);
+  close(side("appellation"), 0.1, 1e-3);
+  close(side("nested"), 0.1, 1e-3);
+  assert.equal(plan.has("bourgogne"), false); // regions are exempt
+  for (const [, entry] of plan) assert.equal(entry.revealArea, revealAreaFromSide(entry.side, 0));
+});
+
+test("revealPlan: the anchor part carries its place, small pieces wait for a third of the threshold", () => {
+  // Geometry order: a sliver, the big part, a middling part.
+  const polygons = [rect(0.05, 0.05, 0.005, 0.005), rect(0.1, 0.1, 0.2, 0.2), rect(0.4, 0.4, 0.05, 0.05)];
+  const plan = revealPlan([placeRow("ridge", polygons)], () => 0).get("ridge");
+  assert.equal(plan.anchor, 1);
+  const total = Math.sqrt(0.005 ** 2 + 0.2 ** 2 + 0.05 ** 2) * PX_PER_DEG;
+  close(plan.side, total, 1e-3);
+  close(plan.parts[1].side, total, 1e-3);
+  close(plan.parts[0].side, 3 * 0.005 * PX_PER_DEG, 1e-3);
+  close(plan.parts[2].side, 3 * 0.05 * PX_PER_DEG, 1e-3);
+  // A piece never comes before its place.
+  const even = revealPlan([placeRow("even", [rect(0, 0, 0.1, 0.1), rect(0.3, 0.3, 0.1, 0.1)])], () => 0).get("even");
+  close(even.parts[0].side, even.side, 1e-9);
+  close(even.parts[1].side, even.side, 1e-9);
+});
+
+test("revealPlan: the part that makes a place long is its anchor", () => {
+  // A 0.1 blob and a 0.6 x 0.02 ribbon: min(0.6/2, 8 x 0.02) = 0.16 beats the blob's 0.1.
+  const plan = revealPlan([placeRow("mixed", [rect(0, 0, 0.1, 0.1), rect(0.3, 0, 0.6, 0.02)])], () => 0).get("mixed");
+  assert.equal(plan.anchor, 1);
+  close(plan.side / PX_PER_DEG, 0.16, 1e-3);
+  close(plan.parts[0].side / PX_PER_DEG, 0.16, 1e-3); // min(0.16, 3 x 0.1)
+});
+
+test("revealPlan fails closed on a value that is not a finite number", () => {
+  assert.throws(() => revealPlan([placeRow("x", [rect(0, 0, 1, 1)])], () => Number.NaN), /reveal_area/);
+});
+
+test("placeFeatures: countries and regions unchanged; a subregion one feature per part, each with its reveal_area", () => {
+  assert.deepEqual(placeFeatures(EXPORT_ROW), [placeFeature(EXPORT_ROW)]);
+  const single = placeRow("single", [rect(0, 0, 1, 1)]);
+  const singlePlan = revealPlan([single], () => 46).get("single");
+  assert.deepEqual(placeFeatures(single, singlePlan), [
+    { ...placeFeature(single), properties: { ...placeFeature(single).properties, reveal_area: singlePlan.revealArea } },
+  ]);
+  const polygons = [rect(0.5, 0.5, 0.05, 0.05), rect(1, 1, 2, 2)];
+  const row = placeRow("split", polygons);
+  const plan = revealPlan([row], () => 46).get("split");
+  const features = placeFeatures(row, plan);
+  assert.equal(features.length, 2);
+  const whole = placeFeature(row);
+  features.forEach((feature, i) => {
+    assert.deepEqual(feature.geometry, { type: "MultiPolygon", coordinates: [polygons[i]] });
+    assert.deepEqual(feature.tippecanoe, whole.tippecanoe);
+    assert.deepEqual({ ...feature.properties, reveal_area: undefined }, { ...whole.properties, reveal_area: undefined });
+    assert.equal(feature.properties.reveal_area, plan.parts[i].revealArea);
+    assert.equal(typeof feature.properties.reveal_area, "number");
   });
-  const [big, small] = placeFeatures(row);
-  assert.deepEqual(big.geometry.coordinates, [withHole]);
-  assert.equal(small.properties.reveal_area, 0.09);
+  // Put back together, the parts are the place (what the app draws with the rule off).
+  assert.deepEqual(features.flatMap((f) => f.geometry.coordinates), whole.geometry.coordinates);
+  assert.throws(() => placeFeatures(row), /no reveal plan/);
+});
+
+test("withRevealArea copies, leaving the feature it was given alone", () => {
+  const [label] = labelFeatures(EXPORT_ROW);
+  const copy = withRevealArea(label, 0.25);
+  assert.equal(copy.properties.reveal_area, 0.25);
+  assert.equal("reveal_area" in label.properties, false);
+  assert.deepEqual({ ...copy.properties, reveal_area: undefined }, { ...label.properties, reveal_area: undefined });
+});
+
+test("manifestForRelease builds promote's manifest, passing reveal_rule through when the release has it", () => {
+  const tileChecksums = {
+    world: { path: "tiles/releases/V/world.pmtiles", bytes: 10, checksum_sha256: "A".repeat(64) },
+    bourgogne: {
+      path: "tiles/releases/V/bourgogne.pmtiles", bytes: 20, checksum_sha256: "B".repeat(64),
+      bbox: [3, 46, 5, 48], min_zoom: 4, max_zoom: 16,
+    },
+  };
+  const manifest = manifestForRelease({ version: "V", tileChecksums, generatedAt: "2026-09-30T00:00:00.000Z" });
+  assert.deepEqual(manifest, buildManifest({
+    version: "V",
+    generatedAt: "2026-09-30T00:00:00.000Z",
+    world: { url: storagePublicUrl("tiles/releases/V/world.pmtiles"), checksum_sha256: "A".repeat(64), bytes: 10 },
+    shards: {
+      bourgogne: {
+        url: storagePublicUrl("tiles/releases/V/bourgogne.pmtiles"), checksum_sha256: "B".repeat(64), bytes: 20,
+        bbox: [3, 46, 5, 48], min_zoom: 4, max_zoom: 16,
+      },
+    },
+    attribution: attributionDisplayMap(),
+  }));
+  assert.equal("reveal_rule" in manifest.shards.bourgogne, false);
+  const flagged = manifestForRelease({
+    version: "V",
+    tileChecksums: { ...tileChecksums, bourgogne: { ...tileChecksums.bourgogne, reveal_rule: REVEAL_RULE } },
+    generatedAt: "2026-09-30T00:00:00.000Z",
+  });
+  assert.equal(flagged.shards.bourgogne.reveal_rule, REVEAL_RULE);
+  assert.equal("reveal_rule" in flagged.world, false);
+});
+
+test("validate: a place split into parts passes the per-feature gates, and its id counts once", async () => {
+  const { checkTileFeature } = await import("./validate.mjs");
+  const polygons = [rect(0.5, 0.5, 0.05, 0.05), rect(1, 1, 2, 2)];
+  const row = placeRow("split", polygons);
+  const features = placeFeatures(row, revealPlan([row], () => 46).get("split"));
+  const allExpectedIds = new Set([row.id]);
+  const seen = new Set();
+  for (const { properties } of features) {
+    checkTileFeature(properties, { name: "bourgogne", layer: "places", allExpectedIds, revealRule: true });
+    seen.add(properties.id);
+  }
+  assert.equal(seen.size, 1);
+});
+
+test("validate: a shard with reveal_rule refuses a subregion without a numeric reveal_area", async () => {
+  const { checkTileFeature } = await import("./validate.mjs");
+  const allExpectedIds = new Set(["a"]);
+  const base = { id: "a", key: "france.bourgogne.a", tier: 3 };
+  const opts = { name: "bourgogne", layer: "labels", allExpectedIds, revealRule: true };
+  assert.throws(() => checkTileFeature(base, opts), /has no reveal_area/);
+  assert.throws(() => checkTileFeature({ ...base, reveal_area: "0.1" }, opts), /has no reveal_area/);
+  assert.throws(() => checkTileFeature({ ...base, reveal_area: Number.NaN }, opts), /has no reveal_area/);
+  checkTileFeature({ ...base, reveal_area: 0 }, opts);
+  checkTileFeature({ ...base, tier: 1 }, opts); // regions are exempt
+  checkTileFeature(base, { ...opts, revealRule: false }); // an archive from before the rule
+  assert.throws(() => checkTileFeature({ ...base, id: "b", reveal_area: 1 }, opts), /unexpected feature id b/);
 });

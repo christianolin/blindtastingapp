@@ -1,11 +1,37 @@
 // When a subregion appears on the wine map (owner, 2026-09-30: "you need to
-// zoom further in before smaller places appear"). One rule for every country:
-// a place below region level is drawn from the first whole zoom at which it is
-// at least REVEAL_MIN_PX CSS px across — the side of a square of its on-screen
-// area — and never before its catalogue min_zoom (tippecanoe keeps it out of
-// the tiles before that). Countries and regions (tier <= 1) are the orientation
-// layer and are never delayed. `wine_places.min_zoom` therefore means "never
-// before", not "appears at": read reveal zooms through this module.
+// zoom further in before smaller places appear"; his decisions the same day:
+// 24 px, and "keep ribbons visible"). One rule for every country: a place
+// below region level is drawn from the first whole zoom at which it is at
+// least REVEAL_MIN_PX CSS px across, and never before its catalogue min_zoom
+// (tippecanoe keeps it out of the tiles before that). Countries and regions
+// (tier <= 1) are the orientation layer and are never delayed.
+// `wine_places.min_zoom` therefore means "never before", not "appears at":
+// read reveal zooms through this module.
+//
+// "Across" is worked out by the tile export, which has the geometry
+// (scripts/wine-map-tiles/lib.mjs revealPlan), and reaches the app as ONE
+// number per feature, `reveal_area`, in the unit of the tile's `area`
+// (planar deg²) at the shard's mid-latitude, so the app's whole test is
+// `reveal_area * 4^z >= K` (revealK). The export's rule, in CSS px:
+//   - a part is big enough once the square of its area is N px across, or,
+//     if it is a ribbon, once it is 2N px long and N/8 px thick (Côte de
+//     Nuits at the Burgundy view: 54 px long, 3.7 px thick); every compact
+//     shape gets exactly the square rule;
+//   - a region's SUBREGIONS come in with their median sibling when they are
+//     at least half its size (Burgundy's six districts at the Burgundy view);
+//   - a place's parts are separate features: the anchor part comes with its
+//     place, the others once their own square is N/3 (no confetti);
+//   - a label carries its place's value, so a name comes with its shape.
+// Everything is a ratio of N, so REVEAL_MIN_PX and ?revealPx= keep their
+// meaning.
+//
+// FAIL OPEN: a feature without a numeric reveal_area is not delayed at all
+// (every release before the rule; `area` is never used instead), and a shard
+// applies the rule only when its manifest entry says its tiles carry it
+// (`reveal_rule` === REVEAL_RULE_VERSION, shardRevealPx). Without that, the
+// shard's filters, the selection camera and the status probes are exactly
+// the map from before the rule, so an app deploy ahead of the tiles release
+// changes nothing, and promoting an older release switches the rule off.
 //
 // The test runs at the tile's WHOLE zoom (filters see nothing finer), so what
 // appears is always at least REVEAL_MIN_PX across, but between whole zooms a
@@ -13,26 +39,21 @@
 // at z13, so it waits for z14, and at z13.9 it is 39 px and still hidden.
 // That errs towards later, which is the owner's ask.
 //
-// The size a feature is judged by is its `reveal_area` when the tiles carry
-// one (scripts/wine-map-tiles/lib.mjs revealAreas, releases built after
-// 2026-09-30), else its `area`. reveal_area lets a small place come in with
-// its family (once the family's median member is REVEAL_MIN_PX across, if it
-// is itself at least half that), so a vineyard mosaic shows no holes; and it
-// holds each small piece of a multi-part place back until that piece is a
-// third of REVEAL_MIN_PX, so a scattered AVA shows no confetti. Both are
-// ratios of REVEAL_MIN_PX, so the knob and ?revealPx= still mean what they say.
-//
 // Pure: no maplibre value import, so vitest runs the expression through both
 // engines (reveal.test.ts).
 import type { Bbox } from "./shard-specs";
 
 /** THE owner's knob: a place appears once it is this many CSS px across at a
     whole zoom. 24 = WCAG 2.2's minimum target size, so what appears can be
-    tapped. It is the DEFAULT, not yet the owner's pick: 16 (lighter) and 32
-    (stricter) wait on his comparison (?revealPx=). 0 = off: the filters and
-    the selection camera (camera-fit.ts selectionZooms) are then exactly the
-    map before this rule. */
+    tapped; the owner chose it on 2026-09-30 after comparing 16/24/32
+    (?revealPx= still overrides it for one visit). 0 = off, the rollback
+    switch: the filters, the selection camera (camera-fit.ts selectionZooms)
+    and the status probes are then exactly the map before this rule. */
 export const REVEAL_MIN_PX = 24;
+/** The rule version a shard's manifest entry names when its tiles carry
+    reveal_area (scripts/wine-map-tiles/lib.mjs REVEAL_RULE). Any other value,
+    or none, and the shard keeps the map from before the rule. */
+export const REVEAL_RULE_VERSION = 1;
 /** ?revealPx= is clamped to 0..REVEAL_PX_MAX. */
 export const REVEAL_PX_MAX = 64;
 /** From this zoom on, everything is drawn whatever its size — a net for a
@@ -40,12 +61,13 @@ export const REVEAL_PX_MAX = 64;
 export const REVEAL_CAP_ZOOM = 16;
 
 const PX_PER_DEG_Z0 = 512 / 360; // 512-px tiles
-/** A feature without a numeric `area` is drawn as it is today (fail open). */
-const AREA_WHEN_MISSING = 1e9;
+/** A feature without a numeric reveal_area is drawn as it is today (fail open). */
+const SIZE_WHEN_MISSING = 1e9;
 /** `number`, never `to-number`: a missing or non-numeric tier reads 0 → drawn. */
 const TIER = ["number", ["get", "tier"], 0];
-/** The size a feature is judged by: reveal_area, else area, else drawn. */
-const SIZE = ["number", ["get", "reveal_area"], ["get", "area"], AREA_WHEN_MISSING];
+/** The size a feature is judged by: its reveal_area, else drawn (fail open).
+    Never `area`: tiles from before the rule must look exactly as they did. */
+const SIZE = ["number", ["get", "reveal_area"], SIZE_WHEN_MISSING];
 
 /** The threshold a page URL asks for: `?revealPx=` (clamped), else the knob. */
 export function revealPxFromSearch(search: string): number {
@@ -65,15 +87,41 @@ export function currentRevealPx(): number {
   return revealPxFromSearch(window.location.search);
 }
 
+/** The threshold one shard applies this visit: the visit's `revealPx` when
+    the shard's manifest entry says its tiles carry the rule, else 0 (the map
+    from before the rule, for its filters, the camera and the probes alike). */
+export function shardRevealPx(
+  shard: { reveal_rule?: unknown } | undefined,
+  revealPx: number,
+): number {
+  return shard?.reveal_rule === REVEAL_RULE_VERSION ? revealPx : 0;
+}
+
+/** The threshold a selection camera applies to a place (its canonical key):
+    its shard's (shardRevealPx). A country has no shard of its own; it gets the
+    visit's threshold once any shard carries the rule. */
+export function placeRevealPx(
+  shards: Readonly<Record<string, { reveal_rule?: unknown }>>,
+  placeKey: string,
+  revealPx: number,
+): number {
+  const shard = placeKey.split(".")[1];
+  if (shard !== undefined) {
+    return shardRevealPx(Object.hasOwn(shards, shard) ? shards[shard] : undefined, revealPx);
+  }
+  return Object.values(shards).some((s) => shardRevealPx(s, revealPx) > 0) ? revealPx : 0;
+}
+
 /** A shard's mid-latitude, from its manifest bbox (45 when missing). */
 export function revealLatitude(bbox: Bbox | undefined): number {
   return bbox ? (bbox[1] + bbox[3]) / 2 : 45;
 }
 
 /** One shard's constant: at tile zoom z a feature is at least `minPx` across iff
-    area · 4^z >= K, `area` being the tile's planar deg² of the whole footprint,
-    or its reveal_area, which is in the same unit (side_px = sqrt(area / cos φ) · 512 · 2^z / 360). The shard's mid-latitude
-    stands in for the feature's: within ±0.02 zoom from p1 to p99. */
+    reveal_area · 4^z >= K. reveal_area is in the unit of the tile's `area`,
+    planar deg², at the shard's mid-latitude (side_px = sqrt(reveal_area /
+    cos φ) · 512 · 2^z / 360); the export works it out at exactly the latitude
+    this K uses (the manifest bbox's), so the test is exact. */
 export function revealK(minPx: number, latitude: number): number {
   return (minPx / PX_PER_DEG_Z0) ** 2 * Math.cos((latitude * Math.PI) / 180);
 }
@@ -92,10 +140,9 @@ export function revealTerm(k: number, minPx: number): unknown[] | null {
   ];
 }
 
-/** SIZE in JS: reveal_area, else area, else drawn (fail open). */
+/** SIZE in JS: reveal_area, else drawn (fail open). */
 function revealSize(props: Readonly<Record<string, unknown>>): number {
-  if (typeof props.reveal_area === "number") return props.reveal_area;
-  return typeof props.area === "number" ? props.area : AREA_WHEN_MISSING;
+  return typeof props.reveal_area === "number" ? props.reveal_area : SIZE_WHEN_MISSING;
 }
 
 /** revealTerm in JS with the same doubles (the status probe and the tests). */

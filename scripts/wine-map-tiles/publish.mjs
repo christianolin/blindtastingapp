@@ -30,9 +30,10 @@ for (const name of names) {
   };
 }
 
-// tile_checksums persists each shard's bbox/zoom so promote.mjs can emit v2
-// manifest metadata even on the rollback/explicit-version path, where
-// release.json is not on disk.
+// tile_checksums persists each shard's bbox/zoom (and its reveal_rule, when
+// its subregions carry reveal_area) so promote.mjs can emit v2 manifest
+// metadata even on the rollback/explicit-version path, where release.json is
+// not on disk.
 const tileChecksums = {
   world: {
     path: archives.world.path,
@@ -48,6 +49,9 @@ for (const key of Object.keys(release.shards)) {
     bbox: release.shards[key].bbox,
     min_zoom: release.shards[key].min_zoom,
     max_zoom: release.shards[key].max_zoom,
+    ...(release.shards[key].reveal_rule !== undefined
+      ? { reveal_rule: release.shards[key].reveal_rule }
+      : {}),
   };
 }
 
