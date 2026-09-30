@@ -1606,3 +1606,48 @@ was verified before it was accepted.
 
 A consequence the plan settled, not the owner: an OVERLAPS edge between a place and its own primary
 ancestor is not stored (§8.3).
+
+## 25. US-2 plan decisions (2026-09-29)
+
+Settled by the US-2 plan (`docs/superpowers/plans/2026-09-29-usa-wine-map-us2.md`) and its
+implementation, not by the owner. Each departs from, or sharpens, an earlier section.
+
+- **Central Valley's outline** is derived inside the stage transaction from its 11 members'
+  committed UC Davis geometry, with a coverage union; `derive-boundary.mjs` is not used (it reads
+  VERIFIED children, and the members only become places in US-3, and it commits on its own under
+  the INAO namespace). The method is still `DERIVED_FROM_DESCENDANTS`, with the member list in
+  `generation_parameters`. US-3 asserts that the outline equals its promoted members' union.
+- **Snapshots are immutable** (a trigger refuses update and delete), so the before-promote
+  rollbacks delete boundaries, and places when abandoning, but keep the snapshots; a re-stage
+  reuses them by `(source_id, source_revision, normalized_checksum)`. §16 said the unstage
+  "deletes the wave's DRAFT boundaries and snapshots".
+- **Placement `sort_order`** is each archetype's own `sort_order` (88/89/90), the live convention
+  of the batch generator and R1b, whose checks require it; not "the next free value at each
+  place" (§14.2).
+- **The archetype links clear R2's curated display points.** The training room's R2
+  (`20260929150000`, applied after this spec was written) gave the three US typical wines a
+  curated map point while they had no place, and its check requires that no placed wine keeps
+  one (18 points before the links, 15 after). `20260930114747` asserts each point is R2's value or
+  empty, clears the three in the same transaction and asserts none is left on a placed wine; the
+  unpublish rollback restores them. The point steps are skipped if R2's columns are gone.
+- **The generator gains `--prelude`** and optional article `grape_varieties`/`wine_styles`
+  columns; default output is byte-identical. Both are in the friend's script: tell them (§17.6).
+- **The knowledge migration is generated before the catalog is live,** through `--prelude`, so
+  the whole chain can be rehearsed now; §15's order had the catalog applied first. If the owner's
+  corrections change the copy, the main session regenerates it without `--prelude` once the
+  catalog is live.
+- **The promote measures state containment** against the staged Natural Earth outlines, with
+  the country outline as the land denominator; the stage uses the union of all 13 committed
+  states. Both are buffered 0.05°.
+- **Articles carry `grape_varieties` and `wine_styles` texts** (all six fields). The explorer
+  shows them only when a place has no structured grape or style rows, so today they are a
+  fallback.
+- **The rollback files live in `scripts/usa-map/`** with their own versions (`…124747`,
+  `…134747`, `…144747`), so a replay never runs them. The "remove" file deletes the catalog and
+  knowledge history rows, so both can be re-applied.
+- **`stage-usa-ava.mjs --check-gate`** (read-only) prints every reason `--stage` would refuse,
+  so the refusal path is proved without ever running `--stage` outside the sitting.
+- **Observation, not a decision:** on 2026-09-29 the live neighbour cache read `fresh = false`
+  (`built_at` 2026-09-20T13:39Z); §3 said fresh. The catalog migration's refresh fixes that when
+  it returns ≥ 0 (the rolled-back dry run and the rehearsal both returned a full cache). If it
+  returns -1, US-2 stops.
