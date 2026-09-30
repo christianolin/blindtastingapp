@@ -1,0 +1,2073 @@
+{
+  "_generated_by": "scripts/usa-map/rehearse-us3.mjs",
+  "batch": "core",
+  "git_head": "3fe3b6f88374fc80e83fd975c9f1fcfcc152ab81",
+  "rehearsed_at": "2026-09-30T10:01:29.293Z",
+  "cache_before": {
+    "fresh": true,
+    "built_at": "2026-09-30T10:00:12.864Z"
+  },
+  "applied_in_transaction": [
+    "supabase/migrations/20260930174747_usa_us3_core_promote.sql",
+    "supabase/migrations/20260930184747_usa_archetype_links_2.sql"
+  ],
+  "prepended": [],
+  "timings_s": {
+    "details": 2.7,
+    "drill_reapply_catalog": 64.7,
+    "drill_reapply_knowledge": 0.4,
+    "drill_remove": 65,
+    "drill_restage": 39,
+    "drill_unpublish": 64.5,
+    "drill_unstage": 67.1,
+    "drill_unstage_again": 69,
+    "export_preview": 0.8,
+    "links": 0.2,
+    "promote": 66.5,
+    "shortlists_after": 1.5,
+    "shortlists_before": 0.8,
+    "stage": 20
+  },
+  "refreshes": {
+    "drill_reapply_catalog": {
+      "rows": 15232,
+      "seconds": 64.5
+    },
+    "drill_remove": {
+      "rows": 15232,
+      "seconds": 64.4
+    },
+    "drill_unpublish": {
+      "rows": 15232,
+      "seconds": 64.2
+    },
+    "drill_unstage": {
+      "rows": 15232,
+      "seconds": 66.9
+    },
+    "drill_unstage_again": {
+      "rows": 15232,
+      "seconds": 68.4
+    },
+    "promote": {
+      "rows": 15566,
+      "seconds": 65.1
+    }
+  },
+  "refusals": {
+    "A_promote_before_stage": "US-3 core promote: expected exactly one DRAFT, non-current boundary per place (run stage-usa-ava.mjs --wave us3-core --stage first): united-states.california.central-coast.alisos-canyon, united-states.california.central-coast.carmel-valley, united-states.california.central-coast.gabilan-mountains, u",
+    "B_links_before_promote": "US archetype links step 2: united-states.california.north-coast.napa-valley, united-states.california.north-coast.northern-sonoma.russian-river-valley, united-states.california.north-coast.sonoma-coast is not VERIFIED with a current boundary (apply after the US-3 core promote)",
+    "C_stage_twice": "86 united-states boundaries already exist on this wave's places",
+    "D_unpublish_before_promote": "US-3 core unpublish: not VERIFIED with one current boundary: united-states.california.central-coast.alisos-canyon, united-states.california.central-coast.carmel-valley, united-states.california.central-coast.gabilan-mountains, united-states.california.central-coast.gabilan-mountains.chalone, united-",
+    "E_remove_after_promote": "US-3 core remove: keys are locked (the promote ran): use the unpublish file instead (united-states.california.central-coast.alisos-canyon, united-states.california.central-coast.carmel-valley, united-states.california.central-coast.gabilan-mountains, united-states.california.central-coast.gabilan-mo",
+    "F_links_twice": "US archetype links step 2: pre-state is not step 1 for A typical Napa Cabernet Sauvignon, A typical Sonoma Chardonnay (applied twice, or step 1 is not live)",
+    "G_core_remove_while_rest_exists": "US-3 core remove: other California places exist (remove the later batch first): united-states.california.antelope-valley-of-the-california-high-desert, united-states.california.central-coast.monterey.hames-valley, united-states.california.central-coast.monterey.san-bernabe, united-states.california.",
+    "S_rest_stage_before_core_promote": "an earlier wave is not live (VERIFIED with one current boundary): united-states.california.central-coast.alisos-canyon, united-states.california.central-coast.carmel-valley, united-states.california.central-coast.gabilan-mountains, united-states.california.central-coast.gabilan-mountains.chalone, un"
+  },
+  "rollbacks": {
+    "unstage": {
+      "boundaries": 0,
+      "draft_places": 86,
+      "fresh": true
+    },
+    "unstage_again": {
+      "boundaries": 0,
+      "draft_places": 86,
+      "fresh": true
+    },
+    "remove": {
+      "places": 0,
+      "history_rows": 0,
+      "reapplied_places": 86
+    },
+    "unpublish": {
+      "verified": 0,
+      "current": 0,
+      "locked": 86,
+      "fresh": true,
+      "links_back_to_step_1": true
+    }
+  },
+  "facts": {
+    "places": 86,
+    "verified": 86,
+    "locked": 86,
+    "current_validated": 86,
+    "draft_boundaries": 0,
+    "ca_live": 92,
+    "ca_relationships": 24,
+    "us_outline": 11,
+    "fresh": true
+  },
+  "parent_inside_lowest": [
+    {
+      "key": "united-states.california.central-coast.santa-ynez-valley.sta-rita-hills",
+      "parent_inside": 0.956965
+    },
+    {
+      "key": "united-states.california.central-coast.san-francisco-bay",
+      "parent_inside": 0.966103
+    },
+    {
+      "key": "united-states.california.north-coast.sonoma-valley.bennett-valley",
+      "parent_inside": 0.972982
+    },
+    {
+      "key": "united-states.california.central-coast.paso-robles.templeton-gap-district",
+      "parent_inside": 0.982184
+    },
+    {
+      "key": "united-states.california.north-coast.northern-sonoma.alexander-valley",
+      "parent_inside": 0.985012
+    }
+  ],
+  "drift_highest": [
+    {
+      "key": "united-states.california.north-coast.napa-valley.chiles-valley",
+      "drift": 0.00207
+    },
+    {
+      "key": "united-states.california.north-coast.mendocino-ridge",
+      "drift": 0.00206
+    },
+    {
+      "key": "united-states.california.north-coast.napa-valley.diamond-mountain-district",
+      "drift": 0.0019
+    },
+    {
+      "key": "united-states.california.north-coast.sonoma-valley.sonoma-mountain",
+      "drift": 0.00168
+    },
+    {
+      "key": "united-states.california.north-coast.napa-valley.crystal-springs-of-napa-valley",
+      "drift": 0.00166
+    }
+  ],
+  "clicks": [
+    {
+      "key": "united-states.california.north-coast.los-carneros",
+      "resolved": "united-states.california.north-coast.los-carneros"
+    },
+    {
+      "key": "united-states.california.north-coast.napa-valley.oakville",
+      "resolved": "united-states.california.north-coast.napa-valley.oakville"
+    },
+    {
+      "key": "united-states.california.north-coast.napa-valley.rutherford",
+      "resolved": "united-states.california.north-coast.napa-valley.rutherford"
+    },
+    {
+      "key": "united-states.california.north-coast.napa-valley.stags-leap-district",
+      "resolved": "united-states.california.north-coast.napa-valley.stags-leap-district"
+    }
+  ],
+  "nearby": {
+    "united-states.california.north-coast.northern-sonoma.russian-river-valley": [
+      "united-states.california.north-coast.fountaingrove-district",
+      "united-states.california.north-coast.northern-sonoma.alexander-valley",
+      "united-states.california.north-coast.northern-sonoma.dry-creek-valley",
+      "united-states.california.north-coast.northern-sonoma.knights-valley",
+      "united-states.california.north-coast.petaluma-gap"
+    ],
+    "united-states.california.north-coast.los-carneros": [
+      "united-states.california.north-coast.napa-valley",
+      "united-states.california.north-coast.petaluma-gap",
+      "united-states.california.north-coast.sonoma-coast",
+      "united-states.california.north-coast.sonoma-valley",
+      "united-states.california.central-coast.san-francisco-bay"
+    ],
+    "united-states.california.north-coast.napa-valley.oakville": [
+      "united-states.california.north-coast.napa-valley.rutherford",
+      "united-states.california.north-coast.napa-valley.yountville",
+      "united-states.california.north-coast.napa-valley.stags-leap-district",
+      "united-states.california.north-coast.napa-valley.mt-veeder",
+      "united-states.california.north-coast.napa-valley.atlas-peak"
+    ],
+    "united-states.california.north-coast.northern-sonoma.russian-river-valley.green-valley-of-russian-river-valley": [
+      "united-states.california.north-coast.sonoma-coast",
+      "united-states.california.north-coast.sonoma-coast.west-sonoma-coast",
+      "united-states.california.north-coast.petaluma-gap",
+      "united-states.california.north-coast.northern-sonoma.dry-creek-valley",
+      "united-states.california.north-coast.northern-sonoma.russian-river-valley.chalk-hill"
+    ],
+    "united-states.california.central-coast.santa-ynez-valley.sta-rita-hills": [
+      "united-states.california.central-coast.santa-ynez-valley.ballard-canyon",
+      "united-states.california.central-coast.santa-ynez-valley.los-olivos-district",
+      "united-states.california.central-coast.alisos-canyon"
+    ],
+    "united-states.california.central-coast.paso-robles.paso-robles-willow-creek-district": [
+      "united-states.california.central-coast.paso-robles.adelaida-district",
+      "united-states.california.central-coast.paso-robles.templeton-gap-district",
+      "united-states.california.central-coast.paso-robles.el-pomar-district",
+      "united-states.california.central-coast.san-luis-obispo-coast",
+      "united-states.california.central-coast.paso-robles.paso-robles-estrella-district"
+    ],
+    "united-states.california.central-coast.monterey.santa-lucia-highlands": [
+      "united-states.california.central-coast.monterey.arroyo-seco",
+      "united-states.california.central-coast.gabilan-mountains"
+    ],
+    "united-states.california.central-valley.lodi": [
+      "united-states.california.sierra-foothills"
+    ]
+  },
+  "shortlist": {
+    "California": {
+      "before_source": "map",
+      "before": [
+        "Cabernet Sauvignon",
+        "Chardonnay",
+        "Pinot Noir",
+        "Zinfandel",
+        "Syrah",
+        "Petite Sirah",
+        "Sauvignon Blanc",
+        "Merlot",
+        "Barbera",
+        "Chenin Blanc",
+        "Grenache",
+        "Muscat"
+      ],
+      "after_source": "map",
+      "after": [
+        "Cabernet Sauvignon",
+        "Chardonnay",
+        "Pinot Noir",
+        "Zinfandel",
+        "Syrah",
+        "Sauvignon Blanc",
+        "Merlot",
+        "Grenache",
+        "Petite Sirah",
+        "Riesling",
+        "Tempranillo",
+        "Cabernet Franc",
+        "Viognier",
+        "Barbera",
+        "Mourvèdre",
+        "Petit Verdot",
+        "Roussanne",
+        "Sangiovese",
+        "Albariño",
+        "Chenin Blanc",
+        "Malbec",
+        "Pinot Gris",
+        "Aglianico",
+        "Carignan",
+        "Cinsault",
+        "Gewürztraminer",
+        "Muscat",
+        "Pinot Blanc",
+        "Semillon",
+        "Vermentino"
+      ],
+      "after_place": "California",
+      "colours": {
+        "Aglianico": "RED",
+        "Albariño": "WHITE",
+        "Barbera": "RED",
+        "Cabernet Franc": "RED",
+        "Cabernet Sauvignon": "RED",
+        "Carignan": "RED",
+        "Chardonnay": "WHITE",
+        "Chenin Blanc": "WHITE",
+        "Cinsault": "RED",
+        "Gewürztraminer": "WHITE",
+        "Grenache": "RED",
+        "Malbec": "RED",
+        "Merlot": "RED",
+        "Mourvèdre": "RED",
+        "Muscat": "WHITE",
+        "Petit Verdot": "RED",
+        "Petite Sirah": "RED",
+        "Pinot Blanc": "WHITE",
+        "Pinot Gris": "WHITE",
+        "Pinot Noir": "RED",
+        "Riesling": "WHITE",
+        "Roussanne": "WHITE",
+        "Sangiovese": "RED",
+        "Sauvignon Blanc": "WHITE",
+        "Semillon": "WHITE",
+        "Syrah": "RED",
+        "Tempranillo": "RED",
+        "Vermentino": "WHITE",
+        "Viognier": "WHITE",
+        "Zinfandel": "RED"
+      }
+    },
+    "Washington": {
+      "before_source": "map",
+      "before": [
+        "Cabernet Sauvignon",
+        "Merlot",
+        "Chardonnay",
+        "Pinot Noir",
+        "Riesling",
+        "Syrah",
+        "Cabernet Franc",
+        "Müller-Thurgau",
+        "Sauvignon Blanc"
+      ],
+      "after_source": "map",
+      "after": [
+        "Cabernet Sauvignon",
+        "Merlot",
+        "Chardonnay",
+        "Pinot Noir",
+        "Riesling",
+        "Syrah",
+        "Cabernet Franc",
+        "Müller-Thurgau",
+        "Sauvignon Blanc"
+      ],
+      "after_place": "Washington",
+      "colours": {
+        "Cabernet Franc": "RED",
+        "Cabernet Sauvignon": "RED",
+        "Chardonnay": "WHITE",
+        "Merlot": "RED",
+        "Müller-Thurgau": "WHITE",
+        "Pinot Noir": "RED",
+        "Riesling": "WHITE",
+        "Sauvignon Blanc": "WHITE",
+        "Syrah": "RED"
+      }
+    },
+    "Oregon": {
+      "before_source": "map",
+      "before": [
+        "Pinot Noir",
+        "Chardonnay",
+        "Pinot Gris",
+        "Syrah",
+        "Cabernet Sauvignon",
+        "Riesling",
+        "Tempranillo",
+        "Merlot",
+        "Pinot Blanc",
+        "Viognier"
+      ],
+      "after_source": "map",
+      "after": [
+        "Pinot Noir",
+        "Chardonnay",
+        "Pinot Gris",
+        "Syrah",
+        "Cabernet Sauvignon",
+        "Riesling",
+        "Tempranillo",
+        "Merlot",
+        "Pinot Blanc",
+        "Viognier"
+      ],
+      "after_place": "Oregon",
+      "colours": {
+        "Cabernet Sauvignon": "RED",
+        "Chardonnay": "WHITE",
+        "Merlot": "RED",
+        "Pinot Blanc": "WHITE",
+        "Pinot Gris": "WHITE",
+        "Pinot Noir": "RED",
+        "Riesling": "WHITE",
+        "Syrah": "RED",
+        "Tempranillo": "RED",
+        "Viognier": "WHITE"
+      }
+    },
+    "New York": {
+      "before_source": "map",
+      "before": [
+        "Riesling",
+        "Cabernet Franc",
+        "Chardonnay",
+        "Merlot",
+        "Blaufränkisch",
+        "Gewürztraminer",
+        "Pinot Noir",
+        "Cabernet Sauvignon",
+        "Sauvignon Blanc"
+      ],
+      "after_source": "map",
+      "after": [
+        "Riesling",
+        "Cabernet Franc",
+        "Chardonnay",
+        "Merlot",
+        "Blaufränkisch",
+        "Gewürztraminer",
+        "Pinot Noir",
+        "Cabernet Sauvignon",
+        "Sauvignon Blanc"
+      ],
+      "after_place": "New York",
+      "colours": {
+        "Blaufränkisch": "RED",
+        "Cabernet Franc": "RED",
+        "Cabernet Sauvignon": "RED",
+        "Chardonnay": "WHITE",
+        "Gewürztraminer": "WHITE",
+        "Merlot": "RED",
+        "Pinot Noir": "RED",
+        "Riesling": "WHITE",
+        "Sauvignon Blanc": "WHITE"
+      }
+    }
+  },
+  "export_preview": {
+    "world": [
+      "united-states",
+      "united-states.california",
+      "united-states.new-york",
+      "united-states.oregon",
+      "united-states.washington"
+    ],
+    "outline": [
+      "united-states.california.central-coast",
+      "united-states.california.central-coast.san-francisco-bay",
+      "united-states.california.central-valley",
+      "united-states.california.north-coast",
+      "united-states.california.sierra-foothills",
+      "united-states.california.south-coast",
+      "united-states.new-york.finger-lakes",
+      "united-states.oregon.southern-oregon",
+      "united-states.oregon.willamette-valley",
+      "united-states.washington.columbia-valley",
+      "united-states.washington.puget-sound"
+    ],
+    "shards": {
+      "california": {
+        "keys": 92,
+        "max_zoom": 12,
+        "bytes": 1411353
+      },
+      "new-york": {
+        "keys": 3,
+        "max_zoom": 7,
+        "bytes": 175000
+      },
+      "oregon": {
+        "keys": 3,
+        "max_zoom": 7,
+        "bytes": 482580
+      },
+      "washington": {
+        "keys": 3,
+        "max_zoom": 7,
+        "bytes": 261045
+      }
+    }
+  },
+  "archetypes": {
+    "links": [
+      {
+        "id": "75e4e467-3929-4844-bbc4-ffe8b12523a1",
+        "name": "A typical Napa Cabernet Sauvignon",
+        "home": "united-states.california.north-coast.napa-valley",
+        "placements": [
+          "united-states.california",
+          "united-states.california.north-coast",
+          "united-states.california.north-coast.napa-valley"
+        ]
+      },
+      {
+        "id": "c4ea77f3-5599-43dd-bdc3-4287c1e0ea15",
+        "name": "A typical Sonoma Chardonnay",
+        "home": "united-states.california.north-coast.sonoma-coast",
+        "placements": [
+          "united-states.california",
+          "united-states.california.north-coast",
+          "united-states.california.north-coast.northern-sonoma.russian-river-valley",
+          "united-states.california.north-coast.sonoma-coast"
+        ]
+      }
+    ],
+    "dots": [
+      {
+        "name": "A typical Napa Cabernet Sauvignon",
+        "home": "united-states.california.north-coast.napa-valley",
+        "before": [
+          -122.974,
+          38.762
+        ],
+        "after": [
+          -122.314,
+          38.461
+        ],
+        "moved_km": 66
+      },
+      {
+        "name": "A typical Sonoma Chardonnay",
+        "home": "united-states.california.north-coast.sonoma-coast",
+        "before": [
+          -122.974,
+          38.762
+        ],
+        "after": [
+          -122.915,
+          38.446
+        ],
+        "moved_km": 36
+      }
+    ]
+  },
+  "stage_report": [
+    {
+      "key": "united-states.california.central-coast.alisos-canyon",
+      "role": "ucd",
+      "npoints": 9,
+      "nparts": 1,
+      "km2": 23.614,
+      "raw_km2": 23.614,
+      "drift": 0,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 1,
+      "bbox": [
+        -120.24401,
+        34.73396,
+        -120.15358,
+        34.76716
+      ]
+    },
+    {
+      "key": "united-states.california.central-coast.carmel-valley",
+      "role": "ucd",
+      "npoints": 38,
+      "nparts": 1,
+      "km2": 77.893,
+      "raw_km2": 77.893,
+      "drift": 0,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 1,
+      "bbox": [
+        -121.77094,
+        36.37239,
+        -121.61072,
+        36.48981
+      ]
+    },
+    {
+      "key": "united-states.california.central-coast.gabilan-mountains",
+      "role": "ucd",
+      "npoints": 1973,
+      "nparts": 1,
+      "km2": 545.38,
+      "raw_km2": 545.486,
+      "drift": 0.00019,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 1,
+      "bbox": [
+        -121.55291,
+        36.40849,
+        -121.10153,
+        36.80545
+      ]
+    },
+    {
+      "key": "united-states.california.central-coast.gabilan-mountains.chalone",
+      "role": "ucd",
+      "npoints": 17,
+      "nparts": 1,
+      "km2": 34.847,
+      "raw_km2": 34.847,
+      "drift": 0,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 0.999957,
+      "bbox": [
+        -121.29625,
+        36.44397,
+        -121.20604,
+        36.50302
+      ]
+    },
+    {
+      "key": "united-states.california.central-coast.gabilan-mountains.mt-harlan",
+      "role": "ucd",
+      "npoints": 329,
+      "nparts": 1,
+      "km2": 31.488,
+      "raw_km2": 31.506,
+      "drift": 0.00057,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 1,
+      "bbox": [
+        -121.47177,
+        36.67183,
+        -121.35194,
+        36.72184
+      ]
+    },
+    {
+      "key": "united-states.california.central-coast.monterey",
+      "role": "ucd",
+      "npoints": 652,
+      "nparts": 1,
+      "km2": 2414.637,
+      "raw_km2": 2414.981,
+      "drift": 0.00014,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 0.999759,
+      "bbox": [
+        -121.97897,
+        35.7917,
+        -120.79829,
+        36.91982
+      ]
+    },
+    {
+      "key": "united-states.california.central-coast.monterey.arroyo-seco",
+      "role": "ucd",
+      "npoints": 147,
+      "nparts": 1,
+      "km2": 130.339,
+      "raw_km2": 130.301,
+      "drift": 0.00029,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 0.99984,
+      "bbox": [
+        -121.4265,
+        36.25188,
+        -121.17965,
+        36.40438
+      ]
+    },
+    {
+      "key": "united-states.california.central-coast.monterey.santa-lucia-highlands",
+      "role": "ucd",
+      "npoints": 161,
+      "nparts": 1,
+      "km2": 83.518,
+      "raw_km2": 83.547,
+      "drift": 0.00035,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 0.999314,
+      "bbox": [
+        -121.53078,
+        36.31421,
+        -121.33093,
+        36.52354
+      ]
+    },
+    {
+      "key": "united-states.california.central-coast.paso-robles",
+      "role": "ucd",
+      "npoints": 62,
+      "nparts": 1,
+      "km2": 2471.975,
+      "raw_km2": 2471.842,
+      "drift": 0.00005,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 0.999516,
+      "bbox": [
+        -120.94614,
+        35.31599,
+        -120.19495,
+        35.79235
+      ]
+    },
+    {
+      "key": "united-states.california.central-coast.paso-robles.adelaida-district",
+      "role": "ucd",
+      "npoints": 294,
+      "nparts": 1,
+      "km2": 215.243,
+      "raw_km2": 215.273,
+      "drift": 0.00014,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 0.999718,
+      "bbox": [
+        -120.94542,
+        35.57753,
+        -120.687,
+        35.71179
+      ]
+    },
+    {
+      "key": "united-states.california.central-coast.paso-robles.creston-district",
+      "role": "ucd",
+      "npoints": 134,
+      "nparts": 1,
+      "km2": 189.484,
+      "raw_km2": 189.467,
+      "drift": 0.00009,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 0.99484,
+      "bbox": [
+        -120.5608,
+        35.44035,
+        -120.35575,
+        35.58936
+      ]
+    },
+    {
+      "key": "united-states.california.central-coast.paso-robles.el-pomar-district",
+      "role": "ucd",
+      "npoints": 96,
+      "nparts": 1,
+      "km2": 89.01,
+      "raw_km2": 89.085,
+      "drift": 0.00084,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 1,
+      "bbox": [
+        -120.68272,
+        35.5034,
+        -120.55054,
+        35.62345
+      ]
+    },
+    {
+      "key": "united-states.california.central-coast.paso-robles.paso-robles-estrella-district",
+      "role": "ucd",
+      "npoints": 209,
+      "nparts": 1,
+      "km2": 269.892,
+      "raw_km2": 269.876,
+      "drift": 0.00006,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 0.998712,
+      "bbox": [
+        -120.6954,
+        35.62509,
+        -120.43416,
+        35.79092
+      ]
+    },
+    {
+      "key": "united-states.california.central-coast.paso-robles.paso-robles-geneseo-district",
+      "role": "ucd",
+      "npoints": 70,
+      "nparts": 1,
+      "km2": 70.554,
+      "raw_km2": 70.538,
+      "drift": 0.00023,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 1,
+      "bbox": [
+        -120.66418,
+        35.57136,
+        -120.51084,
+        35.65955
+      ]
+    },
+    {
+      "key": "united-states.california.central-coast.paso-robles.paso-robles-highlands-district",
+      "role": "ucd",
+      "npoints": 248,
+      "nparts": 1,
+      "km2": 241.944,
+      "raw_km2": 241.873,
+      "drift": 0.00029,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 0.990947,
+      "bbox": [
+        -120.42538,
+        35.43995,
+        -120.19452,
+        35.58651
+      ]
+    },
+    {
+      "key": "united-states.california.central-coast.paso-robles.paso-robles-willow-creek-district",
+      "role": "ucd",
+      "npoints": 190,
+      "nparts": 1,
+      "km2": 67.261,
+      "raw_km2": 67.225,
+      "drift": 0.00053,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 0.997254,
+      "bbox": [
+        -120.83248,
+        35.54163,
+        -120.69213,
+        35.62711
+      ]
+    },
+    {
+      "key": "united-states.california.central-coast.paso-robles.san-juan-creek",
+      "role": "ucd",
+      "npoints": 228,
+      "nparts": 1,
+      "km2": 109.714,
+      "raw_km2": 109.757,
+      "drift": 0.0004,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 0.997402,
+      "bbox": [
+        -120.44446,
+        35.48787,
+        -120.19456,
+        35.68817
+      ]
+    },
+    {
+      "key": "united-states.california.central-coast.paso-robles.san-miguel-district",
+      "role": "ucd",
+      "npoints": 160,
+      "nparts": 1,
+      "km2": 76.851,
+      "raw_km2": 76.863,
+      "drift": 0.00015,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 0.991462,
+      "bbox": [
+        -120.76565,
+        35.69231,
+        -120.62597,
+        35.79118
+      ]
+    },
+    {
+      "key": "united-states.california.central-coast.paso-robles.santa-margarita-ranch",
+      "role": "ucd",
+      "npoints": 93,
+      "nparts": 1,
+      "km2": 70.881,
+      "raw_km2": 70.868,
+      "drift": 0.00018,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 0.994265,
+      "bbox": [
+        -120.65666,
+        35.31595,
+        -120.52355,
+        35.4311
+      ]
+    },
+    {
+      "key": "united-states.california.central-coast.paso-robles.templeton-gap-district",
+      "role": "ucd",
+      "npoints": 150,
+      "nparts": 1,
+      "km2": 76.999,
+      "raw_km2": 76.923,
+      "drift": 0.00098,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 0.982184,
+      "bbox": [
+        -120.81018,
+        35.50954,
+        -120.642,
+        35.61536
+      ]
+    },
+    {
+      "key": "united-states.california.central-coast.san-francisco-bay",
+      "role": "ucd",
+      "npoints": 5527,
+      "nparts": 1,
+      "km2": 7424.129,
+      "raw_km2": 7424.115,
+      "drift": 0,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 0.966103,
+      "bbox": [
+        -122.5209,
+        36.926,
+        -121.36383,
+        38.20986
+      ]
+    },
+    {
+      "key": "united-states.california.central-coast.san-francisco-bay.livermore-valley",
+      "role": "ucd",
+      "npoints": 44,
+      "nparts": 1,
+      "km2": 960.707,
+      "raw_km2": 960.694,
+      "drift": 0.00001,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 0.999891,
+      "bbox": [
+        -122.06461,
+        37.52027,
+        -121.61072,
+        37.88167
+      ]
+    },
+    {
+      "key": "united-states.california.central-coast.san-francisco-bay.santa-cruz-mountains",
+      "role": "ucd",
+      "npoints": 11304,
+      "nparts": 1,
+      "km2": 1652.95,
+      "raw_km2": 1653.735,
+      "drift": 0.00047,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 0.999431,
+      "bbox": [
+        -122.41868,
+        36.95557,
+        -121.66149,
+        37.50762
+      ]
+    },
+    {
+      "key": "united-states.california.central-coast.san-luis-obispo-coast",
+      "role": "ucd",
+      "npoints": 1706,
+      "nparts": 1,
+      "km2": 1632.372,
+      "raw_km2": 1632.171,
+      "drift": 0.00012,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 0.995527,
+      "bbox": [
+        -121.32795,
+        34.99203,
+        -120.36022,
+        35.76601
+      ]
+    },
+    {
+      "key": "united-states.california.central-coast.san-luis-obispo-coast.arroyo-grande-valley",
+      "role": "ucd",
+      "npoints": 202,
+      "nparts": 1,
+      "km2": 160.049,
+      "raw_km2": 160.038,
+      "drift": 0.00007,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 0.999803,
+      "bbox": [
+        -120.58889,
+        35.07685,
+        -120.38297,
+        35.21946
+      ]
+    },
+    {
+      "key": "united-states.california.central-coast.san-luis-obispo-coast.edna-valley",
+      "role": "ucd",
+      "npoints": 706,
+      "nparts": 1,
+      "km2": 88.287,
+      "raw_km2": 88.199,
+      "drift": 0.001,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 1,
+      "bbox": [
+        -120.69624,
+        35.16942,
+        -120.54273,
+        35.29411
+      ]
+    },
+    {
+      "key": "united-states.california.central-coast.santa-maria-valley",
+      "role": "ucd",
+      "npoints": 69,
+      "nparts": 1,
+      "km2": 469.455,
+      "raw_km2": 469.512,
+      "drift": 0.00012,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 0.988407,
+      "bbox": [
+        -120.43405,
+        34.77777,
+        -120.13208,
+        35.02774
+      ]
+    },
+    {
+      "key": "united-states.california.central-coast.santa-ynez-valley",
+      "role": "ucd",
+      "npoints": 92,
+      "nparts": 1,
+      "km2": 737.259,
+      "raw_km2": 737.238,
+      "drift": 0.00003,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 0.995092,
+      "bbox": [
+        -120.42196,
+        34.52336,
+        -119.94927,
+        34.77464
+      ]
+    },
+    {
+      "key": "united-states.california.central-coast.santa-ynez-valley.ballard-canyon",
+      "role": "ucd",
+      "npoints": 104,
+      "nparts": 1,
+      "km2": 31.284,
+      "raw_km2": 31.285,
+      "drift": 0.00004,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 1,
+      "bbox": [
+        -120.1825,
+        34.6042,
+        -120.12098,
+        34.68011
+      ]
+    },
+    {
+      "key": "united-states.california.central-coast.santa-ynez-valley.happy-canyon-of-santa-barbara",
+      "role": "ucd",
+      "npoints": 38,
+      "nparts": 1,
+      "km2": 104.491,
+      "raw_km2": 104.515,
+      "drift": 0.00024,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 0.99999,
+      "bbox": [
+        -120.05086,
+        34.58845,
+        -119.94927,
+        34.74281
+      ]
+    },
+    {
+      "key": "united-states.california.central-coast.santa-ynez-valley.los-olivos-district",
+      "role": "ucd",
+      "npoints": 773,
+      "nparts": 1,
+      "km2": 89.438,
+      "raw_km2": 89.421,
+      "drift": 0.00019,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 1,
+      "bbox": [
+        -120.15507,
+        34.57772,
+        -120.03041,
+        34.69049
+      ]
+    },
+    {
+      "key": "united-states.california.central-coast.santa-ynez-valley.sta-rita-hills",
+      "role": "ucd",
+      "npoints": 127,
+      "nparts": 1,
+      "km2": 144.375,
+      "raw_km2": 144.389,
+      "drift": 0.0001,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 0.956965,
+      "bbox": [
+        -120.42615,
+        34.57546,
+        -120.22808,
+        34.69931
+      ]
+    },
+    {
+      "key": "united-states.california.central-valley.lodi",
+      "role": "ucd",
+      "npoints": 267,
+      "nparts": 1,
+      "km2": 2188.82,
+      "raw_km2": 2188.886,
+      "drift": 0.00003,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": null,
+      "bbox": [
+        -121.49864,
+        37.92957,
+        -120.92637,
+        38.57324
+      ]
+    },
+    {
+      "key": "united-states.california.central-valley.lodi.alta-mesa",
+      "role": "ucd",
+      "npoints": 74,
+      "nparts": 1,
+      "km2": 224.977,
+      "raw_km2": 225.023,
+      "drift": 0.0002,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 0.999999,
+      "bbox": [
+        -121.40182,
+        38.23904,
+        -121.17136,
+        38.43828
+      ]
+    },
+    {
+      "key": "united-states.california.central-valley.lodi.borden-ranch",
+      "role": "ucd",
+      "npoints": 206,
+      "nparts": 1,
+      "km2": 283.099,
+      "raw_km2": 283.132,
+      "drift": 0.00012,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 1,
+      "bbox": [
+        -121.2264,
+        38.23462,
+        -121.00426,
+        38.42473
+      ]
+    },
+    {
+      "key": "united-states.california.central-valley.lodi.clements-hills",
+      "role": "ucd",
+      "npoints": 180,
+      "nparts": 1,
+      "km2": 334.146,
+      "raw_km2": 334.176,
+      "drift": 0.00009,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 0.999581,
+      "bbox": [
+        -121.17147,
+        38.04547,
+        -120.91902,
+        38.24527
+      ]
+    },
+    {
+      "key": "united-states.california.central-valley.lodi.cosumnes-river",
+      "role": "ucd",
+      "npoints": 39,
+      "nparts": 1,
+      "km2": 213.156,
+      "raw_km2": 213.091,
+      "drift": 0.0003,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 0.999999,
+      "bbox": [
+        -121.47672,
+        38.2364,
+        -121.30206,
+        38.43791
+      ]
+    },
+    {
+      "key": "united-states.california.central-valley.lodi.jahant",
+      "role": "ucd",
+      "npoints": 122,
+      "nparts": 1,
+      "km2": 113.83,
+      "raw_km2": 113.815,
+      "drift": 0.00013,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 1,
+      "bbox": [
+        -121.41905,
+        38.18907,
+        -121.17037,
+        38.25681
+      ]
+    },
+    {
+      "key": "united-states.california.central-valley.lodi.mokelumne-river",
+      "role": "ucd",
+      "npoints": 128,
+      "nparts": 1,
+      "km2": 331.282,
+      "raw_km2": 331.297,
+      "drift": 0.00005,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 0.999956,
+      "bbox": [
+        -121.44761,
+        38.05752,
+        -121.14932,
+        38.25654
+      ]
+    },
+    {
+      "key": "united-states.california.central-valley.lodi.sloughhouse",
+      "role": "ucd",
+      "npoints": 336,
+      "nparts": 1,
+      "km2": 301.615,
+      "raw_km2": 301.689,
+      "drift": 0.00024,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 0.998857,
+      "bbox": [
+        -121.30063,
+        38.31093,
+        -121.02704,
+        38.57324
+      ]
+    },
+    {
+      "key": "united-states.california.el-dorado",
+      "role": "ucd",
+      "npoints": 527,
+      "nparts": 1,
+      "km2": 1663.009,
+      "raw_km2": 1662.935,
+      "drift": 0.00004,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": null,
+      "bbox": [
+        -121.07513,
+        38.50238,
+        -120.47628,
+        39.01045
+      ]
+    },
+    {
+      "key": "united-states.california.el-dorado.fair-play",
+      "role": "ucd",
+      "npoints": 201,
+      "nparts": 1,
+      "km2": 105.514,
+      "raw_km2": 105.513,
+      "drift": 0,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 0.999964,
+      "bbox": [
+        -120.74218,
+        38.54559,
+        -120.59408,
+        38.65295
+      ]
+    },
+    {
+      "key": "united-states.california.north-coast.clear-lake",
+      "role": "ucd",
+      "npoints": 101,
+      "nparts": 1,
+      "km2": 884.108,
+      "raw_km2": 884.091,
+      "drift": 0.00002,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 0.999688,
+      "bbox": [
+        -122.99872,
+        38.84235,
+        -122.53023,
+        39.21577
+      ]
+    },
+    {
+      "key": "united-states.california.north-coast.clear-lake.red-hills-lake-county",
+      "role": "ucd",
+      "npoints": 317,
+      "nparts": 1,
+      "km2": 129.039,
+      "raw_km2": 129.056,
+      "drift": 0.00013,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 0.999794,
+      "bbox": [
+        -122.81996,
+        38.85856,
+        -122.61278,
+        38.96798
+      ]
+    },
+    {
+      "key": "united-states.california.north-coast.fountaingrove-district",
+      "role": "ucd",
+      "npoints": 173,
+      "nparts": 1,
+      "km2": 149.042,
+      "raw_km2": 149.05,
+      "drift": 0.00005,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 1,
+      "bbox": [
+        -122.72576,
+        38.45816,
+        -122.52943,
+        38.57022
+      ]
+    },
+    {
+      "key": "united-states.california.north-coast.los-carneros",
+      "role": "ucd",
+      "npoints": 334,
+      "nparts": 1,
+      "km2": 150.709,
+      "raw_km2": 150.67,
+      "drift": 0.00026,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 1,
+      "bbox": [
+        -122.54487,
+        38.15078,
+        -122.28244,
+        38.30364
+      ]
+    },
+    {
+      "key": "united-states.california.north-coast.mendocino",
+      "role": "ucd",
+      "npoints": 109,
+      "nparts": 1,
+      "km2": 1247.766,
+      "raw_km2": 1247.842,
+      "drift": 0.00006,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 1,
+      "bbox": [
+        -123.63494,
+        38.83838,
+        -123.00475,
+        39.36563
+      ]
+    },
+    {
+      "key": "united-states.california.north-coast.mendocino.anderson-valley",
+      "role": "ucd",
+      "npoints": 78,
+      "nparts": 1,
+      "km2": 234.654,
+      "raw_km2": 234.657,
+      "drift": 0.00001,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 0.99999,
+      "bbox": [
+        -123.63494,
+        38.95912,
+        -123.29016,
+        39.16828
+      ]
+    },
+    {
+      "key": "united-states.california.north-coast.mendocino-ridge",
+      "role": "ucd",
+      "npoints": 7946,
+      "nparts": 75,
+      "km2": 339.518,
+      "raw_km2": 340.219,
+      "drift": 0.00206,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 1,
+      "bbox": [
+        -123.70138,
+        38.77659,
+        -123.31982,
+        39.15532
+      ]
+    },
+    {
+      "key": "united-states.california.north-coast.napa-valley",
+      "role": "ucd",
+      "npoints": 2121,
+      "nparts": 1,
+      "km2": 1620.644,
+      "raw_km2": 1620.974,
+      "drift": 0.0002,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 0.998493,
+      "bbox": [
+        -122.64675,
+        38.15506,
+        -122.0614,
+        38.76833
+      ]
+    },
+    {
+      "key": "united-states.california.north-coast.napa-valley.atlas-peak",
+      "role": "ucd",
+      "npoints": 168,
+      "nparts": 1,
+      "km2": 49.928,
+      "raw_km2": 49.931,
+      "drift": 0.00007,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 1,
+      "bbox": [
+        -122.3161,
+        38.37675,
+        -122.21049,
+        38.4692
+      ]
+    },
+    {
+      "key": "united-states.california.north-coast.napa-valley.calistoga",
+      "role": "ucd",
+      "npoints": 669,
+      "nparts": 1,
+      "km2": 51.522,
+      "raw_km2": 51.462,
+      "drift": 0.00116,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 0.999924,
+      "bbox": [
+        -122.64675,
+        38.54989,
+        -122.49755,
+        38.63271
+      ]
+    },
+    {
+      "key": "united-states.california.north-coast.napa-valley.chiles-valley",
+      "role": "ucd",
+      "npoints": 310,
+      "nparts": 1,
+      "km2": 21.176,
+      "raw_km2": 21.132,
+      "drift": 0.00207,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 1,
+      "bbox": [
+        -122.40926,
+        38.49888,
+        -122.27161,
+        38.59417
+      ]
+    },
+    {
+      "key": "united-states.california.north-coast.napa-valley.coombsville",
+      "role": "ucd",
+      "npoints": 60,
+      "nparts": 1,
+      "km2": 45.751,
+      "raw_km2": 45.79,
+      "drift": 0.00085,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 1,
+      "bbox": [
+        -122.2858,
+        38.26523,
+        -122.20285,
+        38.34677
+      ]
+    },
+    {
+      "key": "united-states.california.north-coast.napa-valley.crystal-springs-of-napa-valley",
+      "role": "ucd",
+      "npoints": 278,
+      "nparts": 1,
+      "km2": 16.179,
+      "raw_km2": 16.152,
+      "drift": 0.00166,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 1,
+      "bbox": [
+        -122.50994,
+        38.51644,
+        -122.44196,
+        38.59726
+      ]
+    },
+    {
+      "key": "united-states.california.north-coast.napa-valley.diamond-mountain-district",
+      "role": "ucd",
+      "npoints": 164,
+      "nparts": 1,
+      "km2": 19.869,
+      "raw_km2": 19.907,
+      "drift": 0.0019,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 0.999341,
+      "bbox": [
+        -122.62674,
+        38.53879,
+        -122.52246,
+        38.57975
+      ]
+    },
+    {
+      "key": "united-states.california.north-coast.napa-valley.howell-mountain",
+      "role": "ucd",
+      "npoints": 560,
+      "nparts": 1,
+      "km2": 52.755,
+      "raw_km2": 52.813,
+      "drift": 0.0011,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 1,
+      "bbox": [
+        -122.52171,
+        38.52554,
+        -122.37918,
+        38.63234
+      ]
+    },
+    {
+      "key": "united-states.california.north-coast.napa-valley.mt-veeder",
+      "role": "ucd",
+      "npoints": 545,
+      "nparts": 1,
+      "km2": 68.322,
+      "raw_km2": 68.365,
+      "drift": 0.00063,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 0.999985,
+      "bbox": [
+        -122.49788,
+        38.27749,
+        -122.34424,
+        38.43888
+      ]
+    },
+    {
+      "key": "united-states.california.north-coast.napa-valley.oak-knoll-district-of-napa-valley",
+      "role": "ucd",
+      "npoints": 106,
+      "nparts": 1,
+      "km2": 39.857,
+      "raw_km2": 39.853,
+      "drift": 0.0001,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 1,
+      "bbox": [
+        -122.36924,
+        38.31451,
+        -122.27395,
+        38.38239
+      ]
+    },
+    {
+      "key": "united-states.california.north-coast.napa-valley.oakville",
+      "role": "ucd",
+      "npoints": 228,
+      "nparts": 1,
+      "km2": 27.47,
+      "raw_km2": 27.457,
+      "drift": 0.00048,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 1,
+      "bbox": [
+        -122.43791,
+        38.39871,
+        -122.33021,
+        38.465
+      ]
+    },
+    {
+      "key": "united-states.california.north-coast.napa-valley.rutherford",
+      "role": "ucd",
+      "npoints": 199,
+      "nparts": 1,
+      "km2": 30.455,
+      "raw_km2": 30.438,
+      "drift": 0.00056,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 1,
+      "bbox": [
+        -122.46504,
+        38.43507,
+        -122.36956,
+        38.49976
+      ]
+    },
+    {
+      "key": "united-states.california.north-coast.napa-valley.spring-mountain-district",
+      "role": "ucd",
+      "npoints": 245,
+      "nparts": 1,
+      "km2": 34.314,
+      "raw_km2": 34.319,
+      "drift": 0.00015,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 0.99912,
+      "bbox": [
+        -122.57381,
+        38.4672,
+        -122.47945,
+        38.55089
+      ]
+    },
+    {
+      "key": "united-states.california.north-coast.napa-valley.st-helena",
+      "role": "ucd",
+      "npoints": 324,
+      "nparts": 1,
+      "km2": 37.294,
+      "raw_km2": 37.277,
+      "drift": 0.00045,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 1,
+      "bbox": [
+        -122.51706,
+        38.47562,
+        -122.41189,
+        38.5664
+      ]
+    },
+    {
+      "key": "united-states.california.north-coast.napa-valley.stags-leap-district",
+      "role": "ucd",
+      "npoints": 139,
+      "nparts": 1,
+      "km2": 12.338,
+      "raw_km2": 12.346,
+      "drift": 0.00061,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 1,
+      "bbox": [
+        -122.35186,
+        38.37813,
+        -122.2981,
+        38.43076
+      ]
+    },
+    {
+      "key": "united-states.california.north-coast.napa-valley.yountville",
+      "role": "ucd",
+      "npoints": 186,
+      "nparts": 1,
+      "km2": 33.803,
+      "raw_km2": 33.792,
+      "drift": 0.00032,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 1,
+      "bbox": [
+        -122.42305,
+        38.35889,
+        -122.30391,
+        38.44097
+      ]
+    },
+    {
+      "key": "united-states.california.north-coast.northern-sonoma",
+      "role": "ucd",
+      "npoints": 378,
+      "nparts": 1,
+      "km2": 1596.087,
+      "raw_km2": 1595.985,
+      "drift": 0.00006,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 1,
+      "bbox": [
+        -123.13257,
+        38.30056,
+        -122.62326,
+        38.85277
+      ]
+    },
+    {
+      "key": "united-states.california.north-coast.northern-sonoma.alexander-valley",
+      "role": "ucd",
+      "npoints": 98,
+      "nparts": 1,
+      "km2": 315.958,
+      "raw_km2": 315.957,
+      "drift": 0,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 0.985012,
+      "bbox": [
+        -123.08121,
+        38.5854,
+        -122.72415,
+        38.85277
+      ]
+    },
+    {
+      "key": "united-states.california.north-coast.northern-sonoma.dry-creek-valley",
+      "role": "ucd",
+      "npoints": 104,
+      "nparts": 1,
+      "km2": 315.855,
+      "raw_km2": 315.814,
+      "drift": 0.00013,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 0.999817,
+      "bbox": [
+        -123.11367,
+        38.54502,
+        -122.85686,
+        38.75
+      ]
+    },
+    {
+      "key": "united-states.california.north-coast.northern-sonoma.knights-valley",
+      "role": "ucd",
+      "npoints": 227,
+      "nparts": 1,
+      "km2": 150.338,
+      "raw_km2": 150.31,
+      "drift": 0.00019,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 0.998666,
+      "bbox": [
+        -122.76104,
+        38.56128,
+        -122.62311,
+        38.73606
+      ]
+    },
+    {
+      "key": "united-states.california.north-coast.northern-sonoma.russian-river-valley",
+      "role": "ucd",
+      "npoints": 361,
+      "nparts": 1,
+      "km2": 691.788,
+      "raw_km2": 691.715,
+      "drift": 0.00011,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 0.999955,
+      "bbox": [
+        -123.03101,
+        38.30056,
+        -122.67373,
+        38.65234
+      ]
+    },
+    {
+      "key": "united-states.california.north-coast.northern-sonoma.russian-river-valley.chalk-hill",
+      "role": "ucd",
+      "npoints": 160,
+      "nparts": 1,
+      "km2": 91.778,
+      "raw_km2": 91.764,
+      "drift": 0.00015,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 0.999973,
+      "bbox": [
+        -122.84581,
+        38.50801,
+        -122.67375,
+        38.61495
+      ]
+    },
+    {
+      "key": "united-states.california.north-coast.northern-sonoma.russian-river-valley.green-valley-of-russian-river-valley",
+      "role": "ucd",
+      "npoints": 98,
+      "nparts": 1,
+      "km2": 77.176,
+      "raw_km2": 77.19,
+      "drift": 0.00018,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 0.999997,
+      "bbox": [
+        -122.94526,
+        38.37806,
+        -122.82416,
+        38.50307
+      ]
+    },
+    {
+      "key": "united-states.california.north-coast.petaluma-gap",
+      "role": "ucd",
+      "npoints": 625,
+      "nparts": 1,
+      "km2": 819.007,
+      "raw_km2": 818.925,
+      "drift": 0.0001,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 0.998623,
+      "bbox": [
+        -123.07858,
+        38.10509,
+        -122.43269,
+        38.37263
+      ]
+    },
+    {
+      "key": "united-states.california.north-coast.pine-mountain-cloverdale-peak",
+      "role": "ucd",
+      "npoints": 100,
+      "nparts": 1,
+      "km2": 18.623,
+      "raw_km2": 18.621,
+      "drift": 0.00007,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 1,
+      "bbox": [
+        -123.00668,
+        38.83441,
+        -122.9399,
+        38.8789
+      ]
+    },
+    {
+      "key": "united-states.california.north-coast.rockpile",
+      "role": "ucd",
+      "npoints": 370,
+      "nparts": 1,
+      "km2": 59.476,
+      "raw_km2": 59.487,
+      "drift": 0.00019,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 1,
+      "bbox": [
+        -123.24641,
+        38.70886,
+        -123.05546,
+        38.80911
+      ]
+    },
+    {
+      "key": "united-states.california.north-coast.sonoma-coast",
+      "role": "ucd",
+      "npoints": 1375,
+      "nparts": 1,
+      "km2": 2091.899,
+      "raw_km2": 2091.997,
+      "drift": 0.00005,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 0.99776,
+      "bbox": [
+        -123.53375,
+        38.11166,
+        -122.34973,
+        38.77893
+      ]
+    },
+    {
+      "key": "united-states.california.north-coast.sonoma-coast.west-sonoma-coast",
+      "role": "ucd",
+      "npoints": 1410,
+      "nparts": 1,
+      "km2": 573.809,
+      "raw_km2": 573.882,
+      "drift": 0.00013,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 0.999947,
+      "bbox": [
+        -123.53375,
+        38.33519,
+        -122.83322,
+        38.77893
+      ]
+    },
+    {
+      "key": "united-states.california.north-coast.sonoma-coast.west-sonoma-coast.fort-ross-seaview",
+      "role": "ucd",
+      "npoints": 550,
+      "nparts": 1,
+      "km2": 129.266,
+      "raw_km2": 129.348,
+      "drift": 0.00064,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 0.999836,
+      "bbox": [
+        -123.349,
+        38.48794,
+        -123.15462,
+        38.64775
+      ]
+    },
+    {
+      "key": "united-states.california.north-coast.sonoma-valley",
+      "role": "ucd",
+      "npoints": 397,
+      "nparts": 1,
+      "km2": 465.291,
+      "raw_km2": 465.29,
+      "drift": 0,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 0.999704,
+      "bbox": [
+        -122.67473,
+        38.11606,
+        -122.34972,
+        38.47129
+      ]
+    },
+    {
+      "key": "united-states.california.north-coast.sonoma-valley.bennett-valley",
+      "role": "ucd",
+      "npoints": 55,
+      "nparts": 1,
+      "km2": 33.749,
+      "raw_km2": 33.751,
+      "drift": 0.00004,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 0.972982,
+      "bbox": [
+        -122.67473,
+        38.35551,
+        -122.58636,
+        38.43163
+      ]
+    },
+    {
+      "key": "united-states.california.north-coast.sonoma-valley.moon-mountain-district-sonoma-county",
+      "role": "ucd",
+      "npoints": 414,
+      "nparts": 1,
+      "km2": 71.576,
+      "raw_km2": 71.581,
+      "drift": 0.00007,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 0.99998,
+      "bbox": [
+        -122.54234,
+        38.28657,
+        -122.39465,
+        38.42702
+      ]
+    },
+    {
+      "key": "united-states.california.north-coast.sonoma-valley.sonoma-mountain",
+      "role": "ucd",
+      "npoints": 407,
+      "nparts": 1,
+      "km2": 22.598,
+      "raw_km2": 22.637,
+      "drift": 0.00168,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 1,
+      "bbox": [
+        -122.61522,
+        38.31444,
+        -122.51728,
+        38.38852
+      ]
+    },
+    {
+      "key": "united-states.california.north-coast.wild-horse-valley",
+      "role": "ucd",
+      "npoints": 13,
+      "nparts": 1,
+      "km2": 15.904,
+      "raw_km2": 15.904,
+      "drift": 0,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 1,
+      "bbox": [
+        -122.21681,
+        38.25797,
+        -122.18087,
+        38.3346
+      ]
+    },
+    {
+      "key": "united-states.california.sierra-foothills.california-shenandoah-valley",
+      "role": "ucd",
+      "npoints": 115,
+      "nparts": 1,
+      "km2": 55.256,
+      "raw_km2": 55.259,
+      "drift": 0.00005,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 1,
+      "bbox": [
+        -120.84911,
+        38.4821,
+        -120.75104,
+        38.56894
+      ]
+    },
+    {
+      "key": "united-states.california.sierra-foothills.fiddletown",
+      "role": "ucd",
+      "npoints": 102,
+      "nparts": 1,
+      "km2": 48.875,
+      "raw_km2": 48.873,
+      "drift": 0.00004,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 1,
+      "bbox": [
+        -120.79934,
+        38.46719,
+        -120.68793,
+        38.52373
+      ]
+    },
+    {
+      "key": "united-states.california.south-coast.temecula-valley",
+      "role": "ucd",
+      "npoints": 273,
+      "nparts": 1,
+      "km2": 363.152,
+      "raw_km2": 363.194,
+      "drift": 0.00012,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 1,
+      "bbox": [
+        -117.3708,
+        33.44354,
+        -116.9721,
+        33.60664
+      ]
+    }
+  ],
+  "notices": [
+    "US-3 rest catalog: neighbour refresh 15232 rows in 64.2 s",
+    "US-3 core unstage: neighbour refresh 15232 rows in 66.9 s",
+    "US-3 core unstage: neighbour refresh 15232 rows in 68.4 s",
+    "US-3 core remove: neighbour refresh 15232 rows in 64.4 s",
+    "US-3 core catalog: neighbour refresh 15232 rows in 64.5 s",
+    "US-3 core promote: neighbour refresh 15566 rows in 65.1 s",
+    "US-3 core unpublish: neighbour refresh 15232 rows in 64.2 s"
+  ],
+  "total_s": 532.8,
+  "mode": "sitting"
+}
