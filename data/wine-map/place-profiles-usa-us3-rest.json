@@ -2,13 +2,64 @@
   "_provenance": {
     "what": "Details-panel knowledge for the United States wine map, US-3 rest batch: 64 California AVAs (spec docs/superpowers/specs/2026-09-29-usa-wine-map-design.md §10; plan docs/superpowers/plans/2026-09-30-usa-wine-map-us3.md). Turned into supabase/migrations/20260930204747_usa_us3_rest_knowledge.sql by scripts/wine-map-sources/gen-place-profiles-migration.mjs --source data/wine-map/place-profiles-usa-us3-rest.json --bare.",
     "wave": "us3-rest",
-    "status": "DRAFT",
-    "owner_approval": null,
+    "status": "APPROVED",
+    "owner_approval": {
+      "answer": "Owner waived the copy review on 2026-09-30 (\"ignore my friends changes and just go ahead. no need for my review\"). Written in session from the sources listed under each place; read by the main session in data/wine-map/review/usa-us3-rest-knowledge-*.md.",
+      "date": "2026-09-30"
+    },
     "written_in_session": "From 2026-09-30, from public sources only (listed under each place); no API batch (AGENTS.md).",
     "rules": "Plain English, no praise words, figures only where a listed source publishes them, never 'official boundary' (spec §18). Exactly one key fact 'Established YYYY (27 CFR 9.N)', as TTB lists it. Descriptions of 2-4 sentences, at most 700 characters. At most 8 grapes; the 1-3 signature grapes are PRINCIPAL and the rest ACCESSORY. At least two sources per place, one of them the CFR section or the Federal Register final rule. share_pct is left out."
   },
   "new_grapes": [],
   "places": {
+    "united-states.california.antelope-valley-of-the-california-high-desert": {
+      "article": {
+        "description": "A high-desert valley of about 665 square miles in Los Angeles and Kern counties, north of the San Gabriel Mountains, with a floor at 2,300 to 3,100 feet walled by mountains on three sides. Vines were planted here in the 1880s and 1890s; modern planting began in 1981, and by 2007 there were about 128 acres in 16 vineyards.",
+        "climate": "Hot, dry summers and cold winters, Winkler Region V at about 4,600 growing degree days, with only 4 to 9 inches of rain and winter lows of 6 to 11 °F.",
+        "soils": "Deep, loamy, well-drained alluvial soils from granite, such as the Hesperia-Rosamond-Cajon and Hanford-Ramona-Greenfield associations.",
+        "grape_varieties": "Cabernet Sauvignon, Tempranillo and Malbec, with Muscat, on the estates of the valley.",
+        "wine_styles": "Dry red wines from Cabernet Sauvignon, Tempranillo and Malbec.",
+        "key_facts": [
+          "Established 2011 (27 CFR 9.219)",
+          "About 665 square miles (TTB final rule)",
+          "About 128 acres in 16 vineyards in 2007 (TTB final rule)",
+          "Spans Los Angeles and Kern counties"
+        ]
+      },
+      "styles": [
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Tempranillo"
+        },
+        {
+          "name": "Malbec",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Muscat",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.219, Antelope Valley of the California High Desert (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.219"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), Antelope Valley of the California High Desert (2011)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2011-05-24/html/2011-12823.htm"
+        },
+        {
+          "title": "Wine Routes, Golden Star Vineyards & Winery",
+          "url": "https://www.wineroutes.com/winery/golden-star-vineyards-and-winery/"
+        }
+      ]
+    },
     "united-states.california.central-coast.monterey.hames-valley": {
       "article": {
         "description": "The southernmost Monterey County AVA, a valley of about 10,240 acres near Bradley toward the San Luis Obispo county line, at about 472 to 1,289 feet. About 2,200 acres are planted, and its growers favour Rhône varieties as well as Bordeaux ones.",
@@ -1261,6 +1312,429 @@
         }
       ]
     },
+    "united-states.california.covelo": {
+      "article": {
+        "description": "A bowl-shaped basin of about 38,000 acres in northern Mendocino County, taking in Round Valley and Williams Valley around the town of Covelo, about 150 miles north of San Francisco. Its floor lies at 1,310 to 1,480 feet. Only about 2 acres were planted when it was established.",
+        "climate": "About 3,000 degree days (Region 3), roughly 125 frost-free days, about 40 inches of rain, the most in northern Mendocino County, and occasional snow.",
+        "soils": "Neutral to alkaline Feliz-Russian-Cole loams on the deep, level valley floor, unlike the acidic soils of the surrounding hills.",
+        "grape_varieties": "Pinot Noir and Chardonnay, the varieties the petition named as suited to its short season.",
+        "wine_styles": "Dry red and white wines from a few small vineyards.",
+        "key_facts": [
+          "Established 2006 (27 CFR 9.187)",
+          "About 38,000 acres (TTB final rule)",
+          "Valley floor at 1,310 to 1,480 feet (TTB final rule)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Pinot Noir"
+        },
+        {
+          "name": "Chardonnay"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.187, Covelo (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.187"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), Covelo (2006)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2006-02-16/html/06-1457.htm"
+        }
+      ]
+    },
+    "united-states.california.cucamonga-valley": {
+      "article": {
+        "description": "An AVA of about 109,400 acres in San Bernardino and Riverside counties, east of Los Angeles, once one of California's largest wine regions. Secondo Guasti founded the Italian Vineyard Company here in 1900, and in the 1940s the valley had about 40,000 acres of grapes; fewer than 1,200 remain among houses and malls, many of them old, dry-farmed vines.",
+        "climate": "Warm to hot, suited to heat-loving varieties.",
+        "soils": "Deep sand or hardpan clay that restricts the old dry-farmed vines.",
+        "grape_varieties": "Zinfandel above all, with Grenache, Mourvèdre, Carignan and Palomino among old plantings.",
+        "wine_styles": "Dry red wines from old-vine Zinfandel and Rhône varieties.",
+        "key_facts": [
+          "Established 1995 (27 CFR 9.150)",
+          "About 109,400 acres at establishment (Wine Institute, from the TTB final rule)",
+          "About 40,000 acres of grapes in the 1940s, under 1,200 today (Wine Spectator)"
+        ]
+      },
+      "styles": [
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Zinfandel"
+        },
+        {
+          "name": "Grenache",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Mourvèdre",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Carignan",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Palomino",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.150, Cucamonga Valley (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.150"
+        },
+        {
+          "title": "Wine Institute, American Viticultural Areas of California (acreage at establishment, from TTB final rules)",
+          "url": "https://wineinstitute.org/wp-content/uploads/2024/04/CA-AVAs_FINAL-FOR-WEBSITE_4.18.24.pdf"
+        },
+        {
+          "title": "Wine Spectator, Disappearing act (Cucamonga Valley)",
+          "url": "https://www.winespectator.com/articles/disappearing-act-282"
+        }
+      ]
+    },
+    "united-states.california.dos-rios": {
+      "article": {
+        "description": "A canyon of about 15,500 acres in northern Mendocino County where the Eel River meets its Middle Fork, about 12 miles long and 4 wide. \"Dos Rios\" is Spanish for \"two rivers\". Only about six acres of vines were planted at establishment.",
+        "climate": "Average temperatures of 52 to 58 °F and 30 to 60 inches of rain, mostly October to April; marine winds moderate the heat and the rivers reflect extra sunlight into the canyon.",
+        "soils": "Well-drained to excessively drained loams, sandy loams and gravelly loams from sandstone and siltstone, on canyon walls sloping 30 to 75 percent.",
+        "grape_varieties": "Zinfandel, with Cabernet Sauvignon, Merlot and Chardonnay.",
+        "wine_styles": "Dry red wines from a few small vineyards.",
+        "key_facts": [
+          "Established 2005 (27 CFR 9.175)",
+          "About 15,500 acres; about six acres planted at establishment (TTB final rule)",
+          "Its upper edge is the 2,000-foot contour line (TTB final rule)"
+        ]
+      },
+      "styles": [
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Zinfandel"
+        },
+        {
+          "name": "Cabernet Sauvignon",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Merlot",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Chardonnay",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.175, Dos Rios (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.175"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), T.D. TTB-34, Dos Rios (2005)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2005-10-14/html/05-20546.htm"
+        },
+        {
+          "title": "Mendocino Winegrowers, Dos Rios AVA",
+          "url": "https://mendowine.com/ava/dos-rios-ava/"
+        }
+      ]
+    },
+    "united-states.california.inwood-valley": {
+      "article": {
+        "description": "An AVA of about 28,441 acres in the foothills east of Redding in Shasta County, below Blue Mountain, covering land between 1,000 and 3,000 feet. At establishment five vineyards covered about 62.5 acres. Merlot was planted at the Inwood Ranch in the late 1970s, and wild Mission vines survive from plantings of 1864.",
+        "climate": "Regions II to III, about 2,700 to 3,400 growing degree days, with about 57 inches of rain a year, 14 of them in the growing season.",
+        "soils": "Some 27 soil series, the Aiken series nearly a quarter of the area.",
+        "grape_varieties": "Merlot is the variety the rulemaking records, first planted at the Inwood Ranch in the late 1970s.",
+        "wine_styles": "Dry red wines from a few small foothill vineyards.",
+        "key_facts": [
+          "Established 2012 (27 CFR 9.226)",
+          "About 28,441 acres; five vineyards on about 62.5 acres at establishment (TTB final rule)",
+          "Only land between 1,000 and 3,000 feet is included (TTB proposed rule, 2011)"
+        ]
+      },
+      "styles": [
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Merlot"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.226, Inwood Valley (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.226"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), Inwood Valley (2012)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2012-09-13/html/2012-22595.htm"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), Inwood Valley proposed rule (2011)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2011-12-05/html/2011-31141.htm"
+        }
+      ]
+    },
+    "united-states.california.leona-valley": {
+      "article": {
+        "description": "A narrow valley of about 13.4 square miles in northern Los Angeles County, formed along the San Andreas fault below the Angeles National Forest, with a floor from 2,932 to 3,800 feet. It is named after the early rancher Miguel Leonis. Zinfandel and Mission were planted in the early 1900s; about 20 acres were in production at establishment.",
+        "climate": "About 4,060 degree days (low Region V), 9 to 12 inches of rain, warm days and cool nights, and cold air draining off the slopes that protects against spring frost.",
+        "soils": "Very deep, well-drained soils of the Hanford-Ramona-Greenfield association on alluvial fans, from loamy sand to loam.",
+        "grape_varieties": "Pinot Noir today, after early Zinfandel and Mission plantings.",
+        "wine_styles": "Dry red wines from a small area of vines.",
+        "key_facts": [
+          "Established 2008 (27 CFR 9.212)",
+          "About 13.4 square miles; about 20 acres in production at establishment (T.D. TTB-71)",
+          "Named after the rancher Miguel Leonis (T.D. TTB-71)"
+        ]
+      },
+      "styles": [
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Pinot Noir"
+        },
+        {
+          "name": "Zinfandel",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.212, Leona Valley (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.212"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), T.D. TTB-71, Leona Valley (2008)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2008-10-29/html/E8-25747.htm"
+        }
+      ]
+    },
+    "united-states.california.malibu-coast": {
+      "article": {
+        "description": "An AVA of about 44,590 acres in the Santa Monica Mountains of Los Angeles and Ventura counties, above the Malibu coast. At establishment 52 small vineyards covered about 198 acres. It holds Malibu-Newton Canyon and Saddle Rock-Malibu.",
+        "climate": "Warm, with marine fog coming in from the Pacific over steep mountains, valleys and canyons.",
+        "soils": "Well-drained soils containing volcanic material.",
+        "grape_varieties": "Cabernet Sauvignon, Merlot and Syrah, with Chardonnay and Sauvignon Blanc.",
+        "wine_styles": "Dry red wines from Bordeaux varieties and Syrah, and some whites.",
+        "key_facts": [
+          "Established 2014 (27 CFR 9.235)",
+          "About 44,590 acres; 52 vineyards on about 198 acres at establishment (T.D. TTB-121)",
+          "Contains Malibu-Newton Canyon and Saddle Rock-Malibu"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Syrah"
+        },
+        {
+          "name": "Merlot",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Chardonnay",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Sauvignon Blanc",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.235, Malibu Coast (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.235"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), T.D. TTB-121, Malibu Coast (2014)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2014-07-18/html/2014-16921.htm"
+        },
+        {
+          "title": "Rosenthal Estate Wines, Our story",
+          "url": "https://rosenthalestatewines.com/our-story/"
+        }
+      ]
+    },
+    "united-states.california.malibu-coast.malibu-newton-canyon": {
+      "article": {
+        "description": "A very small AVA of about 850 acres in the Santa Monica Mountains, a valley sheltered from the marine fog, within the Malibu Coast AVA. George Rosenthal planted Malibu's first vineyard here in 1987, at about 1,450 feet and within four miles of the ocean.",
+        "climate": "Warmer than the surrounding Malibu Coast because the valley is sheltered from the marine fog, with cool breezes and plenty of sun; about 4,000 to 4,100 degree days.",
+        "soils": "Well-drained soils with volcanic material, shared with the wider Malibu Coast.",
+        "grape_varieties": "Cabernet Sauvignon, Cabernet Franc and Merlot, with Petit Verdot, Syrah, Viognier and Chardonnay.",
+        "wine_styles": "Dry red wines from Bordeaux varieties, and some whites.",
+        "key_facts": [
+          "Established 1996 (27 CFR 9.152)",
+          "About 850 acres at establishment (Wine Institute, from the TTB final rule)",
+          "First planted in 1987, at about 1,450 feet (Rosenthal Estate Wines)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Cabernet Franc",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Merlot",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Petit Verdot",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Syrah",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Chardonnay",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.152, Malibu-Newton Canyon (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.152"
+        },
+        {
+          "title": "Wine Institute, American Viticultural Areas of California (acreage at establishment, from TTB final rules)",
+          "url": "https://wineinstitute.org/wp-content/uploads/2024/04/CA-AVAs_FINAL-FOR-WEBSITE_4.18.24.pdf"
+        },
+        {
+          "title": "Rosenthal Estate Wines, Our story",
+          "url": "https://rosenthalestatewines.com/our-story/"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), T.D. TTB-121, Malibu Coast (2014)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2014-07-18/html/2014-16921.htm"
+        }
+      ]
+    },
+    "united-states.california.malibu-coast.saddle-rock-malibu": {
+      "article": {
+        "description": "A small, raised valley of about 2,090 acres on the leeward side of the Santa Monica Mountains, about 32 miles west of downtown Los Angeles, from 1,700 to 2,236 feet. It is named after the Saddle Rock formation; the Semler family's Saddlerock Ranch vineyard, planted from 1992, was the only producer when it was established.",
+        "climate": "About 4,200 degree days, warmer than Malibu-Newton Canyon: the height, north-facing slopes and leeward position limit the marine cooling.",
+        "soils": "Cropley clay, Gilroy clay loam and Hambright loam, deeper and with more clay than neighbouring areas.",
+        "grape_varieties": "Cabernet Sauvignon, Merlot and Syrah, with Sauvignon Blanc.",
+        "wine_styles": "Dry red wines from Cabernet Sauvignon, Merlot and Syrah.",
+        "key_facts": [
+          "Established 2006 (27 CFR 9.203)",
+          "About 2,090 acres; 70 acres producing in 2005 (T.D. TTB-52)",
+          "Elevations from 1,700 to 2,236 feet (T.D. TTB-52)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Merlot"
+        },
+        {
+          "name": "Syrah"
+        },
+        {
+          "name": "Sauvignon Blanc",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.203, Saddle Rock-Malibu (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.203"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), T.D. TTB-52, Saddle Rock-Malibu (2006)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2006-07-17/html/E6-11076.htm"
+        },
+        {
+          "title": "Prince of Pinot, Malibu Family Wines",
+          "url": "https://www.princeofpinot.com/winery/1436"
+        }
+      ]
+    },
+    "united-states.california.manton-valley": {
+      "article": {
+        "description": "A stream-cut valley of about 11,178 acres in the foothills of Mount Lassen, east of Redding, across the Shasta–Tehama county line, from about 2,000 to 3,500 feet. Nights fall far lower than in the surrounding lowlands.",
+        "climate": "Region III, while Redding and Chico nearby are Region V; the average day-to-night swing is about 38 °F at the height of the season.",
+        "soils": "Soils of a flat to gently rolling valley floor and slopes cut by streams off Mount Lassen.",
+        "grape_varieties": "Syrah and Petite Sirah, with Cabernet Sauvignon, Merlot and Zinfandel.",
+        "wine_styles": "Dry red wines from Syrah, Petite Sirah and Bordeaux varieties.",
+        "key_facts": [
+          "Established 2014 (27 CFR 9.236)",
+          "About 11,178 acres at establishment (Wine Institute, from the TTB final rule)",
+          "Spans Shasta and Tehama counties"
+        ]
+      },
+      "styles": [
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Syrah"
+        },
+        {
+          "name": "Petite Sirah"
+        },
+        {
+          "name": "Cabernet Sauvignon",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Merlot",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Zinfandel",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.236, Manton Valley (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.236"
+        },
+        {
+          "title": "Wine Institute, American Viticultural Areas of California (acreage at establishment, from TTB final rules)",
+          "url": "https://wineinstitute.org/wp-content/uploads/2024/04/CA-AVAs_FINAL-FOR-WEBSITE_4.18.24.pdf"
+        },
+        {
+          "title": "San Francisco Wine School, Manton Valley approved as Tehama County's first AVA",
+          "url": "https://sanfranciscowineschool.com/blogs/blog/16221451-manton-valley-approved-as-tehama-county-s-1st-ava"
+        },
+        {
+          "title": "California Outdoor Properties, Alger Vineyards",
+          "url": "https://www.californiaoutdoorproperties.com/?p=131933"
+        }
+      ]
+    },
     "united-states.california.north-coast.benmore-valley": {
       "article": {
         "description": "A small, high valley of about 1,440 acres in southwestern Lake County, at about 2,400 feet among mountains averaging 2,800 feet. Its only commercial vineyard was the Trione family's Chardonnay, grown for Geyser Peak; the harsh climate defeated it, most vines were removed, and the valley is now mainly grazing land. It is named after Benjamin Logan Moore, a 19th-century cattle rustler.",
@@ -2019,6 +2493,582 @@
         {
           "title": "Suisun Valley Vintners & Growers Association",
           "url": "https://svvga.com/"
+        }
+      ]
+    },
+    "united-states.california.palos-verdes-peninsula": {
+      "article": {
+        "description": "A coastal AVA of about 15,900 acres on the Palos Verdes Peninsula in southwestern Los Angeles County, a low mountain between the Los Angeles Plain and the Pacific, from sea level to about 1,460 feet at San Pedro Hill. Only about 7 acres of vines were planted at establishment.",
+        "climate": "Mediterranean and warm, with mild winters: average monthly highs of 63 to 74 °F, lows of 48 to 62 °F, and about 14 inches of rain.",
+        "soils": "Altamont clay adobe, Altamont clay loam and Diablo clay adobe, rich in clay and calcium.",
+        "grape_varieties": "Pinot Noir, Chardonnay, Merlot and Cabernet Sauvignon, the varieties the final rule names.",
+        "wine_styles": "Dry red and white wines from a handful of small vineyards.",
+        "key_facts": [
+          "Established 2021 (27 CFR 9.274)",
+          "About 15,900 acres; about 7 acres planted at establishment (TTB final rule)",
+          "Elevations from sea level to about 1,460 feet (TTB final rule)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Pinot Noir"
+        },
+        {
+          "name": "Chardonnay"
+        },
+        {
+          "name": "Merlot",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Cabernet Sauvignon",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.274, Palos Verdes Peninsula (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.274"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), Palos Verdes Peninsula (2021)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2021-06-17/html/2021-12770.htm"
+        }
+      ]
+    },
+    "united-states.california.seiad-valley": {
+      "article": {
+        "description": "A small valley of about 2,160 acres beside the Klamath River in Siskiyou County, about 15 miles south of the Oregon border, California's northernmost AVA. It was established for a single grower, Seiad Valley Vineyards, which has since closed; about 2.5 acres were planted.",
+        "climate": "Hot summers and mild winters in a cool mountain valley, where rock tailings left by gold mining store the day's heat and help against frost.",
+        "soils": "Deep alluvial loam, sand and clay on the valley floor, mixed with granite-rich mining tailings.",
+        "grape_varieties": "Riesling was the grape grown on the valley's only vineyard.",
+        "wine_styles": "White wine from Riesling, when the vineyard was farmed.",
+        "key_facts": [
+          "Established 1994 (27 CFR 9.148)",
+          "About 2,160 acres, with about 2.5 acres planted (ATF proposed rule, 1994)",
+          "Named after a valley trappers knew as \"Sciad\" before 1850 (ATF proposed rule, 1994)"
+        ]
+      },
+      "styles": [
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Riesling"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.148, Seiad Valley (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.148"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), Seiad Valley proposed rule (1994)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-1994-01-11/html/94-477.htm"
+        },
+        {
+          "title": "Wine Country AVA, Klamath Mountains AVAs",
+          "url": "https://www.winecountryava.com/ca-klamath-mountains-ava"
+        }
+      ]
+    },
+    "united-states.california.sierra-foothills.north-yuba": {
+      "article": {
+        "description": "An AVA of about 22,400 acres in the Sierra Nevada foothills of Yuba County, around Oregon House, about 70 miles northeast of Sacramento. It was created for the Renaissance Vineyard, planted from 1971 on some 365 acres of terraces at about 2,000 feet; about 33 acres remain, farmed by a few small producers.",
+        "climate": "Foothill climate at about 2,000 to 2,250 feet, with different slopes suited to different varieties.",
+        "soils": "Decomposed granite, iron-rich and red, on steep terraced slopes.",
+        "grape_varieties": "Cabernet Sauvignon, Syrah and Riesling, with Sauvignon Blanc and Semillon.",
+        "wine_styles": "Dry red wines, and dry and late-harvest Riesling.",
+        "key_facts": [
+          "Established 1985 (27 CFR 9.106)",
+          "About 22,400 acres at establishment (Wine Institute, from the TTB final rule)",
+          "Renaissance planted about 365 acres of terraces (San Francisco Chronicle)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE",
+        "SWEET"
+      ],
+      "grapes": [
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Syrah"
+        },
+        {
+          "name": "Riesling"
+        },
+        {
+          "name": "Sauvignon Blanc",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Semillon",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.106, North Yuba (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.106"
+        },
+        {
+          "title": "Wine Institute, American Viticultural Areas of California (acreage at establishment, from TTB final rules)",
+          "url": "https://wineinstitute.org/wp-content/uploads/2024/04/CA-AVAs_FINAL-FOR-WEBSITE_4.18.24.pdf"
+        },
+        {
+          "title": "San Francisco Chronicle, The lost civilization of California wine",
+          "url": "https://preview-prod.w.sfchronicle.com/food/wine/article/The-lost-civilization-of-California-wine-13174708.php"
+        }
+      ]
+    },
+    "united-states.california.sierra-pelona-valley": {
+      "article": {
+        "description": "A valley of about 9.7 square miles in northern Los Angeles County, taking in Hauser Canyon, upper Agua Dulce Canyon and Mint Canyon, below the Sierra Pelona range, from 2,400 to 3,400 feet. About 96 acres were planted in 2008.",
+        "climate": "Summer highs up to 102 °F and nights of 50 to 60 °F, swings of 40 to 50 °F; 9 to 12 inches of rain, and winds that reduce frost and fungal disease.",
+        "soils": "Very deep, moderately drained valley soils with a high mineral content and low fertility.",
+        "grape_varieties": "Syrah, the grape the petition named as suited to the area.",
+        "wine_styles": "Dry red wines, mainly Syrah, from a small planted area.",
+        "key_facts": [
+          "Established 2010 (27 CFR 9.218)",
+          "About 9.7 square miles; 96 acres of vines in 2008 (T.D. TTB-86)",
+          "Elevations from 2,400 to 3,400 feet (T.D. TTB-86)"
+        ]
+      },
+      "styles": [
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Syrah"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.218, Sierra Pelona Valley (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.218"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), T.D. TTB-86, Sierra Pelona Valley (2010)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2010-07-22/html/2010-17960.htm"
+        }
+      ]
+    },
+    "united-states.california.south-coast.ramona-valley": {
+      "article": {
+        "description": "An AVA of about 89,000 acres around the town of Ramona in central San Diego County, ringed by hills and mountains, from about 650 feet to over 3,000 feet. When it was established 17 vineyards grew about 45 acres; today it has the densest concentration of wineries in the county, more than 30.",
+        "climate": "Known locally as \"the Valley of the Sun\" for its lack of coastal fog: about 3,470 degree days, about 320 frost-free days and 16.5 inches of rain, with wide day-to-night swings.",
+        "soils": "Ramona, Visalia, Los Posas and Fallbrook loams, with nutrient-rich mafic rock on the mid-slopes.",
+        "grape_varieties": "Cabernet Sauvignon, Syrah and Tempranillo, with Sangiovese, Petite Sirah and Viognier.",
+        "wine_styles": "Dry red wines from Bordeaux, Rhône, Spanish and Italian varieties.",
+        "key_facts": [
+          "Established 2005 (27 CFR 9.191)",
+          "About 89,000 acres; 17 vineyards on about 45 acres at establishment (T.D. TTB-39)",
+          "More than 30 active wineries (San Diego Tourism Authority)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Syrah"
+        },
+        {
+          "name": "Tempranillo"
+        },
+        {
+          "name": "Sangiovese",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Petite Sirah",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Viognier",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.191, Ramona Valley (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.191"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), T.D. TTB-39, Ramona Valley (2005)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2005-12-07/html/05-23684.htm"
+        },
+        {
+          "title": "San Diego Tourism Authority, Wine tasting in Ramona Valley",
+          "url": "https://www.sandiego.org/article/wine-tasting-in-ramona-valley"
+        }
+      ]
+    },
+    "united-states.california.south-coast.san-luis-rey": {
+      "article": {
+        "description": "An AVA of about 97,700 acres around Fallbrook and Bonsall in northern San Diego County, following the lower San Luis Rey River. At establishment it had 44 vineyards on about 256 acres and 23 wineries.",
+        "climate": "Low and open to the ocean, mean elevation about 563 feet: cool marine air flows up the valley, giving milder summers than inland and fewer spring frosts; rainfall is low.",
+        "soils": "About 69% sandy loams and about half Alfisols, over decomposed granite.",
+        "grape_varieties": "Mediterranean varieties such as Grenache, Tempranillo, Sangiovese and Vermentino, with Bordeaux varieties.",
+        "wine_styles": "Dry red and white wines from Mediterranean and Bordeaux varieties.",
+        "key_facts": [
+          "Established 2024 (27 CFR 9.295)",
+          "About 97,733 acres (T.D. TTB-195)",
+          "44 vineyards on about 256 acres and 23 wineries at establishment (T.D. TTB-195)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Grenache"
+        },
+        {
+          "name": "Tempranillo"
+        },
+        {
+          "name": "Sangiovese",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Vermentino",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Cabernet Sauvignon",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.295, San Luis Rey (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.295"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), T.D. TTB-195, San Luis Rey (2024)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2024-08-30/html/2024-19578.htm"
+        },
+        {
+          "title": "Coachella Valley Independent, A day trip to Fallbrook, center of California's newest AVA",
+          "url": "https://cvindependent.com/2025/07/escape-the-furnace-a-wine-lovers-day-trip-to-fallbrook-center-of-californias-newest-ava/"
+        },
+        {
+          "title": "Edible San Diego, The appellations of San Diego wine country",
+          "url": "https://ediblesandiego.com/articles/the-appellations-of-san-diego-wine-country"
+        }
+      ]
+    },
+    "united-states.california.south-coast.san-pasqual-valley": {
+      "article": {
+        "description": "A valley of about 9,000 acres on the San Dieguito River near Escondido in San Diego County, among the earliest AVAs in California. Orfila Vineyards, founded in 1994, farms about 40 acres here.",
+        "climate": "Warm, dry days balanced by cool coastal breezes.",
+        "soils": "Soils of the San Dieguito River valley floor and its slopes.",
+        "grape_varieties": "Syrah, Sangiovese and Merlot, with Viognier.",
+        "wine_styles": "Dry red wines from Rhône and Italian varieties, and some whites.",
+        "key_facts": [
+          "Established 1981 (27 CFR 9.25)",
+          "About 9,000 acres (San Diego County Vintners Association)",
+          "On the San Dieguito River near Escondido"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Syrah"
+        },
+        {
+          "name": "Sangiovese"
+        },
+        {
+          "name": "Merlot",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Viognier",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.25, San Pasqual Valley (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.25"
+        },
+        {
+          "title": "TTB, AVA establishment dates",
+          "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/ava-establishment-dates"
+        },
+        {
+          "title": "San Diego County Vintners Association, AVA information",
+          "url": "https://www.sandiegowineries.org/ava-information/"
+        },
+        {
+          "title": "Orfila Vineyards & Winery, About us",
+          "url": "https://www.orfila.com/about-us/"
+        }
+      ]
+    },
+    "united-states.california.squaw-valley-miramonte": {
+      "article": {
+        "description": "An AVA of about 44,690 acres in the Sierra Nevada foothills of Fresno County, around Squaw Valley and Miramonte, from 1,600 to 3,500 feet. At establishment five small vineyards covered only about 7.5 acres, worked by hand on steep, boulder-strewn slopes.",
+        "climate": "Cooler days than the San Joaquin Valley below but warmer nights, thanks to cold-air drainage, and much more rain.",
+        "soils": "Granitic soils of the Vista, Sierra and Auberry series, well drained, with pH of 5.6 to 7.3.",
+        "grape_varieties": "Aglianico and Mourvèdre, with other red varieties in small plantings.",
+        "wine_styles": "Dry red wines from a few estate vineyards.",
+        "key_facts": [
+          "Established 2015 (27 CFR 9.251)",
+          "About 44,690 acres; five vineyards on about 7.5 acres at establishment (T.D. TTB-129)",
+          "Elevations from 1,600 to 3,500 feet (T.D. TTB-129)"
+        ]
+      },
+      "styles": [
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Aglianico"
+        },
+        {
+          "name": "Mourvèdre"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.251, Squaw Valley-Miramonte (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.251"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), T.D. TTB-129, Squaw Valley-Miramonte (2015)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2015-08-07/html/2015-19454.htm"
+        },
+        {
+          "title": "ABC30, Squaw Valley winery creates unique wines",
+          "url": "https://abc30.com/society/squaw-valley-winery-creates-unique-wines-/5538030/"
+        },
+        {
+          "title": "BizBuySell, boutique winery listing in the Squaw Valley-Miramonte AVA (estate Aglianico and Mourvèdre)",
+          "url": "https://www.bizbuysell.com/business-opportunity/turnkey-boutique-winery-and-fortress-like-safe-haven-estate-in-calif/2385119"
+        }
+      ]
+    },
+    "united-states.california.tehachapi-mountains": {
+      "article": {
+        "description": "A saddle-shaped region of about 58,000 acres of mountain foot slopes, high valleys and rolling hills at the southern end of the Sierra Nevada in Kern County, from 3,600 to 5,400 feet. At establishment six vineyards covered about 25 acres.",
+        "climate": "About 2,762 growing degree days and a 198-day season; winds bring warmth from the San Joaquin Valley and the Mojave, winter lows are 26 to 35 °F, and high-altitude sun gives deep colour and thick skins.",
+        "soils": "Soils of mountain foot slopes and high valleys, with good cold-air drainage.",
+        "grape_varieties": "Syrah, Zinfandel and Cabernet Sauvignon, the late-season varieties the petition named.",
+        "wine_styles": "Dry red wines from Syrah, Zinfandel and Cabernet Sauvignon.",
+        "key_facts": [
+          "Established 2020 (27 CFR 9.273)",
+          "About 58,000 acres; six vineyards on about 25 acres at establishment (T.D. TTB-164)",
+          "Elevations from 3,600 to 5,400 feet (T.D. TTB-164)"
+        ]
+      },
+      "styles": [
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Syrah"
+        },
+        {
+          "name": "Zinfandel"
+        },
+        {
+          "name": "Cabernet Sauvignon"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.273, Tehachapi Mountains (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.273"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), T.D. TTB-164, Tehachapi Mountains (2020)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2020-11-19/html/2020-25301.htm"
+        }
+      ]
+    },
+    "united-states.california.trinity-lakes": {
+      "article": {
+        "description": "An AVA of about 96,000 acres around Trinity Lake and Lewiston Lake and the Trinity River below Lewiston Dam, in Trinity County, among rugged, timbered ridges. Only about 1,440 acres are suited to grapes, and 30 acres were planted by four growers at establishment.",
+        "climate": "The lakes moderate the climate, with cooler days and warmer nights; residents report less snow and hard frost and more fog since the lakes were made.",
+        "soils": "Well-drained alluvial fans on stream terraces in narrow valleys, unlike the deeper, clay-rich soils of wider valleys around.",
+        "grape_varieties": "Pinot Noir, Riesling and Gewürztraminer, with Chardonnay, Merlot and Pinot Gris.",
+        "wine_styles": "Dry and off-dry white wines and Pinot Noir.",
+        "key_facts": [
+          "Established 2005 (27 CFR 9.184)",
+          "About 96,000 acres; 30 acres planted at establishment (T.D. TTB-24)",
+          "About 1,440 acres suitable for grapes (T.D. TTB-24)"
+        ]
+      },
+      "styles": [
+        "WHITE",
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Pinot Noir"
+        },
+        {
+          "name": "Riesling"
+        },
+        {
+          "name": "Gewürztraminer"
+        },
+        {
+          "name": "Chardonnay",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Merlot",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Pinot Gris",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.184, Trinity Lakes (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.184"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), T.D. TTB-24, Trinity Lakes (2005)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2005-02-28/html/05-3714.htm"
+        },
+        {
+          "title": "Wine Routes, Alpen Cellars",
+          "url": "https://www.wineroutes.com/winery/alpen-cellars/wines"
+        }
+      ]
+    },
+    "united-states.california.willow-creek": {
+      "article": {
+        "description": "A small valley of about 6,000 acres around the town of Willow Creek, mostly in Humboldt County with a little in Trinity County, where the valley floor at 400 to 500 feet is ringed by mountains up to about 4,000 feet.",
+        "climate": "Hot, dry growing season, with days in the 90s and 100s °F cooling by as much as 50 °F in the evening.",
+        "soils": "Very rocky soils with little clay, from ocean shale.",
+        "grape_varieties": "Cabernet Sauvignon, Pinot Noir and Zinfandel, with Chardonnay, Sauvignon Blanc and Riesling.",
+        "wine_styles": "Dry red and white wines from a few small vineyards.",
+        "key_facts": [
+          "Established 1983 (27 CFR 9.85)",
+          "About 6,000 acres at establishment (Wine Institute, from the TTB final rule)",
+          "Spans Humboldt and Trinity counties"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Pinot Noir"
+        },
+        {
+          "name": "Zinfandel"
+        },
+        {
+          "name": "Chardonnay",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Sauvignon Blanc",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Riesling",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.85, Willow Creek (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.85"
+        },
+        {
+          "title": "Wine Institute, American Viticultural Areas of California (acreage at establishment, from TTB final rules)",
+          "url": "https://wineinstitute.org/wp-content/uploads/2024/04/CA-AVAs_FINAL-FOR-WEBSITE_4.18.24.pdf"
+        },
+        {
+          "title": "Wine Country AVA, Klamath Mountains AVAs",
+          "url": "https://www.winecountryava.com/ca-klamath-mountains-ava"
+        }
+      ]
+    },
+    "united-states.california.yucaipa-valley": {
+      "article": {
+        "description": "An AVA of about 36,467 acres of rolling foothills of the San Bernardino Mountains in San Bernardino County, taking in Yucaipa, Calimesa and Oak Glen, from 2,000 to 4,600 feet. At establishment it had about 23 vineyards and two wineries.",
+        "climate": "Hot and dry: average temperatures in Yucaipa run from about 49 to 78 °F, with August averaging 97 °F, and only about 4 inches of rain in the growing season; the height concentrates sunlight.",
+        "soils": "Soils of rolling foothill slopes below the San Bernardino Mountains.",
+        "grape_varieties": "Cabernet Sauvignon, Zinfandel and Syrah, with Merlot, Malbec, Nebbiolo, Barbera and Petite Sirah.",
+        "wine_styles": "Dry red wines from Bordeaux, Rhône and Italian varieties.",
+        "key_facts": [
+          "Established 2024 (27 CFR 9.293)",
+          "About 36,467 acres; about 23 vineyards and two wineries at establishment (T.D. TTB-193)",
+          "Elevations from 2,000 to 4,600 feet (T.D. TTB-193)"
+        ]
+      },
+      "styles": [
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Zinfandel"
+        },
+        {
+          "name": "Syrah"
+        },
+        {
+          "name": "Merlot",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Malbec",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Nebbiolo",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Barbera",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Petite Sirah",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.293, Yucaipa Valley (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.293"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), T.D. TTB-193, Yucaipa Valley (2024)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2024-04-25/html/2024-08868.htm"
         }
       ]
     }
