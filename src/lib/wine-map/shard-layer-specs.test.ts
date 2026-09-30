@@ -42,8 +42,8 @@ const SHARD_COUNTRY: Record<string, string> = {
   abruzzo: "italy", ahr: "germany", alentejo: "portugal", alsace: "france",
   andalucia: "spain", aragon: "spain", asturias: "spain", baden: "germany",
   bairrada: "portugal", baleares: "spain", basilicata: "italy", beaujolais: "france",
-  bordeaux: "france", bourgogne: "france", calabria: "italy", campania: "italy",
-  "castilla-la-mancha": "spain", "castilla-y-leon": "spain", cataluna: "spain",
+  bordeaux: "france", bourgogne: "france", calabria: "italy", california: "united-states",
+  campania: "italy", "castilla-la-mancha": "spain", "castilla-y-leon": "spain", cataluna: "spain",
   champagne: "france", corse: "france", dao: "portugal", douro: "portugal",
   "emilia-romagna": "italy", extremadura: "spain", franken: "germany", friuli: "italy",
   galicia: "spain", "hessische-bergstrasse": "germany", jura: "france",
@@ -51,13 +51,14 @@ const SHARD_COUNTRY: Record<string, string> = {
   liguria: "italy", loire: "france", lombardia: "italy", madeira: "portugal",
   madrid: "spain", marche: "italy", minho: "portugal", mittelrhein: "germany",
   molise: "italy", mosel: "germany", murcia: "spain", nahe: "germany",
-  navarra: "spain", "pais-vasco": "spain", "peninsula-de-setubal": "portugal",
-  pfalz: "germany", piemonte: "italy", provence: "france", puglia: "italy",
+  navarra: "spain", "new-york": "united-states", oregon: "united-states",
+  "pais-vasco": "spain", "peninsula-de-setubal": "portugal", pfalz: "germany",
+  piemonte: "italy", provence: "france", puglia: "italy",
   rheingau: "germany", rheinhessen: "germany", rhone: "france",
   "saale-unstrut": "germany", sardegna: "italy", savoie: "france", sicilia: "italy",
   "sud-ouest": "france", toscana: "italy", "trentino-alto-adige": "italy",
   umbria: "italy", valencia: "spain", "valle-d-aosta": "italy", veneto: "italy",
-  wuerttemberg: "germany",
+  washington: "united-states", wuerttemberg: "germany",
 };
 const SHARDS = Object.keys(SHARD_COUNTRY).sort();
 const url = (key: string) =>
