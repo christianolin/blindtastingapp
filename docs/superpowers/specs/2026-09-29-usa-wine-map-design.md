@@ -319,7 +319,10 @@ Non-goals:
     `CHIP_FIT_ALL_SHARDS` set, which holds `united-states` only. The chip therefore frames the lower
     48 from California to New York.
   - On a phone, that is below shard zoom, so the world archive's four state washes show first and a
-    tap drills in (checked on iPhone, §15 US-2).
+    tap drills in (checked on iPhone, §15 US-2). A 375 px phone fits the box at about z1.9, whose
+    tiles are z1, so the states carry `min_zoom` and `label_min_zoom` 1.5, not 4 (§25, review
+    round 2026-09-30): at 4 no world tile below z4 held a state, and the chip showed one grey
+    country wash.
   - The chip's z5.5 floor (`CHIP_MIN_ZOOM`) does not apply to these countries: `chipMinZoom(country)`
     is 0 for them, so the camera keeps MapLibre's fitted zoom (about z4.4 on a laptop, z2 on a
     phone). Raised to z5.5, the box would centre on its middle, the Great Plains, with neither coast
@@ -412,7 +415,7 @@ Name references outside the database:
 
 ```
 united-states                                   COUNTRY     tier 0  z1.5 / label 2   sort 140
-├─ united-states.california                     REGION      tier 1  z4   / 4          (shard)
+├─ united-states.california                     REGION      tier 1  z1.5 / 1.5        (shard)
 │  ├─ .north-coast                              SUBREGION   tier 2  z5   / 5   AVA regional, outline
 │  │  ├─ .napa-valley                           APPELLATION tier 3  z6   / 7   AVA subregional
 │  │  │  └─ .oakville                           APPELLATION tier 4  z7   / 9   AVA subregional
@@ -444,7 +447,7 @@ are ("Pauillac", not "Pauillac AOP"). The suffix lives on the scoring row.
 | Place | display_tier | min_zoom | label_min_zoom |
 |---|---:|---:|---:|
 | Country | 0 | 1.5 | 2 |
-| State | 1 | 4 | 4 |
+| State | 1 | 1.5 | 1.5 |
 | Umbrella SUBREGION or navigation node | 2 | 5 | 5 |
 | AVA directly under a state or navigation node | 2 | 6 | 6 |
 | AVA one level inside another AVA | 3 | 6 | 7 |
@@ -1040,6 +1043,15 @@ viewer, read-only), for both surfaces, and the owner accepts the difference. The
 lists are written with that use in mind: the principal varieties a blind taster would reach for,
 ordered.
 
+Neither surface keeps a written order (review round 2026-09-30): `wine_place_grapes` has no order
+column, the details panel sorts by role, then share, then name, and the shortlist ranks by how many
+of the state's places link a grape, PRINCIPAL links before ACCESSORY ones. So each place marks its
+signature grapes PRINCIPAL and the rest ACCESSORY (the panel tags those "accessory"), which is what
+keeps a state's signature grapes at the head of its shortlist. The review file therefore shows, per
+place, the panel's real order, and per state: the guess ladder's whole list, the by-hand form's chip
+row (at most five, `MAX_REGION_GRAPE_CHIPS`) for no colour, red and white, any tie at the fifth
+chip, and each of the state's own first three grapes that the shortlist moves down or may drop.
+
 ---
 
 ## 11. Neighbour cache
@@ -1333,8 +1345,11 @@ The DRAFT-boundary window is therefore minutes, not days, and never holds an own
   2. flips the places to DRAFT and the boundaries to non-current;
   3. ends with the refresh.
 
-  Then a new tiles release. **Never roll back the manifest:** that removes the friend's newer places
-  (§17).
+  Then take the united-states hunk back out of `boundary-expectations.json` (the splice with
+  `--write` drops it once no US boundary is current), commit it, and dispatch a new tiles release.
+  **Never roll back the manifest:** that removes the friend's newer places (§17).
+- **Every rollback file is re-appliable** and records no history: it carries no version and is run
+  with `scripts/usa-map/apply-rollback.mjs`, never the migration applier (§25).
 
 ---
 
@@ -1642,9 +1657,40 @@ implementation, not by the owner. Each departs from, or sharpens, an earlier sec
 - **Articles carry `grape_varieties` and `wine_styles` texts** (all six fields). The explorer
   shows them only when a place has no structured grape or style rows, so today they are a
   fallback.
-- **The rollback files live in `scripts/usa-map/`** with their own versions (`…124747`,
-  `…134747`, `…144747`), so a replay never runs them. The "remove" file deletes the catalog and
-  knowledge history rows, so both can be re-applied.
+- **The rollback files live in `scripts/usa-map/`** (`usa_us2_unstage.sql`, `usa_us2_remove.sql`,
+  `usa_us2_unpublish.sql`), so a replay never runs them. They carry **no version** and run through
+  `scripts/usa-map/apply-rollback.mjs` (`--check`, `--dry`, then no flag), which records no
+  `schema_migrations` row (review round 2026-09-30). The owner's applier records a file's version
+  and refuses it the second time, so a versioned rollback could run only once (a second unstage after
+  a re-stage would be refused, with the DRAFT boundaries still live and master red) and would leave
+  a remote-only history version behind (the §17.1 problem). A second use is simply a second run:
+  each file asserts its own pre-state. The rehearsal drills an unstage, a re-stage and a second
+  unstage.
+- **The "remove" file deletes the catalog and knowledge history rows**, so both apply again as
+  committed. It keeps the Petite Sirah grape row, so the knowledge file inserts new grapes with
+  `on conflict (name) do nothing` (`gen-place-profiles-migration.mjs`, `--bare` output only; the
+  per-place grape counts still catch a name that does not resolve). The rehearsal re-applies both
+  after its remove drill.
+- **After an unpublish**, the united-states hunk the sitting committed to
+  `data/wine-map/boundary-expectations.json` comes back out (splice `--write`, which drops it once
+  no US boundary is current), or `boundary-expectations.test.mjs` is red on every PR.
+- **Grape roles** (review round 2026-09-30, §10.3). Each place's signature grapes are PRINCIPAL and
+  the others ACCESSORY (`role` in `place-profiles-usa.json`; the generator writes it, default
+  PRINCIPAL, so other data files generate what they always did). Chosen so each state's shortlist
+  leads with its signature grapes: California Cabernet Sauvignon; Washington Cabernet Sauvignon and
+  Merlot (tied); Oregon Pinot Noir; New York Riesling. Owner copy: the owner accepts the split with
+  the rest of the review file.
+- **The states draw from z1.5** (`min_zoom` and `label_min_zoom`), not z4 (§4, D26): the phone's
+  "United States" chip lands at about z1.9, and at z4 no world tile below z4 held a state. The shard
+  max zoom is unchanged (it follows the deepest label, z5).
+- **The sitting's rehearsal writes its own evidence file** (`rehearse-us2.mjs --sitting` →
+  `usa-us2-rehearsal-sitting.json`) and fails unless its expected boundaries equal the committed
+  file. The pre-sitting evidence (`usa-us2-rehearsal.json`, which the owner-review file is rendered
+  from) never changes on the sitting day, so the owner-approved review file and its test stay put.
+- **The typical wines' dots.** Linked to North Coast until US-3, the Napa Cabernet and the Sonoma
+  Chardonnay are drawn on the room's map at North Coast's label point, in northern Sonoma, on top of
+  each other, instead of R2's hand-placed points. The review file measures it and asks the owner
+  whether to link them at the sitting or in US-3; sitting step 11 follows the answer.
 - **`stage-usa-ava.mjs --check-gate`** (read-only) prints every reason `--stage` would refuse,
   so the refusal path is proved without ever running `--stage` outside the sitting.
 - **Observation, not a decision:** on 2026-09-29 the live neighbour cache read `fresh = false`
