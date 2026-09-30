@@ -2,13 +2,537 @@
   "_provenance": {
     "what": "Details-panel knowledge for the United States wine map, US-4: the 42 AVAs of Washington, Oregon and New York (spec docs/superpowers/specs/2026-09-29-usa-wine-map-design.md §10; plan docs/superpowers/plans/2026-09-30-usa-wine-map-us4.md). Turned into supabase/migrations/20260930234747_usa_us4_knowledge.sql by scripts/wine-map-sources/gen-place-profiles-migration.mjs --source data/wine-map/place-profiles-usa-us4.json --bare.",
     "wave": "us4",
-    "status": "DRAFT",
-    "owner_approval": null,
+    "status": "APPROVED",
+    "owner_approval": {
+      "answer": "Owner waived the copy review on 2026-09-30 (\"ignore my friends changes and just go ahead. no need for my review\"). Written in session from the sources listed under each place; read by the main session in data/wine-map/review/usa-us4-*-knowledge.md.",
+      "date": "2026-09-30"
+    },
     "written_in_session": "From 2026-09-30, from public sources only (listed under each place); no API batch (AGENTS.md).",
     "rules": "Plain English, no praise words, figures only where a listed source publishes them, never 'official boundary' (spec §18). Exactly one key fact 'Established YYYY (27 CFR 9.N)', as TTB lists it. Descriptions of 2-4 sentences, at most 700 characters. At most 8 grapes; the 1-3 signature grapes are PRINCIPAL and the rest ACCESSORY. At least two sources per place, one of them the CFR section or the Federal Register final rule. share_pct is left out. New grapes only from the US-4 allow-list (hybrids; never a labrusca), each with a source."
   },
-  "new_grapes": [],
+  "new_grapes": [
+    {
+      "name": "Marquette",
+      "color": "RED",
+      "description": "A red hybrid grape bred at the University of Minnesota by Peter Hemstad and James Luby from Minnesota 1094 and Ravat Noir, crossed in 1989 and released in 2006. It is grown in very cold climates for red wine, with good resistance to mildew and black rot.",
+      "skin_color": "blue-black",
+      "sources": [
+        {
+          "title": "Vitis International Variety Catalogue (VIVC), Marquette, variety number 22714",
+          "url": "https://www.vivc.de/index.php?r=passport%2Fview&id=22714"
+        },
+        {
+          "title": "Wikipedia, Marquette (grape)",
+          "url": "https://en.wikipedia.org/wiki/Marquette_(grape)"
+        }
+      ]
+    },
+    {
+      "name": "Frontenac",
+      "color": "RED",
+      "description": "A red hybrid grape bred at the University of Minnesota from Landot Noir and a very cold-hardy Vitis riparia, and released in 1996. It survives winters of about −35 °F and is made into dry red, rosé and port-style wines.",
+      "skin_color": "blue-black",
+      "sources": [
+        {
+          "title": "Vitis International Variety Catalogue (VIVC), Frontenac, variety number 15904",
+          "url": "https://www.vivc.de/index.php?r=passport%2Fview&id=15904"
+        },
+        {
+          "title": "Wikipedia, Frontenac (grape)",
+          "url": "https://en.wikipedia.org/wiki/Frontenac_(grape)"
+        }
+      ]
+    },
+    {
+      "name": "La Crescent",
+      "color": "WHITE",
+      "description": "A white hybrid grape bred at the University of Minnesota by Peter Hemstad and James Luby from St. Pepin and Elmer Swenson 6-8-25, crossed in 1988 and released in 2002. Its wines have aromas of citrus, apricot, pineapple and muscat.",
+      "skin_color": "green",
+      "sources": [
+        {
+          "title": "Vitis International Variety Catalogue (VIVC), La Crescent, variety number 17632",
+          "url": "https://www.vivc.de/index.php?r=passport%2Fview&id=17632"
+        },
+        {
+          "title": "Wikipedia, La Crescent (grape)",
+          "url": "https://en.wikipedia.org/wiki/La_Crescent_(grape)"
+        }
+      ]
+    },
+    {
+      "name": "Seyval Blanc",
+      "color": "WHITE",
+      "description": "A white French-American hybrid bred by Bertille Seyve-Villard from Seibel 5656 and Rayon d'Or. It is grown in cool climates such as New York's Hudson Valley for crisp white wines with citrus notes.",
+      "skin_color": "green",
+      "sources": [
+        {
+          "title": "Vitis International Variety Catalogue (VIVC), Seyval Blanc, variety number 11558",
+          "url": "https://www.vivc.de/index.php?r=passport%2Fview&id=11558"
+        },
+        {
+          "title": "New York Wine & Grape Foundation, Hudson River Region region sheet",
+          "url": "https://newyorkwines.org/wp-content/uploads/2023/08/NYW-One-Sheet-Hudson-River-Region-M3-HR.pdf"
+        }
+      ]
+    },
+    {
+      "name": "Vidal Blanc",
+      "color": "WHITE",
+      "description": "A white French hybrid bred by Jean-Louis Vidal from Ugni Blanc and Rayon d'Or. Its fruit is fruity, with grapefruit and pineapple notes, and its tough skin suits it to ice wine in cold climates.",
+      "skin_color": "green",
+      "sources": [
+        {
+          "title": "Vitis International Variety Catalogue (VIVC), Vidal Blanc, variety number 13047",
+          "url": "https://www.vivc.de/index.php?r=passport%2Fview&id=13047"
+        },
+        {
+          "title": "New York Wine & Grape Foundation, Hudson River Region region sheet",
+          "url": "https://newyorkwines.org/wp-content/uploads/2023/08/NYW-One-Sheet-Hudson-River-Region-M3-HR.pdf"
+        }
+      ]
+    },
+    {
+      "name": "Baco Noir",
+      "color": "RED",
+      "description": "A red French hybrid bred by François Baco in 1902 from Folle Blanche and a Vitis riparia. It makes deeply coloured red wines with blueberry and plum notes in cool northern climates such as New York and Ontario.",
+      "skin_color": "blue-black",
+      "sources": [
+        {
+          "title": "Vitis International Variety Catalogue (VIVC), Baco Noir, variety number 870",
+          "url": "https://www.vivc.de/index.php?r=passport%2Fview&id=870"
+        },
+        {
+          "title": "New York Wine & Grape Foundation, Hudson River Region region sheet",
+          "url": "https://newyorkwines.org/wp-content/uploads/2023/08/NYW-One-Sheet-Hudson-River-Region-M3-HR.pdf"
+        },
+        {
+          "title": "Wikipedia, Baco noir",
+          "url": "https://en.wikipedia.org/wiki/Baco_noir"
+        }
+      ]
+    }
+  ],
   "places": {
+    "united-states.new-york.champlain-valley-of-new-york": {
+      "article": {
+        "description": "New York's northernmost wine region, about 500 square miles in Clinton and Essex counties along the western shore of Lake Champlain, running north to the Canadian border. Its growing season is short, about four weeks shorter than across the lake at South Hero, Vermont, so it is planted to cold-hardy hybrids from the University of Minnesota rather than to vinifera.",
+        "climate": "A season of about 160 days, with later spring frosts and earlier autumn frosts than nearby areas. Westerly winds carry the lake's warmth to Vermont rather than to the AVA, so its climate follows the Adirondacks to the west.",
+        "soils": "Sand and clay, rich in minerals and generally well drained, left in a flat valley between the Adirondacks and the lake after the last ice sheet and the Champlain Sea retreated.",
+        "grape_varieties": "Cold-hardy hybrids: Marquette, Frontenac and La Crescent, with small trial plantings of vinifera.",
+        "wine_styles": "Red wines from Marquette and Frontenac, and aromatic white wine from La Crescent.",
+        "key_facts": [
+          "Established 2016 (27 CFR 9.258)",
+          "Clinton and Essex counties",
+          "11 commercial vineyards and 6 wineries at approval (T.D. TTB-142)",
+          "About 122 acres under vine on 21 farms (New York Wine & Grape Foundation)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Marquette"
+        },
+        {
+          "name": "Frontenac"
+        },
+        {
+          "name": "La Crescent"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.258, Champlain Valley of New York (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.258"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), T.D. TTB-142, Champlain Valley of New York (2016)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2016-08-22/html/2016-19992.htm"
+        },
+        {
+          "title": "New York Wine & Grape Foundation, Champlain Valley region sheet",
+          "url": "https://newyorkwines.org/wp-content/uploads/2023/08/NYW-One-Sheet-Champlain-Valley-M3-HR.pdf"
+        }
+      ]
+    },
+    "united-states.new-york.finger-lakes.cayuga-lake": {
+      "article": {
+        "description": "An AVA around Cayuga Lake, north of Ithaca, in Cayuga, Seneca and Tompkins counties, within the Finger Lakes AVA. In 1988 it became the first AVA established inside the Finger Lakes. The lake, more than 430 feet deep, stores summer heat and tempers the vineyards on the gentle hills around it.",
+        "climate": "Cold air drains down the slopes in summer and the lake gives back stored heat in autumn, lowering the risk of early frost; the growing season runs about 165 to 170 days, against about 145 across much of the Finger Lakes.",
+        "soils": "Soils formed mainly from shale bedrock, as the petition described it, in a glacial basin separated from Seneca Lake's by both topography and soil; limestone and slate lie to the north and sandstone and shale to the south.",
+        "grape_varieties": "Riesling is the benchmark grape, with Pinot Noir and Cabernet Franc gaining ground, and Chardonnay and Gewürztraminer.",
+        "wine_styles": "White wines from Riesling, Chardonnay and Gewürztraminer, and red wines from Pinot Noir and Cabernet Franc.",
+        "key_facts": [
+          "Established 1988 (27 CFR 9.127)",
+          "Cayuga, Seneca and Tompkins counties",
+          "8 bonded wineries and 18 vineyards on about 460 acres when proposed",
+          "The first AVA established within the Finger Lakes AVA"
+        ]
+      },
+      "styles": [
+        "WHITE",
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Riesling"
+        },
+        {
+          "name": "Pinot Noir",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Cabernet Franc",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Chardonnay",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Gewürztraminer",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.127, Cayuga Lake (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.127"
+        },
+        {
+          "title": "ATF Notice No. 641, proposed Cayuga Lake viticultural area, 52 FR 34927 (1987), via TTB",
+          "url": "https://ttb.gov/media/68665/download"
+        },
+        {
+          "title": "Wine With Seth, Cayuga Lake AVA",
+          "url": "https://www.winewithseth.com/winewiki/cayuga-lake-ava/"
+        },
+        {
+          "title": "New York Wine & Grape Foundation, Finger Lakes region sheet",
+          "url": "https://newyorkwines.org/wp-content/uploads/2023/08/NYW-One-Sheet-Fingerlakes-M3-HR.pdf"
+        }
+      ]
+    },
+    "united-states.new-york.finger-lakes.seneca-lake": {
+      "article": {
+        "description": "An AVA of about 204,600 acres around Seneca Lake in Ontario, Schuyler, Seneca and Yates counties, entirely within the Finger Lakes AVA. Seneca is the largest of the Finger Lakes, up to 634 feet deep, and its deep water stays near 39 °F all year, so the surface rarely freezes. Tender vinifera grow near the shore and hardier American and hybrid grapes on the upper slopes.",
+        "climate": "The longest growing season in the Finger Lakes, about 190 days, as the lake protects vineyards from spring frost and autumn freezes; the hills around it rise about 445 feet above the shore.",
+        "soils": "Glacial soils on the slopes of a basin carved by the ice sheets; the most tender vines are planted within about half a mile of the water.",
+        "grape_varieties": "Riesling leads, in styles from bone dry to late harvest, with Chardonnay, Cabernet Franc, Pinot Noir, Gewürztraminer and Lemberger.",
+        "wine_styles": "White wines from Riesling, dry to sweet late-harvest, Chardonnay and Gewürztraminer, and red wines from Cabernet Franc, Pinot Noir and Lemberger.",
+        "key_facts": [
+          "Established 2003 (27 CFR 9.128)",
+          "Ontario, Schuyler, Seneca and Yates counties",
+          "About 3,756 acres of grapes and 33 wineries at approval (T.D. TTB-3)",
+          "The lake covers 67.7 square miles (T.D. TTB-3)"
+        ]
+      },
+      "styles": [
+        "WHITE",
+        "RED",
+        "SWEET"
+      ],
+      "grapes": [
+        {
+          "name": "Riesling"
+        },
+        {
+          "name": "Chardonnay",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Cabernet Franc",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Pinot Noir",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Gewürztraminer",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Blaufränkisch",
+          "role": "ACCESSORY",
+          "note": "Sold as Lemberger"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.128, Seneca Lake (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.128"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), T.D. TTB-3, Seneca Lake (2003)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2003-07-03/html/03-16703.htm"
+        },
+        {
+          "title": "Wine Traveler, Discover the Seneca Lake wine region",
+          "url": "https://www.winetraveler.com/wine-region/seneca-lake/"
+        },
+        {
+          "title": "New York Wine & Grape Foundation, Finger Lakes region sheet",
+          "url": "https://newyorkwines.org/wp-content/uploads/2023/08/NYW-One-Sheet-Fingerlakes-M3-HR.pdf"
+        }
+      ]
+    },
+    "united-states.new-york.hudson-river-region": {
+      "article": {
+        "description": "An AVA in the Hudson Valley north of New York City, in Columbia, Dutchess, Orange, Putnam, Rockland, Sullivan, Ulster and Westchester counties, and one of the oldest wine regions in the country. French Huguenots tried vinifera at New Paltz in the late 1600s, Croton Point planted the first commercial vineyard in 1827, and the valley helped develop French-American hybrids such as Seyval Blanc and Baco Noir.",
+        "climate": "The valley funnels in maritime air, bringing hot days and humid nights; summers average about 74 °F and winters, with winds from Canada, about 21 °F. The season runs about 190 days, and July is wetter than in the rest of the state while September and October are drier.",
+        "soils": "Varied glacial soils: gravel, alluvium, moraine, shale and limestone, which drain differently from site to site.",
+        "grape_varieties": "Hybrids such as Seyval Blanc, Baco Noir and Vidal Blanc, and a growing share of vinifera, among them Cabernet Franc, Chardonnay, Riesling and Pinot Noir.",
+        "wine_styles": "White wines from Seyval Blanc, Chardonnay, Riesling and Vidal Blanc, and red wines from Cabernet Franc, Baco Noir and Pinot Noir.",
+        "key_facts": [
+          "Established 1982 (27 CFR 9.47)",
+          "New York's first AVA",
+          "Brotherhood Winery, begun in 1839, is the oldest continuously operating winery in the United States",
+          "About 446 acres under vine on 79 farms (New York Wine & Grape Foundation)"
+        ]
+      },
+      "styles": [
+        "WHITE",
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Seyval Blanc"
+        },
+        {
+          "name": "Cabernet Franc"
+        },
+        {
+          "name": "Chardonnay"
+        },
+        {
+          "name": "Baco Noir",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Vidal Blanc",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Riesling",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Pinot Noir",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.47, Hudson River Region (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.47"
+        },
+        {
+          "title": "New York Wine & Grape Foundation, Hudson River Region region sheet",
+          "url": "https://newyorkwines.org/wp-content/uploads/2023/08/NYW-One-Sheet-Hudson-River-Region-M3-HR.pdf"
+        },
+        {
+          "title": "Wine With Seth, Hudson River Region AVA",
+          "url": "https://www.winewithseth.com/winewiki/hudson-river-region-ava/"
+        }
+      ]
+    },
+    "united-states.new-york.long-island.north-fork-of-long-island": {
+      "article": {
+        "description": "An AVA in eastern Suffolk County covering the townships of Riverhead, Southold and Shelter Island, between Long Island Sound and Peconic Bay, within the Long Island AVA. It is sheltered from the open Atlantic by the South Fork and the bay. Louisa and Alex Hargrave bought a potato farm here in 1972 and planted Long Island's first modern vinifera vineyard.",
+        "climate": "Maritime: the surrounding water delays spring budbreak and holds off winter, giving a long season of about 225 days, with 3 to 4 inches of rain a month.",
+        "soils": "Deep, well-drained soils of medium to moderate texture on nearly level or gently sloping land.",
+        "grape_varieties": "Mostly vinifera: Merlot and Cabernet Franc lead the reds, with Chardonnay, Sauvignon Blanc and Cabernet Sauvignon.",
+        "wine_styles": "Red wines from Merlot, Cabernet Franc and Cabernet Sauvignon, and white wines from Chardonnay and Sauvignon Blanc.",
+        "key_facts": [
+          "Established 1986 (27 CFR 9.113)",
+          "Suffolk County: Riverhead, Southold and Shelter Island townships",
+          "Takes in Shelter Island, Robins Island, Fishers Island and Plum Island (27 CFR 9.113)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Merlot"
+        },
+        {
+          "name": "Cabernet Franc"
+        },
+        {
+          "name": "Chardonnay",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Sauvignon Blanc",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Cabernet Sauvignon",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.113, North Fork of Long Island (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.113"
+        },
+        {
+          "title": "New York Wine & Grape Foundation, Long Island region sheet",
+          "url": "https://newyorkwines.org/wp-content/uploads/2023/08/NYW-One-Sheet-Long-Island-M3-HR.pdf"
+        }
+      ]
+    },
+    "united-states.new-york.long-island.the-hamptons-long-island": {
+      "article": {
+        "description": "An AVA covering the South Fork of Long Island, all of the townships of Southampton and East Hampton in Suffolk County, Gardiners Island included, within the Long Island AVA. It faces the Atlantic directly and has fewer wineries than the North Fork. Farmers planted the first vinifera vineyards on the South Fork in 1979.",
+        "climate": "In direct contact with the Atlantic, which brings moderating breezes but also rougher weather as autumn approaches; like the rest of Long Island, it has a long, mild growing season.",
+        "soils": "Sandier than the North Fork's, laid down on the outwash plain left as the last glacier in the area melted.",
+        "grape_varieties": "Mostly vinifera: Merlot and Chardonnay lead, with Cabernet Franc and Sauvignon Blanc.",
+        "wine_styles": "Red wines from Merlot and Cabernet Franc, and white wines from Chardonnay and Sauvignon Blanc.",
+        "key_facts": [
+          "Established 1985 (27 CFR 9.101)",
+          "Suffolk County: Southampton and East Hampton townships",
+          "Bridgehampton Winery released its first wine in 1983 (New York Wine & Grape Foundation)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Merlot"
+        },
+        {
+          "name": "Chardonnay"
+        },
+        {
+          "name": "Cabernet Franc",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Sauvignon Blanc",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.101, The Hamptons, Long Island (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.101"
+        },
+        {
+          "title": "New York Wine & Grape Foundation, Long Island region sheet",
+          "url": "https://newyorkwines.org/wp-content/uploads/2023/08/NYW-One-Sheet-Long-Island-M3-HR.pdf"
+        }
+      ]
+    },
+    "united-states.new-york.niagara-escarpment": {
+      "article": {
+        "description": "An AVA of about 18,000 acres in Niagara County on the north-facing slope of the Niagara Escarpment, a band about 28 miles long between the 400- and 600-foot elevation lines, from Johnson Creek west through Gasport and Lockport to the Niagara River at Lewiston. Grapes were grown here before the Civil War, and most new plantings are vinifera.",
+        "climate": "Lake Ontario, up to about 800 feet deep, keeps autumn nights warmer and the season frost-free longer; warm air rising off the lake meets cooler air over the escarpment and keeps moving, giving about 205 frost-free days and little winter damage. Lake-effect snow insulates the vines in winter.",
+        "soils": "Shallow, well-drained soils of the Hilton-Ovid-Ontario association, gravelly limestone and clay loam over limestone laid down in a Paleozoic sea.",
+        "grape_varieties": "Native, hybrid and vinifera grapes; new plantings are mostly Riesling, Cabernet Franc, Pinot Noir and Chardonnay, with Cabernet Sauvignon.",
+        "wine_styles": "Dry white and red wines from Riesling, Chardonnay, Cabernet Franc and Pinot Noir, and ice wine when a vintage allows.",
+        "key_facts": [
+          "Established 2005 (27 CFR 9.186)",
+          "Niagara County",
+          "About 1,067 acres under vine on 58 farms (New York Wine & Grape Foundation)",
+          "About 400 acres of vineyards at approval (T.D. TTB-33)"
+        ]
+      },
+      "styles": [
+        "WHITE",
+        "RED",
+        "SWEET"
+      ],
+      "grapes": [
+        {
+          "name": "Riesling"
+        },
+        {
+          "name": "Cabernet Franc"
+        },
+        {
+          "name": "Pinot Noir",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Chardonnay",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Cabernet Sauvignon",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.186, Niagara Escarpment (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.186"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), T.D. TTB-33, Niagara Escarpment (2005)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2005-09-08/html/05-17759.htm"
+        },
+        {
+          "title": "New York Wine & Grape Foundation, The Niagara Escarpment region sheet",
+          "url": "https://newyorkwines.org/wp-content/uploads/2023/10/NYW-One-Sheet-The-Niagara-Escarpment-M3-HR-2.pdf"
+        },
+        {
+          "title": "Wine Folly New York guide, Niagara Escarpment AVA",
+          "url": "https://newyork.guides.winefolly.com/regions/niagara-escarpment"
+        }
+      ]
+    },
+    "united-states.new-york.upper-hudson": {
+      "article": {
+        "description": "An AVA of about 1,500 square miles north of the Hudson River Region, in Albany, Montgomery, Rensselaer, Saratoga, Schenectady, Schoharie and Washington counties, lying low between the Adirondack, Catskill and Berkshire mountains. With no large body of water to temper it, it grows cold-hardy hybrids, many bred at Cornell University or the University of Minnesota.",
+        "climate": "Continental and landlocked, with sudden swings in temperature and winters as cold as −25 °F; the season runs about 155 days and reaches 2,300 to 2,700 growing degree days, and frost can damage new shoots on clear spring nights.",
+        "soils": "Well-drained soils left by the Laurentide Ice Sheet, over nearly 2,000 feet of limestone and other sedimentary rock from a Paleozoic sea.",
+        "grape_varieties": "Cold-hardy hybrids: Marquette, Frontenac and La Crescent lead, with La Crosse.",
+        "wine_styles": "Red wines from Marquette and Frontenac and aromatic white wines from La Crescent, dry to off-dry.",
+        "key_facts": [
+          "Established 2018 (27 CFR 9.264)",
+          "Albany, Montgomery, Rensselaer, Saratoga, Schenectady, Schoharie and Washington counties",
+          "19 commercial vineyards on about 67.5 acres at approval (T.D. TTB-152)",
+          "About 117 acres under vine on 43 farms (New York Wine & Grape Foundation)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Marquette"
+        },
+        {
+          "name": "Frontenac"
+        },
+        {
+          "name": "La Crescent"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.264, Upper Hudson (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.264"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), T.D. TTB-152, Upper Hudson (2018)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2018-12-06/html/2018-26320.htm"
+        },
+        {
+          "title": "New York Wine & Grape Foundation, Upper Hudson region sheet",
+          "url": "https://newyorkwines.org/wp-content/uploads/2023/08/NYW-One-Sheet-Upper-Hudsons-M3-HR.pdf"
+        }
+      ]
+    },
     "united-states.oregon.columbia-gorge": {
       "article": {
         "description": "An AVA about 60 miles east of Portland that lies on both banks of the Columbia River, in Oregon and Washington: Hood River and Wasco counties, Oregon, and Skamania and Klickitat counties, Washington. The river cuts the only sea-level passage through the Cascade Range, and over a short distance the climate shifts from wet and marine-influenced in the west to dry high desert in the east.",
