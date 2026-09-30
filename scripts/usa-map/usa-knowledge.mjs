@@ -49,7 +49,12 @@ export function validateUsaProfiles(source, wave) {
     const grapes = p.grapes ?? [];
     if (grapes.length === 0) problems.push(`${k}: at least one grape`);
     if (new Set(grapes.map((g) => g.name)).size !== grapes.length) problems.push(`${k}: duplicate grape`);
+    // role: absent means PRINCIPAL (a signature grape); ACCESSORY is tagged
+    // "accessory" in the panel and ranks after every signature grape in the
+    // shortlists. Every place names at least one signature grape.
+    if (grapes.length && !grapes.some((g) => (g.role ?? "PRINCIPAL") === "PRINCIPAL")) problems.push(`${k}: no signature (PRINCIPAL) grape`);
     for (const g of grapes) {
+      if (g.role !== undefined && !["PRINCIPAL", "ACCESSORY"].includes(g.role)) problems.push(`${k}: bad role ${g.role} for ${g.name}`);
       if (g.share_pct != null && !g.share_source) problems.push(`${k}: share_pct for ${g.name} needs share_source`);
     }
     if (!Array.isArray(p.sources) || p.sources.length === 0) problems.push(`${k}: at least one source`);
@@ -70,7 +75,13 @@ export function validateUsaProfiles(source, wave) {
   return problems;
 }
 
-/** Every article string and every place's grape/style count must be in the migration. */
+/**
+ * The migration carries the data file exactly: every article string, each
+ * style at its position, each grape with its role, share and note, the
+ * per-place counts, and each new grape (re-appliable over a kept row). The
+ * rows are matched as the generator (gen-place-profiles-migration.mjs) emits
+ * them, so a swapped style or a changed role is stale, not just a new count.
+ */
 export function migrationIsCurrent(source, sql) {
   const out = [];
   for (const [key, p] of Object.entries(source.places ?? {})) {
@@ -78,9 +89,103 @@ export function migrationIsCurrent(source, sql) {
     for (const fact of p.article?.key_facts ?? []) if (!sql.includes(sq(fact))) out.push(`${key}: a key fact is not in the migration`);
     const tuple = `(${sq(key)}, ${(p.styles ?? []).length}, ${(p.grapes ?? []).length}, 1)`;
     if (!sql.includes(tuple)) out.push(`${key}: expected counts ${tuple} not in the migration`);
-    for (const g of p.grapes ?? []) if (!sql.includes(`where p.canonical_key = ${sq(key)} and g.name = ${sq(g.name)};`)) out.push(`${key}: grape ${g.name} not in the migration`);
+    (p.styles ?? []).forEach((s, i) => {
+      if (!sql.includes(`select id, '${s}', ${i}, 'PUBLISHED' from public.wine_places where canonical_key = ${sq(key)};`)) {
+        out.push(`${key}: style ${s} at ${i} not in the migration`);
+      }
+    });
+    for (const g of p.grapes ?? []) {
+      const row = `select p.id, g.id, '${g.role ?? "PRINCIPAL"}', true, ${g.share_pct ?? "null"}, ${sq(g.note ?? null)}, 'PUBLISHED'\n`
+        + "  from public.wine_places p, public.grapes g\n"
+        + ` where p.canonical_key = ${sq(key)} and g.name = ${sq(g.name)};`;
+      if (!sql.includes(row)) out.push(`${key}: grape ${g.name} (${g.role ?? "PRINCIPAL"}) not in the migration`);
+    }
   }
-  for (const g of source.new_grapes ?? []) if (!sql.includes(sq(g.description))) out.push(`new grape ${g.name}: description not in the migration`);
+  for (const g of source.new_grapes ?? []) {
+    const row = `values (${sq(g.name)}, ${sq(g.color)}, ${sq(g.description)}, ${sq(g.skin_color)})\non conflict (name) do nothing;`;
+    if (!sql.includes(row)) out.push(`new grape ${g.name}: not in the migration as a re-appliable insert`);
+  }
+  return out;
+}
+
+/**
+ * A place's grapes as the details panel lists them: get_wine_place_context
+ * orders by role (PRINCIPAL first), then share_pct descending, then name. The
+ * data file's own order is not kept (wine_place_grapes has no order column).
+ */
+export function panelGrapes(grapes) {
+  const role = (g) => g.role ?? "PRINCIPAL";
+  return [...grapes].sort((a, b) => (role(a) === role(b) ? 0 : role(a) === "PRINCIPAL" ? -1 : 1)
+    || (b.share_pct ?? -1) - (a.share_pct ?? -1)
+    || a.name.localeCompare(b.name));
+}
+
+// src/components/add-wine/by-hand-logic.ts: MAX_REGION_GRAPE_CHIPS.
+export const BY_HAND_CHIPS = 5;
+const ORD = ["1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th", "9th", "10th", "11th", "12th"];
+const ord = (n) => ORD[n - 1] ?? `${n}th`;
+
+/**
+ * The shortlist's rank key for each grape of a state (src/lib/grape-shortlist.ts):
+ * the grape's PRINCIPAL links under the state (the state and every place
+ * beneath it) if it has any, else its ACCESSORY links. Grapes with the same
+ * bucket and count tie; the app keeps the database's row order for them.
+ */
+export function shortlistRanks(source, stateKey) {
+  const ranks = new Map();
+  for (const [k, p] of Object.entries(source.places)) {
+    if (k !== stateKey && !k.startsWith(`${stateKey}.`)) continue;
+    for (const g of p.grapes) {
+      const r = ranks.get(g.name) ?? { principal: 0, accessory: 0 };
+      r[(g.role ?? "PRINCIPAL") === "PRINCIPAL" ? "principal" : "accessory"] += 1;
+      ranks.set(g.name, r);
+    }
+  }
+  return new Map([...ranks].map(([name, r]) => [name, r.principal > 0
+    ? { bucket: "principal", count: r.principal } : { bucket: "accessory", count: r.accessory }]));
+}
+
+/**
+ * The two surfaces a state's shortlist feeds (spec §10.3), from an ordered
+ * list (the mirror's: ties broken by name) and a rank function (null for the
+ * region_grapes fallback, which has no ties). Returns the guess ladder's list,
+ * and the by-hand form's chip row for no colour, RED and WHITE: each capped
+ * at five after the colour filter (a grape with no colour on file is never
+ * filtered out), with the grapes a tie at the cut makes uncertain.
+ */
+export function shortlistSurfaces(list, colours, rankOf) {
+  const same = (a, b) => Boolean(rankOf && rankOf(a) && rankOf(b)
+    && rankOf(a).bucket === rankOf(b).bucket && rankOf(a).count === rankOf(b).count);
+  const chips = (filter) => {
+    const kept = list.filter((g) => filter === null || (colours[g] ?? null) === null || colours[g] === filter);
+    const shown = kept.slice(0, BY_HAND_CHIPS);
+    const last = shown[shown.length - 1];
+    const tiedAtCut = kept.length > BY_HAND_CHIPS && same(last, kept[BY_HAND_CHIPS])
+      ? kept.filter((g) => same(g, last)) : [];
+    return { shown, tiedAtCut };
+  };
+  return { ladder: list, none: chips(null), red: chips("RED"), white: chips("WHITE") };
+}
+
+/** The state's own first three grapes (its written order) that the shortlist moves down or may drop. */
+export function shortlistDemotions(stateGrapes, list, rankOf) {
+  const out = [];
+  stateGrapes.slice(0, 3).forEach((g, i) => {
+    if (!list.includes(g.name)) {
+      out.push(`${g.name} (${ord(i + 1)} on the state's own list) is not on the shortlist`);
+      return;
+    }
+    const mine = rankOf(g.name);
+    const group = list.filter((x) => rankOf(x).bucket === mine.bucket && rankOf(x).count === mine.count);
+    const lo = list.indexOf(group[0]) + 1;
+    const hi = lo + group.length - 1;
+    const where = lo === hi ? ord(lo) : `${ord(lo)} to ${ord(hi)} (a ${group.length}-way tie)`;
+    const notes = [];
+    if (lo > i + 1) notes.push(`moves down to ${where}`);
+    if (lo > BY_HAND_CHIPS) notes.push("is never among the five by-hand chips when no colour is chosen");
+    else if (hi > BY_HAND_CHIPS) notes.push("may miss the five by-hand chips when no colour is chosen");
+    if (notes.length) out.push(`${g.name} (${ord(i + 1)} on the state's own list) ${notes.join(", and ")}`);
+  });
   return out;
 }
 
@@ -108,8 +213,12 @@ export function reviewMarkdown({ source, wave, rehearsal }) {
     L.push(`**Wine styles (text).** ${a.wine_styles}`, "");
     L.push("**Key facts**", "");
     for (const f of a.key_facts) L.push(`- ${f}`);
-    L.push("", "**Grapes, in order**", "");
-    p.grapes.forEach((g, i) => L.push(`${i + 1}. ${g.name}${g.note ? ` (${g.note})` : ""}${g.share_pct != null ? `, ${g.share_pct}% (${g.share_source})` : ""}`));
+    L.push("", "**Grapes**, as the details panel lists them: the signature grapes first, then the others, which the panel tags \"accessory\"; each group alphabetically.", "");
+    for (const g of panelGrapes(p.grapes)) {
+      const acc = (g.role ?? "PRINCIPAL") === "ACCESSORY" ? " · accessory" : "";
+      const share = g.share_pct != null ? `, ${g.share_pct}% (${g.share_source})` : "";
+      L.push(`- ${g.name}${g.note ? ` (${g.note})` : ""}${acc}${share}`);
+    }
     L.push("", `**Styles:** ${p.styles.map((s) => STYLE_LABELS[s]).join(", ")}`, "");
     L.push("**Sources**", "");
     for (const s of p.sources) L.push(`- ${s.title}: ${s.url}`);
@@ -122,20 +231,48 @@ export function reviewMarkdown({ source, wave, rehearsal }) {
   }
   if (rehearsal?.shortlist) {
     L.push("## Grape shortlist change (spec §10.3)", "");
-    L.push(`The guess ladder and the answer-key form both call \`shortlistGrapesForRegion\`. From the promote on, a state's list comes from the map (the state plus every place beneath it, most-linked first) instead of \`region_grapes\`. Measured in the rolled-back rehearsal of ${rehearsal.rehearsed_at.slice(0, 10)}, as a signed-in reader. The number after a grape is how many of the state's places (the state and the areas beneath it) list it. Grapes with the same number tie: the app keeps the database's row order for them, and they are shown alphabetically here, so the app may put any of them first.`, "");
-    L.push("| State | Before (`region_grapes`) | After (the map) |", "|---|---|---|");
+    L.push(`Two surfaces call \`shortlistGrapesForRegion\`: the guess ladder's grape picker, which offers the whole list, and the answer-key form's "Common in {state}" chips, which show at most ${BY_HAND_CHIPS}, filtered to the wine's colour once one is chosen (a grape with no colour on file is always kept). From the promote on, a state's list comes from the map (the state and every place beneath it) instead of \`region_grapes\`: grapes that are a signature grape somewhere come first, ranked by how many of those places list them as one, then the others, ranked the same way. Measured in the rolled-back rehearsal of ${rehearsal.rehearsed_at.slice(0, 10)}, as a signed-in reader.`, "");
+    L.push("After a grape, the number of the state's places that list it (\"accessory\" when it is a signature grape nowhere). Grapes with the same number tie: the app keeps the database's row order for them (shown alphabetically here), so any of them may come first, and a tie at the fifth chip means any of the tied grapes may be the one shown.", "");
     const keyOf = new Map(wave.states.map((st) => [st.name, st.key]));
-    const ties = [];
     for (const [state, s] of Object.entries(rehearsal.shortlist)) {
       const key = keyOf.get(state);
-      const count = (g) => Object.entries(source.places)
-        .filter(([k, p]) => (k === key || k.startsWith(`${key}.`)) && p.grapes.some((x) => x.name === g)).length;
-      L.push(`| ${state} | ${s.before.join(", ")} | ${s.after.map((g) => `${g} (${count(g)})`).join(", ")} |`);
-      const top = s.after.filter((g) => count(g) === count(s.after[0]));
-      if (top.length > 1) ties.push(`${state}: ${top.join(", ")} (${count(s.after[0])} each)`);
+      const ranks = shortlistRanks(source, key);
+      const rankOf = (g) => ranks.get(g);
+      const colours = s.colours ?? {};
+      const label = (g) => {
+        const r = rankOf(g);
+        return r ? `${g} (${r.count}${r.bucket === "accessory" ? ", accessory" : ""})` : g;
+      };
+      const after = shortlistSurfaces(s.after, colours, rankOf);
+      const before = shortlistSurfaces(s.before, colours, null);
+      const row = (x) => `${x.shown.join(", ") || "none"}${x.tiedAtCut.length ? `; the last chip is one of ${x.tiedAtCut.join(", ")} (tied)` : ""}`;
+      L.push(`### ${state}`, "");
+      L.push("| Surface | Before (`region_grapes`) | After (the map) |", "|---|---|---|");
+      L.push(`| Guess ladder (the whole list) | ${s.before.join(", ")} | ${s.after.map(label).join(", ")} |`);
+      L.push(`| By-hand chips, no colour yet | ${row(before.none)} | ${row(after.none)} |`);
+      L.push(`| By-hand chips, red | ${row(before.red)} | ${row(after.red)} |`);
+      L.push(`| By-hand chips, white | ${row(before.white)} | ${row(after.white)} |`);
+      L.push("");
+      const lead = rankOf(s.after[0]);
+      const top = s.after.filter((g) => lead && rankOf(g) && rankOf(g).bucket === lead.bucket && rankOf(g).count === lead.count);
+      L.push(top.length > 1 ? `Tied at the top (the app may lead with any of these): ${top.join(", ")}.` : `Leads with ${s.after[0]}.`, "");
+      const own = source.places[key].grapes;
+      const demotions = shortlistDemotions(own, s.after, rankOf);
+      L.push(`Against ${state}'s own list (its first three: ${own.slice(0, 3).map((g) => g.name).join(", ")}): ${demotions.length ? `${demotions.join("; ")}.` : "none moves down or drops."}`, "");
+    }
+  }
+  const dots = rehearsal?.archetypes?.dots;
+  if (dots?.length) {
+    L.push("## Typical wines on the training-room map", "");
+    L.push("The archetype links (the sitting's last step) give the three US typical wines a map place. The room's map then draws each wine at its place's label point instead of today's hand-placed point (R2), so a wine linked to a large umbrella AVA lands wherever that AVA's label sits. Measured in the rehearsal; longitude, latitude.", "");
+    L.push("| Typical wine | Linked to | Dot today | Dot after the links | Moves |", "|---|---|---|---|---|");
+    const pt = (x) => (x && x[0] != null ? `${x[0]}, ${x[1]}` : "none");
+    for (const d of dots) {
+      L.push(`| ${d.name} | \`${d.home}\` | ${pt(d.before)} | ${pt(d.after)} | ${d.moved_km != null ? `${d.moved_km} km` : "n/a"} |`);
     }
     L.push("");
-    if (ties.length) L.push(`**Tied at the top** (the app may lead with any of these): ${ties.join("; ")}.`, "");
+    const shared = dots.filter((d, i) => dots.some((e, j) => j !== i && d.after && e.after && d.after.join() === e.after.join()));
+    if (shared.length) L.push(`Drawn on the same spot after the links: ${shared.map((d) => d.name).join(" and ")}. US-3 moves the two California wines to Napa Valley and Sonoma Coast.`, "");
   }
   return `${L.join("\n")}\n`;
 }

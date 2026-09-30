@@ -6,13 +6,23 @@
 // in `finally`. It writes two local evidence files after the rollback:
 //   data/wine-map/review/usa-us2-rehearsal.json
 //   data/wine-map/review/usa-us2-expected-boundaries.json
+// The owner-review file is rendered from the first (render-usa-us2-review.mjs),
+// so those two are the pre-sitting evidence, committed with the review file.
+//
+// --sitting (sitting step 3) leaves both alone: it writes
+//   data/wine-map/review/usa-us2-rehearsal-sitting.json
+// (its timings, git head and date change on every run, and the review file the
+// owner approved must not move with them), and it FAILS unless the expected
+// boundaries it measures equal the committed file byte for byte, since the
+// sitting's live checks (check-us2-live.mjs, the splice --check) compare
+// against that file.
 //
 // While it runs it holds wine_place_neighbours_state's row (every catalogue
 // write marks the cache stale): run the activity check first
 // (scripts/usa-map/activity-check.mjs), never two at once, and only as often
 // as the plan says. Several refreshes run in-transaction (about 1-2 min each).
 //
-//   node --env-file=.env.local scripts/usa-map/rehearse-us2.mjs
+//   node --env-file=.env.local scripts/usa-map/rehearse-us2.mjs [--sitting]
 import assert from "node:assert/strict";
 import { execSync } from "node:child_process";
 import { readFile, writeFile } from "node:fs/promises";
@@ -26,9 +36,19 @@ import {
 } from "./us2-checks.mjs";
 import { loadTrees, us2Wave, US2_FILES, US2_ROLLBACK_FILES, US2_VERSIONS } from "./us2-wave.mjs";
 
-const REHEARSAL_PATH = "data/wine-map/review/usa-us2-rehearsal.json";
+const SITTING = process.argv.slice(2).includes("--sitting");
+for (const a of process.argv.slice(2)) if (a !== "--sitting") throw new Error(`unknown argument ${a}`);
 const EXPECTED_PATH = "data/wine-map/review/usa-us2-expected-boundaries.json";
+const REHEARSAL_PATH = SITTING
+  ? "data/wine-map/review/usa-us2-rehearsal-sitting.json"
+  : "data/wine-map/review/usa-us2-rehearsal.json";
 const REFRESH_LIMIT_S = 300;
+/** Great-circle km between two [lon, lat] points (the room's dot moves). */
+const km = (a, b) => {
+  const r = (d) => (d * Math.PI) / 180;
+  const h = Math.sin(r(b[1] - a[1]) / 2) ** 2 + Math.cos(r(a[1])) * Math.cos(r(b[1])) * Math.sin(r(b[0] - a[0]) / 2) ** 2;
+  return Math.round(2 * 6371 * Math.asin(Math.sqrt(h)));
+};
 
 const wave = us2Wave(await loadTrees());
 const links = await loadLinks();
@@ -159,6 +179,18 @@ try {
     rollbacks.unstage = { us_boundaries: await usBoundaries(), draft_places: await draftPlaces(), fresh: await fresh(),
       refresh_s: refreshSeconds("US-2 unstage", from).seconds };
     assert.deepEqual([rollbacks.unstage.us_boundaries, rollbacks.unstage.draft_places, rollbacks.unstage.fresh], [0, 16, true]);
+    // A second use (review round 2026-09-30): re-stage, which reuses the
+    // immutable snapshots, then unstage again. The file itself is re-appliable;
+    // apply-rollback.mjs records no history row that could refuse it.
+    await step("drill_restage", () => stageWave(client, {
+      wave, ...stageInputs, revision: releaseVersion(), importer: "rehearsal", log: () => {},
+    }));
+    assert.equal(await usBoundaries(), 16, "the re-stage wrote 16 boundaries");
+    const again = notices.length;
+    await step("drill_unstage_again", async () => client.query(await file(US2_ROLLBACK_FILES.unstage)));
+    rollbacks.unstage_again = { us_boundaries: await usBoundaries(), draft_places: await draftPlaces(), fresh: await fresh(),
+      refresh_s: refreshSeconds("US-2 unstage", again).seconds };
+    assert.deepEqual([rollbacks.unstage_again.us_boundaries, rollbacks.unstage_again.draft_places, rollbacks.unstage_again.fresh], [0, 16, true]);
   }
   await client.query("rollback to savepoint s1");
 
@@ -175,6 +207,21 @@ try {
       refresh_s: refreshSeconds("US-2 remove", from).seconds,
     };
     assert.deepEqual([rollbacks.remove.us_places, rollbacks.remove.history_rows, rollbacks.remove.fresh], [0, 0, true]);
+    // The remove says both files apply again, as committed: prove it (review
+    // round 2026-09-30). Petite Sirah is kept by the remove, and the knowledge
+    // file's "on conflict (name) do nothing" applies over it.
+    await step("drill_reapply_catalog", async () => client.query(await file(US2_FILES.catalog)));
+    await step("drill_reapply_knowledge", async () => client.query(await file(US2_FILES.knowledge)));
+    rollbacks.remove.reapplied = {
+      draft_places: await draftPlaces(),
+      petite_sirah_rows: await n("select count(*) n from public.grapes where name = 'Petite Sirah'"),
+      grape_links: await n(`select count(*) n from public.wine_place_grapes g join public.wine_places p on p.id = g.wine_place_id
+        where p.canonical_key = 'united-states' or p.canonical_key like 'united-states.%'`),
+      articles: await n(`select count(*) n from public.wine_place_articles a join public.wine_places p on p.id = a.wine_place_id
+        where p.canonical_key = 'united-states' or p.canonical_key like 'united-states.%'`),
+    };
+    const r = rollbacks.remove.reapplied;
+    assert.deepEqual([r.draft_places, r.petite_sirah_rows, r.articles, r.grape_links], [16, 1, 16, 95], JSON.stringify(r));
   }
   await client.query("rollback to savepoint s2");
 
@@ -280,9 +327,25 @@ try {
     shortlist: Object.fromEntries(Object.keys(before).map((st) => [st, {
       before_source: before[st].source, before: names(before[st]).grapes,
       after_source: after[st].source, after: names(after[st]).grapes, after_place: after[st].placeName,
+      colours: byName({ ...before[st].colours, ...after[st].colours }),
     }])),
     export_preview: preview,
-    archetypes: { links: arch.archetypes, room: [...arch.room].sort((a, b) => a.archetype_id.localeCompare(b.archetype_id)), points: arch.points && { with_point: arch.points.with_point, placed_with_point: arch.points.placed_with_point } },
+    archetypes: {
+      links: arch.archetypes,
+      room: [...arch.room].sort((a, b) => a.archetype_id.localeCompare(b.archetype_id)),
+      points: arch.points && { with_point: arch.points.with_point, placed_with_point: arch.points.placed_with_point },
+      // Where each wine's dot sits on the room's map before the links (R2's
+      // curated point) and after (its home's label point).
+      dots: links.map((l) => {
+        const was = pre.points?.mine[l.archetype_id] ?? null;
+        const r = arch.room.find((x) => x.archetype_id === l.archetype_id);
+        const now = r && r.point_lon != null ? [r.point_lon, r.point_lat].map((v) => Math.round(v * 1000) / 1000) : null;
+        return {
+          name: l.name, home: l.home, before: was, after: now, after_point_key: r?.point_key ?? null,
+          moved_km: was && was[0] != null && now ? km(was, now) : null,
+        };
+      }),
+    },
     stage_report: stageReport,
     notices: notices.filter((m) => /neighbour refresh|US-2|US archetype/.test(m)),
   });
@@ -293,7 +356,19 @@ try {
 
 // 22 (cont.). Nothing above persisted: write the local evidence.
 result.total_s = secs(t0);
+result.mode = SITTING ? "sitting" : "pre-sitting";
 await writeFile(REHEARSAL_PATH, `${JSON.stringify(result, null, 2)}\n`);
-await writeFile(EXPECTED_PATH, `${JSON.stringify(expected, null, 2)}\n`);
-log(`wrote ${REHEARSAL_PATH} and ${EXPECTED_PATH}`);
+const expectedText = `${JSON.stringify(expected, null, 2)}\n`;
+if (SITTING) {
+  const committed = (await readFile(EXPECTED_PATH, "utf8")).replace(/\r\n/g, "\n");
+  log(`wrote ${REHEARSAL_PATH}`);
+  if (committed !== expectedText) {
+    console.error(`REHEARSAL FAILED: the expected boundaries differ from the committed ${EXPECTED_PATH}; stop the sitting and investigate`);
+    process.exit(1);
+  }
+  log(`the expected boundaries equal the committed ${EXPECTED_PATH}`);
+} else {
+  await writeFile(EXPECTED_PATH, expectedText);
+  log(`wrote ${REHEARSAL_PATH} and ${EXPECTED_PATH}`);
+}
 console.log("REHEARSAL OK");

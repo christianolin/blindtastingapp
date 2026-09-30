@@ -1,7 +1,7 @@
 {
   "_generated_by": "scripts/usa-map/rehearse-us2.mjs",
-  "git_head": "3108e4b043e0bd34eff03951f9840f2ca1b27ea2",
-  "rehearsed_at": "2026-09-30T05:36:54.972Z",
+  "git_head": "4131b6c28d3ff6211a6ef63addc89e74d54d3c1f",
+  "rehearsed_at": "2026-09-30T06:21:57.352Z",
   "cache_before": {
     "fresh": false,
     "built_at": "2026-09-20T13:39:14.163Z"
@@ -16,20 +16,24 @@
   "catalog_refresh_rows": 15217,
   "promote_refresh_rows": 15232,
   "timings_s": {
-    "catalog": 65.8,
-    "catalog_refresh_s": 65.6,
+    "catalog": 63.4,
+    "catalog_refresh_s": 63.3,
     "contexts": 0.3,
-    "drill_remove": 66.4,
-    "drill_unpublish": 64.4,
-    "drill_unstage": 64,
+    "drill_reapply_catalog": 64.1,
+    "drill_reapply_knowledge": 0.4,
+    "drill_remove": 63.7,
+    "drill_restage": 5.8,
+    "drill_unpublish": 64.3,
+    "drill_unstage": 70.9,
+    "drill_unstage_again": 64.5,
     "export_preview": 0.1,
     "knowledge": 0.2,
     "links": 0.2,
-    "promote": 73.1,
-    "promote_refresh_s": 71.8,
+    "promote": 65.1,
+    "promote_refresh_s": 64.2,
     "shortlists_after": 0.7,
-    "shortlists_before": 0.7,
-    "stage": 5
+    "shortlists_before": 0.8,
+    "stage": 5.7
   },
   "refusals": {
     "A_promote_before_stage": "US-2 promote: expected exactly one DRAFT, non-current boundary per place (run stage-usa-ava.mjs --stage first): united-states, united-states.california, united-states.california.central-coast, united-states.california.central-valley, united-states.california.north-coast, united-states.california.sierra-foothills, united-states.california.south-coast, united-states.new-york, united-states.new-york.finger-lakes, united-states.new-york.long-island, united-states.oregon, united-states.oregon.southern-oregon, united-states.oregon.willamette-valley, united-states.washington, united-states.washington.columbia-valley, united-states.washington.puget-sound",
@@ -43,13 +47,25 @@
       "us_boundaries": 0,
       "draft_places": 16,
       "fresh": true,
-      "refresh_s": 63.9
+      "refresh_s": 70.8
+    },
+    "unstage_again": {
+      "us_boundaries": 0,
+      "draft_places": 16,
+      "fresh": true,
+      "refresh_s": 64.2
     },
     "remove": {
       "us_places": 0,
       "history_rows": 0,
       "fresh": true,
-      "refresh_s": 66.2
+      "refresh_s": 63.3,
+      "reapplied": {
+        "draft_places": 16,
+        "petite_sirah_rows": 1,
+        "grape_links": 95,
+        "articles": 16
+      }
     },
     "unpublish": {
       "verified": 0,
@@ -58,7 +74,7 @@
       "points_restored": true,
       "with_point": 18,
       "fresh": true,
-      "refresh_s": 64.2
+      "refresh_s": 64.1
     }
   },
   "facts": {
@@ -121,10 +137,10 @@
       "after": [
         "Cabernet Sauvignon",
         "Chardonnay",
+        "Pinot Noir",
         "Zinfandel",
         "Syrah",
         "Petite Sirah",
-        "Pinot Noir",
         "Sauvignon Blanc",
         "Merlot",
         "Barbera",
@@ -132,7 +148,21 @@
         "Grenache",
         "Muscat"
       ],
-      "after_place": "California"
+      "after_place": "California",
+      "colours": {
+        "Barbera": "RED",
+        "Cabernet Sauvignon": "RED",
+        "Chardonnay": "WHITE",
+        "Chenin Blanc": "WHITE",
+        "Grenache": "RED",
+        "Merlot": "RED",
+        "Muscat": "WHITE",
+        "Petite Sirah": "RED",
+        "Pinot Noir": "RED",
+        "Sauvignon Blanc": "WHITE",
+        "Syrah": "RED",
+        "Zinfandel": "RED"
+      }
     },
     "Washington": {
       "before_source": "region_grapes",
@@ -144,17 +174,28 @@
       ],
       "after_source": "map",
       "after": [
-        "Riesling",
         "Cabernet Sauvignon",
-        "Chardonnay",
         "Merlot",
+        "Chardonnay",
+        "Pinot Noir",
+        "Riesling",
         "Syrah",
         "Cabernet Franc",
         "Müller-Thurgau",
-        "Pinot Noir",
         "Sauvignon Blanc"
       ],
-      "after_place": "Washington"
+      "after_place": "Washington",
+      "colours": {
+        "Cabernet Franc": "RED",
+        "Cabernet Sauvignon": "RED",
+        "Chardonnay": "WHITE",
+        "Merlot": "RED",
+        "Müller-Thurgau": "WHITE",
+        "Pinot Noir": "RED",
+        "Riesling": "WHITE",
+        "Sauvignon Blanc": "WHITE",
+        "Syrah": "RED"
+      }
     },
     "Oregon": {
       "before_source": "region_grapes",
@@ -164,18 +205,30 @@
       ],
       "after_source": "map",
       "after": [
+        "Pinot Noir",
         "Chardonnay",
         "Pinot Gris",
-        "Pinot Noir",
+        "Syrah",
         "Cabernet Sauvignon",
         "Riesling",
-        "Syrah",
         "Tempranillo",
         "Merlot",
         "Pinot Blanc",
         "Viognier"
       ],
-      "after_place": "Oregon"
+      "after_place": "Oregon",
+      "colours": {
+        "Cabernet Sauvignon": "RED",
+        "Chardonnay": "WHITE",
+        "Merlot": "RED",
+        "Pinot Blanc": "WHITE",
+        "Pinot Gris": "WHITE",
+        "Pinot Noir": "RED",
+        "Riesling": "WHITE",
+        "Syrah": "RED",
+        "Tempranillo": "RED",
+        "Viognier": "WHITE"
+      }
     },
     "New York": {
       "before_source": "region_grapes",
@@ -185,17 +238,28 @@
       ],
       "after_source": "map",
       "after": [
+        "Riesling",
         "Cabernet Franc",
         "Chardonnay",
+        "Merlot",
         "Blaufränkisch",
         "Gewürztraminer",
-        "Merlot",
         "Pinot Noir",
-        "Riesling",
         "Cabernet Sauvignon",
         "Sauvignon Blanc"
       ],
-      "after_place": "New York"
+      "after_place": "New York",
+      "colours": {
+        "Blaufränkisch": "RED",
+        "Cabernet Franc": "RED",
+        "Cabernet Sauvignon": "RED",
+        "Chardonnay": "WHITE",
+        "Gewürztraminer": "WHITE",
+        "Merlot": "RED",
+        "Pinot Noir": "RED",
+        "Riesling": "WHITE",
+        "Sauvignon Blanc": "WHITE"
+      }
     }
   },
   "export_preview": {
@@ -216,7 +280,7 @@
           "united-states.california.sierra-foothills",
           "united-states.california.south-coast"
         ],
-        "bytes": 248822,
+        "bytes": 248826,
         "max_zoom": 7
       },
       "new-york": {
@@ -225,7 +289,7 @@
           "united-states.new-york.finger-lakes",
           "united-states.new-york.long-island"
         ],
-        "bytes": 174996,
+        "bytes": 175000,
         "max_zoom": 7
       },
       "oregon": {
@@ -234,7 +298,7 @@
           "united-states.oregon.southern-oregon",
           "united-states.oregon.willamette-valley"
         ],
-        "bytes": 482576,
+        "bytes": 482580,
         "max_zoom": 7
       },
       "washington": {
@@ -243,7 +307,7 @@
           "united-states.washington.columbia-valley",
           "united-states.washington.puget-sound"
         ],
-        "bytes": 261041,
+        "bytes": 261045,
         "max_zoom": 7
       }
     },
@@ -295,23 +359,76 @@
       {
         "archetype_id": "75e4e467-3929-4844-bbc4-ffe8b12523a1",
         "place_key": "united-states.california.north-coast",
-        "region_key": "united-states.california"
+        "region_key": "united-states.california",
+        "point_key": "united-states.california.north-coast",
+        "point_lon": -122.974008087558,
+        "point_lat": 38.761935
       },
       {
         "archetype_id": "bab8537e-b0bc-4f7c-8547-242537322f8a",
         "place_key": "united-states.oregon.willamette-valley",
-        "region_key": "united-states.oregon"
+        "region_key": "united-states.oregon",
+        "point_key": "united-states.oregon.willamette-valley",
+        "point_lon": -123.142653283702,
+        "point_lat": 44.671635
       },
       {
         "archetype_id": "c4ea77f3-5599-43dd-bdc3-4287c1e0ea15",
         "place_key": "united-states.california.north-coast",
-        "region_key": "united-states.california"
+        "region_key": "united-states.california",
+        "point_key": "united-states.california.north-coast",
+        "point_lon": -122.974008087558,
+        "point_lat": 38.761935
       }
     ],
     "points": {
       "with_point": 15,
       "placed_with_point": 0
-    }
+    },
+    "dots": [
+      {
+        "name": "A typical Napa Cabernet Sauvignon",
+        "home": "united-states.california.north-coast",
+        "before": [
+          -122.4,
+          38.43
+        ],
+        "after": [
+          -122.974,
+          38.762
+        ],
+        "after_point_key": "united-states.california.north-coast",
+        "moved_km": 62
+      },
+      {
+        "name": "A typical Sonoma Chardonnay",
+        "home": "united-states.california.north-coast",
+        "before": [
+          -122.82,
+          38.4
+        ],
+        "after": [
+          -122.974,
+          38.762
+        ],
+        "after_point_key": "united-states.california.north-coast",
+        "moved_km": 42
+      },
+      {
+        "name": "A typical Willamette Pinot Noir",
+        "home": "united-states.oregon.willamette-valley",
+        "before": [
+          -123.03,
+          45.28
+        ],
+        "after": [
+          -123.143,
+          44.672
+        ],
+        "after_point_key": "united-states.oregon.willamette-valley",
+        "moved_km": 68
+      }
+    ]
   },
   "stage_report": [
     {
@@ -588,11 +705,14 @@
     }
   ],
   "notices": [
-    "US-2 catalog: neighbour refresh 15217 rows in 65.6 s",
-    "US-2 unstage: neighbour refresh 15217 rows in 63.9 s",
-    "US-2 remove: neighbour refresh 15217 rows in 66.2 s",
-    "US-2 promote: neighbour refresh 15232 rows in 71.8 s",
-    "US-2 unpublish: neighbour refresh 15217 rows in 64.2 s"
+    "US-2 catalog: neighbour refresh 15217 rows in 63.3 s",
+    "US-2 unstage: neighbour refresh 15217 rows in 70.8 s",
+    "US-2 unstage: neighbour refresh 15217 rows in 64.2 s",
+    "US-2 remove: neighbour refresh 15217 rows in 63.3 s",
+    "US-2 catalog: neighbour refresh 15217 rows in 64.0 s",
+    "US-2 promote: neighbour refresh 15232 rows in 64.2 s",
+    "US-2 unpublish: neighbour refresh 15217 rows in 64.1 s"
   ],
-  "total_s": 344.4
+  "total_s": 473.4,
+  "mode": "pre-sitting"
 }

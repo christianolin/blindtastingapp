@@ -5,12 +5,14 @@
     "status": "DRAFT",
     "owner_approval": null,
     "written_in_session": "2026-09-29, from public sources only (listed under each place); no API batch (AGENTS.md). Every text is provisional owner copy until the owner answers OK on data/wine-map/review/usa-us2-knowledge.md.",
-    "rules": "Plain English, no praise words, figures only where a listed source publishes them, never 'official boundary' (spec §18). Grapes are listed in the order a blind taster would reach for them; share_pct is left out everywhere because no source here publishes a per-place share for every listed grape."
+    "rules": "Plain English, no praise words, figures only where a listed source publishes them, never 'official boundary' (spec §18). Each place's signature grapes are PRINCIPAL and the others ACCESSORY (role); the details panel lists PRINCIPAL first and tags the rest 'accessory', each group alphabetically, and the grape shortlists count PRINCIPAL links before ACCESSORY ones. share_pct is left out everywhere because no source here publishes a per-place share for every listed grape."
   },
   "_owner_questions": [
     "New York: list Concord (and other native or hybrid grapes such as Niagara and Seyval Blanc) as grapes? They dominate New York's acreage but mostly go to juice. Today the articles mention them in text only, and no catalog row is added (spec §10.1: Concord only if you want it).",
     "Puget Sound: add Madeleine Angevine and Siegerrebe to the grape catalog and list them? They are the region's signature whites; today they are named in the text only.",
-    "Central Valley: its styles include Sweet and Fortified for Madera's dessert wines. Keep them, or keep the grouping to Red and White?"
+    "Central Valley: its styles include Sweet and Fortified for Madera's dessert wines. Keep them, or keep the grouping to Red and White?",
+    "Signature grapes: each place's grapes are now split into signature grapes (PRINCIPAL) and the rest (shown with an 'accessory' tag), because the details panel and the grape shortlists put signature grapes first. Is each place's split right? (Grapes sections below, and the shortlist table at the end.)",
+    "Typical wines on the training-room map: until US-3 gives Napa Valley and Sonoma Coast their own places, the Napa Cabernet and the Sonoma Chardonnay are linked to North Coast, so the room's map moves both dots from today's hand-placed points to North Coast's label point, in northern Sonoma, on top of each other (the section 'Typical wines on the training-room map' below gives the numbers). Link them at the sitting anyway (the map's Typical wine list and the room's 'See it on the map' work at once), or keep today's dots and link them in US-3?"
   ],
   "new_grapes": [
     {
@@ -45,10 +47,10 @@
         { "name": "Chardonnay" },
         { "name": "Pinot Noir" },
         { "name": "Zinfandel" },
-        { "name": "Merlot" },
-        { "name": "Riesling" },
-        { "name": "Syrah" },
-        { "name": "Sauvignon Blanc" }
+        { "name": "Merlot", "role": "ACCESSORY" },
+        { "name": "Riesling", "role": "ACCESSORY" },
+        { "name": "Syrah", "role": "ACCESSORY" },
+        { "name": "Sauvignon Blanc", "role": "ACCESSORY" }
       ],
       "sources": [
         { "title": "TTB, Established American Viticultural Areas (updated 2026-08-18)", "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/established-avas" },
@@ -79,10 +81,10 @@
         { "name": "Chardonnay" },
         { "name": "Pinot Noir" },
         { "name": "Zinfandel" },
-        { "name": "Merlot" },
-        { "name": "Sauvignon Blanc" },
-        { "name": "Syrah" },
-        { "name": "Petite Sirah", "note": "Durif" }
+        { "name": "Merlot", "role": "ACCESSORY" },
+        { "name": "Sauvignon Blanc", "role": "ACCESSORY" },
+        { "name": "Syrah", "role": "ACCESSORY" },
+        { "name": "Petite Sirah", "role": "ACCESSORY", "note": "Durif" }
       ],
       "sources": [
         { "title": "Wine Institute, California and US wine production", "url": "https://wineinstitute.org/our-industry/statistics/california-us-wine-production" },
@@ -107,7 +109,7 @@
           "Established 1985 (27 CFR 9.75)",
           "Covers parts of ten counties, from San Francisco and Alameda south to Santa Barbara",
           "Paso Robles has eleven nested AVAs, all established in 2014 (TTB)",
-          "Livermore Valley vineyards date from the early 1880s (Wente and Concannon)",
+          "Vines were first planted in Livermore Valley in the 1840s; Wente and Concannon planted theirs in the early 1880s",
           "Santa Barbara County's transverse valleys run east to west, open to Pacific fog"
         ]
       },
@@ -116,9 +118,9 @@
         { "name": "Chardonnay" },
         { "name": "Pinot Noir" },
         { "name": "Cabernet Sauvignon" },
-        { "name": "Syrah" },
-        { "name": "Zinfandel" },
-        { "name": "Grenache" }
+        { "name": "Syrah", "role": "ACCESSORY" },
+        { "name": "Zinfandel", "role": "ACCESSORY" },
+        { "name": "Grenache", "role": "ACCESSORY" }
       ],
       "sources": [
         { "title": "27 CFR 9.75, Central Coast (eCFR text via Cornell LII)", "url": "https://www.law.cornell.edu/cfr/text/27/9.75" },
@@ -145,11 +147,11 @@
       "styles": ["RED", "WHITE", "SWEET", "FORTIFIED"],
       "grapes": [
         { "name": "Zinfandel" },
-        { "name": "Cabernet Sauvignon" },
-        { "name": "Chardonnay" },
-        { "name": "Petite Sirah", "note": "Durif" },
-        { "name": "Chenin Blanc", "note": "Clarksburg's white" },
-        { "name": "Muscat", "note": "Madera's sweet wines" }
+        { "name": "Cabernet Sauvignon", "role": "ACCESSORY" },
+        { "name": "Chardonnay", "role": "ACCESSORY" },
+        { "name": "Petite Sirah", "role": "ACCESSORY", "note": "Durif" },
+        { "name": "Chenin Blanc", "role": "ACCESSORY", "note": "Clarksburg's white" },
+        { "name": "Muscat", "role": "ACCESSORY", "note": "Madera's sweet wines" }
       ],
       "sources": [
         { "title": "TTB, Established American Viticultural Areas (the eleven member AVAs)", "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/established-avas" },
@@ -179,9 +181,9 @@
         { "name": "Cabernet Sauvignon" },
         { "name": "Chardonnay" },
         { "name": "Pinot Noir" },
-        { "name": "Zinfandel" },
-        { "name": "Merlot" },
-        { "name": "Sauvignon Blanc" }
+        { "name": "Zinfandel", "role": "ACCESSORY" },
+        { "name": "Merlot", "role": "ACCESSORY" },
+        { "name": "Sauvignon Blanc", "role": "ACCESSORY" }
       ],
       "sources": [
         { "title": "27 CFR 9.30, North Coast (eCFR text via Cornell LII)", "url": "https://www.law.cornell.edu/cfr/text/27/9.30" },
@@ -209,9 +211,9 @@
       "styles": ["RED", "WHITE"],
       "grapes": [
         { "name": "Zinfandel" },
-        { "name": "Barbera" },
-        { "name": "Syrah" },
-        { "name": "Petite Sirah", "note": "Durif" }
+        { "name": "Barbera", "role": "ACCESSORY" },
+        { "name": "Syrah", "role": "ACCESSORY" },
+        { "name": "Petite Sirah", "role": "ACCESSORY", "note": "Durif" }
       ],
       "sources": [
         { "title": "27 CFR 9.120, Sierra Foothills (eCFR text via Cornell LII)", "url": "https://www.law.cornell.edu/cfr/text/27/9.120" },
@@ -222,7 +224,7 @@
     },
     "united-states.california.south-coast": {
       "article": {
-        "description": "The umbrella AVA for Southern California's vineyards, established in 1985 in parts of Orange, Riverside and San Diego counties. Its main wine district is Temecula Valley, inland in Riverside County; Ramona Valley and San Pasqual Valley are the other AVAs inside it.",
+        "description": "The umbrella AVA for Southern California's vineyards, established in 1985 in parts of Orange, Riverside and San Diego counties. Its main wine district is Temecula Valley, inland in Riverside County; Ramona Valley, San Luis Rey and San Pasqual Valley are the other AVAs inside it.",
         "climate": "Warm and sunny, cooled where the coastal mountains open. In Temecula Valley, hot air rising over the desert draws Pacific air in through the Rainbow Gap, so warm days are followed by cool nights.",
         "soils": "Temecula Valley's vineyards are largely on well-drained decomposed granite.",
         "grape_varieties": "Cabernet Sauvignon, Syrah, Chardonnay and Sauvignon Blanc, among some thirty varieties grown in Temecula Valley, including Sangiovese, Vermentino and Barbera.",
@@ -231,18 +233,19 @@
           "Established 1985 (27 CFR 9.104)",
           "Covers parts of Orange, Riverside and San Diego counties",
           "Temecula Valley sits between the Pacific and the desert, about an hour north-east of San Diego",
-          "Contains the Temecula Valley, Ramona Valley and San Pasqual Valley AVAs"
+          "Contains the Temecula Valley, Ramona Valley, San Luis Rey and San Pasqual Valley AVAs"
         ]
       },
       "styles": ["RED", "WHITE", "ROSE"],
       "grapes": [
         { "name": "Cabernet Sauvignon" },
-        { "name": "Syrah" },
-        { "name": "Chardonnay" },
-        { "name": "Sauvignon Blanc" }
+        { "name": "Syrah", "role": "ACCESSORY" },
+        { "name": "Chardonnay", "role": "ACCESSORY" },
+        { "name": "Sauvignon Blanc", "role": "ACCESSORY" }
       ],
       "sources": [
         { "title": "27 CFR 9.104, South Coast (eCFR text via Cornell LII)", "url": "https://www.law.cornell.edu/cfr/text/27/9.104" },
+        { "title": "27 CFR 9.295, San Luis Rey (eCFR text via Cornell LII)", "url": "https://www.law.cornell.edu/cfr/text/27/9.295" },
         { "title": "TTB, AVA establishment dates", "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/ava-establishment-dates" },
         { "title": "California Grown, Temecula wines", "url": "https://californiagrown.org/blog/temecula-wines/" }
       ]
@@ -266,11 +269,11 @@
       "grapes": [
         { "name": "Riesling" },
         { "name": "Chardonnay" },
-        { "name": "Cabernet Franc" },
-        { "name": "Merlot" },
-        { "name": "Pinot Noir" },
-        { "name": "Gewürztraminer" },
-        { "name": "Blaufränkisch", "note": "Sold as Lemberger" }
+        { "name": "Cabernet Franc", "role": "ACCESSORY" },
+        { "name": "Merlot", "role": "ACCESSORY" },
+        { "name": "Pinot Noir", "role": "ACCESSORY" },
+        { "name": "Gewürztraminer", "role": "ACCESSORY" },
+        { "name": "Blaufränkisch", "role": "ACCESSORY", "note": "Sold as Lemberger" }
       ],
       "sources": [
         { "title": "TTB, Established American Viticultural Areas", "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/established-avas" },
@@ -299,11 +302,11 @@
       "styles": ["WHITE", "RED", "SPARKLING", "SWEET", "ROSE"],
       "grapes": [
         { "name": "Riesling" },
-        { "name": "Cabernet Franc" },
-        { "name": "Pinot Noir" },
-        { "name": "Gewürztraminer" },
-        { "name": "Chardonnay" },
-        { "name": "Blaufränkisch", "note": "Sold as Lemberger" }
+        { "name": "Cabernet Franc", "role": "ACCESSORY" },
+        { "name": "Pinot Noir", "role": "ACCESSORY" },
+        { "name": "Gewürztraminer", "role": "ACCESSORY" },
+        { "name": "Chardonnay", "role": "ACCESSORY" },
+        { "name": "Blaufränkisch", "role": "ACCESSORY", "note": "Sold as Lemberger" }
       ],
       "sources": [
         { "title": "27 CFR 9.34, Finger Lakes (eCFR text via Cornell LII)", "url": "https://www.law.cornell.edu/cfr/text/27/9.34" },
@@ -331,9 +334,9 @@
       "grapes": [
         { "name": "Merlot" },
         { "name": "Cabernet Franc" },
-        { "name": "Chardonnay" },
-        { "name": "Sauvignon Blanc" },
-        { "name": "Cabernet Sauvignon" }
+        { "name": "Chardonnay", "role": "ACCESSORY" },
+        { "name": "Sauvignon Blanc", "role": "ACCESSORY" },
+        { "name": "Cabernet Sauvignon", "role": "ACCESSORY" }
       ],
       "sources": [
         { "title": "27 CFR 9.170, Long Island (eCFR text via Cornell LII)", "url": "https://www.law.cornell.edu/cfr/text/27/9.170" },
@@ -362,10 +365,10 @@
         { "name": "Pinot Noir" },
         { "name": "Pinot Gris" },
         { "name": "Chardonnay" },
-        { "name": "Riesling" },
-        { "name": "Syrah" },
-        { "name": "Cabernet Sauvignon" },
-        { "name": "Tempranillo" }
+        { "name": "Riesling", "role": "ACCESSORY" },
+        { "name": "Syrah", "role": "ACCESSORY" },
+        { "name": "Cabernet Sauvignon", "role": "ACCESSORY" },
+        { "name": "Tempranillo", "role": "ACCESSORY" }
       ],
       "sources": [
         { "title": "Oregon Wine Board, 2024 Oregon Vineyard and Winery Census report published", "url": "https://industry.oregonwine.org/press-releases/2024-oregon-vineyard-and-winery-census-report-published/" },
@@ -393,13 +396,13 @@
       "styles": ["RED", "WHITE", "ROSE"],
       "grapes": [
         { "name": "Pinot Noir" },
-        { "name": "Pinot Gris" },
+        { "name": "Pinot Gris", "role": "ACCESSORY" },
         { "name": "Syrah" },
-        { "name": "Cabernet Sauvignon" },
-        { "name": "Merlot" },
-        { "name": "Viognier" },
-        { "name": "Chardonnay" },
-        { "name": "Tempranillo" }
+        { "name": "Cabernet Sauvignon", "role": "ACCESSORY" },
+        { "name": "Merlot", "role": "ACCESSORY" },
+        { "name": "Viognier", "role": "ACCESSORY" },
+        { "name": "Chardonnay", "role": "ACCESSORY" },
+        { "name": "Tempranillo", "role": "ACCESSORY" }
       ],
       "sources": [
         { "title": "27 CFR 9.179, Southern Oregon (eCFR text via Cornell LII)", "url": "https://www.law.cornell.edu/cfr/text/27/9.179" },
@@ -413,7 +416,7 @@
         "description": "Oregon's main wine region, about 150 miles long from Portland south to Eugene, and an AVA since 1983. It has 25,450 acres under vine, more than 700 wineries and eleven nested AVAs, from the Dundee Hills and Eola-Amity Hills to Mount Pisgah, Polk County. Pinot Noir is its grape.",
         "climate": "Cool, with cool, wet winters and warm, dry summers, and warm days and cool nights that keep acidity in the grapes. The Coast Range to the west and the Cascades to the east shelter the valley; the Van Duzer Corridor, a gap in the Coast Range, lets afternoon ocean winds into its western side.",
         "soils": "Three main types on the hillsides: red volcanic Jory soils formed from Columbia River basalts, as in the Dundee Hills; marine sedimentary soils such as Willakenzie, as in Yamhill-Carlton; and wind-blown Laurelwood loess in the Chehalem Mountains. Most vineyards sit above about 200 feet, clear of the Missoula flood soils on the valley floor.",
-        "grape_varieties": "Pinot Noir leads, followed by Pinot Gris, Chardonnay and Riesling; roughly 30 per cent of the valley's grapes are now other varieties, Pinot Blanc among them.",
+        "grape_varieties": "Pinot Noir is about 70 per cent of the valley's grapes; Pinot Gris, Chardonnay and Riesling are the main others, with smaller plantings such as Pinot Blanc.",
         "wine_styles": "Dry Pinot Noir above all, with Pinot Gris and Chardonnay whites, and rosé and sparkling wine from the same grapes.",
         "key_facts": [
           "Established 1983 (27 CFR 9.90)",
@@ -428,8 +431,8 @@
         { "name": "Pinot Noir" },
         { "name": "Pinot Gris" },
         { "name": "Chardonnay" },
-        { "name": "Riesling" },
-        { "name": "Pinot Blanc" }
+        { "name": "Riesling", "role": "ACCESSORY" },
+        { "name": "Pinot Blanc", "role": "ACCESSORY" }
       ],
       "sources": [
         { "title": "27 CFR 9.90, Willamette Valley (eCFR text via Cornell LII)", "url": "https://www.law.cornell.edu/cfr/text/27/9.90" },
@@ -459,10 +462,10 @@
         { "name": "Cabernet Sauvignon" },
         { "name": "Merlot" },
         { "name": "Chardonnay" },
-        { "name": "Riesling" },
-        { "name": "Syrah" },
-        { "name": "Cabernet Franc" },
-        { "name": "Sauvignon Blanc" }
+        { "name": "Riesling", "role": "ACCESSORY" },
+        { "name": "Syrah", "role": "ACCESSORY" },
+        { "name": "Cabernet Franc", "role": "ACCESSORY" },
+        { "name": "Sauvignon Blanc", "role": "ACCESSORY" }
       ],
       "sources": [
         { "title": "Washington State Wine Commission, Fast facts", "url": "https://www.washingtonwine.org/fast-facts/" },
@@ -490,10 +493,10 @@
       "styles": ["RED", "WHITE", "ROSE", "SWEET"],
       "grapes": [
         { "name": "Cabernet Sauvignon" },
-        { "name": "Chardonnay" },
+        { "name": "Chardonnay", "role": "ACCESSORY" },
         { "name": "Merlot" },
-        { "name": "Riesling" },
-        { "name": "Syrah" }
+        { "name": "Riesling", "role": "ACCESSORY" },
+        { "name": "Syrah", "role": "ACCESSORY" }
       ],
       "sources": [
         { "title": "27 CFR 9.74, Columbia Valley (eCFR text via Cornell LII)", "url": "https://www.law.cornell.edu/cfr/text/27/9.74" },
@@ -520,7 +523,7 @@
       "grapes": [
         { "name": "Pinot Noir" },
         { "name": "Riesling" },
-        { "name": "Müller-Thurgau" }
+        { "name": "Müller-Thurgau", "role": "ACCESSORY" }
       ],
       "sources": [
         { "title": "27 CFR 9.151, Puget Sound (eCFR text via Cornell LII)", "url": "https://www.law.cornell.edu/cfr/text/27/9.151" },

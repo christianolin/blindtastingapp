@@ -51,11 +51,19 @@ export async function contexts(client, keys = CONTEXT_KEYS) {
   });
 }
 
-/** The four states' grape shortlists, through RLS as the app reads them. */
+/**
+ * The four states' grape shortlists, through RLS as the app reads them, each
+ * with its grapes' colours (grapes.color), which the by-hand form's chip row
+ * filters by (spec §10.3: both surfaces).
+ */
 export async function shortlists(client) {
   return asAuthenticated(client, async () => {
     const out = {};
-    for (const name of Object.keys(US_STATES)) out[name] = await readShortlist(client, name);
+    for (const name of Object.keys(US_STATES)) {
+      const s = await readShortlist(client, name);
+      const { rows } = await client.query("select name, color::text from public.grapes where name = any($1::text[])", [s.grapes]);
+      out[name] = { ...s, colours: Object.fromEntries(rows.map((r) => [r.name, r.color])) };
+    }
     return out;
   });
 }
@@ -109,8 +117,12 @@ export async function archetypeFacts(client, links) {
             count(*) filter (where display_lon is not null and wine_place_id is not null)::int placed_with_point,
             coalesce(json_object_agg(id::text, json_build_array(display_lon, display_lat)) filter (where id = any($1::uuid[])), '{}'::json) mine
        from public.wine_archetypes`, [ids])).rows[0] : null;
+  // The room's read, with the dot it draws (pool-shape.ts: the home's label
+  // point first, else R2's curated point), so the evidence shows where each
+  // wine's dot moves (review round 2026-09-30).
   const room = await asAuthenticated(client, async () => (await client.query(
-    `select archetype_id::text, place_key, region_key from public.training_archetype_places()
+    `select archetype_id::text, place_key, region_key, point_key, point_lon, point_lat
+       from public.training_archetype_places()
       where archetype_id = any($1::uuid[])`, [ids])).rows);
   const rm9a = (await client.query(`with recursive chain as (
       select a.id as archetype_id, p.id as place_id, p.canonical_key, p.kind, p.primary_parent_id, 0 as depth

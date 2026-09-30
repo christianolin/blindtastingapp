@@ -11,6 +11,8 @@ Places: 16. Sources are listed under each place; figures appear only where a sou
 - New York: list Concord (and other native or hybrid grapes such as Niagara and Seyval Blanc) as grapes? They dominate New York's acreage but mostly go to juice. Today the articles mention them in text only, and no catalog row is added (spec §10.1: Concord only if you want it).
 - Puget Sound: add Madeleine Angevine and Siegerrebe to the grape catalog and list them? They are the region's signature whites; today they are named in the text only.
 - Central Valley: its styles include Sweet and Fortified for Madera's dessert wines. Keep them, or keep the grouping to Red and White?
+- Signature grapes: each place's grapes are now split into signature grapes (PRINCIPAL) and the rest (shown with an 'accessory' tag), because the details panel and the grape shortlists put signature grapes first. Is each place's split right? (Grapes sections below, and the shortlist table at the end.)
+- Typical wines on the training-room map: until US-3 gives Napa Valley and Sonoma Coast their own places, the Napa Cabernet and the Sonoma Chardonnay are linked to North Coast, so the room's map moves both dots from today's hand-placed points to North Coast's label point, in northern Sonoma, on top of each other (the section 'Typical wines on the training-room map' below gives the numbers). Link them at the sitting anyway (the map's Typical wine list and the room's 'See it on the map' work at once), or keep today's dots and link them in US-3?
 
 ## United States
 
@@ -34,16 +36,16 @@ Name: **United States** · key `united-states` · country
 - The first AVA was Augusta, Missouri, established on 20 June 1980
 - California makes about 81% of US wine (Wine Institute)
 
-**Grapes, in order**
+**Grapes**, as the details panel lists them: the signature grapes first, then the others, which the panel tags "accessory"; each group alphabetically.
 
-1. Cabernet Sauvignon
-2. Chardonnay
-3. Pinot Noir
-4. Zinfandel
-5. Merlot
-6. Riesling
-7. Syrah
-8. Sauvignon Blanc
+- Cabernet Sauvignon
+- Chardonnay
+- Pinot Noir
+- Zinfandel
+- Merlot · accessory
+- Riesling · accessory
+- Sauvignon Blanc · accessory
+- Syrah · accessory
 
 **Styles:** Red, White, Rosé, Sparkling, Sweet
 
@@ -77,16 +79,16 @@ Name: **California** · key `united-states.california` · region
 - At the 1976 Paris tasting, a 1973 Stag's Leap Cabernet Sauvignon and a 1973 Chateau Montelena Chardonnay placed first
 - Napa Valley, designated in 1981, was California's first AVA
 
-**Grapes, in order**
+**Grapes**, as the details panel lists them: the signature grapes first, then the others, which the panel tags "accessory"; each group alphabetically.
 
-1. Cabernet Sauvignon
-2. Chardonnay
-3. Pinot Noir
-4. Zinfandel
-5. Merlot
-6. Sauvignon Blanc
-7. Syrah
-8. Petite Sirah (Durif)
+- Cabernet Sauvignon
+- Chardonnay
+- Pinot Noir
+- Zinfandel
+- Merlot · accessory
+- Petite Sirah (Durif) · accessory
+- Sauvignon Blanc · accessory
+- Syrah · accessory
 
 **Styles:** Red, White, Rosé, Sparkling
 
@@ -121,17 +123,17 @@ Name: **Central Coast** · key `united-states.california.central-coast` · AVA
 - Established 1985 (27 CFR 9.75)
 - Covers parts of ten counties, from San Francisco and Alameda south to Santa Barbara
 - Paso Robles has eleven nested AVAs, all established in 2014 (TTB)
-- Livermore Valley vineyards date from the early 1880s (Wente and Concannon)
+- Vines were first planted in Livermore Valley in the 1840s; Wente and Concannon planted theirs in the early 1880s
 - Santa Barbara County's transverse valleys run east to west, open to Pacific fog
 
-**Grapes, in order**
+**Grapes**, as the details panel lists them: the signature grapes first, then the others, which the panel tags "accessory"; each group alphabetically.
 
-1. Chardonnay
-2. Pinot Noir
-3. Cabernet Sauvignon
-4. Syrah
-5. Zinfandel
-6. Grenache
+- Cabernet Sauvignon
+- Chardonnay
+- Pinot Noir
+- Grenache · accessory
+- Syrah · accessory
+- Zinfandel · accessory
 
 **Styles:** Red, White, Rosé, Sparkling
 
@@ -164,14 +166,14 @@ Name: **Central Valley** · key `united-states.california.central-valley` · a g
 - Clarksburg, in the Sacramento River Delta, is known for Chenin Blanc
 - In Madera, Ficklin Vineyards has made port-style wine since 1948 and Quady Winery makes sweet Muscat
 
-**Grapes, in order**
+**Grapes**, as the details panel lists them: the signature grapes first, then the others, which the panel tags "accessory"; each group alphabetically.
 
-1. Zinfandel
-2. Cabernet Sauvignon
-3. Chardonnay
-4. Petite Sirah (Durif)
-5. Chenin Blanc (Clarksburg's white)
-6. Muscat (Madera's sweet wines)
+- Zinfandel
+- Cabernet Sauvignon · accessory
+- Chardonnay · accessory
+- Chenin Blanc (Clarksburg's white) · accessory
+- Muscat (Madera's sweet wines) · accessory
+- Petite Sirah (Durif) · accessory
 
 **Styles:** Red, White, Sweet, Fortified
 
@@ -205,14 +207,14 @@ Name: **North Coast** · key `united-states.california.north-coast` · AVA
 - Contains Napa Valley, California's first AVA (1981), which grows about 4% of the state's wine grapes
 - Home to more than half of California's wineries (Discover California Wines)
 
-**Grapes, in order**
+**Grapes**, as the details panel lists them: the signature grapes first, then the others, which the panel tags "accessory"; each group alphabetically.
 
-1. Cabernet Sauvignon
-2. Chardonnay
-3. Pinot Noir
-4. Zinfandel
-5. Merlot
-6. Sauvignon Blanc
+- Cabernet Sauvignon
+- Chardonnay
+- Pinot Noir
+- Merlot · accessory
+- Sauvignon Blanc · accessory
+- Zinfandel · accessory
 
 **Styles:** Red, White, Sparkling
 
@@ -246,12 +248,12 @@ Name: **Sierra Foothills** · key `united-states.california.sierra-foothills` ·
 - Zinfandel is about 40% of the vineyard acreage (ZAP)
 - The Original Grandpere Vineyard, planted in 1869, is the oldest documented Zinfandel vineyard still producing
 
-**Grapes, in order**
+**Grapes**, as the details panel lists them: the signature grapes first, then the others, which the panel tags "accessory"; each group alphabetically.
 
-1. Zinfandel
-2. Barbera
-3. Syrah
-4. Petite Sirah (Durif)
+- Zinfandel
+- Barbera · accessory
+- Petite Sirah (Durif) · accessory
+- Syrah · accessory
 
 **Styles:** Red, White
 
@@ -266,7 +268,7 @@ Name: **Sierra Foothills** · key `united-states.california.sierra-foothills` ·
 
 Name: **South Coast** · key `united-states.california.south-coast` · AVA
 
-**Description.** The umbrella AVA for Southern California's vineyards, established in 1985 in parts of Orange, Riverside and San Diego counties. Its main wine district is Temecula Valley, inland in Riverside County; Ramona Valley and San Pasqual Valley are the other AVAs inside it.
+**Description.** The umbrella AVA for Southern California's vineyards, established in 1985 in parts of Orange, Riverside and San Diego counties. Its main wine district is Temecula Valley, inland in Riverside County; Ramona Valley, San Luis Rey and San Pasqual Valley are the other AVAs inside it.
 
 **Climate.** Warm and sunny, cooled where the coastal mountains open. In Temecula Valley, hot air rising over the desert draws Pacific air in through the Rainbow Gap, so warm days are followed by cool nights.
 
@@ -281,20 +283,21 @@ Name: **South Coast** · key `united-states.california.south-coast` · AVA
 - Established 1985 (27 CFR 9.104)
 - Covers parts of Orange, Riverside and San Diego counties
 - Temecula Valley sits between the Pacific and the desert, about an hour north-east of San Diego
-- Contains the Temecula Valley, Ramona Valley and San Pasqual Valley AVAs
+- Contains the Temecula Valley, Ramona Valley, San Luis Rey and San Pasqual Valley AVAs
 
-**Grapes, in order**
+**Grapes**, as the details panel lists them: the signature grapes first, then the others, which the panel tags "accessory"; each group alphabetically.
 
-1. Cabernet Sauvignon
-2. Syrah
-3. Chardonnay
-4. Sauvignon Blanc
+- Cabernet Sauvignon
+- Chardonnay · accessory
+- Sauvignon Blanc · accessory
+- Syrah · accessory
 
 **Styles:** Red, White, Rosé
 
 **Sources**
 
 - 27 CFR 9.104, South Coast (eCFR text via Cornell LII): https://www.law.cornell.edu/cfr/text/27/9.104
+- 27 CFR 9.295, San Luis Rey (eCFR text via Cornell LII): https://www.law.cornell.edu/cfr/text/27/9.295
 - TTB, AVA establishment dates: https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/ava-establishment-dates
 - California Grown, Temecula wines: https://californiagrown.org/blog/temecula-wines/
 
@@ -320,15 +323,15 @@ Name: **New York** · key `united-states.new-york` · region
 - Konstantin Frank planted vinifera on Keuka Lake from 1958 and released his first wines in 1962
 - Long Island's first vineyard was planted in 1973
 
-**Grapes, in order**
+**Grapes**, as the details panel lists them: the signature grapes first, then the others, which the panel tags "accessory"; each group alphabetically.
 
-1. Riesling
-2. Chardonnay
-3. Cabernet Franc
-4. Merlot
-5. Pinot Noir
-6. Gewürztraminer
-7. Blaufränkisch (Sold as Lemberger)
+- Chardonnay
+- Riesling
+- Blaufränkisch (Sold as Lemberger) · accessory
+- Cabernet Franc · accessory
+- Gewürztraminer · accessory
+- Merlot · accessory
+- Pinot Noir · accessory
 
 **Styles:** White, Red, Sparkling, Sweet, Rosé
 
@@ -363,14 +366,14 @@ Name: **Finger Lakes** · key `united-states.new-york.finger-lakes` · AVA
 - Growing season about 195 days, lengthened by the lakes
 - Konstantin Frank's vinifera plantings on Keuka Lake began in 1958
 
-**Grapes, in order**
+**Grapes**, as the details panel lists them: the signature grapes first, then the others, which the panel tags "accessory"; each group alphabetically.
 
-1. Riesling
-2. Cabernet Franc
-3. Pinot Noir
-4. Gewürztraminer
-5. Chardonnay
-6. Blaufränkisch (Sold as Lemberger)
+- Riesling
+- Blaufränkisch (Sold as Lemberger) · accessory
+- Cabernet Franc · accessory
+- Chardonnay · accessory
+- Gewürztraminer · accessory
+- Pinot Noir · accessory
 
 **Styles:** White, Red, Sparkling, Sweet, Rosé
 
@@ -403,13 +406,13 @@ Name: **Long Island** · key `united-states.new-york.long-island` · AVA
 - About 1,815 acres of vineyard and 82 wineries (NYWGF)
 - Growing season about 225 days
 
-**Grapes, in order**
+**Grapes**, as the details panel lists them: the signature grapes first, then the others, which the panel tags "accessory"; each group alphabetically.
 
-1. Merlot
-2. Cabernet Franc
-3. Chardonnay
-4. Sauvignon Blanc
-5. Cabernet Sauvignon
+- Cabernet Franc
+- Merlot
+- Cabernet Sauvignon · accessory
+- Chardonnay · accessory
+- Sauvignon Blanc · accessory
 
 **Styles:** Red, White, Rosé, Sparkling
 
@@ -442,15 +445,15 @@ Name: **Oregon** · key `united-states.oregon` · region
 - An Oregon AVA or county name needs 95% of the grapes from it and 100% from Oregon
 - David Lett planted the Willamette Valley's first Pinot Noir in 1965
 
-**Grapes, in order**
+**Grapes**, as the details panel lists them: the signature grapes first, then the others, which the panel tags "accessory"; each group alphabetically.
 
-1. Pinot Noir
-2. Pinot Gris
-3. Chardonnay
-4. Riesling
-5. Syrah
-6. Cabernet Sauvignon
-7. Tempranillo
+- Chardonnay
+- Pinot Gris
+- Pinot Noir
+- Cabernet Sauvignon · accessory
+- Riesling · accessory
+- Syrah · accessory
+- Tempranillo · accessory
 
 **Styles:** Red, White, Rosé, Sparkling
 
@@ -484,16 +487,16 @@ Name: **Southern Oregon** · key `united-states.oregon.southern-oregon` · AVA
 - Contains the Umpqua Valley, Rogue Valley, Applegate Valley, Elkton Oregon and Red Hill Douglas County AVAs
 - Abacela planted Tempranillo in the Umpqua Valley in 1995, the first varietal Tempranillo made in the Pacific Northwest
 
-**Grapes, in order**
+**Grapes**, as the details panel lists them: the signature grapes first, then the others, which the panel tags "accessory"; each group alphabetically.
 
-1. Pinot Noir
-2. Pinot Gris
-3. Syrah
-4. Cabernet Sauvignon
-5. Merlot
-6. Viognier
-7. Chardonnay
-8. Tempranillo
+- Pinot Noir
+- Syrah
+- Cabernet Sauvignon · accessory
+- Chardonnay · accessory
+- Merlot · accessory
+- Pinot Gris · accessory
+- Tempranillo · accessory
+- Viognier · accessory
 
 **Styles:** Red, White, Rosé
 
@@ -514,7 +517,7 @@ Name: **Willamette Valley** · key `united-states.oregon.willamette-valley` · A
 
 **Soils.** Three main types on the hillsides: red volcanic Jory soils formed from Columbia River basalts, as in the Dundee Hills; marine sedimentary soils such as Willakenzie, as in Yamhill-Carlton; and wind-blown Laurelwood loess in the Chehalem Mountains. Most vineyards sit above about 200 feet, clear of the Missoula flood soils on the valley floor.
 
-**Grape varieties (text).** Pinot Noir leads, followed by Pinot Gris, Chardonnay and Riesling; roughly 30 per cent of the valley's grapes are now other varieties, Pinot Blanc among them.
+**Grape varieties (text).** Pinot Noir is about 70 per cent of the valley's grapes; Pinot Gris, Chardonnay and Riesling are the main others, with smaller plantings such as Pinot Blanc.
 
 **Wine styles (text).** Dry Pinot Noir above all, with Pinot Gris and Chardonnay whites, and rosé and sparkling wine from the same grapes.
 
@@ -526,13 +529,13 @@ Name: **Willamette Valley** · key `united-states.oregon.willamette-valley` · A
 - David Lett planted the first Pinot Noir in the Dundee Hills in 1966, at The Eyrie Vineyards
 - Lett's 1975 Pinot Noir placed highly at the 1979 Gault-Millau Wine Olympiad in Paris
 
-**Grapes, in order**
+**Grapes**, as the details panel lists them: the signature grapes first, then the others, which the panel tags "accessory"; each group alphabetically.
 
-1. Pinot Noir
-2. Pinot Gris
-3. Chardonnay
-4. Riesling
-5. Pinot Blanc
+- Chardonnay
+- Pinot Gris
+- Pinot Noir
+- Pinot Blanc · accessory
+- Riesling · accessory
 
 **Styles:** Red, White, Rosé, Sparkling
 
@@ -566,15 +569,15 @@ Name: **Washington** · key `united-states.washington` · region
 - Over 99% of the state's vineyard acreage is in the Columbia Valley AVA
 - Cabernet Sauvignon was first planted in 1941, Riesling in 1961, Chardonnay in 1964 and Merlot in 1965 (WSWC)
 
-**Grapes, in order**
+**Grapes**, as the details panel lists them: the signature grapes first, then the others, which the panel tags "accessory"; each group alphabetically.
 
-1. Cabernet Sauvignon
-2. Merlot
-3. Chardonnay
-4. Riesling
-5. Syrah
-6. Cabernet Franc
-7. Sauvignon Blanc
+- Cabernet Sauvignon
+- Chardonnay
+- Merlot
+- Cabernet Franc · accessory
+- Riesling · accessory
+- Sauvignon Blanc · accessory
+- Syrah · accessory
 
 **Styles:** Red, White, Rosé, Sweet
 
@@ -608,13 +611,13 @@ Name: **Columbia Valley** · key `united-states.washington.columbia-valley` · A
 - Over 99% of Washington's vineyard acreage lies inside it
 - Contains Yakima Valley, Washington's first AVA (1983), and Red Mountain (2001)
 
-**Grapes, in order**
+**Grapes**, as the details panel lists them: the signature grapes first, then the others, which the panel tags "accessory"; each group alphabetically.
 
-1. Cabernet Sauvignon
-2. Chardonnay
-3. Merlot
-4. Riesling
-5. Syrah
+- Cabernet Sauvignon
+- Merlot
+- Chardonnay · accessory
+- Riesling · accessory
+- Syrah · accessory
 
 **Styles:** Red, White, Rosé, Sweet
 
@@ -646,11 +649,11 @@ Name: **Puget Sound** · key `united-states.washington.puget-sound` · AVA
 - Washington's coolest and wettest growing region
 - Grows Madeleine Angevine and Siegerrebe, seen nowhere else in the state
 
-**Grapes, in order**
+**Grapes**, as the details panel lists them: the signature grapes first, then the others, which the panel tags "accessory"; each group alphabetically.
 
-1. Pinot Noir
-2. Riesling
-3. Müller-Thurgau
+- Pinot Noir
+- Riesling
+- Müller-Thurgau · accessory
 
 **Styles:** White, Red
 
@@ -666,14 +669,71 @@ Name: **Puget Sound** · key `united-states.washington.puget-sound` · AVA
 
 ## Grape shortlist change (spec §10.3)
 
-The guess ladder and the answer-key form both call `shortlistGrapesForRegion`. From the promote on, a state's list comes from the map (the state plus every place beneath it, most-linked first) instead of `region_grapes`. Measured in the rolled-back rehearsal of 2026-09-30, as a signed-in reader. The number after a grape is how many of the state's places (the state and the areas beneath it) list it. Grapes with the same number tie: the app keeps the database's row order for them, and they are shown alphabetically here, so the app may put any of them first.
+Two surfaces call `shortlistGrapesForRegion`: the guess ladder's grape picker, which offers the whole list, and the answer-key form's "Common in {state}" chips, which show at most 5, filtered to the wine's colour once one is chosen (a grape with no colour on file is always kept). From the promote on, a state's list comes from the map (the state and every place beneath it) instead of `region_grapes`: grapes that are a signature grape somewhere come first, ranked by how many of those places list them as one, then the others, ranked the same way. Measured in the rolled-back rehearsal of 2026-09-30, as a signed-in reader.
 
-| State | Before (`region_grapes`) | After (the map) |
+After a grape, the number of the state's places that list it ("accessory" when it is a signature grape nowhere). Grapes with the same number tie: the app keeps the database's row order for them (shown alphabetically here), so any of them may come first, and a tie at the fifth chip means any of the tied grapes may be the one shown.
+
+### California
+
+| Surface | Before (`region_grapes`) | After (the map) |
 |---|---|---|
-| California | Cabernet Sauvignon, Chardonnay, Zinfandel | Cabernet Sauvignon (5), Chardonnay (5), Zinfandel (5), Syrah (4), Petite Sirah (3), Pinot Noir (3), Sauvignon Blanc (3), Merlot (2), Barbera (1), Chenin Blanc (1), Grenache (1), Muscat (1) |
-| Washington | Cabernet Sauvignon, Merlot, Riesling, Syrah | Riesling (3), Cabernet Sauvignon (2), Chardonnay (2), Merlot (2), Syrah (2), Cabernet Franc (1), Müller-Thurgau (1), Pinot Noir (1), Sauvignon Blanc (1) |
-| Oregon | Pinot Noir, Pinot Gris | Chardonnay (3), Pinot Gris (3), Pinot Noir (3), Cabernet Sauvignon (2), Riesling (2), Syrah (2), Tempranillo (2), Merlot (1), Pinot Blanc (1), Viognier (1) |
-| New York | Riesling, Cabernet Franc | Cabernet Franc (3), Chardonnay (3), Blaufränkisch (2), Gewürztraminer (2), Merlot (2), Pinot Noir (2), Riesling (2), Cabernet Sauvignon (1), Sauvignon Blanc (1) |
+| Guess ladder (the whole list) | Cabernet Sauvignon, Chardonnay, Zinfandel | Cabernet Sauvignon (4), Chardonnay (3), Pinot Noir (3), Zinfandel (3), Syrah (4, accessory), Petite Sirah (3, accessory), Sauvignon Blanc (3, accessory), Merlot (2, accessory), Barbera (1, accessory), Chenin Blanc (1, accessory), Grenache (1, accessory), Muscat (1, accessory) |
+| By-hand chips, no colour yet | Cabernet Sauvignon, Chardonnay, Zinfandel | Cabernet Sauvignon, Chardonnay, Pinot Noir, Zinfandel, Syrah |
+| By-hand chips, red | Cabernet Sauvignon, Zinfandel | Cabernet Sauvignon, Pinot Noir, Zinfandel, Syrah, Petite Sirah |
+| By-hand chips, white | Chardonnay | Chardonnay, Sauvignon Blanc, Chenin Blanc, Muscat |
 
-**Tied at the top** (the app may lead with any of these): California: Cabernet Sauvignon, Chardonnay, Zinfandel (5 each); Oregon: Chardonnay, Pinot Gris, Pinot Noir (3 each); New York: Cabernet Franc, Chardonnay (3 each).
+Leads with Cabernet Sauvignon.
+
+Against California's own list (its first three: Cabernet Sauvignon, Chardonnay, Pinot Noir): none moves down or drops.
+
+### Washington
+
+| Surface | Before (`region_grapes`) | After (the map) |
+|---|---|---|
+| Guess ladder (the whole list) | Cabernet Sauvignon, Merlot, Riesling, Syrah | Cabernet Sauvignon (2), Merlot (2), Chardonnay (1), Pinot Noir (1), Riesling (1), Syrah (2, accessory), Cabernet Franc (1, accessory), Müller-Thurgau (1, accessory), Sauvignon Blanc (1, accessory) |
+| By-hand chips, no colour yet | Cabernet Sauvignon, Merlot, Riesling, Syrah | Cabernet Sauvignon, Merlot, Chardonnay, Pinot Noir, Riesling |
+| By-hand chips, red | Cabernet Sauvignon, Merlot, Syrah | Cabernet Sauvignon, Merlot, Pinot Noir, Syrah, Cabernet Franc |
+| By-hand chips, white | Riesling | Chardonnay, Riesling, Müller-Thurgau, Sauvignon Blanc |
+
+Tied at the top (the app may lead with any of these): Cabernet Sauvignon, Merlot.
+
+Against Washington's own list (its first three: Cabernet Sauvignon, Merlot, Chardonnay): none moves down or drops.
+
+### Oregon
+
+| Surface | Before (`region_grapes`) | After (the map) |
+|---|---|---|
+| Guess ladder (the whole list) | Pinot Noir, Pinot Gris | Pinot Noir (3), Chardonnay (2), Pinot Gris (2), Syrah (1), Cabernet Sauvignon (2, accessory), Riesling (2, accessory), Tempranillo (2, accessory), Merlot (1, accessory), Pinot Blanc (1, accessory), Viognier (1, accessory) |
+| By-hand chips, no colour yet | Pinot Noir, Pinot Gris | Pinot Noir, Chardonnay, Pinot Gris, Syrah, Cabernet Sauvignon; the last chip is one of Cabernet Sauvignon, Riesling, Tempranillo (tied) |
+| By-hand chips, red | Pinot Noir | Pinot Noir, Syrah, Cabernet Sauvignon, Tempranillo, Merlot |
+| By-hand chips, white | Pinot Gris | Chardonnay, Pinot Gris, Riesling, Pinot Blanc, Viognier |
+
+Leads with Pinot Noir.
+
+Against Oregon's own list (its first three: Pinot Noir, Pinot Gris, Chardonnay): none moves down or drops.
+
+### New York
+
+| Surface | Before (`region_grapes`) | After (the map) |
+|---|---|---|
+| Guess ladder (the whole list) | Riesling, Cabernet Franc | Riesling (2), Cabernet Franc (1), Chardonnay (1), Merlot (1), Blaufränkisch (2, accessory), Gewürztraminer (2, accessory), Pinot Noir (2, accessory), Cabernet Sauvignon (1, accessory), Sauvignon Blanc (1, accessory) |
+| By-hand chips, no colour yet | Riesling, Cabernet Franc | Riesling, Cabernet Franc, Chardonnay, Merlot, Blaufränkisch; the last chip is one of Blaufränkisch, Gewürztraminer, Pinot Noir (tied) |
+| By-hand chips, red | Cabernet Franc | Cabernet Franc, Merlot, Blaufränkisch, Pinot Noir, Cabernet Sauvignon |
+| By-hand chips, white | Riesling | Riesling, Chardonnay, Gewürztraminer, Sauvignon Blanc |
+
+Leads with Riesling.
+
+Against New York's own list (its first three: Riesling, Chardonnay, Cabernet Franc): none moves down or drops.
+
+## Typical wines on the training-room map
+
+The archetype links (the sitting's last step) give the three US typical wines a map place. The room's map then draws each wine at its place's label point instead of today's hand-placed point (R2), so a wine linked to a large umbrella AVA lands wherever that AVA's label sits. Measured in the rehearsal; longitude, latitude.
+
+| Typical wine | Linked to | Dot today | Dot after the links | Moves |
+|---|---|---|---|---|
+| A typical Napa Cabernet Sauvignon | `united-states.california.north-coast` | -122.4, 38.43 | -122.974, 38.762 | 62 km |
+| A typical Sonoma Chardonnay | `united-states.california.north-coast` | -122.82, 38.4 | -122.974, 38.762 | 42 km |
+| A typical Willamette Pinot Noir | `united-states.oregon.willamette-valley` | -123.03, 45.28 | -123.143, 44.672 | 68 km |
+
+Drawn on the same spot after the links: A typical Napa Cabernet Sauvignon and A typical Sonoma Chardonnay. US-3 moves the two California wines to Napa Valley and Sonoma Coast.
 
