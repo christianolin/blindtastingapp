@@ -1,0 +1,20 @@
+{
+  "_note": "US typical wines linked to the map, step 1 (spec 2026-09-29 D22, §14.2): each archetype's home at the deepest US-2 place, plus the REGION placement the training-room drift guard (RM9a) requires. Matched by live id AND name, both asserted. display_point is the curated training-room point R2 set (20260929150000) while the wine had no map place: the links clear it (the room's R2 check requires that no placed wine keeps one) and the unpublish rollback restores it. Step 2 (US-3) moves the two California wines to their AVAs.",
+  "links": [
+    { "archetype_id": "75e4e467-3929-4844-bbc4-ffe8b12523a1", "name": "A typical Napa Cabernet Sauvignon", "sort_order": 88,
+      "appellation": "Napa Valley AVA", "region": "California",
+      "home": "united-states.california.north-coast",
+      "placements": ["united-states.california.north-coast", "united-states.california"],
+      "display_point": [-122.40, 38.43] },
+    { "archetype_id": "c4ea77f3-5599-43dd-bdc3-4287c1e0ea15", "name": "A typical Sonoma Chardonnay", "sort_order": 89,
+      "appellation": "Sonoma Coast AVA", "region": "California",
+      "home": "united-states.california.north-coast",
+      "placements": ["united-states.california.north-coast", "united-states.california"],
+      "display_point": [-122.82, 38.40] },
+    { "archetype_id": "bab8537e-b0bc-4f7c-8547-242537322f8a", "name": "A typical Willamette Pinot Noir", "sort_order": 90,
+      "appellation": "Willamette Valley AVA", "region": "Oregon",
+      "home": "united-states.oregon.willamette-valley",
+      "placements": ["united-states.oregon.willamette-valley", "united-states.oregon"],
+      "display_point": [-123.03, 45.28] }
+  ]
+}

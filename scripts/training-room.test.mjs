@@ -894,13 +894,25 @@ test("the batch-1 migration lands every archetype with its links, and a second a
       typical_age_high: 30,
       tannin: ["MEDIUM_PLUS", "HIGH"],
     });
+    // US typical wines, step 1 (usa-wine-map spec §14.2, 20260930114747): once
+    // linked, Napa lives on North Coast and also sits on California's page.
     const napa = (
       await client.query(
-        `select a.wine_place_id, (select count(*)::int from wine_archetype_placements p where p.archetype_id = a.id) placements
-           from wine_archetypes a where a.name = 'A typical Napa Cabernet Sauvignon'`,
+        `select wp.canonical_key place,
+                (select array_agg(pp.canonical_key order by pp.canonical_key) from wine_archetype_placements p
+                   join wine_places pp on pp.id = p.wine_place_id where p.archetype_id = a.id) placements
+           from wine_archetypes a left join wine_places wp on wp.id = a.wine_place_id
+          where a.name = 'A typical Napa Cabernet Sauvignon'`,
       )
     ).rows[0];
-    assert.deepEqual(napa, { wine_place_id: null, placements: 0 }, "an archetype without a map place stays off the map");
+    if (napa.place === null) {
+      assert.deepEqual(napa, { place: null, placements: null }, "an archetype without a map place stays off the map");
+    } else {
+      assert.deepEqual(napa, {
+        place: "united-states.california.north-coast",
+        placements: ["united-states.california", "united-states.california.north-coast"],
+      });
+    }
     const prosecco = (await client.query("select sat -> 'mousse' mousse from wine_archetypes where name = 'A typical Prosecco'"))
       .rows[0];
     assert.deepEqual(prosecco, { mousse: ["CREAMY", "AGGRESSIVE"] });
