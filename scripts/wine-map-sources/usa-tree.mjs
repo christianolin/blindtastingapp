@@ -248,10 +248,15 @@ export function buildUsaTree({ avas, pairs, config }) {
     ...emptyPlace(), key: COUNTRY_KEY, slug: COUNTRY_KEY, name: COUNTRY_NAME, kind: "COUNTRY",
     display_tier: 0, min_zoom: 1.5, label_min_zoom: 2,
   }];
+  // The states draw from z1.5 (fill and label), not z4 like other countries'
+  // regions: the "United States" chip frames California to New York, which a
+  // 375 px phone fits at about z1.9 (tile zoom 1), and D26 promises the four
+  // state washes there, and a tap on one to drill in. Tiles take floor(zoom),
+  // so 1.5 puts them in the z1 tiles of the world archive.
   for (const [code, s] of Object.entries(waveStates)) {
     places.push({
       ...emptyPlace(), key: stateKey(code), slug: s.slug, name: s.name, kind: "REGION",
-      display_tier: 1, min_zoom: 4, label_min_zoom: 4, parent_key: COUNTRY_KEY, map_state: code,
+      display_tier: 1, min_zoom: 1.5, label_min_zoom: 1.5, parent_key: COUNTRY_KEY, map_state: code,
     });
   }
   for (const n of navNodes) {

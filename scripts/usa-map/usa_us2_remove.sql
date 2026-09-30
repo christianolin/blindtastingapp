@@ -5,16 +5,23 @@
 -- Deletes the 16 US-2 places (deepest first), their relationships, boundaries
 -- and knowledge (articles, styles and grapes cascade), and the catalog
 -- (20260930084747) and knowledge (20260930094747) history
--- rows, so both can be applied again. Refuses once the promote has run: VERIFIED
--- keys are locked for good, and the way back is the unpublish file.
+-- rows, so both can be applied again, as committed, in their order. Refuses once
+-- the promote has run: VERIFIED keys are locked for good, and the way back is
+-- the unpublish file.
 -- Kept on purpose: the source snapshots (immutable; a re-stage reuses them) and
 -- the Petite Sirah grape row the knowledge added (harmless; deleting it would
--- need every grape FK checked).
+-- need every grape FK checked). The knowledge file inserts it with
+-- "on conflict (name) do nothing", so it applies again on top of the kept row.
 --
--- Deliberately outside supabase/migrations/: a replay must never run it. Apply
--- with the owner's applier (--check, --dry, then no flag). Rendered by
+-- Deliberately outside supabase/migrations/, and with no version prefix: a
+-- replay must never run it, and it must never be recorded. Apply it with
+-- scripts/usa-map/apply-rollback.mjs (--check, --dry, then no flag), never
+-- with the migration applier: that records a schema_migrations version and
+-- refuses it the second time, and a rollback may be needed more than once
+-- (a second unstage after a re-stage). Re-appliable: every step asserts its
+-- own pre-state, and nothing is recorded. Rendered by
 -- scripts/usa-map/render-us2-sql.mjs; do not hand-edit.
--- No begin/commit: the applier owns the transaction (D24).
+-- No begin/commit: the runner owns the transaction (D24).
 
 set local lock_timeout = '10s';
 set local statement_timeout = '30min';

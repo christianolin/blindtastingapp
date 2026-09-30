@@ -8,10 +8,15 @@
 -- revision and checksum). Ends with the checked neighbour refresh, which brings
 -- the cache and master's map-data checks back to green.
 --
--- Deliberately outside supabase/migrations/: a replay must never run it. Apply
--- with the owner's applier (--check, --dry, then no flag). Rendered by
+-- Deliberately outside supabase/migrations/, and with no version prefix: a
+-- replay must never run it, and it must never be recorded. Apply it with
+-- scripts/usa-map/apply-rollback.mjs (--check, --dry, then no flag), never
+-- with the migration applier: that records a schema_migrations version and
+-- refuses it the second time, and a rollback may be needed more than once
+-- (a second unstage after a re-stage). Re-appliable: every step asserts its
+-- own pre-state, and nothing is recorded. Rendered by
 -- scripts/usa-map/render-us2-sql.mjs; do not hand-edit.
--- No begin/commit: the applier owns the transaction (D24).
+-- No begin/commit: the runner owns the transaction (D24).
 
 set local lock_timeout = '10s';
 set local statement_timeout = '30min';

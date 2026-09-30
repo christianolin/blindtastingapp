@@ -88,7 +88,7 @@ test("country, states and umbrellas", () => {
     ((p) => [p.key, p.display_tier, p.min_zoom, p.label_min_zoom, p.sort_order, p.kind])(t.places[0]),
   );
   const ca = place(t, "California");
-  assert.deepEqual([ca.key, ca.kind, ca.display_tier, ca.min_zoom, ca.display], ["united-states.california", "REGION", 1, 4, null]);
+  assert.deepEqual([ca.key, ca.kind, ca.display_tier, ca.min_zoom, ca.display], ["united-states.california", "REGION", 1, 1.5, null]);
   const nc = place(t, "North Coast");
   assert.deepEqual(
     [nc.key, nc.kind, nc.display_tier, nc.min_zoom, nc.label_min_zoom, nc.appellation_level, nc.display],

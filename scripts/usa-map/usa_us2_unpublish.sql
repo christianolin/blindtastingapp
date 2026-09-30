@@ -7,14 +7,23 @@
 -- to null, and R2's curated display point restored where the links cleared it),
 -- then every US boundary non-current and every US place DRAFT, then the checked
 -- refresh. Boundaries, relationships and knowledge stay, for a later re-promote.
--- THEN DISPATCH A NEW TILES RELEASE FROM MASTER (promote=true), and
--- never roll back the manifest (§17.3): that would remove other people's newer
--- places.
+-- THEN, on master: take the united-states hunk back out of
+-- data/wine-map/boundary-expectations.json (splice-boundary-expectations.mjs
+-- --write, which drops it once no US boundary is current; git diff must show
+-- only removed united-states rows), commit and push it as a staged push, or
+-- boundary-expectations.test.mjs goes red on every PR. THEN DISPATCH A NEW TILES
+-- RELEASE FROM MASTER (promote=true), and never roll back the manifest (§17.3):
+-- that would remove other people's newer places.
 --
--- Deliberately outside supabase/migrations/: a replay must never run it. Apply
--- with the owner's applier (--check, --dry, then no flag). Rendered by
+-- Deliberately outside supabase/migrations/, and with no version prefix: a
+-- replay must never run it, and it must never be recorded. Apply it with
+-- scripts/usa-map/apply-rollback.mjs (--check, --dry, then no flag), never
+-- with the migration applier: that records a schema_migrations version and
+-- refuses it the second time, and a rollback may be needed more than once
+-- (a second unstage after a re-stage). Re-appliable: every step asserts its
+-- own pre-state, and nothing is recorded. Rendered by
 -- scripts/usa-map/render-us2-sql.mjs; do not hand-edit.
--- No begin/commit: the applier owns the transaction (D24).
+-- No begin/commit: the runner owns the transaction (D24).
 
 set local lock_timeout = '10s';
 set local statement_timeout = '30min';

@@ -428,7 +428,7 @@ export function linksSql(links) {
 -- R2 (20260929150000) gave these wines a curated display point while they had
 -- no map place. A placed wine never keeps one (the room's R2 check: 18 points
 -- before this, 15 after, never a placed one), so this clears the three here;
--- the unpublish rollback (${US2_VERSIONS.unpublish}) restores them. If R2's
+-- the unpublish rollback (${US2_ROLLBACK_FILES.unpublish}) restores them. If R2's
 -- columns are gone (its rollback ran), the point steps are skipped.
 --
 -- Apply AFTER the US-2 promote (${US2_VERSIONS.promote}): every place must be
@@ -594,10 +594,15 @@ const rollbackHeader = (title, body) => `-- USA on the wine map, phase US-2 ROLL
 --
 ${body.trim().split("\n").map((l) => (l ? `-- ${l}` : "--")).join("\n")}
 --
--- Deliberately outside supabase/migrations/: a replay must never run it. Apply
--- with the owner's applier (--check, --dry, then no flag). Rendered by
+-- Deliberately outside supabase/migrations/, and with no version prefix: a
+-- replay must never run it, and it must never be recorded. Apply it with
+-- scripts/usa-map/apply-rollback.mjs (--check, --dry, then no flag), never
+-- with the migration applier: that records a schema_migrations version and
+-- refuses it the second time, and a rollback may be needed more than once
+-- (a second unstage after a re-stage). Re-appliable: every step asserts its
+-- own pre-state, and nothing is recorded. Rendered by
 -- scripts/usa-map/render-us2-sql.mjs; do not hand-edit.
--- No begin/commit: the applier owns the transaction (D24).
+-- No begin/commit: the runner owns the transaction (D24).
 
 `;
 
@@ -653,11 +658,13 @@ export function removeSql(wave) {
 Deletes the ${n} US-2 places (deepest first), their relationships, boundaries
 and knowledge (articles, styles and grapes cascade), and the catalog
 (${US2_VERSIONS.catalog}) and knowledge (${US2_VERSIONS.knowledge}) history
-rows, so both can be applied again. Refuses once the promote has run: VERIFIED
-keys are locked for good, and the way back is the unpublish file.
+rows, so both can be applied again, as committed, in their order. Refuses once
+the promote has run: VERIFIED keys are locked for good, and the way back is
+the unpublish file.
 Kept on purpose: the source snapshots (immutable; a re-stage reuses them) and
 the Petite Sirah grape row the knowledge added (harmless; deleting it would
-need every grape FK checked).`)}${rollbackPrelude(wave, "remove")}
+need every grape FK checked). The knowledge file inserts it with
+"on conflict (name) do nothing", so it applies again on top of the kept row.`)}${rollbackPrelude(wave, "remove")}
 do $$
 declare v_text text;
 begin
@@ -712,9 +719,13 @@ archetype links first (their placements on US places deleted, their homes set
 to null, and R2's curated display point restored where the links cleared it),
 then every US boundary non-current and every US place DRAFT, then the checked
 refresh. Boundaries, relationships and knowledge stay, for a later re-promote.
-THEN DISPATCH A NEW TILES RELEASE FROM MASTER (promote=true), and
-never roll back the manifest (§17.3): that would remove other people's newer
-places.`)}${rollbackPrelude(wave, "unpublish")}
+THEN, on master: take the united-states hunk back out of
+data/wine-map/boundary-expectations.json (splice-boundary-expectations.mjs
+--write, which drops it once no US boundary is current; git diff must show
+only removed united-states rows), commit and push it as a staged push, or
+boundary-expectations.test.mjs goes red on every PR. THEN DISPATCH A NEW TILES
+RELEASE FROM MASTER (promote=true), and never roll back the manifest (§17.3):
+that would remove other people's newer places.`)}${rollbackPrelude(wave, "unpublish")}
 drop table if exists pg_temp._us2_points;
 create temp table _us2_points (archetype_id uuid primary key, display_lon double precision not null,
   display_lat double precision not null) on commit drop;

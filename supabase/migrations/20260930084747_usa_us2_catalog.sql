@@ -32,19 +32,19 @@ create temp table _us2_catalog (
 ) on commit drop;
 insert into _us2_catalog values
   ('united-states', 'united-states', 'United States', 'COUNTRY', 0, 1.5, 2, false, null, null, 140, null, 0),
-  ('united-states.california', 'california', 'California', 'REGION', 1, 4, 4, false, null, null, 10, 'united-states', 1),
+  ('united-states.california', 'california', 'California', 'REGION', 1, 1.5, 1.5, false, null, null, 10, 'united-states', 1),
   ('united-states.california.central-coast', 'central-coast', 'Central Coast', 'SUBREGION', 2, 5, 5, true, 'AVA', 'regional', 20, 'united-states.california', 2),
   ('united-states.california.central-valley', 'central-valley', 'Central Valley', 'SUBREGION', 2, 5, 5, false, null, null, 30, 'united-states.california', 2),
   ('united-states.california.north-coast', 'north-coast', 'North Coast', 'SUBREGION', 2, 5, 5, true, 'AVA', 'regional', 130, 'united-states.california', 2),
   ('united-states.california.sierra-foothills', 'sierra-foothills', 'Sierra Foothills', 'SUBREGION', 2, 5, 5, true, 'AVA', 'regional', 160, 'united-states.california', 2),
   ('united-states.california.south-coast', 'south-coast', 'South Coast', 'SUBREGION', 2, 5, 5, true, 'AVA', 'regional', 180, 'united-states.california', 2),
-  ('united-states.new-york', 'new-york', 'New York', 'REGION', 1, 4, 4, false, null, null, 20, 'united-states', 1),
+  ('united-states.new-york', 'new-york', 'New York', 'REGION', 1, 1.5, 1.5, false, null, null, 20, 'united-states', 1),
   ('united-states.new-york.finger-lakes', 'finger-lakes', 'Finger Lakes', 'SUBREGION', 2, 5, 5, true, 'AVA', 'regional', 20, 'united-states.new-york', 2),
   ('united-states.new-york.long-island', 'long-island', 'Long Island', 'SUBREGION', 2, 5, 5, true, 'AVA', 'regional', 40, 'united-states.new-york', 2),
-  ('united-states.oregon', 'oregon', 'Oregon', 'REGION', 1, 4, 4, false, null, null, 30, 'united-states', 1),
+  ('united-states.oregon', 'oregon', 'Oregon', 'REGION', 1, 1.5, 1.5, false, null, null, 30, 'united-states', 1),
   ('united-states.oregon.southern-oregon', 'southern-oregon', 'Southern Oregon', 'SUBREGION', 2, 5, 5, true, 'AVA', 'regional', 20, 'united-states.oregon', 2),
   ('united-states.oregon.willamette-valley', 'willamette-valley', 'Willamette Valley', 'SUBREGION', 2, 5, 5, true, 'AVA', 'regional', 40, 'united-states.oregon', 2),
-  ('united-states.washington', 'washington', 'Washington', 'REGION', 1, 4, 4, false, null, null, 40, 'united-states', 1),
+  ('united-states.washington', 'washington', 'Washington', 'REGION', 1, 1.5, 1.5, false, null, null, 40, 'united-states', 1),
   ('united-states.washington.columbia-valley', 'columbia-valley', 'Columbia Valley', 'SUBREGION', 2, 5, 5, true, 'AVA', 'regional', 10, 'united-states.washington', 2),
   ('united-states.washington.puget-sound', 'puget-sound', 'Puget Sound', 'SUBREGION', 2, 5, 5, true, 'AVA', 'regional', 20, 'united-states.washington', 2);
 

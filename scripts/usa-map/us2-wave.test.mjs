@@ -32,7 +32,7 @@ test("US-2 is the country, the four states, their umbrella AVAs and Central Vall
 test("zooms and tiers follow spec §4", async () => {
   const w = us2Wave(await loadTrees());
   for (const p of w.places) {
-    const want = p.kind === "COUNTRY" ? [0, 1.5, 2] : p.kind === "REGION" ? [1, 4, 4] : [2, 5, 5];
+    const want = p.kind === "COUNTRY" ? [0, 1.5, 2] : p.kind === "REGION" ? [1, 1.5, 1.5] : [2, 5, 5];
     assert.deepEqual([p.display_tier, p.min_zoom, p.label_min_zoom], want, p.key);
     assert.ok(p.label_min_zoom <= 10, `${p.key}: D16`);
     assert.equal(depthOf(p.key), p.kind === "COUNTRY" ? 0 : p.kind === "REGION" ? 1 : 2, p.key);
@@ -90,5 +90,9 @@ test("versions end in 4747 and file names follow them", () => {
   for (const v of Object.values(US2_VERSIONS)) assert.match(v, /^\d{10}4747$/);
   assert.equal(US2_FILES.catalog, "supabase/migrations/20260930084747_usa_us2_catalog.sql");
   assert.equal(US2_FILES.promote, "supabase/migrations/20260930104747_usa_us2_promote.sql");
-  assert.equal(US2_ROLLBACK_FILES.unpublish, "scripts/usa-map/20260930144747_usa_us2_unpublish.sql");
+  assert.equal(US2_ROLLBACK_FILES.unpublish, "scripts/usa-map/usa_us2_unpublish.sql");
+  for (const f of Object.values(US2_ROLLBACK_FILES)) {
+    assert.doesNotMatch(f, /\/\d{14}_/, "a rollback carries no version: the applier would record it and refuse a second run");
+    assert.doesNotMatch(f, /^supabase\/migrations\//);
+  }
 });

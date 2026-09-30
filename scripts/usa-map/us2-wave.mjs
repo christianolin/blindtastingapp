@@ -14,9 +14,6 @@ export const US2_VERSIONS = Object.freeze({
   knowledge: "20260930094747",
   promote: "20260930104747",
   links: "20260930114747",
-  unstage: "20260930124747",
-  remove: "20260930134747",
-  unpublish: "20260930144747",
 });
 export const US2_FILES = Object.freeze({
   catalog: `supabase/migrations/${US2_VERSIONS.catalog}_usa_us2_catalog.sql`,
@@ -25,10 +22,13 @@ export const US2_FILES = Object.freeze({
   links: `supabase/migrations/${US2_VERSIONS.links}_usa_archetype_links_1.sql`,
 });
 // Outside supabase/migrations/ on purpose: a replay must never run a rollback.
+// No version prefix either: they are applied with apply-rollback.mjs, which
+// records no schema_migrations row, so each can run again (a second unstage
+// after a re-stage) and none leaves a remote-only history version behind.
 export const US2_ROLLBACK_FILES = Object.freeze({
-  unstage: `scripts/usa-map/${US2_VERSIONS.unstage}_usa_us2_unstage.sql`,
-  remove: `scripts/usa-map/${US2_VERSIONS.remove}_usa_us2_remove.sql`,
-  unpublish: `scripts/usa-map/${US2_VERSIONS.unpublish}_usa_us2_unpublish.sql`,
+  unstage: "scripts/usa-map/usa_us2_unstage.sql",
+  remove: "scripts/usa-map/usa_us2_remove.sql",
+  unpublish: "scripts/usa-map/usa_us2_unpublish.sql",
 });
 const WAVE_KINDS = new Set(["COUNTRY", "REGION", "SUBREGION"]);
 

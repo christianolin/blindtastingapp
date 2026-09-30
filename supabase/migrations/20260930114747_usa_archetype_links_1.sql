@@ -11,7 +11,7 @@
 -- R2 (20260929150000) gave these wines a curated display point while they had
 -- no map place. A placed wine never keeps one (the room's R2 check: 18 points
 -- before this, 15 after, never a placed one), so this clears the three here;
--- the unpublish rollback (20260930144747) restores them. If R2's
+-- the unpublish rollback (scripts/usa-map/usa_us2_unpublish.sql) restores them. If R2's
 -- columns are gone (its rollback ran), the point steps are skipped.
 --
 -- Apply AFTER the US-2 promote (20260930104747): every place must be

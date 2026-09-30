@@ -17,6 +17,9 @@ test("catalog: no transaction statements, DRAFT only, ends with the checked refr
   assert.deepEqual(topLevelTransactionStatements(sql), []);
   assert.equal((sql.match(/^ {2}\('united-states/gm) ?? []).length, 16, "16 value rows");
   assert.ok(!/'VERIFIED'/.test(sql), "the catalog never writes VERIFIED");
+  // The states draw from z1.5 so the phone's "United States" chip (about z1.9)
+  // shows their washes (D26; review round 2026-09-30).
+  assert.equal((sql.match(/^ {2}\('united-states\.[a-z-]+', '[a-z-]+', '[^']+', 'REGION', 1, 1\.5, 1\.5,/gm) ?? []).length, 4);
   const tail = sql.slice(sql.lastIndexOf("do $$"));
   assert.match(tail, /refresh_wine_place_neighbours\(\)/);
   assert.match(tail, /if v_rows < 0 then/);
@@ -104,6 +107,12 @@ test("rollbacks: each committed file equals its render, outside supabase/migrati
   const depthOrder = [...renders.remove.matchAll(/e\.depth = (\d)/g)].map((m) => Number(m[1]));
   assert.deepEqual(depthOrder, [2, 1, 0], "deepest first");
   assert.ok(renders.unpublish.includes("never roll back the manifest"));
+  // Review round (2026-09-30): the unpublish names the expectations hunk the
+  // sitting committed, and the remove says the kept grape row re-applies.
+  assert.ok(renders.unpublish.includes("data/wine-map/boundary-expectations.json"));
+  assert.ok(renders.unpublish.includes("splice-boundary-expectations.mjs"));
+  assert.ok(renders.remove.includes('"on conflict (name) do nothing"'));
+  for (const sql of Object.values(renders)) assert.ok(sql.includes("scripts/usa-map/apply-rollback.mjs"));
   assert.ok(renders.unpublish.includes("not VERIFIED with one current boundary"));
   const unlink = renders.unpublish.indexOf("delete from public.wine_archetype_placements");
   const flip = renders.unpublish.indexOf("set publication_status = 'DRAFT'");
