@@ -75,7 +75,7 @@ select p.id, g.id, 'PRINCIPAL', true, null, null, 'PUBLISHED'
   from public.wine_places p, public.grapes g
  where p.canonical_key = 'united-states.new-york.finger-lakes.cayuga-lake' and g.name = 'Riesling';
 insert into public.wine_place_grapes (wine_place_id, grape_id, role, permitted, share_pct, local_note, editorial_status)
-select p.id, g.id, 'ACCESSORY', true, null, null, 'PUBLISHED'
+select p.id, g.id, 'PRINCIPAL', true, null, null, 'PUBLISHED'
   from public.wine_places p, public.grapes g
  where p.canonical_key = 'united-states.new-york.finger-lakes.cayuga-lake' and g.name = 'Pinot Noir';
 insert into public.wine_place_grapes (wine_place_id, grape_id, role, permitted, share_pct, local_note, editorial_status)
@@ -106,6 +106,10 @@ select p.id, g.id, 'PRINCIPAL', true, null, null, 'PUBLISHED'
   from public.wine_places p, public.grapes g
  where p.canonical_key = 'united-states.new-york.finger-lakes.seneca-lake' and g.name = 'Riesling';
 insert into public.wine_place_grapes (wine_place_id, grape_id, role, permitted, share_pct, local_note, editorial_status)
+select p.id, g.id, 'PRINCIPAL', true, null, 'Sold as Lemberger', 'PUBLISHED'
+  from public.wine_places p, public.grapes g
+ where p.canonical_key = 'united-states.new-york.finger-lakes.seneca-lake' and g.name = 'Blaufränkisch';
+insert into public.wine_place_grapes (wine_place_id, grape_id, role, permitted, share_pct, local_note, editorial_status)
 select p.id, g.id, 'ACCESSORY', true, null, null, 'PUBLISHED'
   from public.wine_places p, public.grapes g
  where p.canonical_key = 'united-states.new-york.finger-lakes.seneca-lake' and g.name = 'Chardonnay';
@@ -121,10 +125,6 @@ insert into public.wine_place_grapes (wine_place_id, grape_id, role, permitted, 
 select p.id, g.id, 'ACCESSORY', true, null, null, 'PUBLISHED'
   from public.wine_places p, public.grapes g
  where p.canonical_key = 'united-states.new-york.finger-lakes.seneca-lake' and g.name = 'Gewürztraminer';
-insert into public.wine_place_grapes (wine_place_id, grape_id, role, permitted, share_pct, local_note, editorial_status)
-select p.id, g.id, 'ACCESSORY', true, null, 'Sold as Lemberger', 'PUBLISHED'
-  from public.wine_places p, public.grapes g
- where p.canonical_key = 'united-states.new-york.finger-lakes.seneca-lake' and g.name = 'Blaufränkisch';
 
 -- united-states.new-york.hudson-river-region
 insert into public.wine_place_articles (wine_place_id, description, climate, soils, grape_varieties, wine_styles, key_facts, editorial_status)
@@ -236,7 +236,7 @@ select p.id, g.id, 'PRINCIPAL', true, null, null, 'PUBLISHED'
   from public.wine_places p, public.grapes g
  where p.canonical_key = 'united-states.new-york.niagara-escarpment' and g.name = 'Cabernet Franc';
 insert into public.wine_place_grapes (wine_place_id, grape_id, role, permitted, share_pct, local_note, editorial_status)
-select p.id, g.id, 'ACCESSORY', true, null, null, 'PUBLISHED'
+select p.id, g.id, 'PRINCIPAL', true, null, null, 'PUBLISHED'
   from public.wine_places p, public.grapes g
  where p.canonical_key = 'united-states.new-york.niagara-escarpment' and g.name = 'Pinot Noir';
 insert into public.wine_place_grapes (wine_place_id, grape_id, role, permitted, share_pct, local_note, editorial_status)
@@ -414,7 +414,7 @@ select p.id, g.id, 'PRINCIPAL', true, null, null, 'PUBLISHED'
   from public.wine_places p, public.grapes g
  where p.canonical_key = 'united-states.oregon.southern-oregon.umpqua-valley.elkton-oregon' and g.name = 'Pinot Noir';
 insert into public.wine_place_grapes (wine_place_id, grape_id, role, permitted, share_pct, local_note, editorial_status)
-select p.id, g.id, 'ACCESSORY', true, null, null, 'PUBLISHED'
+select p.id, g.id, 'PRINCIPAL', true, null, null, 'PUBLISHED'
   from public.wine_places p, public.grapes g
  where p.canonical_key = 'united-states.oregon.southern-oregon.umpqua-valley.elkton-oregon' and g.name = 'Pinot Gris';
 insert into public.wine_place_grapes (wine_place_id, grape_id, role, permitted, share_pct, local_note, editorial_status)
@@ -439,7 +439,7 @@ select p.id, g.id, 'PRINCIPAL', true, null, null, 'PUBLISHED'
   from public.wine_places p, public.grapes g
  where p.canonical_key = 'united-states.oregon.southern-oregon.umpqua-valley.red-hill-douglas-county-oregon' and g.name = 'Pinot Noir';
 insert into public.wine_place_grapes (wine_place_id, grape_id, role, permitted, share_pct, local_note, editorial_status)
-select p.id, g.id, 'ACCESSORY', true, null, null, 'PUBLISHED'
+select p.id, g.id, 'PRINCIPAL', true, null, null, 'PUBLISHED'
   from public.wine_places p, public.grapes g
  where p.canonical_key = 'united-states.oregon.southern-oregon.umpqua-valley.red-hill-douglas-county-oregon' and g.name = 'Pinot Gris';
 
@@ -475,11 +475,11 @@ select p.id, g.id, 'PRINCIPAL', true, null, null, 'PUBLISHED'
   from public.wine_places p, public.grapes g
  where p.canonical_key = 'united-states.oregon.willamette-valley.chehalem-mountains' and g.name = 'Pinot Noir';
 insert into public.wine_place_grapes (wine_place_id, grape_id, role, permitted, share_pct, local_note, editorial_status)
-select p.id, g.id, 'ACCESSORY', true, null, null, 'PUBLISHED'
+select p.id, g.id, 'PRINCIPAL', true, null, null, 'PUBLISHED'
   from public.wine_places p, public.grapes g
  where p.canonical_key = 'united-states.oregon.willamette-valley.chehalem-mountains' and g.name = 'Chardonnay';
 insert into public.wine_place_grapes (wine_place_id, grape_id, role, permitted, share_pct, local_note, editorial_status)
-select p.id, g.id, 'ACCESSORY', true, null, null, 'PUBLISHED'
+select p.id, g.id, 'PRINCIPAL', true, null, null, 'PUBLISHED'
   from public.wine_places p, public.grapes g
  where p.canonical_key = 'united-states.oregon.willamette-valley.chehalem-mountains' and g.name = 'Pinot Gris';
 insert into public.wine_place_grapes (wine_place_id, grape_id, role, permitted, share_pct, local_note, editorial_status)
@@ -508,11 +508,11 @@ select p.id, g.id, 'PRINCIPAL', true, null, null, 'PUBLISHED'
   from public.wine_places p, public.grapes g
  where p.canonical_key = 'united-states.oregon.willamette-valley.chehalem-mountains.laurelwood-district' and g.name = 'Pinot Noir';
 insert into public.wine_place_grapes (wine_place_id, grape_id, role, permitted, share_pct, local_note, editorial_status)
-select p.id, g.id, 'ACCESSORY', true, null, null, 'PUBLISHED'
+select p.id, g.id, 'PRINCIPAL', true, null, null, 'PUBLISHED'
   from public.wine_places p, public.grapes g
  where p.canonical_key = 'united-states.oregon.willamette-valley.chehalem-mountains.laurelwood-district' and g.name = 'Pinot Gris';
 insert into public.wine_place_grapes (wine_place_id, grape_id, role, permitted, share_pct, local_note, editorial_status)
-select p.id, g.id, 'ACCESSORY', true, null, null, 'PUBLISHED'
+select p.id, g.id, 'PRINCIPAL', true, null, null, 'PUBLISHED'
   from public.wine_places p, public.grapes g
  where p.canonical_key = 'united-states.oregon.willamette-valley.chehalem-mountains.laurelwood-district' and g.name = 'Chardonnay';
 
@@ -529,11 +529,11 @@ select p.id, g.id, 'PRINCIPAL', true, null, null, 'PUBLISHED'
   from public.wine_places p, public.grapes g
  where p.canonical_key = 'united-states.oregon.willamette-valley.chehalem-mountains.ribbon-ridge' and g.name = 'Pinot Noir';
 insert into public.wine_place_grapes (wine_place_id, grape_id, role, permitted, share_pct, local_note, editorial_status)
-select p.id, g.id, 'ACCESSORY', true, null, null, 'PUBLISHED'
+select p.id, g.id, 'PRINCIPAL', true, null, null, 'PUBLISHED'
   from public.wine_places p, public.grapes g
  where p.canonical_key = 'united-states.oregon.willamette-valley.chehalem-mountains.ribbon-ridge' and g.name = 'Chardonnay';
 insert into public.wine_place_grapes (wine_place_id, grape_id, role, permitted, share_pct, local_note, editorial_status)
-select p.id, g.id, 'ACCESSORY', true, null, null, 'PUBLISHED'
+select p.id, g.id, 'PRINCIPAL', true, null, null, 'PUBLISHED'
   from public.wine_places p, public.grapes g
  where p.canonical_key = 'united-states.oregon.willamette-valley.chehalem-mountains.ribbon-ridge' and g.name = 'Pinot Gris';
 insert into public.wine_place_grapes (wine_place_id, grape_id, role, permitted, share_pct, local_note, editorial_status)
@@ -560,11 +560,11 @@ select p.id, g.id, 'PRINCIPAL', true, null, null, 'PUBLISHED'
   from public.wine_places p, public.grapes g
  where p.canonical_key = 'united-states.oregon.willamette-valley.dundee-hills' and g.name = 'Pinot Noir';
 insert into public.wine_place_grapes (wine_place_id, grape_id, role, permitted, share_pct, local_note, editorial_status)
-select p.id, g.id, 'ACCESSORY', true, null, null, 'PUBLISHED'
+select p.id, g.id, 'PRINCIPAL', true, null, null, 'PUBLISHED'
   from public.wine_places p, public.grapes g
  where p.canonical_key = 'united-states.oregon.willamette-valley.dundee-hills' and g.name = 'Chardonnay';
 insert into public.wine_place_grapes (wine_place_id, grape_id, role, permitted, share_pct, local_note, editorial_status)
-select p.id, g.id, 'ACCESSORY', true, null, null, 'PUBLISHED'
+select p.id, g.id, 'PRINCIPAL', true, null, null, 'PUBLISHED'
   from public.wine_places p, public.grapes g
  where p.canonical_key = 'united-states.oregon.willamette-valley.dundee-hills' and g.name = 'Pinot Gris';
 insert into public.wine_place_grapes (wine_place_id, grape_id, role, permitted, share_pct, local_note, editorial_status)
@@ -585,11 +585,11 @@ select p.id, g.id, 'PRINCIPAL', true, null, null, 'PUBLISHED'
   from public.wine_places p, public.grapes g
  where p.canonical_key = 'united-states.oregon.willamette-valley.eola-amity-hills' and g.name = 'Pinot Noir';
 insert into public.wine_place_grapes (wine_place_id, grape_id, role, permitted, share_pct, local_note, editorial_status)
-select p.id, g.id, 'ACCESSORY', true, null, null, 'PUBLISHED'
+select p.id, g.id, 'PRINCIPAL', true, null, null, 'PUBLISHED'
   from public.wine_places p, public.grapes g
  where p.canonical_key = 'united-states.oregon.willamette-valley.eola-amity-hills' and g.name = 'Chardonnay';
 insert into public.wine_place_grapes (wine_place_id, grape_id, role, permitted, share_pct, local_note, editorial_status)
-select p.id, g.id, 'ACCESSORY', true, null, null, 'PUBLISHED'
+select p.id, g.id, 'PRINCIPAL', true, null, null, 'PUBLISHED'
   from public.wine_places p, public.grapes g
  where p.canonical_key = 'united-states.oregon.willamette-valley.eola-amity-hills' and g.name = 'Pinot Gris';
 insert into public.wine_place_grapes (wine_place_id, grape_id, role, permitted, share_pct, local_note, editorial_status)
@@ -614,7 +614,7 @@ select p.id, g.id, 'PRINCIPAL', true, null, null, 'PUBLISHED'
   from public.wine_places p, public.grapes g
  where p.canonical_key = 'united-states.oregon.willamette-valley.lower-long-tom' and g.name = 'Pinot Noir';
 insert into public.wine_place_grapes (wine_place_id, grape_id, role, permitted, share_pct, local_note, editorial_status)
-select p.id, g.id, 'ACCESSORY', true, null, null, 'PUBLISHED'
+select p.id, g.id, 'PRINCIPAL', true, null, null, 'PUBLISHED'
   from public.wine_places p, public.grapes g
  where p.canonical_key = 'united-states.oregon.willamette-valley.lower-long-tom' and g.name = 'Chardonnay';
 insert into public.wine_place_grapes (wine_place_id, grape_id, role, permitted, share_pct, local_note, editorial_status)
@@ -643,7 +643,7 @@ select p.id, g.id, 'PRINCIPAL', true, null, null, 'PUBLISHED'
   from public.wine_places p, public.grapes g
  where p.canonical_key = 'united-states.oregon.willamette-valley.mcminnville' and g.name = 'Pinot Noir';
 insert into public.wine_place_grapes (wine_place_id, grape_id, role, permitted, share_pct, local_note, editorial_status)
-select p.id, g.id, 'ACCESSORY', true, null, null, 'PUBLISHED'
+select p.id, g.id, 'PRINCIPAL', true, null, null, 'PUBLISHED'
   from public.wine_places p, public.grapes g
  where p.canonical_key = 'united-states.oregon.willamette-valley.mcminnville' and g.name = 'Chardonnay';
 insert into public.wine_place_grapes (wine_place_id, grape_id, role, permitted, share_pct, local_note, editorial_status)
@@ -664,17 +664,17 @@ select p.id, g.id, 'PRINCIPAL', true, null, null, 'PUBLISHED'
   from public.wine_places p, public.grapes g
  where p.canonical_key = 'united-states.oregon.willamette-valley.mount-pisgah-polk-county-oregon' and g.name = 'Pinot Noir';
 insert into public.wine_place_grapes (wine_place_id, grape_id, role, permitted, share_pct, local_note, editorial_status)
-select p.id, g.id, 'ACCESSORY', true, null, null, 'PUBLISHED'
+select p.id, g.id, 'PRINCIPAL', true, null, null, 'PUBLISHED'
   from public.wine_places p, public.grapes g
  where p.canonical_key = 'united-states.oregon.willamette-valley.mount-pisgah-polk-county-oregon' and g.name = 'Pinot Gris';
 insert into public.wine_place_grapes (wine_place_id, grape_id, role, permitted, share_pct, local_note, editorial_status)
-select p.id, g.id, 'ACCESSORY', true, null, null, 'PUBLISHED'
+select p.id, g.id, 'PRINCIPAL', true, null, null, 'PUBLISHED'
   from public.wine_places p, public.grapes g
  where p.canonical_key = 'united-states.oregon.willamette-valley.mount-pisgah-polk-county-oregon' and g.name = 'Chardonnay';
 
 -- united-states.oregon.willamette-valley.tualatin-hills
 insert into public.wine_place_articles (wine_place_id, description, climate, soils, grape_varieties, wine_styles, key_facts, editorial_status)
-select id, 'An AVA of about 144,000 acres in the northwest corner of the Willamette Valley, in Multnomah and Washington counties, entirely within the Willamette Valley AVA, named for and largely defined by the watershed of the Tualatin River. It is sheltered by the Coast Range to the west and the Chehalem Mountains to the south.', 'A rain shadow gives cooler springs and drier autumns at harvest, with wider day-night swings than the areas around it; vineyards lie between 200 and 1,000 feet.', 'The largest concentration in Oregon of Laurelwood soil, fine, stone-free silt of wind-blown loess and weathered basalt, with the related Kinton and Cornelius series.', 'Pinot Noir leads, with Pinot Gris, Chardonnay and Gewürztraminer.', 'Red wine from Pinot Noir and white wines from Pinot Gris, Chardonnay and Gewürztraminer.', array['Established 2020 (27 CFR 9.268)', 'Multnomah and Washington counties', 'About 1,009 acres planted in 41 vineyards (Willamette Valley Wineries Association)', 'Average annual rainfall of about 43.7 inches (T.D. TTB-160)']::text[], 'PUBLISHED'
+select id, 'An AVA of about 144,000 acres in the northwest corner of the Willamette Valley, in Clackamas, Multnomah and Washington counties, entirely within the Willamette Valley AVA, named for and largely defined by the watershed of the Tualatin River. It is sheltered by the Coast Range to the west and the Chehalem Mountains to the south.', 'A rain shadow gives cooler springs and drier autumns at harvest, with wider day-night swings than the areas around it; vineyards lie between 200 and 1,000 feet.', 'The largest concentration in Oregon of Laurelwood soil, fine, stone-free silt of wind-blown loess and weathered basalt, with the related Kinton and Cornelius series.', 'Pinot Noir leads, with Pinot Gris, Chardonnay and Gewürztraminer.', 'Red wine from Pinot Noir and white wines from Pinot Gris, Chardonnay and Gewürztraminer.', array['Established 2020 (27 CFR 9.268)', 'Clackamas, Multnomah and Washington counties', 'About 1,009 acres planted in 41 vineyards (Willamette Valley Wineries Association)', 'Average annual rainfall of about 43.7 inches (T.D. TTB-160)']::text[], 'PUBLISHED'
   from public.wine_places where canonical_key = 'united-states.oregon.willamette-valley.tualatin-hills';
 insert into public.wine_place_styles (wine_place_id, style, sort_order, editorial_status)
 select id, 'RED', 0, 'PUBLISHED' from public.wine_places where canonical_key = 'united-states.oregon.willamette-valley.tualatin-hills';
@@ -685,11 +685,11 @@ select p.id, g.id, 'PRINCIPAL', true, null, null, 'PUBLISHED'
   from public.wine_places p, public.grapes g
  where p.canonical_key = 'united-states.oregon.willamette-valley.tualatin-hills' and g.name = 'Pinot Noir';
 insert into public.wine_place_grapes (wine_place_id, grape_id, role, permitted, share_pct, local_note, editorial_status)
-select p.id, g.id, 'ACCESSORY', true, null, null, 'PUBLISHED'
+select p.id, g.id, 'PRINCIPAL', true, null, null, 'PUBLISHED'
   from public.wine_places p, public.grapes g
  where p.canonical_key = 'united-states.oregon.willamette-valley.tualatin-hills' and g.name = 'Pinot Gris';
 insert into public.wine_place_grapes (wine_place_id, grape_id, role, permitted, share_pct, local_note, editorial_status)
-select p.id, g.id, 'ACCESSORY', true, null, null, 'PUBLISHED'
+select p.id, g.id, 'PRINCIPAL', true, null, null, 'PUBLISHED'
   from public.wine_places p, public.grapes g
  where p.canonical_key = 'united-states.oregon.willamette-valley.tualatin-hills' and g.name = 'Chardonnay';
 insert into public.wine_place_grapes (wine_place_id, grape_id, role, permitted, share_pct, local_note, editorial_status)
@@ -710,11 +710,11 @@ select p.id, g.id, 'PRINCIPAL', true, null, null, 'PUBLISHED'
   from public.wine_places p, public.grapes g
  where p.canonical_key = 'united-states.oregon.willamette-valley.van-duzer-corridor' and g.name = 'Pinot Noir';
 insert into public.wine_place_grapes (wine_place_id, grape_id, role, permitted, share_pct, local_note, editorial_status)
-select p.id, g.id, 'ACCESSORY', true, null, null, 'PUBLISHED'
+select p.id, g.id, 'PRINCIPAL', true, null, null, 'PUBLISHED'
   from public.wine_places p, public.grapes g
  where p.canonical_key = 'united-states.oregon.willamette-valley.van-duzer-corridor' and g.name = 'Chardonnay';
 insert into public.wine_place_grapes (wine_place_id, grape_id, role, permitted, share_pct, local_note, editorial_status)
-select p.id, g.id, 'ACCESSORY', true, null, null, 'PUBLISHED'
+select p.id, g.id, 'PRINCIPAL', true, null, null, 'PUBLISHED'
   from public.wine_places p, public.grapes g
  where p.canonical_key = 'united-states.oregon.willamette-valley.van-duzer-corridor' and g.name = 'Pinot Gris';
 insert into public.wine_place_grapes (wine_place_id, grape_id, role, permitted, share_pct, local_note, editorial_status)
@@ -743,11 +743,11 @@ select p.id, g.id, 'PRINCIPAL', true, null, null, 'PUBLISHED'
   from public.wine_places p, public.grapes g
  where p.canonical_key = 'united-states.oregon.willamette-valley.yamhill-carlton' and g.name = 'Pinot Noir';
 insert into public.wine_place_grapes (wine_place_id, grape_id, role, permitted, share_pct, local_note, editorial_status)
-select p.id, g.id, 'ACCESSORY', true, null, null, 'PUBLISHED'
+select p.id, g.id, 'PRINCIPAL', true, null, null, 'PUBLISHED'
   from public.wine_places p, public.grapes g
  where p.canonical_key = 'united-states.oregon.willamette-valley.yamhill-carlton' and g.name = 'Chardonnay';
 insert into public.wine_place_grapes (wine_place_id, grape_id, role, permitted, share_pct, local_note, editorial_status)
-select p.id, g.id, 'ACCESSORY', true, null, null, 'PUBLISHED'
+select p.id, g.id, 'PRINCIPAL', true, null, null, 'PUBLISHED'
   from public.wine_places p, public.grapes g
  where p.canonical_key = 'united-states.oregon.willamette-valley.yamhill-carlton' and g.name = 'Pinot Gris';
 
@@ -879,7 +879,7 @@ select p.id, g.id, 'PRINCIPAL', true, null, null, 'PUBLISHED'
   from public.wine_places p, public.grapes g
  where p.canonical_key = 'united-states.washington.columbia-valley.royal-slope' and g.name = 'Cabernet Sauvignon';
 insert into public.wine_place_grapes (wine_place_id, grape_id, role, permitted, share_pct, local_note, editorial_status)
-select p.id, g.id, 'ACCESSORY', true, null, null, 'PUBLISHED'
+select p.id, g.id, 'PRINCIPAL', true, null, null, 'PUBLISHED'
   from public.wine_places p, public.grapes g
  where p.canonical_key = 'united-states.washington.columbia-valley.royal-slope' and g.name = 'Syrah';
 insert into public.wine_place_grapes (wine_place_id, grape_id, role, permitted, share_pct, local_note, editorial_status)
@@ -898,7 +898,7 @@ select p.id, g.id, 'PRINCIPAL', true, null, null, 'PUBLISHED'
   from public.wine_places p, public.grapes g
  where p.canonical_key = 'united-states.washington.columbia-valley.the-burn-of-columbia-valley' and g.name = 'Cabernet Sauvignon';
 insert into public.wine_place_grapes (wine_place_id, grape_id, role, permitted, share_pct, local_note, editorial_status)
-select p.id, g.id, 'ACCESSORY', true, null, null, 'PUBLISHED'
+select p.id, g.id, 'PRINCIPAL', true, null, null, 'PUBLISHED'
   from public.wine_places p, public.grapes g
  where p.canonical_key = 'united-states.washington.columbia-valley.the-burn-of-columbia-valley' and g.name = 'Syrah';
 
@@ -919,7 +919,7 @@ select p.id, g.id, 'PRINCIPAL', true, null, null, 'PUBLISHED'
   from public.wine_places p, public.grapes g
  where p.canonical_key = 'united-states.washington.columbia-valley.wahluke-slope' and g.name = 'Merlot';
 insert into public.wine_place_grapes (wine_place_id, grape_id, role, permitted, share_pct, local_note, editorial_status)
-select p.id, g.id, 'ACCESSORY', true, null, null, 'PUBLISHED'
+select p.id, g.id, 'PRINCIPAL', true, null, null, 'PUBLISHED'
   from public.wine_places p, public.grapes g
  where p.canonical_key = 'united-states.washington.columbia-valley.wahluke-slope' and g.name = 'Syrah';
 insert into public.wine_place_grapes (wine_place_id, grape_id, role, permitted, share_pct, local_note, editorial_status)
@@ -963,7 +963,7 @@ select p.id, g.id, 'PRINCIPAL', true, null, null, 'PUBLISHED'
   from public.wine_places p, public.grapes g
  where p.canonical_key = 'united-states.washington.columbia-valley.white-bluffs' and g.name = 'Merlot';
 insert into public.wine_place_grapes (wine_place_id, grape_id, role, permitted, share_pct, local_note, editorial_status)
-select p.id, g.id, 'ACCESSORY', true, null, null, 'PUBLISHED'
+select p.id, g.id, 'PRINCIPAL', true, null, null, 'PUBLISHED'
   from public.wine_places p, public.grapes g
  where p.canonical_key = 'united-states.washington.columbia-valley.white-bluffs' and g.name = 'Syrah';
 insert into public.wine_place_grapes (wine_place_id, grape_id, role, permitted, share_pct, local_note, editorial_status)
@@ -1028,11 +1028,11 @@ select p.id, g.id, 'PRINCIPAL', true, null, null, 'PUBLISHED'
   from public.wine_places p, public.grapes g
  where p.canonical_key = 'united-states.washington.columbia-valley.yakima-valley.goose-gap' and g.name = 'Cabernet Sauvignon';
 insert into public.wine_place_grapes (wine_place_id, grape_id, role, permitted, share_pct, local_note, editorial_status)
-select p.id, g.id, 'ACCESSORY', true, null, null, 'PUBLISHED'
+select p.id, g.id, 'PRINCIPAL', true, null, null, 'PUBLISHED'
   from public.wine_places p, public.grapes g
  where p.canonical_key = 'united-states.washington.columbia-valley.yakima-valley.goose-gap' and g.name = 'Merlot';
 insert into public.wine_place_grapes (wine_place_id, grape_id, role, permitted, share_pct, local_note, editorial_status)
-select p.id, g.id, 'ACCESSORY', true, null, null, 'PUBLISHED'
+select p.id, g.id, 'PRINCIPAL', true, null, null, 'PUBLISHED'
   from public.wine_places p, public.grapes g
  where p.canonical_key = 'united-states.washington.columbia-valley.yakima-valley.goose-gap' and g.name = 'Syrah';
 insert into public.wine_place_grapes (wine_place_id, grape_id, role, permitted, share_pct, local_note, editorial_status)
@@ -1057,7 +1057,7 @@ select p.id, g.id, 'PRINCIPAL', true, null, null, 'PUBLISHED'
   from public.wine_places p, public.grapes g
  where p.canonical_key = 'united-states.washington.columbia-valley.yakima-valley.rattlesnake-hills' and g.name = 'Cabernet Sauvignon';
 insert into public.wine_place_grapes (wine_place_id, grape_id, role, permitted, share_pct, local_note, editorial_status)
-select p.id, g.id, 'ACCESSORY', true, null, null, 'PUBLISHED'
+select p.id, g.id, 'PRINCIPAL', true, null, null, 'PUBLISHED'
   from public.wine_places p, public.grapes g
  where p.canonical_key = 'united-states.washington.columbia-valley.yakima-valley.rattlesnake-hills' and g.name = 'Syrah';
 insert into public.wine_place_grapes (wine_place_id, grape_id, role, permitted, share_pct, local_note, editorial_status)
@@ -1076,11 +1076,11 @@ select p.id, g.id, 'PRINCIPAL', true, null, null, 'PUBLISHED'
   from public.wine_places p, public.grapes g
  where p.canonical_key = 'united-states.washington.columbia-valley.yakima-valley.red-mountain' and g.name = 'Cabernet Sauvignon';
 insert into public.wine_place_grapes (wine_place_id, grape_id, role, permitted, share_pct, local_note, editorial_status)
-select p.id, g.id, 'ACCESSORY', true, null, null, 'PUBLISHED'
+select p.id, g.id, 'PRINCIPAL', true, null, null, 'PUBLISHED'
   from public.wine_places p, public.grapes g
  where p.canonical_key = 'united-states.washington.columbia-valley.yakima-valley.red-mountain' and g.name = 'Merlot';
 insert into public.wine_place_grapes (wine_place_id, grape_id, role, permitted, share_pct, local_note, editorial_status)
-select p.id, g.id, 'ACCESSORY', true, null, null, 'PUBLISHED'
+select p.id, g.id, 'PRINCIPAL', true, null, null, 'PUBLISHED'
   from public.wine_places p, public.grapes g
  where p.canonical_key = 'united-states.washington.columbia-valley.yakima-valley.red-mountain' and g.name = 'Syrah';
 

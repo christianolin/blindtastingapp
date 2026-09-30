@@ -180,8 +180,7 @@
           "name": "Riesling"
         },
         {
-          "name": "Pinot Noir",
-          "role": "ACCESSORY"
+          "name": "Pinot Noir"
         },
         {
           "name": "Cabernet Franc",
@@ -239,6 +238,10 @@
           "name": "Riesling"
         },
         {
+          "name": "Blaufränkisch",
+          "note": "Sold as Lemberger"
+        },
+        {
           "name": "Chardonnay",
           "role": "ACCESSORY"
         },
@@ -253,11 +256,6 @@
         {
           "name": "Gewürztraminer",
           "role": "ACCESSORY"
-        },
-        {
-          "name": "Blaufränkisch",
-          "role": "ACCESSORY",
-          "note": "Sold as Lemberger"
         }
       ],
       "sources": [
@@ -276,6 +274,10 @@
         {
           "title": "New York Wine & Grape Foundation, Finger Lakes region sheet",
           "url": "https://newyorkwines.org/wp-content/uploads/2023/08/NYW-One-Sheet-Fingerlakes-M3-HR.pdf"
+        },
+        {
+          "title": "Wine With Seth, Seneca Lake AVA",
+          "url": "https://www.winewithseth.com/winewiki/seneca-lake-ava/"
         }
       ]
     },
@@ -458,8 +460,7 @@
           "name": "Cabernet Franc"
         },
         {
-          "name": "Pinot Noir",
-          "role": "ACCESSORY"
+          "name": "Pinot Noir"
         },
         {
           "name": "Chardonnay",
@@ -775,8 +776,7 @@
           "name": "Pinot Noir"
         },
         {
-          "name": "Pinot Gris",
-          "role": "ACCESSORY"
+          "name": "Pinot Gris"
         },
         {
           "name": "Gewürztraminer",
@@ -821,8 +821,7 @@
           "name": "Pinot Noir"
         },
         {
-          "name": "Pinot Gris",
-          "role": "ACCESSORY"
+          "name": "Pinot Gris"
         }
       ],
       "sources": [
@@ -904,12 +903,10 @@
           "name": "Pinot Noir"
         },
         {
-          "name": "Chardonnay",
-          "role": "ACCESSORY"
+          "name": "Chardonnay"
         },
         {
-          "name": "Pinot Gris",
-          "role": "ACCESSORY"
+          "name": "Pinot Gris"
         },
         {
           "name": "Riesling",
@@ -958,12 +955,10 @@
           "name": "Pinot Noir"
         },
         {
-          "name": "Pinot Gris",
-          "role": "ACCESSORY"
+          "name": "Pinot Gris"
         },
         {
-          "name": "Chardonnay",
-          "role": "ACCESSORY"
+          "name": "Chardonnay"
         }
       ],
       "sources": [
@@ -1004,12 +999,10 @@
           "name": "Pinot Noir"
         },
         {
-          "name": "Chardonnay",
-          "role": "ACCESSORY"
+          "name": "Chardonnay"
         },
         {
-          "name": "Pinot Gris",
-          "role": "ACCESSORY"
+          "name": "Pinot Gris"
         },
         {
           "name": "Riesling",
@@ -1055,12 +1048,10 @@
           "name": "Pinot Noir"
         },
         {
-          "name": "Chardonnay",
-          "role": "ACCESSORY"
+          "name": "Chardonnay"
         },
         {
-          "name": "Pinot Gris",
-          "role": "ACCESSORY"
+          "name": "Pinot Gris"
         },
         {
           "name": "Pinot Blanc",
@@ -1105,12 +1096,10 @@
           "name": "Pinot Noir"
         },
         {
-          "name": "Chardonnay",
-          "role": "ACCESSORY"
+          "name": "Chardonnay"
         },
         {
-          "name": "Pinot Gris",
-          "role": "ACCESSORY"
+          "name": "Pinot Gris"
         },
         {
           "name": "Riesling",
@@ -1159,8 +1148,7 @@
           "name": "Pinot Noir"
         },
         {
-          "name": "Chardonnay",
-          "role": "ACCESSORY"
+          "name": "Chardonnay"
         },
         {
           "name": "Riesling",
@@ -1209,8 +1197,7 @@
           "name": "Pinot Noir"
         },
         {
-          "name": "Chardonnay",
-          "role": "ACCESSORY"
+          "name": "Chardonnay"
         },
         {
           "name": "Pinot Blanc",
@@ -1251,12 +1238,10 @@
           "name": "Pinot Noir"
         },
         {
-          "name": "Pinot Gris",
-          "role": "ACCESSORY"
+          "name": "Pinot Gris"
         },
         {
-          "name": "Chardonnay",
-          "role": "ACCESSORY"
+          "name": "Chardonnay"
         }
       ],
       "sources": [
@@ -1272,14 +1257,14 @@
     },
     "united-states.oregon.willamette-valley.tualatin-hills": {
       "article": {
-        "description": "An AVA of about 144,000 acres in the northwest corner of the Willamette Valley, in Multnomah and Washington counties, entirely within the Willamette Valley AVA, named for and largely defined by the watershed of the Tualatin River. It is sheltered by the Coast Range to the west and the Chehalem Mountains to the south.",
+        "description": "An AVA of about 144,000 acres in the northwest corner of the Willamette Valley, in Clackamas, Multnomah and Washington counties, entirely within the Willamette Valley AVA, named for and largely defined by the watershed of the Tualatin River. It is sheltered by the Coast Range to the west and the Chehalem Mountains to the south.",
         "climate": "A rain shadow gives cooler springs and drier autumns at harvest, with wider day-night swings than the areas around it; vineyards lie between 200 and 1,000 feet.",
         "soils": "The largest concentration in Oregon of Laurelwood soil, fine, stone-free silt of wind-blown loess and weathered basalt, with the related Kinton and Cornelius series.",
         "grape_varieties": "Pinot Noir leads, with Pinot Gris, Chardonnay and Gewürztraminer.",
         "wine_styles": "Red wine from Pinot Noir and white wines from Pinot Gris, Chardonnay and Gewürztraminer.",
         "key_facts": [
           "Established 2020 (27 CFR 9.268)",
-          "Multnomah and Washington counties",
+          "Clackamas, Multnomah and Washington counties",
           "About 1,009 acres planted in 41 vineyards (Willamette Valley Wineries Association)",
           "Average annual rainfall of about 43.7 inches (T.D. TTB-160)"
         ]
@@ -1293,12 +1278,10 @@
           "name": "Pinot Noir"
         },
         {
-          "name": "Pinot Gris",
-          "role": "ACCESSORY"
+          "name": "Pinot Gris"
         },
         {
-          "name": "Chardonnay",
-          "role": "ACCESSORY"
+          "name": "Chardonnay"
         },
         {
           "name": "Gewürztraminer",
@@ -1343,12 +1326,10 @@
           "name": "Pinot Noir"
         },
         {
-          "name": "Chardonnay",
-          "role": "ACCESSORY"
+          "name": "Chardonnay"
         },
         {
-          "name": "Pinot Gris",
-          "role": "ACCESSORY"
+          "name": "Pinot Gris"
         },
         {
           "name": "Riesling",
@@ -1405,12 +1386,10 @@
           "name": "Pinot Noir"
         },
         {
-          "name": "Chardonnay",
-          "role": "ACCESSORY"
+          "name": "Chardonnay"
         },
         {
-          "name": "Pinot Gris",
-          "role": "ACCESSORY"
+          "name": "Pinot Gris"
         }
       ],
       "sources": [
@@ -1678,8 +1657,7 @@
           "name": "Cabernet Sauvignon"
         },
         {
-          "name": "Syrah",
-          "role": "ACCESSORY"
+          "name": "Syrah"
         },
         {
           "name": "Chardonnay",
@@ -1719,8 +1697,7 @@
           "name": "Cabernet Sauvignon"
         },
         {
-          "name": "Syrah",
-          "role": "ACCESSORY"
+          "name": "Syrah"
         }
       ],
       "sources": [
@@ -1764,8 +1741,7 @@
           "name": "Merlot"
         },
         {
-          "name": "Syrah",
-          "role": "ACCESSORY"
+          "name": "Syrah"
         },
         {
           "name": "Chardonnay",
@@ -1848,8 +1824,7 @@
           "name": "Merlot"
         },
         {
-          "name": "Syrah",
-          "role": "ACCESSORY"
+          "name": "Syrah"
         },
         {
           "name": "Riesling",
@@ -1987,12 +1962,10 @@
           "name": "Cabernet Sauvignon"
         },
         {
-          "name": "Merlot",
-          "role": "ACCESSORY"
+          "name": "Merlot"
         },
         {
-          "name": "Syrah",
-          "role": "ACCESSORY"
+          "name": "Syrah"
         },
         {
           "name": "Chardonnay",
@@ -2040,8 +2013,7 @@
           "name": "Cabernet Sauvignon"
         },
         {
-          "name": "Syrah",
-          "role": "ACCESSORY"
+          "name": "Syrah"
         },
         {
           "name": "Riesling",
@@ -2081,12 +2053,10 @@
           "name": "Cabernet Sauvignon"
         },
         {
-          "name": "Merlot",
-          "role": "ACCESSORY"
+          "name": "Merlot"
         },
         {
-          "name": "Syrah",
-          "role": "ACCESSORY"
+          "name": "Syrah"
         }
       ],
       "sources": [

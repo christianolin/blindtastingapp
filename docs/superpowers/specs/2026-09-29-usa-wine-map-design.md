@@ -435,7 +435,7 @@ united-states                                   COUNTRY     tier 0  z1.5 / label
 - Form: `<country>.<state>[.<ancestor-slugs>…].<slug>`, following the primary tree at insert time
   (D6/D7).
 - Slugs come from the TTB legal name without "AVA": `sta-rita-hills`, `mt-veeder`,
-  `mt-pisgah-polk-county-oregon`, `oak-knoll-district-of-napa-valley`.
+  `mount-pisgah-polk-county-oregon`, `oak-knoll-district-of-napa-valley`.
 - Keys are opaque once VERIFIED, and nothing parses them for hierarchy (CLAUDE.md Phase 3A). Only
   the tile pipeline reads the first two segments, and the coverage check reads the first.
 
@@ -1306,7 +1306,7 @@ The DRAFT-boundary window is therefore minutes, not days, and never holds an own
   - no Idaho-dominant AVA was created;
   - Finger Lakes contains Seneca Lake and Cayuga Lake;
   - Long Island contains North Fork of Long Island and The Hamptons, Long Island;
-  - "Mt. Pisgah, Polk County, Oregon" wraps cleanly at 375 px;
+  - "Mount Pisgah, Polk County, Oregon" wraps cleanly at 375 px;
   - the §8.7 and §10.3 checks are repeated.
 
 **US-5: 2026 AVAs missing from UC Davis.**
@@ -1758,3 +1758,5 @@ Settled by the US-4 plan (`docs/superpowers/plans/2026-09-30-usa-wine-map-us4.md
 - **No archetype link migration.** Spec §14.2 names none for US-4 (the Willamette row reads "unchanged"), so the Willamette Pinot Noir keeps its US-2 home and placements; the rehearsal and the live check assert that, and the US-4 unpublish refuses while any typical wine is placed on a US-4 place.
 - **Hudson River Region is the one new outline place** (9,751 km² ≥ 5,000, D15). Rogue Valley (4,639 km²) and Upper Hudson (4,206 km²) fill. US outlines go 11 → 12.
 - **Shard zooms follow the deepest label (D16):** Washington and Oregon go to max zoom 11 (tier-4 labels at z9), New York to 9 (tier-3 labels at z7). The rehearsal's export preview (GeoJSON byte proxies for §13.2's 1.5 MB archive target): washington 489,416 B (19 keys, z11), oregon 925,664 B (21 keys, z11), new-york 331,401 B (11 keys, z9); california unchanged at 156 keys, z12.
+- **Mount Pisgah's name and slug follow 27 CFR 9.284's heading, "Mount Pisgah, Polk County, Oregon"** (not "Mt."), as UC Davis's name field does: the place is named "Mount Pisgah, Polk County, Oregon" and keyed `united-states.oregon.willamette-valley.mount-pisgah-polk-county-oregon`. The rule (T.D. TTB-180) also recognizes "Mt. Pisgah, Polk County, Oregon" as a term of viticultural significance, which the place's key facts say; §4's example slug, §15's acceptance string and the plan's acceptance row read "Mount Pisgah". The key never changes (it locks at the promote).
+- **Grape roles follow each place's own sources, re-checked before the sitting** (re-review, 2026-09-30; keys unchanged). A grape is PRINCIPAL where the place's text or a cited source names it among the leading or most-grown grapes (a Washington State Wine Commission profile's "Top Varieties", the Willamette Valley Wineries Association's "Most common grape varieties", an Oregon Wine Board "Predominant Varieties" list, a final rule's "most commonly grown"), taking at most the first three such names and never passing over a grape the same list ranks higher. Oregon: Pinot Gris and Chardonnay are PRINCIPAL on the Willamette sub-AVAs whose sources rank them in the first three (Pinot Gris also on Red Hill Douglas County and Elkton Oregon), so Oregon reads Pinot Noir, then Chardonnay and Pinot Gris, ahead of Syrah. Washington: Syrah is PRINCIPAL on The Burn (final rule: one of the two most commonly grown), Wahluke Slope, Red Mountain, Royal Slope, White Bluffs, Goose Gap and Rattlesnake Hills (and Merlot, ranked above it, on Red Mountain and Goose Gap), so Syrah ties Merlot, well ahead of Pinot Noir. New York: Pinot Noir is PRINCIPAL on Cayuga Lake and the Niagara Escarpment, and Blaufränkisch on Seneca Lake (a source names Cabernet Franc and Blaufränkisch its signature reds). Cabernet Franc stays ACCESSORY on the two lakes because a fifth PRINCIPAL link would tie Riesling at the top of New York's shortlist (decision 9); no source names Pinot Noir a leading grape on Seneca Lake, nor Cabernet Sauvignon on North Fork or The Hamptons (the Long Island sheet ranks it fourth, behind Merlot, Chardonnay and Cabernet Franc), so those stay ACCESSORY and New York's hybrids still tie Pinot Noir. The same pass corrected Tualatin Hills to Clackamas, Multnomah and Washington counties (27 CFR 9.268(c); the final rule's preamble names only the last two).

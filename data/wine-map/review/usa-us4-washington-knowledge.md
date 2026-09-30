@@ -204,8 +204,8 @@ Name: **Royal Slope** · key `united-states.washington.columbia-valley.royal-slo
 **Grapes**, as the details panel lists them (signature grapes first, then the ones it tags "accessory"; each group alphabetically):
 
 - Cabernet Sauvignon
+- Syrah
 - Chardonnay · accessory
-- Syrah · accessory
 
 **Styles:** Red, White
 
@@ -238,7 +238,7 @@ Name: **The Burn of Columbia Valley** · key `united-states.washington.columbia-
 **Grapes**, as the details panel lists them (signature grapes first, then the ones it tags "accessory"; each group alphabetically):
 
 - Cabernet Sauvignon
-- Syrah · accessory
+- Syrah
 
 **Styles:** Red
 
@@ -273,8 +273,8 @@ Name: **Wahluke Slope** · key `united-states.washington.columbia-valley.wahluke
 
 - Cabernet Sauvignon
 - Merlot
+- Syrah
 - Chardonnay · accessory
-- Syrah · accessory
 
 **Styles:** Red, White
 
@@ -342,9 +342,9 @@ Name: **White Bluffs** · key `united-states.washington.columbia-valley.white-bl
 
 - Cabernet Sauvignon
 - Merlot
+- Syrah
 - Riesling · accessory
 - Sauvignon Blanc · accessory
-- Syrah · accessory
 
 **Styles:** Red, White
 
@@ -448,9 +448,9 @@ Name: **Goose Gap** · key `united-states.washington.columbia-valley.yakima-vall
 **Grapes**, as the details panel lists them (signature grapes first, then the ones it tags "accessory"; each group alphabetically):
 
 - Cabernet Sauvignon
+- Merlot
+- Syrah
 - Chardonnay · accessory
-- Merlot · accessory
-- Syrah · accessory
 
 **Styles:** Red, White
 
@@ -485,8 +485,8 @@ Name: **Rattlesnake Hills** · key `united-states.washington.columbia-valley.yak
 
 - Cabernet Sauvignon
 - Merlot
+- Syrah
 - Riesling · accessory
-- Syrah · accessory
 
 **Styles:** Red, White
 
@@ -519,8 +519,8 @@ Name: **Red Mountain** · key `united-states.washington.columbia-valley.yakima-v
 **Grapes**, as the details panel lists them (signature grapes first, then the ones it tags "accessory"; each group alphabetically):
 
 - Cabernet Sauvignon
-- Merlot · accessory
-- Syrah · accessory
+- Merlot
+- Syrah
 
 **Styles:** Red
 
@@ -569,12 +569,12 @@ Measured in the rolled-back rehearsal of 2026-09-30, as a signed-in reader. "Bef
 
 | Surface | Before | After |
 |---|---|---|
-| Guess ladder (the whole list) | Cabernet Sauvignon, Merlot, Chardonnay, Pinot Noir, Riesling, Syrah, Cabernet Franc, Müller-Thurgau, Sauvignon Blanc | Cabernet Sauvignon (14), Merlot (7), Riesling (4), Chardonnay (3), Pinot Noir (2), Syrah (2), Pinot Gris (1), Sauvignon Blanc (3, accessory), Cabernet Franc (1, accessory), Gewürztraminer (1, accessory), Müller-Thurgau (1, accessory) |
-| By-hand chips, no colour yet | Cabernet Sauvignon, Merlot, Chardonnay, Pinot Noir, Riesling | Cabernet Sauvignon, Merlot, Riesling, Chardonnay, Pinot Noir; the last chip is one of Pinot Noir, Syrah (tied) |
-| By-hand chips, red | Cabernet Sauvignon, Merlot, Pinot Noir, Syrah, Cabernet Franc | Cabernet Sauvignon, Merlot, Pinot Noir, Syrah, Cabernet Franc |
+| Guess ladder (the whole list) | Cabernet Sauvignon, Merlot, Chardonnay, Pinot Noir, Riesling, Syrah, Cabernet Franc, Müller-Thurgau, Sauvignon Blanc | Cabernet Sauvignon (14), Merlot (9), Syrah (9), Riesling (4), Chardonnay (3), Pinot Noir (2), Pinot Gris (1), Sauvignon Blanc (3, accessory), Cabernet Franc (1, accessory), Gewürztraminer (1, accessory), Müller-Thurgau (1, accessory) |
+| By-hand chips, no colour yet | Cabernet Sauvignon, Merlot, Chardonnay, Pinot Noir, Riesling | Cabernet Sauvignon, Merlot, Syrah, Riesling, Chardonnay |
+| By-hand chips, red | Cabernet Sauvignon, Merlot, Pinot Noir, Syrah, Cabernet Franc | Cabernet Sauvignon, Merlot, Syrah, Pinot Noir, Cabernet Franc |
 | By-hand chips, white | Chardonnay, Riesling, Müller-Thurgau, Sauvignon Blanc | Riesling, Chardonnay, Pinot Gris, Sauvignon Blanc, Gewürztraminer; the last chip is one of Gewürztraminer, Müller-Thurgau (tied) |
 
-Against Washington's own list (its first three: Cabernet Sauvignon, Merlot, Chardonnay): Chardonnay (3rd on the state's own list) moves down to 4th.
+Against Washington's own list (its first three: Cabernet Sauvignon, Merlot, Chardonnay): Chardonnay (3rd on the state's own list) moves down to 5th.
 
 ## Nearby chips (spec §8.7)
 

@@ -2843,7 +2843,7 @@ Expected: every test green; eslint clean; the renders rewrite nothing (`git stat
 | Every place has an article; the promote asserts pass | Tasks 9, 11 | Task 15; sitting step 8 |
 | Shards within target (≤ 1.5 MB each) | — | Task 15 preview (keys, max zoom 11/11/9, byte proxy); sitting step 10 (archives) |
 | Clicking a nested AVA selects it; small AVAs tappable at phone zoom | Task 13 (`CLICK_KEYS`) | Task 15 click assert; sitting steps 8 and 11 |
-| "Mt. Pisgah, Polk County, Oregon" wraps cleanly at 375 px | — | sitting step 11 |
+| "Mount Pisgah, Polk County, Oregon" wraps cleanly at 375 px | — | sitting step 11 |
 | §8.7 nearby lists and §10.3 shortlist comparison repeated | Tasks 13, 14, 16 | Task 15 evidence (`nearby`, `shortlist`); review files (Task 16); sitting steps 8 and 11 |
 | Willamette Valley typical wine: the spec names no refinement, so its placements are kept | Task 13 (`willametteLink`) | Task 13 test; Task 15 before/after/unpublish asserts; the unpublish's typical-wine refusal (Task 12); sitting steps 8 and 11 |
 

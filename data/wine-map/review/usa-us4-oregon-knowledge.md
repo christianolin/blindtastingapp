@@ -177,9 +177,9 @@ Name: **Elkton Oregon** · key `united-states.oregon.southern-oregon.umpqua-vall
 
 **Grapes**, as the details panel lists them (signature grapes first, then the ones it tags "accessory"; each group alphabetically):
 
+- Pinot Gris
 - Pinot Noir
 - Gewürztraminer · accessory
-- Pinot Gris · accessory
 - Riesling · accessory
 
 **Styles:** Red, White
@@ -212,8 +212,8 @@ Name: **Red Hill Douglas County, Oregon** · key `united-states.oregon.southern-
 
 **Grapes**, as the details panel lists them (signature grapes first, then the ones it tags "accessory"; each group alphabetically):
 
+- Pinot Gris
 - Pinot Noir
-- Pinot Gris · accessory
 
 **Styles:** Red, White
 
@@ -280,11 +280,11 @@ Name: **Chehalem Mountains** · key `united-states.oregon.willamette-valley.cheh
 
 **Grapes**, as the details panel lists them (signature grapes first, then the ones it tags "accessory"; each group alphabetically):
 
+- Chardonnay
+- Pinot Gris
 - Pinot Noir
-- Chardonnay · accessory
 - Gamay · accessory
 - Pinot Blanc · accessory
-- Pinot Gris · accessory
 - Riesling · accessory
 
 **Styles:** Red, White
@@ -317,9 +317,9 @@ Name: **Laurelwood District** · key `united-states.oregon.willamette-valley.che
 
 **Grapes**, as the details panel lists them (signature grapes first, then the ones it tags "accessory"; each group alphabetically):
 
+- Chardonnay
+- Pinot Gris
 - Pinot Noir
-- Chardonnay · accessory
-- Pinot Gris · accessory
 
 **Styles:** Red, White
 
@@ -352,10 +352,10 @@ Name: **Ribbon Ridge** · key `united-states.oregon.willamette-valley.chehalem-m
 
 **Grapes**, as the details panel lists them (signature grapes first, then the ones it tags "accessory"; each group alphabetically):
 
+- Chardonnay
+- Pinot Gris
 - Pinot Noir
-- Chardonnay · accessory
 - Gamay · accessory
-- Pinot Gris · accessory
 - Riesling · accessory
 
 **Styles:** Red, White
@@ -388,10 +388,10 @@ Name: **Dundee Hills** · key `united-states.oregon.willamette-valley.dundee-hil
 
 **Grapes**, as the details panel lists them (signature grapes first, then the ones it tags "accessory"; each group alphabetically):
 
+- Chardonnay
+- Pinot Gris
 - Pinot Noir
-- Chardonnay · accessory
 - Pinot Blanc · accessory
-- Pinot Gris · accessory
 
 **Styles:** Red, White, Sparkling
 
@@ -424,10 +424,10 @@ Name: **Eola-Amity Hills** · key `united-states.oregon.willamette-valley.eola-a
 
 **Grapes**, as the details panel lists them (signature grapes first, then the ones it tags "accessory"; each group alphabetically):
 
+- Chardonnay
+- Pinot Gris
 - Pinot Noir
-- Chardonnay · accessory
 - Gamay · accessory
-- Pinot Gris · accessory
 - Riesling · accessory
 
 **Styles:** Red, White
@@ -461,8 +461,8 @@ Name: **Lower Long Tom** · key `united-states.oregon.willamette-valley.lower-lo
 
 **Grapes**, as the details panel lists them (signature grapes first, then the ones it tags "accessory"; each group alphabetically):
 
+- Chardonnay
 - Pinot Noir
-- Chardonnay · accessory
 - Pinot Gris · accessory
 - Riesling · accessory
 - Sauvignon Blanc · accessory
@@ -497,8 +497,8 @@ Name: **McMinnville** · key `united-states.oregon.willamette-valley.mcminnville
 
 **Grapes**, as the details panel lists them (signature grapes first, then the ones it tags "accessory"; each group alphabetically):
 
+- Chardonnay
 - Pinot Noir
-- Chardonnay · accessory
 - Pinot Blanc · accessory
 
 **Styles:** Red, White
@@ -531,9 +531,9 @@ Name: **Mount Pisgah, Polk County, Oregon** · key `united-states.oregon.willame
 
 **Grapes**, as the details panel lists them (signature grapes first, then the ones it tags "accessory"; each group alphabetically):
 
+- Chardonnay
+- Pinot Gris
 - Pinot Noir
-- Chardonnay · accessory
-- Pinot Gris · accessory
 
 **Styles:** Red, White
 
@@ -546,7 +546,7 @@ Name: **Mount Pisgah, Polk County, Oregon** · key `united-states.oregon.willame
 
 Name: **Tualatin Hills** · key `united-states.oregon.willamette-valley.tualatin-hills` · AVA
 
-**Description.** An AVA of about 144,000 acres in the northwest corner of the Willamette Valley, in Multnomah and Washington counties, entirely within the Willamette Valley AVA, named for and largely defined by the watershed of the Tualatin River. It is sheltered by the Coast Range to the west and the Chehalem Mountains to the south.
+**Description.** An AVA of about 144,000 acres in the northwest corner of the Willamette Valley, in Clackamas, Multnomah and Washington counties, entirely within the Willamette Valley AVA, named for and largely defined by the watershed of the Tualatin River. It is sheltered by the Coast Range to the west and the Chehalem Mountains to the south.
 
 **Climate.** A rain shadow gives cooler springs and drier autumns at harvest, with wider day-night swings than the areas around it; vineyards lie between 200 and 1,000 feet.
 
@@ -559,16 +559,16 @@ Name: **Tualatin Hills** · key `united-states.oregon.willamette-valley.tualatin
 **Key facts**
 
 - Established 2020 (27 CFR 9.268)
-- Multnomah and Washington counties
+- Clackamas, Multnomah and Washington counties
 - About 1,009 acres planted in 41 vineyards (Willamette Valley Wineries Association)
 - Average annual rainfall of about 43.7 inches (T.D. TTB-160)
 
 **Grapes**, as the details panel lists them (signature grapes first, then the ones it tags "accessory"; each group alphabetically):
 
+- Chardonnay
+- Pinot Gris
 - Pinot Noir
-- Chardonnay · accessory
 - Gewürztraminer · accessory
-- Pinot Gris · accessory
 
 **Styles:** Red, White
 
@@ -601,10 +601,10 @@ Name: **Van Duzer Corridor** · key `united-states.oregon.willamette-valley.van-
 
 **Grapes**, as the details panel lists them (signature grapes first, then the ones it tags "accessory"; each group alphabetically):
 
+- Chardonnay
+- Pinot Gris
 - Pinot Noir
-- Chardonnay · accessory
 - Pinot Blanc · accessory
-- Pinot Gris · accessory
 - Riesling · accessory
 - Sauvignon Blanc · accessory
 
@@ -640,9 +640,9 @@ Name: **Yamhill-Carlton** · key `united-states.oregon.willamette-valley.yamhill
 
 **Grapes**, as the details panel lists them (signature grapes first, then the ones it tags "accessory"; each group alphabetically):
 
+- Chardonnay
+- Pinot Gris
 - Pinot Noir
-- Chardonnay · accessory
-- Pinot Gris · accessory
 
 **Styles:** Red, White
 
@@ -657,12 +657,12 @@ Measured in the rolled-back rehearsal of 2026-09-30, as a signed-in reader. "Bef
 
 | Surface | Before | After |
 |---|---|---|
-| Guess ladder (the whole list) | Pinot Noir, Chardonnay, Pinot Gris, Syrah, Cabernet Sauvignon, Riesling, Tempranillo, Merlot, Pinot Blanc, Viognier | Pinot Noir (18), Syrah (4), Chardonnay (3), Pinot Gris (3), Cabernet Sauvignon (2), Merlot (1), Riesling (9, accessory), Pinot Blanc (5, accessory), Tempranillo (4, accessory), Gamay (3, accessory), Gewürztraminer (3, accessory), Sauvignon Blanc (2, accessory), Viognier (2, accessory), Albariño (1, accessory), Grenache (1, accessory), Zinfandel (1, accessory) |
-| By-hand chips, no colour yet | Pinot Noir, Chardonnay, Pinot Gris, Syrah, Cabernet Sauvignon | Pinot Noir, Syrah, Chardonnay, Pinot Gris, Cabernet Sauvignon |
+| Guess ladder (the whole list) | Pinot Noir, Chardonnay, Pinot Gris, Syrah, Cabernet Sauvignon, Riesling, Tempranillo, Merlot, Pinot Blanc, Viognier | Pinot Noir (18), Chardonnay (14), Pinot Gris (14), Syrah (4), Cabernet Sauvignon (2), Merlot (1), Riesling (9, accessory), Pinot Blanc (5, accessory), Tempranillo (4, accessory), Gamay (3, accessory), Gewürztraminer (3, accessory), Sauvignon Blanc (2, accessory), Viognier (2, accessory), Albariño (1, accessory), Grenache (1, accessory), Zinfandel (1, accessory) |
+| By-hand chips, no colour yet | Pinot Noir, Chardonnay, Pinot Gris, Syrah, Cabernet Sauvignon | Pinot Noir, Chardonnay, Pinot Gris, Syrah, Cabernet Sauvignon |
 | By-hand chips, red | Pinot Noir, Syrah, Cabernet Sauvignon, Tempranillo, Merlot | Pinot Noir, Syrah, Cabernet Sauvignon, Merlot, Tempranillo |
 | By-hand chips, white | Chardonnay, Pinot Gris, Riesling, Pinot Blanc, Viognier | Chardonnay, Pinot Gris, Riesling, Pinot Blanc, Gewürztraminer |
 
-Against Oregon's own list (its first three: Pinot Noir, Pinot Gris, Chardonnay): Pinot Gris (2nd on the state's own list) moves down to 3rd to 4th (a 2-way tie).
+Against Oregon's own list (its first three: Pinot Noir, Pinot Gris, Chardonnay): none moves down or drops.
 
 ## Nearby chips (spec §8.7)
 

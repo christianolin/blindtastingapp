@@ -62,11 +62,11 @@ Name: **Cayuga Lake** · key `united-states.new-york.finger-lakes.cayuga-lake` �
 
 **Grapes**, as the details panel lists them (signature grapes first, then the ones it tags "accessory"; each group alphabetically):
 
+- Pinot Noir
 - Riesling
 - Cabernet Franc · accessory
 - Chardonnay · accessory
 - Gewürztraminer · accessory
-- Pinot Noir · accessory
 
 **Styles:** White, Red
 
@@ -100,8 +100,8 @@ Name: **Seneca Lake** · key `united-states.new-york.finger-lakes.seneca-lake` �
 
 **Grapes**, as the details panel lists them (signature grapes first, then the ones it tags "accessory"; each group alphabetically):
 
+- Blaufränkisch (Sold as Lemberger)
 - Riesling
-- Blaufränkisch (Sold as Lemberger) · accessory
 - Cabernet Franc · accessory
 - Chardonnay · accessory
 - Gewürztraminer · accessory
@@ -115,6 +115,7 @@ Name: **Seneca Lake** · key `united-states.new-york.finger-lakes.seneca-lake` �
 - Federal Register final rule (govinfo), T.D. TTB-3, Seneca Lake (2003): https://www.govinfo.gov/content/pkg/FR-2003-07-03/html/03-16703.htm
 - Wine Traveler, Discover the Seneca Lake wine region: https://www.winetraveler.com/wine-region/seneca-lake/
 - New York Wine & Grape Foundation, Finger Lakes region sheet: https://newyorkwines.org/wp-content/uploads/2023/08/NYW-One-Sheet-Fingerlakes-M3-HR.pdf
+- Wine With Seth, Seneca Lake AVA: https://www.winewithseth.com/winewiki/seneca-lake-ava/
 
 ## United States › New York › Hudson River Region
 
@@ -248,10 +249,10 @@ Name: **Niagara Escarpment** · key `united-states.new-york.niagara-escarpment` 
 **Grapes**, as the details panel lists them (signature grapes first, then the ones it tags "accessory"; each group alphabetically):
 
 - Cabernet Franc
+- Pinot Noir
 - Riesling
 - Cabernet Sauvignon · accessory
 - Chardonnay · accessory
-- Pinot Noir · accessory
 
 **Styles:** White, Red, Sweet
 
@@ -314,8 +315,8 @@ Measured in the rolled-back rehearsal of 2026-09-30, as a signed-in reader. "Bef
 
 | Surface | Before | After |
 |---|---|---|
-| Guess ladder (the whole list) | Riesling, Cabernet Franc, Chardonnay, Merlot, Blaufränkisch, Gewürztraminer, Pinot Noir, Cabernet Sauvignon, Sauvignon Blanc | Riesling (5), Cabernet Franc (4), Chardonnay (3), Merlot (3), Frontenac (2), La Crescent (2), Marquette (2), Seyval Blanc (1), Pinot Noir (6, accessory), Gewürztraminer (4, accessory), Blaufränkisch (3, accessory), Cabernet Sauvignon (3, accessory), Sauvignon Blanc (3, accessory), Baco Noir (1, accessory), Vidal Blanc (1, accessory) |
-| By-hand chips, no colour yet | Riesling, Cabernet Franc, Chardonnay, Merlot, Blaufränkisch | Riesling, Cabernet Franc, Chardonnay, Merlot, Frontenac; the last chip is one of Frontenac, La Crescent, Marquette (tied) |
+| Guess ladder (the whole list) | Riesling, Cabernet Franc, Chardonnay, Merlot, Blaufränkisch, Gewürztraminer, Pinot Noir, Cabernet Sauvignon, Sauvignon Blanc | Riesling (5), Cabernet Franc (4), Chardonnay (3), Merlot (3), Frontenac (2), La Crescent (2), Marquette (2), Pinot Noir (2), Blaufränkisch (1), Seyval Blanc (1), Gewürztraminer (4, accessory), Cabernet Sauvignon (3, accessory), Sauvignon Blanc (3, accessory), Baco Noir (1, accessory), Vidal Blanc (1, accessory) |
+| By-hand chips, no colour yet | Riesling, Cabernet Franc, Chardonnay, Merlot, Blaufränkisch | Riesling, Cabernet Franc, Chardonnay, Merlot, Frontenac; the last chip is one of Frontenac, La Crescent, Marquette, Pinot Noir (tied) |
 | By-hand chips, red | Cabernet Franc, Merlot, Blaufränkisch, Pinot Noir, Cabernet Sauvignon | Cabernet Franc, Merlot, Frontenac, Marquette, Pinot Noir |
 | By-hand chips, white | Riesling, Chardonnay, Gewürztraminer, Sauvignon Blanc | Riesling, Chardonnay, La Crescent, Seyval Blanc, Gewürztraminer |
 
