@@ -27,7 +27,10 @@
 // the digitized outlines do (Comptche: "not included within the North Coast
 // viticultural area", 27 CFR 9.292, T.D. TTB-192): that pair yields no
 // containment, no ALTERNATE_PARENT and no OVERLAPS edge, and is listed under
-// review.legal_exclusions with its measured ratio. A `parent_overrides` entry
+// review.legal_exclusions with its measured ratio. The same entry serves a
+// pair the law says do not overlap although the outlines share a sliver
+// (Candy Mountain and Goose Gap, Federal Register document 2021-14047): no
+// edge either way. A `parent_overrides` entry
 // (a name, or { parent, rule, note }) puts a place under a named AVA or
 // navigation node whatever the outlines measure (Contra Costa under San
 // Francisco Bay, T.D. TTB-191, whose expansion the UC Davis outlines predate);

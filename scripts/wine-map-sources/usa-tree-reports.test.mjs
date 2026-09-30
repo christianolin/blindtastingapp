@@ -94,7 +94,7 @@ test("owner 2026-09-29: Central Valley holds 11 members; Tehachapi Mountains and
   }
 });
 
-test("no OVERLAPS edge joins a place to its own ancestor; Red Hill's and Contra Costa's are listed for review", async () => {
+test("no OVERLAPS edge joins a place to its own ancestor; Contra Costa's, Candy Mountain's and Red Hill's are listed for review", async () => {
   const reports = await allReports();
   for (const r of reports) {
     const byKey = new Map(r.places.map((p) => [p.key, p]));
@@ -104,7 +104,8 @@ test("no OVERLAPS edge joins a place to its own ancestor; Red Hill's and Contra 
     }
   }
   assert.deepEqual(reports.flatMap((r) => r.review.ancestor_overlaps).map((x) => [x.name, x.ancestor, x.ratio]),
-    [["Contra Costa", "Central Coast", 0.3367], ["Contra Costa", "San Francisco Bay", 0.3363], ["Red Hill Douglas County, Oregon", "Southern Oregon", 0.6775]]);
+    [["Contra Costa", "Central Coast", 0.3367], ["Contra Costa", "San Francisco Bay", 0.3363],
+      ["Candy Mountain", "Yakima Valley", 0.8931], ["Red Hill Douglas County, Oregon", "Southern Oregon", 0.6775]]);
 });
 
 test("US-3 review fixes 2026-09-30: the legal record over the outlines (Comptche, Contra Costa)", async () => {
@@ -119,10 +120,33 @@ test("US-3 review fixes 2026-09-30: the legal record over the outlines (Comptche
   assert.equal(p("Contra Costa").key, "united-states.california.central-coast.san-francisco-bay.contra-costa");
   assert.deepEqual(ca.review.parent_overrides.map((x) => [x.name, x.parent_key, x.parent_basis, x.parent_inside]),
     [["Contra Costa", "united-states.california.central-coast.san-francisco-bay", "override", 0.336329]]);
-  assert.deepEqual(reports.filter((r) => r.state !== "CA").flatMap((r) => [...r.review.legal_exclusions, ...r.review.parent_overrides]), []);
+  assert.deepEqual(reports.filter((r) => !["CA", "WA"].includes(r.state)).flatMap((r) => [...r.review.legal_exclusions, ...r.review.parent_overrides]), []);
 });
 
 test("counts per state after the owner's decisions", async () => {
   const got = Object.fromEntries((await allReports()).map((r) => [r.state, [r.counts.places, r.counts.edges.ALTERNATE_PARENT ?? 0, r.counts.edges.OVERLAPS ?? 0, r.counts.outline]]));
-  assert.deepEqual(got, { CA: [156, 2, 25, 6], WA: [19, 2, 2, 2], OR: [21, 3, 0, 2], NY: [11, 0, 0, 2] });
+  assert.deepEqual(got, { CA: [156, 2, 25, 6], WA: [19, 2, 0, 2], OR: [21, 3, 0, 2], NY: [11, 0, 0, 2] });
+});
+
+test("US-4 plan 2026-09-30: the legal record over the outlines (Candy Mountain in Yakima Valley, not overlapping Goose Gap)", async () => {
+  const wa = (await allReports()).find((r) => r.state === "WA");
+  const p = (n) => wa.places.find((x) => x.name === n);
+  const yv = "united-states.washington.columbia-valley.yakima-valley";
+  // T.D. TTB-163: Candy Mountain "will remain part of both the established Columbia Valley AVA and the Yakima Valley AVA".
+  assert.equal(p("Candy Mountain").key, `${yv}.candy-mountain`);
+  assert.deepEqual([p("Candy Mountain").display_tier, p("Candy Mountain").min_zoom, p("Candy Mountain").label_min_zoom], [4, 7, 9]);
+  assert.deepEqual(wa.review.parent_overrides.map((x) => [x.name, x.parent_key, x.parent_basis, x.parent_inside]),
+    [["Candy Mountain", yv, "override", 0.893096]]);
+  assert.match(wa.review.parent_overrides[0].rule, /T.D. TTB-163/);
+  // FR 2021-14047: Goose Gap "does not overlap any other existing or proposed AVA".
+  assert.deepEqual(wa.review.legal_exclusions.map((x) => [x.name, x.excluded_from, x.ratio]), [["Candy Mountain", "Goose Gap", 0.0134]]);
+  assert.deepEqual(wa.edges.filter((e) => e.type === "OVERLAPS"), []);
+  assert.deepEqual(wa.edges.map((e) => [e.source_key.split(".").at(-1), e.target_key]).sort(),
+    [["columbia-valley", "united-states.oregon"], ["walla-walla-valley", "united-states.oregon"]]);
+});
+
+test("US-4 plan 2026-09-30: the rebuild moved nothing in California", async () => {
+  const ca = (await allReports()).find((r) => r.state === "CA");
+  assert.deepEqual([ca.places.length, ca.edges.length], [157, 27]);
+  assert.equal(ca.places.find((x) => x.name === "Contra Costa").key, "united-states.california.central-coast.san-francisco-bay.contra-costa");
 });

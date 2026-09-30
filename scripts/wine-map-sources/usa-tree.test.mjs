@@ -369,3 +369,16 @@ test("a parent_overrides entry may carry its rule, which the review lists", () =
   assert.throws(() => buildUsaTree({ avas, pairs: PAIRS, config: { ...CONFIG, parent_overrides: { Small: { rule: "x" } } } }), /parent_overrides\[Small\]/);
   assert.deepEqual(tree().review.parent_overrides, []);
 });
+
+test("a legal_exclusions pair of siblings that the law says do not overlap loses its OVERLAPS edge (US-4: Candy Mountain / Goose Gap)", () => {
+  const avas = [...AVAS, ava("big", "Big", 500, CA), ava("small", "Small", 40, CA)];
+  const pairs = [...PAIRS, pair("small", "big", 0.0134, 0.0011)];
+  const without = buildUsaTree({ avas, pairs, config: CONFIG });
+  const small = place(without, "Small");
+  assert.deepEqual(edgesFrom(without, small.key), [`OVERLAPS>${place(without, "Big").key}`]);
+  const config = { ...CONFIG, legal_exclusions: [{ inner: "Small", outer: "Big", rule: "FR 2021-14047: does not overlap any other AVA" }] };
+  const t = buildUsaTree({ avas, pairs, config });
+  assert.deepEqual(t.edges.filter((e) => [e.source_key, e.target_key].includes(place(t, "Small").key)), []);
+  assert.equal(place(t, "Small").parent_key, "united-states.california");
+  assert.deepEqual(t.review.legal_exclusions.map((x) => [x.name, x.excluded_from, x.ratio]), [["Small", "Big", 0.0134]]);
+});

@@ -3,7 +3,7 @@
   "_spec": "docs/superpowers/specs/2026-09-29-usa-wine-map-design.md §8.3",
   "_inputs": {
     "measurements_sha256": "72339AB6F6A804F831F00D6D8A27106CFC0BE2C5EE078B23EC41FAD4CB26BA42",
-    "config_sha256": "18D7FC0CAFD06D740CCC50DF3B646364BA4B7A11F07F7ECE303704952EAE0416",
+    "config_sha256": "659C7D6F4058F6612B74E6799FECBF7794641E77BE331C32759F3551760A12E1",
     "diff_sha256": "80DF4951FE4A9AE42B6999B90EFC1D797B3976A7921A9CF7A7994462AC1B75A2",
     "ttb_list_sha256": "C745F493AE24E0777F1177E3056785942B6C14160AA54D348F8520220B660A87"
   },
@@ -29,13 +29,12 @@
     "by_tier": {
       "1": 1,
       "2": 2,
-      "3": 12,
-      "4": 4
+      "3": 11,
+      "4": 5
     },
     "outline": 2,
     "edges": {
-      "ALTERNATE_PARENT": 2,
-      "OVERLAPS": 2
+      "ALTERNATE_PARENT": 2
     }
   },
   "places": [
@@ -166,39 +165,6 @@
       }
     },
     {
-      "key": "united-states.washington.columbia-valley.candy-mountain",
-      "slug": "candy-mountain",
-      "name": "Candy Mountain",
-      "kind": "APPELLATION",
-      "display_tier": 3,
-      "min_zoom": 6,
-      "label_min_zoom": 7,
-      "sort_order": 20,
-      "parent_key": "united-states.washington.columbia-valley",
-      "parent_basis": "measured",
-      "parent_inside": 1,
-      "breadcrumb": "United States › Washington › Columbia Valley › Candy Mountain",
-      "is_appellation": true,
-      "appellation_system": "AVA",
-      "appellation_level": "subregional",
-      "display": null,
-      "navigation_node": false,
-      "map_state": "WA",
-      "map_state_source": "dominant",
-      "ucd_ava_id": "candy_mountain",
-      "cfr_section": "9.272",
-      "area_km2": 3.654,
-      "land_share": 1,
-      "containment_share": 1,
-      "legal_states": [
-        "WA"
-      ],
-      "legal_source": "ttb",
-      "state_shares": {
-        "WA": 1
-      }
-    },
-    {
       "key": "united-states.washington.columbia-valley.horse-heaven-hills",
       "slug": "horse-heaven-hills",
       "name": "Horse Heaven Hills",
@@ -206,7 +172,7 @@
       "display_tier": 3,
       "min_zoom": 6,
       "label_min_zoom": 7,
-      "sort_order": 30,
+      "sort_order": 20,
       "parent_key": "united-states.washington.columbia-valley",
       "parent_basis": "measured",
       "parent_inside": 1,
@@ -240,7 +206,7 @@
       "display_tier": 3,
       "min_zoom": 6,
       "label_min_zoom": 7,
-      "sort_order": 40,
+      "sort_order": 30,
       "parent_key": "united-states.washington.columbia-valley",
       "parent_basis": "legal_record",
       "parent_inside": 0.957193,
@@ -273,7 +239,7 @@
       "display_tier": 3,
       "min_zoom": 6,
       "label_min_zoom": 7,
-      "sort_order": 50,
+      "sort_order": 40,
       "parent_key": "united-states.washington.columbia-valley",
       "parent_basis": "measured",
       "parent_inside": 1,
@@ -306,7 +272,7 @@
       "display_tier": 3,
       "min_zoom": 6,
       "label_min_zoom": 7,
-      "sort_order": 60,
+      "sort_order": 50,
       "parent_key": "united-states.washington.columbia-valley",
       "parent_basis": "measured",
       "parent_inside": 1,
@@ -339,7 +305,7 @@
       "display_tier": 3,
       "min_zoom": 6,
       "label_min_zoom": 7,
-      "sort_order": 70,
+      "sort_order": 60,
       "parent_key": "united-states.washington.columbia-valley",
       "parent_basis": "measured",
       "parent_inside": 1,
@@ -372,7 +338,7 @@
       "display_tier": 3,
       "min_zoom": 6,
       "label_min_zoom": 7,
-      "sort_order": 80,
+      "sort_order": 70,
       "parent_key": "united-states.washington.columbia-valley",
       "parent_basis": "measured",
       "parent_inside": 1,
@@ -406,7 +372,7 @@
       "display_tier": 3,
       "min_zoom": 6,
       "label_min_zoom": 7,
-      "sort_order": 90,
+      "sort_order": 80,
       "parent_key": "united-states.washington.columbia-valley",
       "parent_basis": "measured",
       "parent_inside": 1,
@@ -439,7 +405,7 @@
       "display_tier": 3,
       "min_zoom": 6,
       "label_min_zoom": 7,
-      "sort_order": 100,
+      "sort_order": 90,
       "parent_key": "united-states.washington.columbia-valley",
       "parent_basis": "measured",
       "parent_inside": 0.999475,
@@ -474,7 +440,7 @@
       "display_tier": 3,
       "min_zoom": 6,
       "label_min_zoom": 7,
-      "sort_order": 110,
+      "sort_order": 100,
       "parent_key": "united-states.washington.columbia-valley",
       "parent_basis": "measured",
       "parent_inside": 1,
@@ -507,7 +473,7 @@
       "display_tier": 3,
       "min_zoom": 6,
       "label_min_zoom": 7,
-      "sort_order": 120,
+      "sort_order": 110,
       "parent_key": "united-states.washington.columbia-valley",
       "parent_basis": "measured",
       "parent_inside": 0.999705,
@@ -533,6 +499,39 @@
       }
     },
     {
+      "key": "united-states.washington.columbia-valley.yakima-valley.candy-mountain",
+      "slug": "candy-mountain",
+      "name": "Candy Mountain",
+      "kind": "APPELLATION",
+      "display_tier": 4,
+      "min_zoom": 7,
+      "label_min_zoom": 9,
+      "sort_order": 10,
+      "parent_key": "united-states.washington.columbia-valley.yakima-valley",
+      "parent_basis": "override",
+      "parent_inside": 0.893096,
+      "breadcrumb": "United States › Washington › Columbia Valley › Yakima Valley › Candy Mountain",
+      "is_appellation": true,
+      "appellation_system": "AVA",
+      "appellation_level": "subregional",
+      "display": null,
+      "navigation_node": false,
+      "map_state": "WA",
+      "map_state_source": "dominant",
+      "ucd_ava_id": "candy_mountain",
+      "cfr_section": "9.272",
+      "area_km2": 3.654,
+      "land_share": 1,
+      "containment_share": 1,
+      "legal_states": [
+        "WA"
+      ],
+      "legal_source": "ttb",
+      "state_shares": {
+        "WA": 1
+      }
+    },
+    {
       "key": "united-states.washington.columbia-valley.yakima-valley.goose-gap",
       "slug": "goose-gap",
       "name": "Goose Gap",
@@ -540,7 +539,7 @@
       "display_tier": 4,
       "min_zoom": 7,
       "label_min_zoom": 9,
-      "sort_order": 10,
+      "sort_order": 20,
       "parent_key": "united-states.washington.columbia-valley.yakima-valley",
       "parent_basis": "measured",
       "parent_inside": 0.999694,
@@ -573,7 +572,7 @@
       "display_tier": 4,
       "min_zoom": 7,
       "label_min_zoom": 9,
-      "sort_order": 20,
+      "sort_order": 30,
       "parent_key": "united-states.washington.columbia-valley.yakima-valley",
       "parent_basis": "legal_record",
       "parent_inside": 0.994536,
@@ -606,7 +605,7 @@
       "display_tier": 4,
       "min_zoom": 7,
       "label_min_zoom": 9,
-      "sort_order": 30,
+      "sort_order": 40,
       "parent_key": "united-states.washington.columbia-valley.yakima-valley",
       "parent_basis": "measured",
       "parent_inside": 0.995035,
@@ -639,7 +638,7 @@
       "display_tier": 4,
       "min_zoom": 7,
       "label_min_zoom": 9,
-      "sort_order": 40,
+      "sort_order": 50,
       "parent_key": "united-states.washington.columbia-valley.yakima-valley",
       "parent_basis": "measured",
       "parent_inside": 1,
@@ -712,20 +711,6 @@
       "target_key": "united-states.oregon",
       "basis": "state_share",
       "share": 0.3101
-    },
-    {
-      "type": "OVERLAPS",
-      "source_key": "united-states.washington.columbia-valley.candy-mountain",
-      "target_key": "united-states.washington.columbia-valley.yakima-valley",
-      "basis": "partial_overlap",
-      "ratio": 0.8931
-    },
-    {
-      "type": "OVERLAPS",
-      "source_key": "united-states.washington.columbia-valley.candy-mountain",
-      "target_key": "united-states.washington.columbia-valley.yakima-valley.goose-gap",
-      "basis": "partial_overlap",
-      "ratio": 0.0134
     }
   ],
   "deferred": [
@@ -766,7 +751,7 @@
   "review": {
     "within_disagreements": [
       {
-        "key": "united-states.washington.columbia-valley.candy-mountain",
+        "key": "united-states.washington.columbia-valley.yakima-valley.candy-mountain",
         "name": "Candy Mountain",
         "ucd_within_not_computed": [
           "Yakima Valley"
@@ -827,9 +812,35 @@
       }
     ],
     "near_within": [],
-    "ancestor_overlaps": [],
-    "legal_exclusions": [],
-    "parent_overrides": [],
+    "ancestor_overlaps": [
+      {
+        "key": "united-states.washington.columbia-valley.yakima-valley.candy-mountain",
+        "name": "Candy Mountain",
+        "ancestor": "Yakima Valley",
+        "ancestor_key": "united-states.washington.columbia-valley.yakima-valley",
+        "ratio": 0.8931
+      }
+    ],
+    "legal_exclusions": [
+      {
+        "key": "united-states.washington.columbia-valley.yakima-valley.candy-mountain",
+        "name": "Candy Mountain",
+        "excluded_from": "Goose Gap",
+        "excluded_from_key": "united-states.washington.columbia-valley.yakima-valley.goose-gap",
+        "ratio": 0.0134,
+        "rule": "The Goose Gap final rule (T.D. TTB-170, Federal Register document 2021-14047, published 2021-07-01, effective 2021-08-02): the Goose Gap AVA \"lies entirely within the established Yakima Valley (27 CFR 9.69) and Columbia Valley (27 CFR 9.74) AVAs and does not overlap any other existing or proposed AVA.\" Candy Mountain was established in 2020, before it."
+      }
+    ],
+    "parent_overrides": [
+      {
+        "key": "united-states.washington.columbia-valley.yakima-valley.candy-mountain",
+        "name": "Candy Mountain",
+        "parent_key": "united-states.washington.columbia-valley.yakima-valley",
+        "parent_basis": "override",
+        "parent_inside": 0.893096,
+        "rule": "T.D. TTB-163 (Federal Register document 2020-18741, published 2020-09-25, effective 2020-10-26) established the Candy Mountain AVA while \"expanding the boundary of the existing 1,093-square mile Yakima Valley viticultural area by approximately 72 acres in order to avoid a partial overlap with the newly established Candy Mountain viticultural area\"; TTB determined that \"the Candy Mountain AVA will remain part of both the established Columbia Valley AVA and the Yakima Valley AVA\". The UC Davis Yakima Valley outline (valid from 2020-10-26) still leaves about 11% of the Candy Mountain outline outside it (89.31% measured inside, under the 90% legal-record arm)."
+      }
+    ],
     "legal_record_nests": [
       {
         "key": "united-states.washington.columbia-valley.lake-chelan",

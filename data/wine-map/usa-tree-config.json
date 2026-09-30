@@ -39,6 +39,11 @@
       "parent": "San Francisco Bay",
       "rule": "T.D. TTB-191 (published 2024-03-15, effective 2024-04-15) expanded the San Francisco Bay and Central Coast AVAs \"to entirely encompass the Contra Costa AVA\". The UC Davis San Francisco Bay (valid from 2008) and Central Coast (2006) outlines predate it, so only 33.6% of Contra Costa measures inside them.",
       "note": "Keyed under San Francisco Bay, and so under Central Coast, by the legal record (added 2026-09-30 in the US-3 review fixes, before the rest catalog is applied). The two containers' drawn outlines still leave out about two thirds of Contra Costa until a later boundary cycle restages them (spec §20)."
+    },
+    "Candy Mountain": {
+      "parent": "Yakima Valley",
+      "rule": "T.D. TTB-163 (Federal Register document 2020-18741, published 2020-09-25, effective 2020-10-26) established the Candy Mountain AVA while \"expanding the boundary of the existing 1,093-square mile Yakima Valley viticultural area by approximately 72 acres in order to avoid a partial overlap with the newly established Candy Mountain viticultural area\"; TTB determined that \"the Candy Mountain AVA will remain part of both the established Columbia Valley AVA and the Yakima Valley AVA\". The UC Davis Yakima Valley outline (valid from 2020-10-26) still leaves about 11% of the Candy Mountain outline outside it (89.31% measured inside, under the 90% legal-record arm).",
+      "note": "Keyed under Yakima Valley by the legal record (added 2026-09-30 in the US-4 plan, before the US-4 catalog renders). UC Davis's own `within` for Candy Mountain names Yakima Valley too."
     }
   },
   "legal_exclusions": [
@@ -47,6 +52,12 @@
       "outer": "North Coast",
       "rule": "27 CFR 9.292 (T.D. TTB-192, published 2024-04-08): \"The Comptche viticultural area as described in this section is not included within the North Coast viticultural area as described in § 9.30.\"",
       "note": "Comptche lies inside the North Coast outline, which TTB did not redraw; it is keyed under California with no edge to North Coast (added 2026-09-30 in the US-3 review fixes, before the rest catalog is applied). The North Coast display outline still covers it (spec §20)."
+    },
+    {
+      "inner": "Candy Mountain",
+      "outer": "Goose Gap",
+      "rule": "The Goose Gap final rule (T.D. TTB-170, Federal Register document 2021-14047, published 2021-07-01, effective 2021-08-02): the Goose Gap AVA \"lies entirely within the established Yakima Valley (27 CFR 9.69) and Columbia Valley (27 CFR 9.74) AVAs and does not overlap any other existing or proposed AVA.\" Candy Mountain was established in 2020, before it.",
+      "note": "The two outlines share a 1.34% sliver of Candy Mountain along their common edge; the law says they do not overlap, so the pair gets no OVERLAPS edge (added 2026-09-30 in the US-4 plan)."
     }
   ],
   "thresholds": {
