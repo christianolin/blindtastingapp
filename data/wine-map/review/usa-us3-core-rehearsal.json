@@ -1,8 +1,8 @@
 {
   "_generated_by": "scripts/usa-map/rehearse-us3.mjs",
   "batch": "core",
-  "git_head": "91e7805310bfbcd3856970b9cabda0bfb05b4e9f",
-  "rehearsed_at": "2026-09-30T08:26:00.395Z",
+  "git_head": "4a640c837ed3f68b77ed9dc82c20be0eefba9413",
+  "rehearsed_at": "2026-09-30T09:31:53.479Z",
   "cache_before": {
     "fresh": true,
     "built_at": "2026-09-30T06:49:21.114Z"
@@ -15,51 +15,51 @@
   ],
   "prepended": [],
   "timings_s": {
-    "catalog": 65.9,
+    "catalog": 64.6,
     "details": 2.7,
-    "drill_reapply_catalog": 69.5,
+    "drill_reapply_catalog": 64.8,
     "drill_reapply_knowledge": 0.5,
-    "drill_remove": 70.4,
-    "drill_restage": 23.8,
-    "drill_unpublish": 64.7,
-    "drill_unstage": 68.3,
-    "drill_unstage_again": 68.7,
+    "drill_remove": 65.7,
+    "drill_restage": 27.1,
+    "drill_unpublish": 64.6,
+    "drill_unstage": 68.2,
+    "drill_unstage_again": 69.8,
     "export_preview": 0.2,
-    "knowledge": 0.3,
+    "knowledge": 0.4,
     "links": 0.2,
-    "promote": 66.8,
-    "shortlists_after": 0.7,
-    "shortlists_before": 1,
-    "stage": 21.1
+    "promote": 67.6,
+    "shortlists_after": 0.8,
+    "shortlists_before": 0.9,
+    "stage": 19.1
   },
   "refreshes": {
     "catalog": {
       "rows": 15232,
-      "seconds": 65.7
+      "seconds": 64.5
     },
     "drill_reapply_catalog": {
       "rows": 15232,
-      "seconds": 67.9
+      "seconds": 64.5
     },
     "drill_remove": {
       "rows": 15232,
-      "seconds": 69.9
+      "seconds": 65
     },
     "drill_unpublish": {
       "rows": 15232,
-      "seconds": 64.5
+      "seconds": 64.3
     },
     "drill_unstage": {
       "rows": 15232,
-      "seconds": 67.9
+      "seconds": 67.8
     },
     "drill_unstage_again": {
       "rows": 15232,
-      "seconds": 68.3
+      "seconds": 69.4
     },
     "promote": {
       "rows": 15566,
-      "seconds": 65.2
+      "seconds": 66.1
     }
   },
   "refusals": {
@@ -446,7 +446,7 @@
       "california": {
         "keys": 92,
         "max_zoom": 12,
-        "bytes": 1411354
+        "bytes": 1411353
       },
       "new-york": {
         "keys": 3,
@@ -2069,15 +2069,15 @@
     }
   ],
   "notices": [
-    "US-3 core catalog: neighbour refresh 15232 rows in 65.7 s",
-    "US-3 rest catalog: neighbour refresh 15232 rows in 64.6 s",
-    "US-3 core unstage: neighbour refresh 15232 rows in 67.9 s",
-    "US-3 core unstage: neighbour refresh 15232 rows in 68.3 s",
-    "US-3 core remove: neighbour refresh 15232 rows in 69.9 s",
-    "US-3 core catalog: neighbour refresh 15232 rows in 67.9 s",
-    "US-3 core promote: neighbour refresh 15566 rows in 65.2 s",
-    "US-3 core unpublish: neighbour refresh 15232 rows in 64.5 s"
+    "US-3 core catalog: neighbour refresh 15232 rows in 64.5 s",
+    "US-3 rest catalog: neighbour refresh 15232 rows in 70.3 s",
+    "US-3 core unstage: neighbour refresh 15232 rows in 67.8 s",
+    "US-3 core unstage: neighbour refresh 15232 rows in 69.4 s",
+    "US-3 core remove: neighbour refresh 15232 rows in 65.0 s",
+    "US-3 core catalog: neighbour refresh 15232 rows in 64.5 s",
+    "US-3 core promote: neighbour refresh 15566 rows in 66.1 s",
+    "US-3 core unpublish: neighbour refresh 15232 rows in 64.3 s"
   ],
-  "total_s": 595.5,
+  "total_s": 593.8,
   "mode": "pre-sitting"
 }
