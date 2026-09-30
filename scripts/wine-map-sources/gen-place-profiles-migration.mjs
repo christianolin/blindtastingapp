@@ -38,6 +38,9 @@ const {
 } = genArgs(process.argv.slice(2));
 
 const STYLE_KINDS = new Set(["RED", "WHITE", "ROSE", "SPARKLING", "SWEET", "FORTIFIED"]);
+// A grape link's role; absent means PRINCIPAL, so a data file without roles
+// generates exactly what it always did.
+const GRAPE_ROLES = new Set(["PRINCIPAL", "ACCESSORY"]);
 const sq = (s) => (s === null || s === undefined ? "null" : `'${String(s).replace(/'/g, "''")}'`);
 
 const env = Object.fromEntries(
@@ -93,6 +96,9 @@ for (const [key, p] of Object.entries(places)) {
   if (new Set(p.styles ?? []).size !== (p.styles ?? []).length) problems.push(`${key}: duplicate style`);
   const names = (p.grapes ?? []).map((g) => g.name);
   if (new Set(names).size !== names.length) problems.push(`${key}: duplicate grape`);
+  for (const g of p.grapes ?? []) {
+    if (g.role !== undefined && !GRAPE_ROLES.has(g.role)) problems.push(`${key}: bad role ${g.role} for ${g.name}`);
+  }
   // A share is a published figure or it is nothing; and the shares given for one
   // place must not add up to more than the place has.
   const shares = (p.grapes ?? []).map((g) => g.share_pct).filter((v) => v != null);
@@ -190,7 +196,12 @@ if (grapesToAdd.length) {
   lines.push(`-- Varieties the content needs that the catalog did not carry.`);
   for (const g of grapesToAdd) {
     lines.push(`insert into public.grapes (name, color, description, skin_color)`);
-    lines.push(`values (${sq(g.name)}, ${sq(g.color)}, ${sq(g.description)}, ${sq(g.skin_color)});`);
+    // --bare (the US files): a rollback may keep a variety this file added
+    // (usa_us2_remove.sql keeps Petite Sirah), so the file must apply again on
+    // top of it; the per-place grape counts below still catch a name that
+    // resolves to nothing. The default output is unchanged.
+    lines.push(`values (${sq(g.name)}, ${sq(g.color)}, ${sq(g.description)}, ${sq(g.skin_color)})${BARE ? "" : ";"}`);
+    if (BARE) lines.push("on conflict (name) do nothing;");
   }
   lines.push(``);
 }
@@ -204,7 +215,7 @@ for (const [key, p] of Object.entries(places)) {
   });
   for (const g of p.grapes ?? []) {
     lines.push(`insert into public.wine_place_grapes (wine_place_id, grape_id, role, permitted, share_pct, local_note, editorial_status)`);
-    lines.push(`select p.id, g.id, 'PRINCIPAL', true, ${g.share_pct ?? "null"}, ${sq(g.note ?? null)}, 'PUBLISHED'`);
+    lines.push(`select p.id, g.id, '${g.role ?? "PRINCIPAL"}', true, ${g.share_pct ?? "null"}, ${sq(g.note ?? null)}, 'PUBLISHED'`);
     lines.push(`  from public.wine_places p, public.grapes g`);
     lines.push(` where p.canonical_key = ${sq(key)} and g.name = ${sq(g.name)};`);
   }
