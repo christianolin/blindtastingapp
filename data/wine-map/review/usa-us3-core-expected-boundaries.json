@@ -1,0 +1,920 @@
+[
+  {
+    "canonical_key": "united-states",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "ne_50m_admin_0_countries_lakes:USA",
+    "normalized_checksum_sha256": "CF02FF8E8B44CE08745CA75A1BE72F4F0654F81E7B5553502560E80E603BB0D4",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "ne_50m_admin_1_states_provinces_lakes:US-CA",
+    "normalized_checksum_sha256": "C651A0E44CD9561A4AF642B7E7C46C599A5F9C2EECC78159DA92646FFD87F218",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.central-coast",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "central_coast",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.central-coast.alisos-canyon",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "alisos_canyon",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.central-coast.carmel-valley",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "carmel_valley",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.central-coast.gabilan-mountains",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "gabilan_mountains",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.central-coast.gabilan-mountains.chalone",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "chalone",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.central-coast.gabilan-mountains.mt-harlan",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "mt__harlan",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.central-coast.monterey",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "monterey",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.central-coast.monterey.arroyo-seco",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "arroyo_seco",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.central-coast.monterey.santa-lucia-highlands",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "santa_lucia_highlands",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.central-coast.paso-robles",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "paso_robles",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.central-coast.paso-robles.adelaida-district",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "adelaida_district",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.central-coast.paso-robles.creston-district",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "creston_district",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.central-coast.paso-robles.el-pomar-district",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "el_pomar_district",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.central-coast.paso-robles.paso-robles-estrella-district",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "paso_robles_estrella_district",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.central-coast.paso-robles.paso-robles-geneseo-district",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "paso_robles_geneseo_district",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.central-coast.paso-robles.paso-robles-highlands-district",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "paso_robles_highlands_district",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.central-coast.paso-robles.paso-robles-willow-creek-district",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "paso_robles_willow_creek_district",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.central-coast.paso-robles.san-juan-creek",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "san_juan_creek",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.central-coast.paso-robles.san-miguel-district",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "san_miguel_district",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.central-coast.paso-robles.santa-margarita-ranch",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "santa_margarita_ranch",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.central-coast.paso-robles.templeton-gap-district",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "templeton_gap_district",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.central-coast.san-francisco-bay",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "san_francisco_bay",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.central-coast.san-francisco-bay.livermore-valley",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "livermore_valley",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.central-coast.san-francisco-bay.santa-cruz-mountains",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "santa_cruz_mountains",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.central-coast.san-luis-obispo-coast",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "san_luis_obispo_coast",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.central-coast.san-luis-obispo-coast.arroyo-grande-valley",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "arroyo_grande_valley",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.central-coast.san-luis-obispo-coast.edna-valley",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "edna_valley",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.central-coast.santa-maria-valley",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "santa_maria_valley",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.central-coast.santa-ynez-valley",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "santa_ynez_valley",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.central-coast.santa-ynez-valley.ballard-canyon",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "ballard_canyon",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.central-coast.santa-ynez-valley.happy-canyon-of-santa-barbara",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "happy_canyon_of_santa_barbara",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.central-coast.santa-ynez-valley.los-olivos-district",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "los_olivos_district",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.central-coast.santa-ynez-valley.sta-rita-hills",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "sta__rita_hills",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.central-valley",
+    "boundary_method": "DERIVED_FROM_DESCENDANTS",
+    "source_feature_id": "derived:central-valley",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.central-valley.lodi",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "lodi",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.central-valley.lodi.alta-mesa",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "alta_mesa",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.central-valley.lodi.borden-ranch",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "borden_ranch",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.central-valley.lodi.clements-hills",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "clements_hills",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.central-valley.lodi.cosumnes-river",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "cosumnes_river",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.central-valley.lodi.jahant",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "jahant",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.central-valley.lodi.mokelumne-river",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "mokelumne_river",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.central-valley.lodi.sloughhouse",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "sloughhouse",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.el-dorado",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "el_dorado",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.el-dorado.fair-play",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "fair_play",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.north-coast",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "north_coast",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.north-coast.clear-lake",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "clear_lake",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.north-coast.clear-lake.red-hills-lake-county",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "red_hills_lake_county",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.north-coast.fountaingrove-district",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "fountaingrove_district",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.north-coast.los-carneros",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "los_carneros",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.north-coast.mendocino",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "mendocino",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.north-coast.mendocino-ridge",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "mendocino_ridge",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.north-coast.mendocino.anderson-valley",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "anderson_valley",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.north-coast.napa-valley",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "napa_valley",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.north-coast.napa-valley.atlas-peak",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "atlas_peak",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.north-coast.napa-valley.calistoga",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "calistoga",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.north-coast.napa-valley.chiles-valley",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "chiles_valley",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.north-coast.napa-valley.coombsville",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "coombsville",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.north-coast.napa-valley.crystal-springs-of-napa-valley",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "crystal_springs_of_napa_valley",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.north-coast.napa-valley.diamond-mountain-district",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "diamond_mountain_district",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.north-coast.napa-valley.howell-mountain",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "howell_mountain",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.north-coast.napa-valley.mt-veeder",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "mt__veeder",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.north-coast.napa-valley.oak-knoll-district-of-napa-valley",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "oak_knoll_district_of_napa_valley",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.north-coast.napa-valley.oakville",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "oakville",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.north-coast.napa-valley.rutherford",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "rutherford",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.north-coast.napa-valley.spring-mountain-district",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "spring_mountain_district",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.north-coast.napa-valley.st-helena",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "st__helena",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.north-coast.napa-valley.stags-leap-district",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "stags_leap_district",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.north-coast.napa-valley.yountville",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "yountville",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.north-coast.northern-sonoma",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "northern_sonoma",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.north-coast.northern-sonoma.alexander-valley",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "alexander_valley",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.north-coast.northern-sonoma.dry-creek-valley",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "dry_creek_valley",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.north-coast.northern-sonoma.knights-valley",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "knights_valley",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.north-coast.northern-sonoma.russian-river-valley",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "russian_river_valley",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.north-coast.northern-sonoma.russian-river-valley.chalk-hill",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "chalk_hill",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.north-coast.northern-sonoma.russian-river-valley.green-valley-of-russian-river-valley",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "green_valley_of_russian_river_valley",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.north-coast.petaluma-gap",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "petaluma_gap",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.north-coast.pine-mountain-cloverdale-peak",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "pine_mountain_cloverdale_peak",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.north-coast.rockpile",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "rockpile",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.north-coast.sonoma-coast",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "sonoma_coast",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.north-coast.sonoma-coast.west-sonoma-coast",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "west_sonoma_coast",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.north-coast.sonoma-coast.west-sonoma-coast.fort-ross-seaview",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "fort_ross_seaview",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.north-coast.sonoma-valley",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "sonoma_valley",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.north-coast.sonoma-valley.bennett-valley",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "bennett_valley",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.north-coast.sonoma-valley.moon-mountain-district-sonoma-county",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "moon_mountain_district_sonoma_county",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.north-coast.sonoma-valley.sonoma-mountain",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "sonoma_mountain",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.north-coast.wild-horse-valley",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "wild_horse_valley",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.sierra-foothills",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "sierra_foothills",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.sierra-foothills.california-shenandoah-valley",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "california_shenandoah_valley",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.sierra-foothills.fiddletown",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "fiddletown",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.south-coast",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "south_coast",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.california.south-coast.temecula-valley",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "temecula_valley",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.new-york",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "ne_50m_admin_1_states_provinces_lakes:US-NY",
+    "normalized_checksum_sha256": "C651A0E44CD9561A4AF642B7E7C46C599A5F9C2EECC78159DA92646FFD87F218",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.new-york.finger-lakes",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "finger_lakes",
+    "normalized_checksum_sha256": "4CF1BA9413468D7825A2E3B2EAC10D5DB2C09037718A87422C5E10D79205DBB1",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/NY_avas.geojson",
+    "raw_checksum_sha256": "8BE8F4D385229441461D67FA33A24B169C227DA5C44BC67B717368FC3BAA8E66",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.new-york.long-island",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "long_island",
+    "normalized_checksum_sha256": "4CF1BA9413468D7825A2E3B2EAC10D5DB2C09037718A87422C5E10D79205DBB1",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/NY_avas.geojson",
+    "raw_checksum_sha256": "8BE8F4D385229441461D67FA33A24B169C227DA5C44BC67B717368FC3BAA8E66",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.oregon",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "ne_50m_admin_1_states_provinces_lakes:US-OR",
+    "normalized_checksum_sha256": "C651A0E44CD9561A4AF642B7E7C46C599A5F9C2EECC78159DA92646FFD87F218",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.oregon.southern-oregon",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "southern_oregon",
+    "normalized_checksum_sha256": "BF05463C00EB9D62EFFBF8A3608B10FFA798B0F84DC2B34699C49AB30863C732",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/OR_avas.geojson",
+    "raw_checksum_sha256": "37AF8C156A0A55584C39890606D16A8EBA753E604531E1577CAE1DCAA0A32B55",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.oregon.willamette-valley",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "willamette_valley",
+    "normalized_checksum_sha256": "BF05463C00EB9D62EFFBF8A3608B10FFA798B0F84DC2B34699C49AB30863C732",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/OR_avas.geojson",
+    "raw_checksum_sha256": "37AF8C156A0A55584C39890606D16A8EBA753E604531E1577CAE1DCAA0A32B55",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.washington",
+    "boundary_method": "MANUAL",
+    "source_feature_id": "ne_50m_admin_1_states_provinces_lakes:US-WA",
+    "normalized_checksum_sha256": "C651A0E44CD9561A4AF642B7E7C46C599A5F9C2EECC78159DA92646FFD87F218",
+    "raw_snapshot_uri": null,
+    "raw_checksum_sha256": null,
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.washington.columbia-valley",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "columbia_valley",
+    "normalized_checksum_sha256": "0D55D546E37CC1288DD24AEEC5DC1F303D295F72BC7A0DC6F213BB6F2DA22297",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/WA_avas.geojson",
+    "raw_checksum_sha256": "A66B99F05BFB83CB408294134546CD20D8CBCDB96BA9D2DC5A6F02DA41AE2363",
+    "documented": true
+  },
+  {
+    "canonical_key": "united-states.washington.puget-sound",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "puget_sound",
+    "normalized_checksum_sha256": "0D55D546E37CC1288DD24AEEC5DC1F303D295F72BC7A0DC6F213BB6F2DA22297",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/WA_avas.geojson",
+    "raw_checksum_sha256": "A66B99F05BFB83CB408294134546CD20D8CBCDB96BA9D2DC5A6F02DA41AE2363",
+    "documented": true
+  }
+]
