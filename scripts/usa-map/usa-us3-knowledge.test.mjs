@@ -5,6 +5,8 @@ import { reviewChunks } from "./us3-wave.mjs";
 import { mergeSources, sortToWaveOrder, us3ReviewMarkdown, validateUs3Profiles } from "./usa-us3-knowledge.mjs";
 import { loadWave } from "./waves.mjs";
 import { renderReview, reviewPath } from "./render-usa-us3-review.mjs";
+import { topLevelTransactionStatements } from "../migration-preflight.mjs";
+import { migrationIsCurrent } from "./usa-knowledge.mjs";
 
 const waves = { core: await loadWave("us3-core"), rest: await loadWave("us3-rest") };
 const long = (s) => `${s}: a plain factual sentence long enough to pass the floor.`;
@@ -111,5 +113,16 @@ for (const batch of ["core", "rest"]) {
       try { committed = (await readFile(path, "utf8")).replace(/\r\n/g, "\n"); } catch { t.skip(`${path} not rendered yet`); return; }
       assert.equal(committed, text, path);
     }
+  });
+}
+
+for (const batch of ["core", "rest"]) {
+  test(`Review Focus 4: the ${batch} knowledge migration carries the data file exactly`, async () => {
+    const w = waves[batch];
+    const source = JSON.parse(await readFile(w.knowledgeSource, "utf8"));
+    const sql = (await readFile(w.files.knowledge, "utf8")).replace(/\r\n/g, "\n");
+    assert.deepEqual(migrationIsCurrent(source, sql), []);
+    assert.deepEqual(topLevelTransactionStatements(sql), []);
+    assert.equal((sql.match(/^insert into public\.wine_place_articles /gm) ?? []).length, w.places.length);
   });
 }
