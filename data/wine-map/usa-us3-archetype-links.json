@@ -1,0 +1,20 @@
+{
+  "_note": "US typical wines linked to the map, step 2 (spec 2026-09-29 D22, §14.2): the two California wines move from North Coast to their AVAs and keep North Coast and California as placements (the §14.2 table; California is the REGION placement the training-room drift guard RM9a needs). The Sonoma Chardonnay's scoring appellation is Sonoma Coast AVA, so Sonoma Coast is its home; it is also placed on Russian River Valley (§14.2). Matched by live id AND name; the pre-state must be step 1 exactly (20260930114747). Placement sort_order is the archetype's own (§25). Apply after the US-3 core promote.",
+  "links": [
+    { "archetype_id": "75e4e467-3929-4844-bbc4-ffe8b12523a1", "name": "A typical Napa Cabernet Sauvignon", "sort_order": 88,
+      "appellation": "Napa Valley AVA", "region": "California",
+      "from": { "home": "united-states.california.north-coast",
+                "placements": ["united-states.california", "united-states.california.north-coast"] },
+      "home": "united-states.california.north-coast.napa-valley",
+      "placements": ["united-states.california", "united-states.california.north-coast",
+                     "united-states.california.north-coast.napa-valley"] },
+    { "archetype_id": "c4ea77f3-5599-43dd-bdc3-4287c1e0ea15", "name": "A typical Sonoma Chardonnay", "sort_order": 89,
+      "appellation": "Sonoma Coast AVA", "region": "California",
+      "from": { "home": "united-states.california.north-coast",
+                "placements": ["united-states.california", "united-states.california.north-coast"] },
+      "home": "united-states.california.north-coast.sonoma-coast",
+      "placements": ["united-states.california", "united-states.california.north-coast",
+                     "united-states.california.north-coast.northern-sonoma.russian-river-valley",
+                     "united-states.california.north-coast.sonoma-coast"] }
+  ]
+}

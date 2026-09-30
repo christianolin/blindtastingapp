@@ -373,12 +373,12 @@ export const LINKS_PATH = "data/wine-map/usa-us2-archetype-links.json";
 export const loadLinks = async (read = (p) => readFile(p, "utf8")) => JSON.parse(await read(LINKS_PATH)).links;
 
 /** true when R2's curated display-point columns exist (20260929150000); a SQL expression. */
-const DISPLAY_COLUMNS_LIVE = `(select count(*) from information_schema.columns
+export const DISPLAY_COLUMNS_LIVE = `(select count(*) from information_schema.columns
        where table_schema = 'public' and table_name = 'wine_archetypes'
          and column_name in ('display_lon', 'display_lat')) = 2`;
 
 /** R1b's RM9a query (20260929141000), verbatim: placed archetypes lacking their REGION placement. */
-const RM9A_SQL = `  with recursive chain as (
+export const RM9A_SQL = `  with recursive chain as (
     select a.id as archetype_id, p.id as place_id, p.canonical_key, p.kind, p.primary_parent_id, 0 as depth
       from public.wine_archetypes a join public.wine_places p on p.id = a.wine_place_id
     union all

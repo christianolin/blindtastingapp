@@ -894,8 +894,9 @@ test("the batch-1 migration lands every archetype with its links, and a second a
       typical_age_high: 30,
       tannin: ["MEDIUM_PLUS", "HIGH"],
     });
-    // US typical wines, step 1 (usa-wine-map spec §14.2, 20260930114747): once
-    // linked, Napa lives on North Coast and also sits on California's page.
+    // US typical wines (usa-wine-map spec §14.2): after step 1 (20260930114747)
+    // Napa lives on North Coast and also sits on California's page; after step 2
+    // (20260930184747) it lives on Napa Valley, still placed on both.
     const napa = (
       await client.query(
         `select wp.canonical_key place,
@@ -905,12 +906,18 @@ test("the batch-1 migration lands every archetype with its links, and a second a
           where a.name = 'A typical Napa Cabernet Sauvignon'`,
       )
     ).rows[0];
+    // Step 2 (usa-wine-map spec §14.2, 20260930184747): once US-3's core is
+    // promoted and linked, Napa lives on Napa Valley, still placed on North
+    // Coast and California.
     if (napa.place === null) {
       assert.deepEqual(napa, { place: null, placements: null }, "an archetype without a map place stays off the map");
+    } else if (napa.place === "united-states.california.north-coast") {
+      assert.deepEqual(napa.placements, ["united-states.california", "united-states.california.north-coast"]);
     } else {
       assert.deepEqual(napa, {
-        place: "united-states.california.north-coast",
-        placements: ["united-states.california", "united-states.california.north-coast"],
+        place: "united-states.california.north-coast.napa-valley",
+        placements: ["united-states.california", "united-states.california.north-coast",
+          "united-states.california.north-coast.napa-valley"],
       });
     }
     const prosecco = (await client.query("select sat -> 'mousse' mousse from wine_archetypes where name = 'A typical Prosecco'"))
