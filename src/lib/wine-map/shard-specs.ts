@@ -34,6 +34,7 @@ import {
   type MapPalette,
 } from "./map-palette";
 import { depthTerm, grapeGateExpression, GS, labelTextField } from "./map-state";
+import { revealTerm } from "./reveal";
 import { shardKeyFor } from "./shard";
 
 /** [west, south, east, north], as the manifest and the place context carry it. */
@@ -433,15 +434,28 @@ export function selectedLabelPaint(input: {
   };
 }
 
-/** A shard's fills, outlines and labels: the grape gate, plus region-level
-    depth unless its country's wm_deep_ flag is on. A shard whose country is
-    unknown (tree not loaded, or a shard newer than it) stays at full depth,
-    as it always has. Never undefined: MapLibre silently drops a layer whose
-    filter is. */
-export function shardFilter(country: string | null): unknown[] {
-  return country
-    ? ["all", grapeGateExpression(), depthTerm(country)]
-    : ["all", grapeGateExpression()];
+/** A shard's fills, outlines and labels: the size rule (reveal.ts: a
+    subregion appears once it is REVEAL_MIN_PX across), the grape gate, plus
+    region-level depth unless its country's wm_deep_ flag is on. A shard whose
+    country is unknown (tree not loaded, or a shard newer than it) stays at
+    full depth, as it always has. Never undefined: MapLibre silently drops a
+    layer whose filter is.
+
+    The size term goes FIRST: it is the cheapest arm and rejects most features
+    at z5-z9. Without `reveal`, or with the rule off (px 0), the filter is
+    exactly the one from before the rule. The term reads no global state, so
+    it adds no reload to a selection or a focus change. */
+export function shardFilter(
+  country: string | null,
+  reveal?: { k: number; px: number },
+): unknown[] {
+  const term = reveal ? revealTerm(reveal.k, reveal.px) : null;
+  return [
+    "all",
+    ...(term ? [term] : []),
+    grapeGateExpression(),
+    ...(country ? [depthTerm(country)] : []),
+  ];
 }
 
 /** The selection ring, its casing and the selected label: the selected key
@@ -473,6 +487,10 @@ export type ShardSpecInputs = {
   ramp: boolean;
   palette: MapPalette;
   fillsVisible: boolean;
+  /** reveal.ts: this shard's K (its manifest bbox mid-latitude) and the
+      page's threshold, both fixed for the visit. revealPx 0 = the rule off. */
+  revealK: number;
+  revealPx: number;
 };
 
 export type ShardLayerSpecs = {
@@ -492,9 +510,11 @@ export function shardLayerIds(key: string) {
   };
 }
 
-/** The selected place's overlay layer ids on its own shard, bottom to top. */
+/** The selected place's overlay layer ids on its own shard, bottom to top.
+    The fill exists only while the size rule is on (selectedFillFilter). */
 export function shardOverlayIds(key: string) {
   return {
+    fill: `shard-selected-fill-${key}`,
     casing: `shard-selected-casing-${key}`,
     ring: `shard-selected-ring-${key}`,
     label: `shard-selected-label-${key}`,
@@ -530,7 +550,15 @@ export function shardLayerSpecs(key: string, url: string, inputs: ShardSpecInput
     ramp: inputs.ramp,
     palette: inputs.palette,
   });
-  const filter = shardFilter(inputs.country) as FilterSpecification;
+  // One filter for all three layers: a shape and its outline always appear
+  // together, a name never before its shape, and a place the size rule hides
+  // is never rendered, hit-tested, hovered, scanned or placed for collision.
+  // Never hide a place with opacity instead: queryRenderedFeatures and label
+  // collision still see opacity-0 features.
+  const filter = shardFilter(inputs.country, {
+    k: inputs.revealK,
+    px: inputs.revealPx,
+  }) as FilterSpecification;
   const layers: LayerSpecification[] = [
     {
       id: ids.fills,
@@ -566,15 +594,65 @@ export function shardLayerSpecs(key: string, url: string, inputs: ShardSpecInput
   });
 }
 
-/** The selected place's casing, ring and bigger label, on its own shard's
-    source. ShardController keeps them at the very top of the style: the ring
-    above every fill and outline, and the label placed first, so it wins every
-    collision (D4). Fresh objects per call, as shardLayerSpecs. */
-export function shardOverlaySpecs(key: string, palette: MapPalette): LayerSpecification[] {
+/** The ordinary shard filter with the size term NEGATED, for the selected
+    key: it draws the selected place exactly where the ordinary fill would if
+    the size rule were off (the grape gate and the depth term still apply), and
+    never where the ordinary fill already draws it. Null while the rule is off.
+    It reads only global state the selected shard already reads (wm_sel_key,
+    wm_keys, wm_deep_<country>), so a selection reloads nothing new. */
+export function selectedFillFilter(inputs: ShardSpecInputs): unknown[] | null {
+  const term = revealTerm(inputs.revealK, inputs.revealPx);
+  if (!term) return null;
+  return [
+    "all",
+    ["!", term],
+    ...shardFilter(inputs.country).slice(1), // grape gate, depth term
+    ["==", ["string", ["get", "key"], ""], ["global-state", GS.selKey]],
+  ];
+}
+
+/** The selected place's overlays on its own shard's source, bottom to top:
+    its fill where the size rule alone hides it (only with `inputs` and the
+    rule on), the casing, the ring and the bigger label. ShardController keeps
+    them at the very top of the style: the ring above every fill and outline,
+    and the label placed first, so it wins every collision (D4). The fill
+    paints exactly as the ordinary fill (same colour and focus/opacity arms;
+    feature-state `sel` is per feature), so there is no jump at the reveal
+    zoom. Fresh objects per call, as shardLayerSpecs. */
+export function shardOverlaySpecs(
+  key: string,
+  palette: MapPalette,
+  inputs?: ShardSpecInputs,
+): LayerSpecification[] {
   const source = shardSourceId(key);
   const ids = shardOverlayIds(key);
   const filter = selectedPlaceFilter() as FilterSpecification;
+  const fillFilter = inputs ? selectedFillFilter(inputs) : null;
+  const fill: LayerSpecification[] =
+    inputs && fillFilter
+      ? [
+          {
+            id: ids.fill,
+            type: "fill",
+            source,
+            "source-layer": "places",
+            filter: fillFilter as FilterSpecification,
+            layout: { visibility: inputs.fillsVisible ? "visible" : "none" },
+            paint: staticFillPaint({
+              color: shardColorExpression({
+                region: key,
+                areaSlugs: inputs.areaSlugs,
+                ramp: inputs.ramp,
+                palette: inputs.palette,
+              }),
+              ramp: inputs.ramp,
+              worldHandoff: false,
+            }) as FillLayerSpecification["paint"],
+          },
+        ]
+      : [];
   return structuredClone<LayerSpecification[]>([
+    ...fill,
     {
       id: ids.casing,
       type: "line",

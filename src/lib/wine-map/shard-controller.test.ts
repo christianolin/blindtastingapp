@@ -11,6 +11,9 @@ import { MAP_PALETTES, type MapPalette } from "./map-palette";
 import { GS } from "./map-state";
 import { ShardController, type ControllerMap, type ShardDesired } from "./shard-controller";
 import { shardFilter, shardLayerSpecs, shardOverlaySpecs } from "./shard-specs";
+import { revealK } from "./reveal";
+
+const REVEAL_K = revealK(24, 47);
 
 type Spec = {
   id: string;
@@ -255,6 +258,9 @@ function desired(over: {
   theme?: "light" | "dark";
   ramped?: string[];
   tree?: boolean;
+  /** The size rule's threshold (reveal.ts); off (0) unless a test asks. */
+  revealPx?: number;
+  revealK?: number;
 } = {}): ShardDesired {
   const palette: MapPalette = MAP_PALETTES[over.theme ?? "light"];
   const ramped = new Set(over.ramped ?? []);
@@ -270,6 +276,8 @@ function desired(over: {
       ramp: ramped.has(key),
       palette,
       fillsVisible: true,
+      revealK: over.revealK ?? REVEAL_K,
+      revealPx: over.revealPx ?? 0,
     }),
   };
 }
@@ -804,5 +812,132 @@ describe("ShardController", () => {
     // Absent (never a target): neither.
     expect(controller.isAdded("mosel")).toBe(false);
     expect(controller.isSettled("mosel")).toBe(false);
+  });
+});
+
+// The size rule (design 2026-09-30, "small places appear later"): the base
+// filters carry its term, and the selected shard gets a fourth overlay, the
+// fill that draws a size-hidden selected place, at the bottom of the four.
+describe("ShardController with the size rule on", () => {
+  const fills = (key: string) => [`shard-selected-fill-${key}`, ...overlays(key)];
+
+  it("26. writes the size term into every base filter, and rewrites them only when K or px change", () => {
+    const { map, frames, controller } = setup();
+    controller.setDesired(desired({ keys: ["bourgogne", "mosel"], revealPx: 24 }));
+    frames.drain();
+    for (const id of base("bourgogne")) {
+      expect(map.getLayer(id)?.filter).toEqual(shardFilter("france", { k: REVEAL_K, px: 24 }));
+    }
+    map.calls = [];
+    // Same inputs, new objects: nothing is rewritten.
+    controller.setDesired(desired({ keys: ["bourgogne", "mosel"], revealPx: 24 }));
+    frames.drain();
+    expect(map.mutations()).toEqual([]);
+
+    controller.setDesired(desired({ keys: ["bourgogne", "mosel"], revealPx: 32 }));
+    frames.drain();
+    const filters = map.mutations().filter(([n]) => n === "setFilter").map(([, id]) => id);
+    expect(filters.sort()).toEqual([...base("bourgogne"), ...base("mosel")].sort());
+    expect(map.mutations().filter(([n]) => n === "setPaintProperty")).toEqual([]);
+    expect(map.getLayer("shard-fills-mosel")?.filter).toEqual(shardFilter("germany", { k: REVEAL_K, px: 32 }));
+
+    map.calls = [];
+    controller.setDesired(desired({ keys: ["bourgogne", "mosel"], revealPx: 32, revealK: REVEAL_K * 2 }));
+    frames.drain();
+    expect(map.mutations().filter(([n]) => n === "setFilter")).toHaveLength(6);
+  });
+
+  it("27. adds four overlays, the fill at the bottom, and removes all four when the selection moves", () => {
+    const { map, frames, controller } = setup();
+    controller.setDesired(desired({ keys: ["alsace", "bourgogne"], selectedShard: "bourgogne", revealPx: 24 }));
+    frames.drain();
+    expect(map.getLayersOrder().slice(-4)).toEqual(fills("bourgogne"));
+    const inputs = desired({ revealPx: 24 }).inputs("bourgogne");
+    expect(map.getLayer("shard-selected-fill-bourgogne")).toEqual(
+      shardOverlaySpecs("bourgogne", MAP_PALETTES.light, inputs)[0],
+    );
+
+    map.calls = [];
+    controller.setDesired(desired({ keys: ["alsace", "bourgogne"], selectedShard: "alsace", revealPx: 24 }));
+    frames.drain();
+    expect(map.mutations()).toEqual([
+      ["removeLayer", "shard-selected-label-bourgogne"],
+      ["removeLayer", "shard-selected-ring-bourgogne"],
+      ["removeLayer", "shard-selected-casing-bourgogne"],
+      ["removeLayer", "shard-selected-fill-bourgogne"],
+      ["addLayer", "shard-selected-fill-alsace", undefined, V],
+      ["addLayer", "shard-selected-casing-alsace", undefined, V],
+      ["addLayer", "shard-selected-ring-alsace", undefined, V],
+      ["addLayer", "shard-selected-label-alsace", undefined, V],
+      ["setGlobalStateProperty", GS.tick, 1],
+    ]);
+    expect(map.getLayersOrder().slice(-4)).toEqual(fills("alsace"));
+    expect(map.getLayersOrder().some((id) => id.endsWith("-bourgogne") && id.startsWith("shard-selected-"))).toBe(false);
+  });
+
+  it("28. a shard added later lands below the fill overlay too", () => {
+    const { map, frames, controller } = setup();
+    controller.setDesired(desired({ keys: ["bourgogne"], selectedShard: "bourgogne", revealPx: 24 }));
+    frames.drain();
+    controller.setDesired(desired({ keys: ["bourgogne", "toscana"], selectedShard: "bourgogne", revealPx: 24 }));
+    frames.drain();
+    expect(map.calls).toContainEqual(["addLayer", "shard-fills-toscana", "shard-selected-fill-bourgogne", V]);
+    expect(map.getLayersOrder().slice(-4)).toEqual(fills("bourgogne"));
+  });
+
+  it("29. repaints the overlay fill on a ramp latch, new area slugs or a theme flip, and refilters it on a country change", () => {
+    const { map, frames, controller } = setup();
+    controller.setDesired(desired({ keys: ["bourgogne"], selectedShard: "bourgogne", revealPx: 24, tree: false }));
+    frames.drain();
+
+    // The tree lands: area slugs and a country.
+    map.calls = [];
+    controller.setDesired(desired({ keys: ["bourgogne"], selectedShard: "bourgogne", revealPx: 24 }));
+    frames.drain();
+    const fillCalls = () =>
+      map.mutations().filter(([n, id]) => (n === "setPaintProperty" || n === "setFilter") && id === "shard-selected-fill-bourgogne");
+    expect(fillCalls().map(([n]) => n)).toContain("setFilter");
+    expect(fillCalls().map(([n]) => n)).toContain("setPaintProperty");
+    const now = desired({ selectedShard: "bourgogne", revealPx: 24 }).inputs("bourgogne");
+    expect(map.getLayer("shard-selected-fill-bourgogne")).toEqual(
+      shardOverlaySpecs("bourgogne", MAP_PALETTES.light, now)[0],
+    );
+
+    // The ramp latch.
+    map.calls = [];
+    controller.setDesired(desired({ keys: ["bourgogne"], selectedShard: "bourgogne", revealPx: 24, ramped: ["bourgogne"] }));
+    frames.drain();
+    expect(fillCalls().map(([n]) => n)).toContain("setPaintProperty");
+    expect(map.getLayer("shard-selected-fill-bourgogne")?.paint).toEqual(
+      shardOverlaySpecs("bourgogne", MAP_PALETTES.light, desired({ revealPx: 24, ramped: ["bourgogne"] }).inputs("bourgogne"))[0].paint,
+    );
+
+    // A theme flip.
+    map.calls = [];
+    controller.setDesired(
+      desired({ keys: ["bourgogne"], selectedShard: "bourgogne", revealPx: 24, ramped: ["bourgogne"], theme: "dark" }),
+    );
+    frames.drain();
+    expect(fillCalls().map(([n]) => n)).toContain("setPaintProperty");
+    expect(map.getLayer("shard-selected-casing-bourgogne")?.paint?.["line-color"]).toBe(MAP_PALETTES.dark.selectedCasing);
+
+    // Nothing changed: nothing is rewritten.
+    map.calls = [];
+    controller.setDesired(
+      desired({ keys: ["bourgogne"], selectedShard: "bourgogne", revealPx: 24, ramped: ["bourgogne"], theme: "dark" }),
+    );
+    frames.drain();
+    expect(map.mutations()).toEqual([]);
+  });
+
+  it("30. with the rule turned off mid-visit, the fill overlay goes and the other three stay", () => {
+    const { map, frames, controller } = setup();
+    controller.setDesired(desired({ keys: ["bourgogne"], selectedShard: "bourgogne", revealPx: 24 }));
+    frames.drain();
+    controller.setDesired(desired({ keys: ["bourgogne"], selectedShard: "bourgogne", revealPx: 0 }));
+    frames.drain();
+    expect(map.getLayersOrder().slice(-3)).toEqual(overlays("bourgogne"));
+    expect(map.getLayer("shard-selected-fill-bourgogne")).toBeUndefined();
+    for (const id of base("bourgogne")) expect(map.getLayer(id)?.filter).toEqual(shardFilter("france"));
   });
 });

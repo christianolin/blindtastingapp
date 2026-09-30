@@ -1,5 +1,15 @@
 "use client";
 
+// react-hooks/refs is off for this file, which is exactly where it stood
+// before 2026-09-30: the React Compiler lint used to bail out of
+// TileWineMapExplorer on the old camera memo's `Math.max(...childZooms)`, and
+// with it went every ref check in the component. The ref reads it now reports
+// (the selection source and sheet snap read and written during render, the
+// tree pickers' ref-backed callbacks) are deliberate and older than that memo;
+// the React Compiler is not enabled in the build, so nothing is memoised
+// behind them. Revisit them on their own, not as part of the size rule.
+/* eslint-disable react-hooks/refs */
+
 import {
   useCallback,
   useEffect,
@@ -53,6 +63,7 @@ import { useWinePlacePrefetch } from "@/lib/wine-map/use-place-prefetch";
 import type { WinePlaceTreeNode } from "@/lib/wine-map/tree";
 import { englishName } from "@/lib/wine-map/localize-names";
 import { deepLinkAction } from "@/lib/wine-map/deep-link";
+import { currentRevealPx } from "@/lib/wine-map/reveal";
 import { fallbackFromContext } from "@/lib/wine-map/selection-state";
 import { areaSlugsByShard } from "@/lib/wine-map/shard-specs";
 import {
@@ -72,6 +83,7 @@ import {
   CHIP_FIT_ALL_SHARDS,
   chipMinZoom,
   countryCameraBox,
+  selectionZooms,
   type CameraRequest,
   type SheetPadding,
 } from "@/lib/wine-map/camera-fit";
@@ -750,27 +762,22 @@ export function TileWineMapExplorer({
   }
 
   // Drill-down camera: selecting a place zooms far enough that ALL its
-  // children's reveal zooms are reached (deepest child + headroom). Leaf
+  // children's catalogue zooms are reached (deepest child + headroom). Leaf
   // places instead zoom to their own footprint — bbox fitting decides, with
   // a generous cap — so tiny appellations (Pomerol) fill the view rather
-  // than showing the whole parent region.
+  // than showing the whole parent region. Either way the landing is where
+  // the place itself is drawn: past its own tile zoom and, below region
+  // level, past the zoom the size rule reveals it at (selectionZooms,
+  // lib/wine-map/camera-fit.ts; reveal.ts).
   const cameraTarget = useMemo<CameraTarget | null>(() => {
     if (!context?.boundary) return null;
-    const childZooms = context.children.map((c) => c.min_zoom);
-    // Parents zoom to a cap where their children appear. Leaves must end past
-    // their OWN reveal zoom so the selected feature — and its gold ring —
-    // actually renders instead of hiding under a coarser ancestor polygon
-    // (a bbox-fit alone can land below a small climat/cru's min_zoom).
-    const maxZoom = Math.min(
-      childZooms.length > 0
-        ? Math.max(...childZooms) + 0.5
-        : context.place.min_zoom + 1.5,
-      16,
-    );
-    const minZoom =
-      childZooms.length > 0
-        ? 0
-        : Math.min(context.place.min_zoom + 0.35, maxZoom);
+    const { minZoom, maxZoom } = selectionZooms({
+      tier: context.place.tier,
+      minZoom: context.place.min_zoom,
+      childMinZooms: context.children.map((c) => c.min_zoom),
+      bbox: context.boundary.bbox,
+      revealPx: currentRevealPx(),
+    });
     return {
       bbox: context.boundary.bbox,
       minZoom,

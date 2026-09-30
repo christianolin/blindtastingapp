@@ -6,6 +6,7 @@
 import { describe, expect, it } from "vitest";
 import { DETAIL_WARNING, detailStatus } from "./detail-status";
 import { NEIGHBOUR_MIN_ZOOM } from "./mount-policy";
+import { scanPastDepthZoom } from "./focus";
 
 type Input = Parameters<typeof detailStatus>[0];
 const base: Input = {
@@ -103,5 +104,33 @@ describe("detailStatus", () => {
     expect(detailStatus({ ...base, focusName: "Deutschland" }).text).toBe(
       "Subregions: Deutschland.",
     );
+  });
+});
+
+// The size rule (design 2026-09-30): at z8 or deeper, a subregion the rule
+// alone still hides keeps "Zoom in" rather than "No subregions mapped here".
+describe("detailStatus with a size-hidden subregion", () => {
+  it("keeps 'Zoom in to see {F}'s subregions.' when the probe found one", () => {
+    const pastDepthZoom = scanPastDepthZoom({
+      scanZoom: 8.5,
+      scanFocus: "france",
+      focusCountry: "france",
+      depthHidden: true,
+    });
+    expect(
+      detailStatus({ ...base, focusName: "France", depthVisible: false, pastDepthZoom }).text,
+    ).toBe("Zoom in to see France's subregions.");
+  });
+
+  it("still says 'No subregions mapped here for {F} yet.' when it found none", () => {
+    const pastDepthZoom = scanPastDepthZoom({
+      scanZoom: 8.5,
+      scanFocus: "france",
+      focusCountry: "france",
+      depthHidden: false,
+    });
+    expect(
+      detailStatus({ ...base, focusName: "France", depthVisible: false, pastDepthZoom }).text,
+    ).toBe("No subregions mapped here for France yet.");
   });
 });

@@ -15,7 +15,18 @@ import "maplibre-gl/dist/maplibre-gl.css";
 // Dark-theme dressing for MapLibre's own controls; must follow maplibre-gl.css.
 import "./map-chrome.css";
 import type { WineMapManifest } from "@/lib/wine-map/manifest";
-import { countryOfShard, keepAcrossSync, mountTarget } from "@/lib/wine-map/mount-policy";
+import {
+  countryOfShard,
+  keepAcrossSync,
+  mountTarget,
+  NEIGHBOUR_MIN_ZOOM,
+} from "@/lib/wine-map/mount-policy";
+import {
+  currentRevealPx,
+  revealK,
+  revealLatitude,
+  sizeHiddenInView,
+} from "@/lib/wine-map/reveal";
 import { allModeHealthy } from "@/lib/wine-map/detail-mode";
 import {
   CENTRE_PROBE_DIRECTIONS,
@@ -44,6 +55,7 @@ import {
   selectedPlaceFilter,
   selectionCasingPaint,
   selectionRingPaint,
+  shardOverlayIds,
   staticFillPaint,
   staticLabelLayout,
   staticLabelPaint,
@@ -485,6 +497,20 @@ export function TileWineMap({
     () => Object.entries(manifest.shards).sort(([a], [b]) => a.localeCompare(b)),
     [manifest],
   );
+  // When a subregion appears (lib/wine-map/reveal.ts; owner, 2026-09-30: "you
+  // need to zoom further in before smaller places appear"): from the first
+  // whole zoom at which it is revealPx CSS px across. The threshold is fixed
+  // for the visit (?revealPx= overrides the knob) and read through the same
+  // function the explorer's camera reads, so the two always agree; each
+  // shard's constant K comes from its manifest bbox's mid-latitude.
+  const revealPx = useMemo(() => currentRevealPx(), []);
+  const revealKs = useMemo(
+    () =>
+      Object.fromEntries(
+        shardEntries.map(([key, shard]) => [key, revealK(revealPx, revealLatitude(shard.bbox))]),
+      ) as Record<string, number>,
+    [shardEntries, revealPx],
+  );
 
   // A place belongs to exactly one shard (canonical_key segment 1), so on the
   // other 53 shards the selected-casing/ring layers are filtered to nothing by
@@ -912,6 +938,15 @@ export function TileWineMap({
   // (scanPastDepthZoom, controller ruling R3); a scan from before a focus
   // change never speaks for the new focus.
   const [scanFocus, setScanFocus] = useState<string | null>(null);
+  // Whether that scan's probe found a subregion of the focus country in view
+  // that only the size rule (reveal.ts) hides: more zoom will draw it, so the
+  // status line keeps "Zoom in" instead of "No subregions mapped here".
+  const [depthHidden, setDepthHidden] = useState(false);
+  // The grape filter's keys as a set, for that probe (null: no filter).
+  const visibleKeySet = useMemo(
+    () => (visibleKeys ? new Set(visibleKeys) : null),
+    [visibleKeys],
+  );
   // The legend covers much of a phone screen (owner screenshots), so make it
   // collapsible. It starts open only on a window both wide and tall enough
   // (legendStartsOpen: 64rem x 56rem, spec 2026-09-27 M12, owner ruling); at
@@ -1011,9 +1046,48 @@ export function TileWineMap({
         ? prev
         : depthList,
     );
+    // The status probe (design 2026-09-30 §3.4). Only in the rare state where
+    // the focus country has no subregion drawn at z8 or deeper: does a loaded
+    // tile hold one in view that only the size rule hides? Before the rule,
+    // nothing new appeared past z8; now 662 subregions first appear at z9 or
+    // deeper, so "No subregions mapped here" needs this check to stay honest.
+    const focusNow = focusRef.current;
+    const zoomNow = map.getZoom();
+    let hidden = false;
+    if (focusNow !== null && !depth.has(focusNow) && zoomNow >= NEIGHBOUR_MIN_ZOOM && revealPx > 0) {
+      try {
+        const b = map.getBounds();
+        const view: Bbox = [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()];
+        for (const key of mountedShards) {
+          if (countryOfShard(shardCountries, key) !== focusNow) continue;
+          const source = shardSourceId(key);
+          if (!map.getSource(source)) continue;
+          const features = map.querySourceFeatures(source, {
+            sourceLayer: "places",
+            filter: [">=", ["number", ["get", "tier"], 0], 2],
+          });
+          if (
+            sizeHiddenInView({
+              features,
+              view,
+              tileZoom: Math.floor(zoomNow),
+              k: revealKs[key] ?? revealK(revealPx, 45),
+              px: revealPx,
+              visibleKeys: visibleKeySet,
+            })
+          ) {
+            hidden = true;
+            break;
+          }
+        }
+      } catch {
+        // A lost context or a source mid-reload: say nothing new this scan.
+      }
+    }
+    setDepthHidden(hidden);
     // Read from the ref, not state: syncMountedShards writes it at moveend,
     // before the idle that scheduled this scan.
-    setScanFocus(focusRef.current);
+    setScanFocus(focusNow);
     const next = {
       scanned: true,
       zoom: map.getZoom(),
@@ -1031,7 +1105,7 @@ export function TileWineMap({
     // world-fills and the legend would never see a shard layer. It tracks the
     // viewport-gated mount set, so the scan queries only layers that actually
     // exist; scanView is passed straight to onIdle, which re-binds for free.
-  }, [mountedShards, noFills, shardCountries]);
+  }, [mountedShards, noFills, shardCountries, revealPx, revealKs, visibleKeySet]);
 
   // queryRenderedFeatures over every fill layer is not cheap, and onIdle fires
   // at the end of each gesture — so a burst of small pans/zooms ran a full
@@ -1146,6 +1220,7 @@ export function TileWineMap({
     scanZoom: viewInfo.zoom,
     scanFocus,
     focusCountry: focus.country,
+    depthHidden,
   });
   const onDetailReportRef = useRef(onDetailReport);
   useEffect(() => {
@@ -1427,9 +1502,14 @@ export function TileWineMap({
         ramp: rampedRegions.includes(key),
         palette,
         fillsVisible: !noFills,
+        // The size rule: fixed for the visit, so these never trigger a rewrite.
+        revealK: Object.prototype.hasOwnProperty.call(revealKs, key)
+          ? revealKs[key]
+          : revealK(revealPx, 45),
+        revealPx,
       }),
     }),
-    [mountedShards, shardUrls, selectedShard, palette, shardCountries, areaSlugsByShard, rampedRegions, noFills],
+    [mountedShards, shardUrls, selectedShard, palette, shardCountries, areaSlugsByShard, rampedRegions, noFills, revealKs, revealPx],
   );
   // onLoad reads this: the effect below may run before the map exists.
   const shardDesiredRef = useRef(shardDesired);
@@ -1461,6 +1541,10 @@ export function TileWineMap({
       // collision, so this is what a click on that name lands on.
       "world-selected-label",
       ...(selectedShard ? [`shard-selected-label-${selectedShard}`] : []),
+      // The selected place where the size rule alone hides it: its overlay
+      // fill draws it, so a tap or hover on it resolves to it (smallest area
+      // wins). The ordinary fill never draws it there, so nothing is doubled.
+      ...(selectedShard && !noFills ? [shardOverlayIds(selectedShard).fill] : []),
     ],
     [mountedShards, noFills, selectedShard],
   );

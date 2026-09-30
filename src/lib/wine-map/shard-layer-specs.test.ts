@@ -16,7 +16,9 @@ import {
 } from "@maplibre/maplibre-gl-style-spec";
 import { tuneBasemapStyle, withWineLayers, WORLD_SOURCE_ID } from "./basemap";
 import { MAP_PALETTES } from "./map-palette";
-import { deepStateName } from "./map-state";
+import { deepStateName, grapeGateExpression, GS } from "./map-state";
+import { revealK, revealTerm } from "./reveal";
+import { bundledStyleEngine } from "../testing/bundled-style-engine";
 import {
   selectedLabelLayout,
   selectedLabelPaint,
@@ -29,6 +31,7 @@ import {
   shardLayerSpecs,
   shardOverlayIds,
   shardOverlaySpecs,
+  selectedFillFilter,
   staticFillPaint,
   staticLabelLayout,
   staticLabelPaint,
@@ -84,6 +87,9 @@ function inputs(key: string, over: Partial<ShardSpecInputs> = {}): ShardSpecInpu
     ramp: false,
     palette: MAP_PALETTES.light,
     fillsVisible: true,
+    // The size rule off unless a test turns it on: today's filters.
+    revealK: 0,
+    revealPx: 0,
     ...over,
   };
 }
@@ -204,9 +210,20 @@ describe("shardLayerSpecs", () => {
                 ramp,
                 palette: MAP_PALETTES[theme],
                 fillsVisible,
+                // On for the ramped half, off for the other, so both shapes validate.
+                revealK: revealK(24, 45),
+                revealPx: ramp ? 24 : 0,
               });
               sources[specs.sourceId] = specs.source;
-              layers.push(...specs.layers, ...shardOverlaySpecs(key, MAP_PALETTES[theme]));
+              layers.push(...specs.layers, ...shardOverlaySpecs(key, MAP_PALETTES[theme], inputs(key, {
+                country: treeLoaded ? SHARD_COUNTRY[key] : null,
+                areaSlugs: treeLoaded ? slugsFor(key) : [],
+                ramp,
+                palette: MAP_PALETTES[theme],
+                fillsVisible,
+                revealK: revealK(24, 45),
+                revealPx: 24,
+              })));
             }
             const errors = validateStyleMin(styleOf(sources, layers));
             expect(errors, `${theme} ramp=${ramp} tree=${treeLoaded} fills=${fillsVisible}`).toEqual([]);
@@ -227,6 +244,7 @@ describe("shardOverlaySpecs", () => {
         ["shard-selected-label-bourgogne", "symbol", "labels"],
       ]);
     expect(shardOverlayIds("bourgogne")).toEqual({
+      fill: "shard-selected-fill-bourgogne",
       casing: "shard-selected-casing-bourgogne",
       ring: "shard-selected-ring-bourgogne",
       label: "shard-selected-label-bourgogne",
@@ -286,10 +304,18 @@ describe("a theme swap", () => {
     const shards = ["bourgogne", "alsace", "mosel"].map((key) =>
       shardLayerSpecs(key, url(key), inputs(key, { ramp: key === "bourgogne" })),
     );
+    // The overlays with the size rule on: the selected-place fill (its filter
+    // and paint) has to cross the swap untouched like the rest.
+    const overlays = shardOverlaySpecs(
+      "bourgogne",
+      MAP_PALETTES.light,
+      inputs("bourgogne", { ramp: true, revealK: revealK(24, 47.06), revealPx: 24 }),
+    );
+    expect(overlays[0].id).toBe("shard-selected-fill-bourgogne");
     const wineLayers = [
       ...world,
       ...shards.flatMap((specs) => specs.layers),
-      ...shardOverlaySpecs("bourgogne", MAP_PALETTES.light),
+      ...overlays,
     ] as LayerSpecification[];
     const live = {
       ...light,
@@ -314,5 +340,144 @@ describe("a theme swap", () => {
       }
     }
     expect(validateStyleMin(next)).toEqual([]);
+  });
+});
+
+// The size rule (design 2026-09-30, "small places appear later"): one term,
+// first in the one filter fills, outlines and labels share; and the selected
+// place drawn by an overlay fill where the rule alone hides it.
+describe("the size rule in the shard specs", () => {
+  const K = revealK(24, 37.2671);
+  const on = (key: string, over: Partial<ShardSpecInputs> = {}) =>
+    inputs(key, { revealK: K, revealPx: 24, ...over });
+
+  it("11. is the FIRST arm of the one filter fills, outlines and labels share", () => {
+    const layers = shardLayerSpecs("california", url("california"), on("california")).layers as { filter: unknown[] }[];
+    const expected = ["all", revealTerm(K, 24), grapeGateExpression(), ...shardFilter("united-states").slice(2)];
+    for (const layer of layers) expect(layer.filter).toEqual(expected);
+    expect(layers[0].filter).toEqual(shardFilter("united-states", { k: K, px: 24 }));
+  });
+
+  it("12. off (0 px), or called without it, the filter is exactly today's", () => {
+    expect(shardFilter("france", { k: K, px: 0 })).toEqual(shardFilter("france"));
+    expect(shardFilter(null, { k: K, px: 0 })).toEqual(shardFilter(null));
+    expect(shardFilter("france")).toEqual(["all", grapeGateExpression(), ...shardFilter("france").slice(2)]);
+    const layers = shardLayerSpecs("california", url("california"), on("california", { revealPx: 0 })).layers;
+    for (const layer of layers) expect((layer as { filter: unknown }).filter).toEqual(shardFilter("united-states"));
+  });
+
+  it("13. reads no new global state (a selection or focus change reloads what it did before)", () => {
+    const names = (expression: unknown, out = new Set<string>()): Set<string> => {
+      if (Array.isArray(expression)) {
+        if (expression[0] === "global-state") out.add(String(expression[1]));
+        for (const part of expression) names(part, out);
+      }
+      return out;
+    };
+    expect([...names(shardFilter("france", { k: K, px: 24 }))].sort()).toEqual([...names(shardFilter("france"))].sort());
+    const fill = selectedFillFilter(on("california"));
+    expect([...names(fill)].sort()).toEqual([deepStateName("united-states"), GS.selKey, GS.keys].sort());
+  });
+
+  it("14. the overlays are fill, casing, ring, label; the fill only while the rule is on", () => {
+    const overlays = shardOverlaySpecs("california", MAP_PALETTES.light, on("california"));
+    expect(overlays.map((l) => [l.id, l.type])).toEqual([
+      ["shard-selected-fill-california", "fill"],
+      ["shard-selected-casing-california", "line"],
+      ["shard-selected-ring-california", "line"],
+      ["shard-selected-label-california", "symbol"],
+    ]);
+    expect((overlays[0] as { "source-layer"?: string })["source-layer"]).toBe("places");
+    expect((overlays[0] as { source?: string }).source).toBe("wine-shard-california");
+    expect(overlays.slice(1)).toEqual(shardOverlaySpecs("california", MAP_PALETTES.light));
+    expect(shardOverlaySpecs("california", MAP_PALETTES.light, on("california", { revealPx: 0 }))).toEqual(
+      shardOverlaySpecs("california", MAP_PALETTES.light),
+    );
+    expect(selectedFillFilter(on("california", { revealPx: 0 }))).toBeNull();
+    const hidden = shardOverlaySpecs("california", MAP_PALETTES.light, on("california", { fillsVisible: false }))[0];
+    expect((hidden as { layout?: unknown }).layout).toEqual({ visibility: "none" });
+  });
+
+  it("15. the overlay fill paints exactly as the ordinary fill (no colour or opacity jump at the reveal)", () => {
+    for (const theme of ["light", "dark"] as const) {
+      for (const ramp of [false, true]) {
+        const i = on("bourgogne", { palette: MAP_PALETTES[theme], ramp, country: "france" });
+        const [fill] = shardOverlaySpecs("bourgogne", MAP_PALETTES[theme], i) as { paint?: unknown }[];
+        const [ordinary] = shardLayerSpecs("bourgogne", url("bourgogne"), i).layers as { paint?: unknown }[];
+        expect(fill.paint).toEqual(ordinary.paint);
+      }
+    }
+  });
+
+  it("16. the overlay fill is the ordinary fill's exact complement for the selected key, both engines", () => {
+    const i = on("california", { country: "united-states" });
+    const ordinary = shardFilter("united-states", { k: K, px: 24 });
+    const overlay = selectedFillFilter(i)!;
+    const COLE = "united-states.california.north-coast.cole-ranch";
+    const cole = { key: COLE, tier: 3, area: 0.00008013, region: "california" };
+    const deep = { [deepStateName("united-states")]: true };
+    const cases: { name: string; state: Record<string, unknown>; props: Record<string, unknown>; want: string }[] = [
+      // P = ordinary fill, O = overlay fill, - = neither, ! = both (never).
+      { name: "selected, US deep", state: { ...deep, [GS.selKey]: COLE }, props: cole, want: "OOOOOOOOOOOPPPPPPPP" },
+      { name: "selected, US not deep", state: { [GS.selKey]: COLE }, props: cole, want: "-------------------" },
+      { name: "another place selected", state: { ...deep, [GS.selKey]: "x" }, props: cole, want: "-----------PPPPPPPP" },
+      { name: "nothing selected", state: { ...deep }, props: cole, want: "-----------PPPPPPPP" },
+      { name: "selection null", state: { ...deep, [GS.selKey]: null }, props: cole, want: "-----------PPPPPPPP" },
+      { name: "grape filter excludes it", state: { ...deep, [GS.selKey]: COLE, [GS.keys]: { other: true } }, props: cole, want: "-------------------" },
+      { name: "grape filter keeps it", state: { ...deep, [GS.selKey]: COLE, [GS.keys]: { [COLE]: true } }, props: cole, want: "OOOOOOOOOOOPPPPPPPP" },
+      {
+        name: "a key named constructor is still rejected",
+        state: { ...deep, [GS.selKey]: "constructor", [GS.keys]: { other: true } },
+        props: { ...cole, key: "constructor" },
+        want: "-------------------",
+      },
+    ];
+    const engines = [
+      {
+        name: "standalone",
+        compile: (e: unknown, state: Record<string, unknown>) => {
+          const f = featureFilter(e as never, state);
+          return (props: Record<string, unknown>, zoom: number) =>
+            f.filter({ zoom }, { type: 3, properties: props } as never);
+        },
+      },
+      {
+        name: "bundled",
+        compile: (e: unknown, state: Record<string, unknown>) => {
+          const f = bundledStyleEngine().featureFilter(e, state);
+          return (props: Record<string, unknown>, zoom: number) =>
+            f.filter({ zoom }, { type: 3, properties: props });
+        },
+      },
+    ];
+    for (const engine of engines) {
+      for (const c of cases) {
+        const p = engine.compile(ordinary, c.state);
+        const o = engine.compile(overlay, c.state);
+        let got = "";
+        for (let z = 0; z <= 18; z += 1) {
+          const a = p(c.props, z);
+          const b = o(c.props, z);
+          got += a && b ? "!" : a ? "P" : b ? "O" : "-";
+        }
+        expect(got, `${engine.name}: ${c.name}`).toBe(c.want);
+      }
+    }
+  });
+
+  it("17. validates in light and dark at 16, 24 and 32 px", () => {
+    for (const theme of ["light", "dark"] as const) {
+      for (const px of [16, 24, 32]) {
+        const sources: Record<string, unknown> = {};
+        const layers: unknown[] = [];
+        for (const key of SHARDS) {
+          const i = inputs(key, { palette: MAP_PALETTES[theme], revealK: revealK(px, 45), revealPx: px });
+          const specs = shardLayerSpecs(key, url(key), i);
+          sources[specs.sourceId] = specs.source;
+          layers.push(...specs.layers, ...shardOverlaySpecs(key, MAP_PALETTES[theme], i));
+        }
+        expect(validateStyleMin(styleOf(sources, layers)), `${theme} ${px}`).toEqual([]);
+      }
+    }
   });
 });

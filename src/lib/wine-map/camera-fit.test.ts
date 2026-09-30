@@ -14,6 +14,8 @@ import {
   FIT_PADDING_PX,
   MIN_FIT_BAND_PX,
   selectionFit,
+  selectionZooms,
+  CAMERA_MAX_ZOOM,
 } from "./camera-fit";
 import { SHARD_MIN_ZOOM } from "./mount-policy";
 import type { Bbox } from "./shard-specs";
@@ -242,5 +244,85 @@ describe("where a chip lands (spec 2026-09-29 D26)", () => {
     // and a fitted zoom under it is still raised.
     expect(chipLandingZoom(3, chipMinZoom("portugal"))).toBe(CHIP_MIN_ZOOM);
     expect(chipLandingZoom(undefined, chipMinZoom("portugal"))).toBe(CHIP_MIN_ZOOM);
+  });
+});
+
+// Where a tree, search or ?place= pick lands (design-final §3.5): where the
+// place can be seen. Bboxes, tiers and min_zooms are the live catalogue's.
+describe("selectionZooms", () => {
+  const COLE_RANCH: Bbox = [-123.23493, 39.05565, -123.21377, 39.06551];
+  const MONTHOUX: Bbox = [5.8364, 45.7003, 5.837, 45.7022];
+  const PAUILLAC: Bbox = [-0.7933, 45.1667, -0.7403, 45.2279];
+  const NAPA: Bbox = [-122.64675, 38.15506, -122.0614, 38.76833];
+  const RRV: Bbox = [-123.03101, 38.30056, -122.67373, 38.65234];
+  const CHABLIS_1ER: Bbox = [3.7266, 47.7837, 3.8421, 47.859];
+  const USA: Bbox = [-124.71, 24.5423, -66.987, 49.3697];
+  const leaf = (bbox: Bbox, tier: number, minZoom: number, revealPx: number) =>
+    selectionZooms({ tier, minZoom, childMinZooms: [], bbox, revealPx });
+  // Today's rule, as the explorer computed it before the size rule.
+  const today = (minZoom: number, childMinZooms: number[]) => {
+    const maxZoom = Math.min(
+      childMinZooms.length > 0 ? Math.max(...childMinZooms) + 0.5 : minZoom + 1.5,
+      16,
+    );
+    return { minZoom: childMinZooms.length > 0 ? 0 : Math.min(minZoom + 0.35, maxZoom), maxZoom };
+  };
+
+  it("leaves large places where they land today", () => {
+    // At 32 px Pauillac's floor rises to z10, under its z10.5 cap, which a
+    // desktop or phone fit reaches anyway: it still lands where it does today.
+    expect(leaf(PAUILLAC, 3, 9, 32)).toEqual({ minZoom: 10, maxZoom: 10.5 });
+    for (const px of [0, 16, 24]) {
+      expect(leaf(PAUILLAC, 3, 9, px), `Pauillac ${px}`).toEqual(today(9, []));
+      expect(leaf(RRV, 4, 7, px), `Russian River Valley ${px}`).toEqual(today(7, []));
+      // A parent keeps its framing; only its floor rises to its own tile zoom.
+      expect(selectionZooms({ tier: 3, minZoom: 6, childMinZooms: [7], bbox: NAPA, revealPx: px })).toEqual({
+        minZoom: 6,
+        maxZoom: today(6, [7]).maxZoom,
+      });
+    }
+  });
+
+  it("with the rule off, every leaf lands as today", () => {
+    for (const minZoom of [4, 6, 7, 9.5, 12, 13, 14]) {
+      expect(leaf(COLE_RANCH, 3, minZoom, 0)).toEqual(today(minZoom, []));
+    }
+  });
+
+  it("lands a tiny place where it is drawn", () => {
+    expect(leaf(COLE_RANCH, 3, 6, 24)).toEqual({ minZoom: 12, maxZoom: 12.5 });
+    expect(leaf(COLE_RANCH, 3, 6, 16)).toEqual({ minZoom: 11, maxZoom: 11.5 });
+    expect(leaf(MONTHOUX, 2, 7, 24)).toEqual({ minZoom: 15, maxZoom: 15.5 });
+    expect(leaf(MONTHOUX, 2, 7, 32)).toEqual({ minZoom: 16, maxZoom: 16.5 });
+  });
+
+  it("floors a parent at its own tile zoom (Chablis 1er Cru landed at 11.77, drawing nothing)", () => {
+    for (const px of [0, 24]) {
+      const z = selectionZooms({ tier: 4, minZoom: 12, childMinZooms: [14], bbox: CHABLIS_1ER, revealPx: px });
+      expect(z).toEqual({ minZoom: 12, maxZoom: 14.5 });
+    }
+  });
+
+  it("never floors a country or region above its own tile zoom", () => {
+    for (const px of [0, 16, 24, 32, 64]) {
+      expect(selectionZooms({ tier: 0, minZoom: 1.5, childMinZooms: [1.5], bbox: USA, revealPx: px })).toEqual({
+        minZoom: 1,
+        maxZoom: 2,
+      });
+      expect(leaf(COLE_RANCH, 1, 4, px).minZoom).toBe(4.35);
+    }
+  });
+
+  it("keeps minZoom <= maxZoom <= CAMERA_MAX_ZOOM", () => {
+    expect(CAMERA_MAX_ZOOM).toBe(17);
+    for (const px of [0, 16, 24, 32, 64]) {
+      for (const bbox of [COLE_RANCH, MONTHOUX, PAUILLAC, NAPA, [5, 45, 5, 45] as Bbox]) {
+        for (const [tier, minZoom, children] of [[3, 6, []], [4, 14, []], [2, 7, [16]], [4, 12, [14]]] as const) {
+          const z = selectionZooms({ tier, minZoom, childMinZooms: children, bbox, revealPx: px });
+          expect(z.minZoom).toBeLessThanOrEqual(z.maxZoom);
+          expect(z.maxZoom).toBeLessThanOrEqual(CAMERA_MAX_ZOOM);
+        }
+      }
+    }
   });
 });

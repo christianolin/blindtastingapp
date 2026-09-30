@@ -26,7 +26,10 @@ export type DetailStatus = { text: string; retry: boolean };
  * NEIGHBOUR_MIN_ZOOM, a focus country whose on-screen regions have no tier >= 2
  * places in the catalogue (Baden, Franken, Navarra, Saale-Unstrut and
  * Württemberg today) instead gets "No subregions mapped here for {F} yet.",
- * since by then more zoom will not help (controller ruling R3).
+ * since by then more zoom will not help (controller ruling R3). "At or above
+ * NEIGHBOUR_MIN_ZOOM" also requires that the map's probe found no subregion
+ * the size rule alone still hides (reveal.ts; focus.ts scanPastDepthZoom's
+ * `depthHidden`): such a place does appear with more zoom.
  */
 export function detailStatus(input: {
   tree: "loading" | "ready" | "failed";

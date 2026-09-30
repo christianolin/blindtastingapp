@@ -2197,6 +2197,35 @@ a raw subquery, regardless of which two tables look involved at a glance.
     like-for-like A/B on one build showed no win (64/56 ms without it, 72/64 ms
     with it, plus a new long task), so it was not shipped. Measure any
     debounce/defer attempt the same way before believing it.
+  - **When a place appears** (2026-09-30, owner: "you need to zoom further
+    in before smaller places appear"; design
+    `docs/superpowers/specs/2026-09-30-wine-map-reveal-by-size.md`).
+    - **The rule.** A subregion (tier >= 2) is drawn from the first whole zoom
+      at which it is at least `REVEAL_MIN_PX` CSS px across
+      (`src/lib/wine-map/reveal.ts`; 24, the owner's pick of 16/24/32; 0 =
+      off). "Across" is the side of a square of its on-screen area, from the
+      tile's `area` and a per-shard latitude constant (`revealK`, the shard's
+      manifest bbox mid-latitude).
+    - **Never earlier than `floor(min_zoom)`.** So `min_zoom` now means
+      "never before"; read reveal zooms through `reveal.ts` (`revealZoom`).
+    - **Exemptions and the net.** Countries and regions are exempt, so the
+      world archive's layers are untouched. Everything is drawn by z16
+      (`REVEAL_CAP_ZOOM`).
+    - **One term, first.** The term is the first arm of `shardFilter`, shared
+      by fills, outlines and labels. Never hide a place with opacity:
+      `queryRenderedFeatures` and label collision still see opacity-0 features.
+    - **The selection.** The selected place is always drawn, by
+      `shard-selected-fill-*` (`selectedFillFilter`): the ordinary fill's paint
+      and filter with the size term negated, at the bottom of the four overlays.
+    - **Picks.** Tree, search and `?place=` picks land where the place is drawn
+      (`selectionZooms`, `camera-fit.ts`); a parent's floor is its own tile zoom.
+    - **Status line.** The "No subregions mapped here" line checks with
+      `querySourceFeatures` (`sizeHiddenInView`) that nothing in view is only
+      size-hidden.
+    - **Comparing.** `?revealPx=` (0..64) overrides the knob for one visit.
+    - **Do not.** Never bake the rule into tippecanoe `minzoom`: the ring could
+      no longer draw a small selected place, and shard `max_zoom` would drop
+      features.
 - **Wine map engine and One country | All countries** (2026-09-23; spec
   `docs/superpowers/specs/2026-09-23-wine-map-one-country-all-countries-design.md`,
   plan `docs/superpowers/plans/2026-09-23-wine-map-one-country-all-countries.md`;

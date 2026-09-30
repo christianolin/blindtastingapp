@@ -235,16 +235,24 @@ export function deepCountriesFor(
     that measured depth, and only when that scan was taken with the current
     focus country: focus moves at moveend, the scan lands a beat after idle,
     and in between a pan from Würzburg to Colmar must not tell the viewer that
-    France has nothing mapped there on the strength of Germany's scan. */
+    France has nothing mapped there on the strength of Germany's scan.
+
+    `depthHidden`: the scan's probe found a subregion of the focus country in
+    view that exists in the loaded tiles and that only the size rule
+    (reveal.ts) still hides. More zoom WILL draw it, so it is not "none mapped
+    here" (design 2026-09-30: at 24 px, 662 subregions first appear at z9 or
+    deeper). */
 export function scanPastDepthZoom(input: {
   scanZoom: number;
   scanFocus: string | null;
   focusCountry: string | null;
+  depthHidden?: boolean;
 }): boolean {
   return (
     input.focusCountry !== null &&
     input.scanFocus === input.focusCountry &&
-    input.scanZoom >= NEIGHBOUR_MIN_ZOOM
+    input.scanZoom >= NEIGHBOUR_MIN_ZOOM &&
+    !input.depthHidden
   );
 }
 

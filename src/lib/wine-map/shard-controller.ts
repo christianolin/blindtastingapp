@@ -36,6 +36,7 @@
 //    while reloading nothing (no layer reads wm_tick).
 import type { MapPalette } from "./map-palette";
 import type { SyncMap } from "./map-state-sync";
+import { revealTerm } from "./reveal";
 import { GS } from "./map-state";
 import { SHARD_SOURCE_PREFIX, shardSourceId } from "./basemap";
 import {
@@ -105,7 +106,7 @@ const WORLD_ORDER: readonly string[] = [
 const SHARD_LAYER_PREFIX = "shard-";
 const OVERLAY_PREFIX = "shard-selected-";
 const BASE_LAYER_ID = /^shard-(?:fills|outlines|labels)-(.+)$/;
-const OVERLAY_LAYER_ID = /^shard-selected-(?:casing|ring|label)-(.+)$/;
+const OVERLAY_LAYER_ID = /^shard-selected-(?:fill|casing|ring|label)-(.+)$/;
 const DEFAULT_BUDGET_MS = 8;
 
 function isNotLoaded(error: unknown): boolean {
@@ -114,6 +115,17 @@ function isNotLoaded(error: unknown): boolean {
 
 function sameList(a: readonly string[], b: readonly string[]): boolean {
   return a === b || (a.length === b.length && a.every((value, i) => value === b[i]));
+}
+
+/** Whether a shard's paint must be rewritten for these inputs. */
+function paintChanged(was: ShardSpecInputs, now: ShardSpecInputs): boolean {
+  return was.palette !== now.palette || was.ramp !== now.ramp || !sameList(was.areaSlugs, now.areaSlugs);
+}
+
+/** Whether a shard's filters must be rewritten for these inputs: the depth
+    term (country) or the size term (reveal.ts: K and the threshold). */
+function filterChanged(was: ShardSpecInputs, now: ShardSpecInputs): boolean {
+  return was.country !== now.country || was.revealK !== now.revealK || was.revealPx !== now.revealPx;
 }
 
 export class ShardController {
@@ -133,7 +145,9 @@ export class ShardController {
   private readonly overlaysFailed = new Set<string>();
   /** The inputs each mounted shard's paint and filters were written from. */
   private readonly applied = new Map<string, ShardSpecInputs>();
-  private appliedOverlay: { key: string; palette: MapPalette } | null = null;
+  /** The overlays' shard and the inputs their paint and the fill's filter
+      were written from. */
+  private appliedOverlay: { key: string; inputs: ShardSpecInputs } | null = null;
   private readonly logged = new Set<string>();
   private readonly onStyleData = () => {
     if (this.desired) this.schedule();
@@ -310,7 +324,7 @@ export class ShardController {
       for (const key of base) if (!wanted.has(key)) this.removeShard(key);
       const owner = d.selectedShard !== null && wanted.has(d.selectedShard) ? d.selectedShard : null;
       for (const key of owners) if (key !== owner) this.removeOverlays(key);
-      if (owner !== null && this.present(owner)) this.ensureOverlays(style, owner, d.palette);
+      if (owner !== null && this.present(owner)) this.ensureOverlays(style, owner, this.overlayInputs(d, owner));
 
       const start = this.now();
       let units = 0;
@@ -322,13 +336,12 @@ export class ShardController {
         if (this.present(key)) {
           const inputs = d.inputs(key);
           const was = this.applied.get(key);
-          const paint = !was || was.palette !== inputs.palette || was.ramp !== inputs.ramp ||
-            !sameList(was.areaSlugs, inputs.areaSlugs);
-          const filter = !was || was.country !== inputs.country;
+          const paint = !was || paintChanged(was, inputs);
+          const filter = !was || filterChanged(was, inputs);
           if (!paint && !filter) continue;
           this.rewrite(style, key, d.urls[key], inputs, { paint, filter });
         } else if (this.addShard(style, key, d) && key === owner) {
-          this.ensureOverlays(style, owner, d.palette);
+          this.ensureOverlays(style, owner, this.overlayInputs(d, owner));
         }
         units += 1;
       }
@@ -398,36 +411,55 @@ export class ShardController {
     this.applied.set(key, inputs);
   }
 
-  private ensureOverlays(style: ControllerStyle, key: string, palette: MapPalette): void {
+  /** The overlay owner's inputs, with the landed palette (d.palette), which is
+      what the ring and label have always been painted from. */
+  private overlayInputs(d: ShardDesired, key: string): ShardSpecInputs {
+    const inputs = d.inputs(key);
+    return inputs.palette === d.palette ? inputs : { ...inputs, palette: d.palette };
+  }
+
+  private ensureOverlays(style: ControllerStyle, key: string, inputs: ShardSpecInputs): void {
     if (this.overlaysFailed.has(key)) return;
-    const specs = shardOverlaySpecs(key, palette);
-    if (specs.every((layer) => this.map.getLayer(layer.id))) {
-      const was = this.appliedOverlay;
-      if (was && was.key === key && was.palette === palette) return;
+    const was = this.appliedOverlay;
+    const ids = shardOverlayIds(key);
+    // Compared before any spec is built, so a run that changes nothing
+    // allocates no new colour expression.
+    const same = was !== null && was.key === key && !paintChanged(was.inputs, inputs) && !filterChanged(was.inputs, inputs);
+    const wantFill = revealTerm(inputs.revealK, inputs.revealPx) !== null;
+    const fillPresent = Boolean(this.map.getLayer(ids.fill));
+    const othersPresent = [ids.casing, ids.ring, ids.label].every((id) => this.map.getLayer(id));
+    if (same && othersPresent && fillPresent === wantFill) return;
+    const specs = shardOverlaySpecs(key, inputs.palette, inputs);
+    if (othersPresent && fillPresent === wantFill) {
       this.wrote = true;
+      const filter = !was || was.key !== key || filterChanged(was.inputs, inputs);
       try {
         for (const layer of specs) {
           for (const [name, value] of Object.entries(layer.paint ?? {})) {
             style.setPaintProperty(layer.id, name, value, NO_VALIDATE);
+          }
+          if (filter && layer.id === ids.fill && "filter" in layer && layer.filter !== undefined) {
+            style.setFilter(layer.id, layer.filter, NO_VALIDATE);
           }
         }
       } catch (error) {
         if (isNotLoaded(error)) throw error;
         this.logOnce(`overlay-paint:${key}`, error);
       }
-      this.appliedOverlay = { key, palette };
+      this.appliedOverlay = { key, inputs };
       return;
     }
     try {
       this.removeOverlays(key);
       this.wrote = true;
       // Appended: the top of the style, above every shard added so far and,
-      // through firstOverlayId, every shard added later.
+      // through firstOverlayId, every shard added later. The fill comes first,
+      // so it sits under the casing and ring, and firstOverlayId finds it.
       for (const layer of specs) {
         style.addLayer(layer, undefined, NO_VALIDATE);
         if (!this.map.getLayer(layer.id)) throw new Error(`${layer.id} was not added`);
       }
-      this.appliedOverlay = { key, palette };
+      this.appliedOverlay = { key, inputs };
     } catch (error) {
       if (isNotLoaded(error)) throw error;
       this.removeOverlays(key);
@@ -457,7 +489,7 @@ export class ShardController {
 
   private removeOverlays(key: string): void {
     const ids = shardOverlayIds(key);
-    for (const id of [ids.label, ids.ring, ids.casing]) this.removeLayer(id);
+    for (const id of [ids.label, ids.ring, ids.casing, ids.fill]) this.removeLayer(id);
     if (this.appliedOverlay?.key === key) this.appliedOverlay = null;
   }
 

@@ -7,11 +7,54 @@
 // which on a phone makes room for the bottom sheet.
 import type { Bbox } from "./shard-specs";
 import { countryOfShard, SHARD_MIN_ZOOM } from "./mount-policy";
+import { bboxZoomForPx } from "./reveal";
 
 /** A chip flight never lands shallower than this. At z5.5 the country's
-    shards are mounted and its regions load, and Italy's and Portugal's first
-    subregions (min_zoom 5) are already drawn. */
+    shards are mounted and its regions load, and those of Italy's and
+    Portugal's first subregions (min_zoom 5) that are at least REVEAL_MIN_PX
+    across (reveal.ts) are already drawn. */
 export const CHIP_MIN_ZOOM = 5.5;
+
+/** A selection flight's deepest cap: the reveal net (REVEAL_CAP_ZOOM, z16)
+    plus headroom. Was 16. */
+export const CAMERA_MAX_ZOOM = 17;
+
+/** Where a tree, search, details or ?place= pick flies (design 2026-09-30,
+    "small places appear later"): where the place can be seen.
+
+    Leaf: today's [min_zoom + 0.35, min_zoom + 1.5], raised to the size floor,
+    the first whole zoom where the place's bbox is 2N px across (the side of a
+    square of its Web-Mercator area). A place filling a quarter of its box or
+    more is drawn there by its ordinary fill; a sparser one is drawn by the
+    selected-place overlay fill (shard-specs selectedFillFilter).
+
+    Parent: today's framing (deepest child + 0.5), raised only if the parent
+    itself is size-delayed. Its floor is its own tile zoom floor(min_zoom):
+    today's floor 0 let six picks (Chablis 1er Cru, Corton, ...) land where
+    nothing is drawn, not even the ring.
+
+    Countries and regions (tier <= 1) get no size floor: the rule exempts them. */
+export function selectionZooms(input: {
+  tier: number;
+  /** The place's catalogue min_zoom. */
+  minZoom: number;
+  childMinZooms: readonly number[];
+  bbox: Bbox;
+  /** reveal.ts's threshold for this visit (0 = the rule is off). */
+  revealPx: number;
+}): { minZoom: number; maxZoom: number } {
+  const n = input.tier >= 2 && input.revealPx > 0 ? input.revealPx : 0;
+  const sizeFloor = n > 0 ? bboxZoomForPx(input.bbox, 2 * n) : 0;
+  if (input.childMinZooms.length > 0) {
+    const maxZoom = Math.min(
+      CAMERA_MAX_ZOOM,
+      Math.max(Math.max(...input.childMinZooms) + 0.5, sizeFloor + 0.5),
+    );
+    return { minZoom: Math.min(Math.max(Math.floor(input.minZoom), sizeFloor), maxZoom), maxZoom };
+  }
+  const maxZoom = Math.min(CAMERA_MAX_ZOOM, Math.max(input.minZoom + 1.5, sizeFloor + 0.5));
+  return { minZoom: Math.min(Math.max(input.minZoom + 0.35, sizeFloor), maxZoom), maxZoom };
+}
 
 /** The frame a fit leaves round its place, in CSS px on every side. */
 export const FIT_PADDING_PX = 48;

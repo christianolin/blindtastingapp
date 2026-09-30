@@ -345,4 +345,13 @@ describe("scanPastDepthZoom", () => {
   it("is false with no focus country", () => {
     expect(scanPastDepthZoom({ scanZoom: 9, scanFocus: null, focusCountry: null })).toBe(false);
   });
+
+  // The size rule (reveal.ts) can hold a subregion back past z8, so "none
+  // mapped here" is said only when the probe found nothing the rule alone hides.
+  it("is false while the probe found a subregion only the size rule hides", () => {
+    const at = { scanZoom: 8.5, scanFocus: "france", focusCountry: "france" };
+    expect(scanPastDepthZoom({ ...at, depthHidden: true })).toBe(false);
+    expect(scanPastDepthZoom({ ...at, depthHidden: false })).toBe(true);
+    expect(scanPastDepthZoom(at)).toBe(true);
+  });
 });
