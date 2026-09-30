@@ -10,7 +10,7 @@ import { pathToFileURL } from "node:url";
 import { REFRESH_BLOCK, sq } from "./render-us2-sql.mjs";
 import { depthOf, loadTrees, STATE_SLUGS } from "./us2-wave.mjs";
 import { loadTtb } from "./us3-wave.mjs";
-import { SCOPE_KEYS, us4Wave } from "./us4-wave.mjs";
+import { inScope, SCOPE_KEYS, us4Wave } from "./us4-wave.mjs";
 import { STATE_WINDOWS } from "../wine-map-sources/usa-stage-lib.mjs";
 
 const num = (n) => String(Number(n));
@@ -436,13 +436,219 @@ end $$;
 `;
 }
 
-// (Task 12 inserts the rollback renderers here.)
+// --- Rollbacks (spec §16, §25). scripts/usa-map/, unversioned, run with
+// apply-rollback.mjs (--check, --dry, then no flag); re-appliable, each asserts
+// its own pre-state. They work on exactly the wave's 42 keys.
+function rbPrelude(wave) {
+  const rows = wave.places.map((p) => `  (${sq(p.key)}, ${depthOf(p.key)})`).join(",\n");
+  const known = [...wave.priorKeys.filter(inScope), ...wave.places.map((p) => p.key)].map((k) => `  (${sq(k)})`).join(",\n");
+  return `set local lock_timeout = '10s';
+set local statement_timeout = '30min';
+
+drop table if exists pg_temp._us4_rb, pg_temp._us4_known;
+create temp table _us4_rb (key text primary key, depth int not null) on commit drop;
+insert into _us4_rb values
+${rows};
+-- Every key under the three states this wave knows about (US-2's and its own).
+create temp table _us4_known (key text primary key) on commit drop;
+insert into _us4_known values
+${known};
+`;
+}
+
+const rbHeader = (title, body) => `-- USA on the wine map, phase US-4 ROLLBACK: ${title} (spec
+-- docs/superpowers/specs/2026-09-29-usa-wine-map-design.md §16, §25; plan
+-- ${PLAN} Task 12).
+--
+${body.trim().split("\n").map((l) => (l ? `-- ${l}` : "--")).join("\n")}
+--
+-- Deliberately outside supabase/migrations/, with no version prefix: run it
+-- with scripts/usa-map/apply-rollback.mjs (--check, --dry, then no flag), never
+-- with the migration applier. Re-appliable: every step asserts its own
+-- pre-state, and nothing is recorded. Touches only keys under Washington,
+-- Oregon and New York. Rendered by scripts/usa-map/render-us4-sql.mjs; do not
+-- hand-edit.
+-- No begin/commit: the runner owns the transaction (D24).
+
+`;
+
+export function unstageSql(wave) {
+  const tag = "US-4 unstage";
+  const n = wave.places.length;
+  return `${rbHeader("unstage (after --stage, before the promote)", `
+Removes the ${n} DRAFT, non-current boundaries stage-usa-ava.mjs --wave us4
+--stage committed, and nothing else: the places, their knowledge and the
+source snapshots stay (snapshots are immutable; a re-stage reuses them). Ends
+with the checked neighbour refresh, which brings the cache and master's
+map-data checks back to green.`)}${rbPrelude(wave)}
+do $$
+declare n int; v_text text;
+begin
+  select string_agg(e.key, ', ' order by e.key) into v_text
+    from _us4_rb e left join public.wine_places p on p.canonical_key = e.key
+   where p.id is null or p.publication_status <> 'DRAFT';
+  if v_text is not null then raise exception '${tag}: missing or not DRAFT (after the promote, use the unpublish file): %', v_text; end if;
+  select count(*) into n from public.wine_place_boundaries b join public.wine_places p on p.id = b.wine_place_id
+   where p.canonical_key in (select key from _us4_rb) and (b.is_current or b.quality_status <> 'DRAFT');
+  if n <> 0 then raise exception '${tag}: % boundaries on this wave are current or not DRAFT', n; end if;
+  select count(*) into n from public.wine_place_boundaries b join public.wine_places p on p.id = b.wine_place_id
+   where p.canonical_key in (select key from _us4_rb) and b.quality_status = 'DRAFT' and not b.is_current;
+  if n <> ${n} then raise exception '${tag}: % DRAFT non-current boundaries on this wave, expected ${n}', n; end if;
+end $$;
+
+delete from public.wine_place_boundaries b
+ using public.wine_places p
+ where p.id = b.wine_place_id and p.canonical_key in (select key from _us4_rb)
+   and b.quality_status = 'DRAFT' and not b.is_current;
+
+do $$
+declare n int;
+begin
+  select count(*) into n from public.wine_place_boundaries b join public.wine_places p on p.id = b.wine_place_id
+   where p.canonical_key in (select key from _us4_rb);
+  if n <> 0 then raise exception '${tag}: % boundaries left on this wave', n; end if;
+  select count(*) into n from public.wine_places p where p.canonical_key in (select key from _us4_rb) and p.publication_status = 'DRAFT';
+  if n <> ${n} then raise exception '${tag}: % DRAFT places, expected ${n}', n; end if;
+end $$;
+
+${REFRESH_BLOCK(tag)}`;
+}
+
+export function removeSql(wave) {
+  const tag = "US-4 remove";
+  const n = wave.places.length;
+  const depths = [...new Set(wave.places.map((p) => depthOf(p.key)))].sort((a, b) => b - a);
+  const deletes = depths.map((d) => `delete from public.wine_places p
+ using _us4_rb e
+ where p.canonical_key = e.key and e.depth = ${d};`).join("\n");
+  return `${rbHeader("remove (abandon the wave before its promote)", `
+Deletes the ${n} places of the wave (deepest first), their relationships,
+boundaries and knowledge (articles, styles and grapes cascade), and the
+catalog (${wave.versions.catalog}) and knowledge (${wave.versions.knowledge}) history rows,
+so both apply again as committed. Refuses once the promote has run (keys lock
+for good; use the unpublish file), and while any other place under Washington,
+Oregon or New York exists outside US-2 and this wave (remove the later wave
+first). Keeps the source snapshots (immutable; a re-stage reuses them) and the
+new grape rows (shared reference rows; the knowledge migration re-applies over
+them with on conflict (name) do nothing).`)}${rbPrelude(wave)}
+do $$
+declare v_text text;
+begin
+  -- The lock check first, so after a promote this is always the message.
+  select string_agg(p.canonical_key, ', ' order by p.canonical_key) into v_text
+    from public.wine_places p join _us4_rb e on e.key = p.canonical_key
+   where p.canonical_key_locked_at is not null;
+  if v_text is not null then
+    raise exception '${tag}: keys are locked (the promote ran): use the unpublish file instead (%)', v_text;
+  end if;
+  select string_agg(p.canonical_key, ', ' order by p.canonical_key) into v_text
+    from public.wine_places p
+   where ${SCOPE_WHERE("p")} and p.canonical_key not in (select key from _us4_known);
+  if v_text is not null then raise exception '${tag}: other places under Washington, Oregon or New York exist (remove the later wave first): %', v_text; end if;
+  select string_agg(e.key, ', ' order by e.key) into v_text
+    from _us4_rb e left join public.wine_places p on p.canonical_key = e.key
+   where p.id is null or p.publication_status <> 'DRAFT';
+  if v_text is not null then raise exception '${tag}: missing or not DRAFT: %', v_text; end if;
+end $$;
+
+delete from public.wine_place_relationships r
+ using public.wine_places p
+ where p.canonical_key in (select key from _us4_rb)
+   and (r.source_place_id = p.id or r.target_place_id = p.id);
+delete from public.wine_place_boundaries b
+ using public.wine_places p
+ where p.id = b.wine_place_id and p.canonical_key in (select key from _us4_rb);
+${deletes}
+delete from supabase_migrations.schema_migrations where version in ('${wave.versions.catalog}', '${wave.versions.knowledge}');
+
+do $$
+declare n int;
+begin
+  select count(*) into n from public.wine_places where canonical_key in (select key from _us4_rb);
+  if n <> 0 then raise exception '${tag}: % places of this wave left', n; end if;
+  select (select count(*) from public.wine_place_articles a where not exists (select 1 from public.wine_places p where p.id = a.wine_place_id))
+       + (select count(*) from public.wine_place_styles s where not exists (select 1 from public.wine_places p where p.id = s.wine_place_id))
+       + (select count(*) from public.wine_place_grapes g where not exists (select 1 from public.wine_places p where p.id = g.wine_place_id))
+    into n;
+  if n <> 0 then raise exception '${tag}: % orphan knowledge rows', n; end if;
+  if exists (select 1 from supabase_migrations.schema_migrations where version in ('${wave.versions.catalog}', '${wave.versions.knowledge}')) then
+    raise exception '${tag}: history rows left';
+  end if;
+end $$;
+
+${REFRESH_BLOCK(tag)}`;
+}
+
+export function unpublishSql(wave) {
+  const tag = "US-4 unpublish";
+  const n = wave.places.length;
+  return `${rbHeader("unpublish (a roll forward after the promote)", `
+Takes the ${n} places of the wave off the map without touching their locked
+keys: every boundary of the wave non-current and every place DRAFT, then the
+checked refresh. Boundaries, relationships and knowledge stay. Refuses while a
+later wave is live under the three states (unpublish it first), and while any
+typical wine is placed on a US-4 place (none is, plan decision 10: re-point it
+first).
+THEN, on master: splice-boundary-expectations.mjs --write (it keeps only the
+current united-states rows, so this wave's rows leave the hunk); git diff must
+show only removed united-states rows; commit and push it as a staged push.
+THEN DISPATCH A NEW TILES RELEASE FROM MASTER (promote=true), and never roll
+back the manifest (§17.3).`)}${rbPrelude(wave)}
+do $$
+declare v_text text;
+begin
+  select string_agg(e.key, ', ' order by e.key) into v_text
+    from _us4_rb e left join public.wine_places p on p.canonical_key = e.key
+   where p.id is null or p.publication_status <> 'VERIFIED'
+      or (select count(*) from public.wine_place_boundaries b where b.wine_place_id = p.id and b.is_current) <> 1;
+  if v_text is not null then raise exception '${tag}: not VERIFIED with one current boundary: %', v_text; end if;
+  select string_agg(p.canonical_key, ', ' order by p.canonical_key) into v_text
+    from public.wine_places p
+   where ${SCOPE_WHERE("p")} and p.canonical_key not in (select key from _us4_known)
+     and (p.publication_status = 'VERIFIED'
+          or exists (select 1 from public.wine_place_boundaries b where b.wine_place_id = p.id and b.is_current));
+  if v_text is not null then raise exception '${tag}: a later wave is live under Washington, Oregon or New York (unpublish it first): %', v_text; end if;
+  select string_agg(a.name, ', ' order by a.name) into v_text
+    from public.wine_archetypes a
+   where a.wine_place_id in (select p.id from public.wine_places p where p.canonical_key in (select key from _us4_rb))
+      or exists (select 1 from public.wine_archetype_placements x join public.wine_places p on p.id = x.wine_place_id
+                  where x.archetype_id = a.id and p.canonical_key in (select key from _us4_rb));
+  if v_text is not null then
+    raise exception '${tag}: a typical wine is placed on this wave (re-point it first): %', v_text;
+  end if;
+end $$;
+
+update public.wine_place_boundaries b
+   set is_current = false
+  from public.wine_places p
+ where p.id = b.wine_place_id and p.canonical_key in (select key from _us4_rb) and b.is_current;
+update public.wine_places p
+   set publication_status = 'DRAFT', updated_at = now()
+ where p.canonical_key in (select key from _us4_rb);
+
+do $$
+declare n int;
+begin
+  select count(*) into n from public.wine_places p where p.canonical_key in (select key from _us4_rb) and p.publication_status = 'VERIFIED';
+  if n <> 0 then raise exception '${tag}: % VERIFIED places of this wave left', n; end if;
+  select count(*) into n from public.wine_place_boundaries b join public.wine_places p on p.id = b.wine_place_id
+   where p.canonical_key in (select key from _us4_rb) and b.is_current;
+  if n <> 0 then raise exception '${tag}: % current boundaries left', n; end if;
+  select count(*) into n from public.wine_places p where p.canonical_key in (select key from _us4_rb) and p.canonical_key_locked_at is not null;
+  if n <> ${n} then raise exception '${tag}: % of ${n} keys still locked (they never unlock)', n; end if;
+end $$;
+
+${REFRESH_BLOCK(tag)}`;
+}
 
 /** Every rendered file, path -> text. */
 export function renderAll(wave) {
   return {
     [wave.files.catalog]: catalogSql(wave),
     [wave.files.promote]: promoteSql(wave),
+    [wave.rollbackFiles.unstage]: unstageSql(wave),
+    [wave.rollbackFiles.remove]: removeSql(wave),
+    [wave.rollbackFiles.unpublish]: unpublishSql(wave),
   };
 }
 

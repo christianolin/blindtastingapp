@@ -2,7 +2,8 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 import { topLevelTransactionStatements } from "../migration-preflight.mjs";
-import { catalogSql, loadUs4Wave, promoteSql } from "./render-us4-sql.mjs";
+import { rollbackRefusal } from "./apply-rollback.mjs";
+import { catalogSql, loadUs4Wave, promoteSql, renderAll } from "./render-us4-sql.mjs";
 
 const lf = (s) => s.replace(/\r\n/g, "\n");
 const wave = await loadUs4Wave();
@@ -65,4 +66,25 @@ test("Review Focus 2: the state-share edges carry the tree's figure and the 0.01
 
 test("Review Focus 1: Candy Mountain's override floor is the tree's figure less one point", () => {
   assert.ok(promoteSql(wave).includes("('united-states.washington.columbia-valley.yakima-valley.candy-mountain', 'candy_mountain', false, 'united-states.washington.columbia-valley.yakima-valley', 0.883, '{united-states.washington}',"));
+});
+
+test("rollbacks: committed = render, no transaction statements, own pre-state, refresh last, scope only", async () => {
+  const all = renderAll(wave);
+  for (const [what, path] of Object.entries(wave.rollbackFiles)) {
+    assert.equal(rollbackRefusal(path), null, `${path} is a US rollback file name`);
+    assert.equal(lf(await readFile(path, "utf8")), all[path], path);
+    assert.deepEqual(topLevelTransactionStatements(all[path]), [], path);
+    assert.ok(!all[path].includes("united-states.california"), `${what}: nothing about California`);
+    const tail = all[path].slice(all[path].lastIndexOf("do $$"));
+    assert.match(tail, /refresh_wine_place_neighbours\(\)/, `${what}: refresh last`);
+  }
+  const [un, rm, up] = ["unstage", "remove", "unpublish"].map((w) => all[wave.rollbackFiles[w]]);
+  assert.match(un, /US-4 unstage: missing or not DRAFT \(after the promote, use the unpublish file\)/);
+  assert.match(rm, /keys are locked \(the promote ran\)/);
+  assert.match(rm, /other places under Washington, Oregon or New York exist \(remove the later wave first\)/);
+  assert.ok(rm.includes(`delete from supabase_migrations.schema_migrations where version in ('${wave.versions.catalog}', '${wave.versions.knowledge}')`));
+  assert.ok(rm.indexOf("keys are locked") < rm.indexOf("other places under"), "the lock message comes first");
+  assert.match(up, /a later wave is live under Washington, Oregon or New York \(unpublish it first\)/);
+  assert.match(up, /a typical wine is placed on this wave \(re-point it first\)/);
+  for (const sql of [un, rm, up]) assert.equal((sql.match(/^ {2}\('united-states\.(washington|oregon|new-york)\.[^']+', \d+\)/gm) ?? []).length, 42);
 });
