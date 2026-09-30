@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
+import { topLevelTransactionStatements } from "../migration-preflight.mjs";
+import { migrationIsCurrent } from "./usa-knowledge.mjs";
 import { mergeSources } from "./usa-us3-knowledge.mjs";
 import { shortlistTop, signatureLeadProblems, us4ReviewMarkdown, validateUs4Profiles } from "./usa-us4-knowledge.mjs";
 import { renderReview, reviewPath } from "./render-usa-us4-review.mjs";
@@ -109,4 +111,13 @@ test("the committed review files are the render (once written)", async (t) => {
   for (const [path, text] of await renderReview()) {
     assert.equal((await readFile(path, "utf8")).replace(/\r\n/g, "\n"), text, path);
   }
+});
+
+test("Review Focus 4: the knowledge migration carries the data file exactly", async () => {
+  const source = JSON.parse(await readFile(wave.knowledgeSource, "utf8"));
+  const sql = (await readFile(wave.files.knowledge, "utf8")).replace(/\r\n/g, "\n");
+  assert.deepEqual(migrationIsCurrent(source, sql), []);
+  assert.deepEqual(topLevelTransactionStatements(sql), []);
+  assert.equal((sql.match(/^insert into public\.wine_place_articles /gm) ?? []).length, wave.places.length);
+  assert.equal((sql.match(/\non conflict \(name\) do nothing;/g) ?? []).length, source.new_grapes.length);
 });
