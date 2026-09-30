@@ -7,3 +7,4 @@ data/wine-map/review/usa-* -text
 data/usa-reference/** -text
 data/wine-map/place-profiles-usa.json -text
 data/wine-map/place-profiles-usa-us3-*.json -text
+data/wine-map/place-profiles-usa-us4.json -text
