@@ -6,7 +6,7 @@
 // Usage: node scripts/usa-map/render-us2-sql.mjs
 import { readFile, writeFile } from "node:fs/promises";
 import { pathToFileURL } from "node:url";
-import { depthOf, loadTrees, us2Wave, US2_FILES, US2_VERSIONS } from "./us2-wave.mjs";
+import { depthOf, loadTrees, us2Wave, US2_FILES, US2_ROLLBACK_FILES, US2_VERSIONS } from "./us2-wave.mjs";
 
 export const sq = (v) => (v === null || v === undefined ? "null" : `'${String(v).replace(/'/g, "''")}'`);
 const num = (n) => String(Number(n));
@@ -560,12 +560,241 @@ end $$;
 `;
 }
 
+// --- Rollbacks (plan Task 11; spec §16). They live in scripts/usa-map/, not
+// supabase/migrations/, so a replay never runs one. Each works on exactly the
+// 16 US-2 keys and refuses if a later US wave has added any other US place.
+
+function rollbackPrelude(wave, what) {
+  const rows = wave.places.map((p) => `  (${sq(p.key)}, ${depthOf(p.key)})`).join(",\n");
+  return `set local lock_timeout = '10s';
+set local statement_timeout = '30min';
+
+drop table if exists pg_temp._us2_rb;
+create temp table _us2_rb (key text primary key, depth int not null) on commit drop;
+insert into _us2_rb values
+${rows};
+
+do $$
+declare v_text text;
+begin
+  select string_agg(p.canonical_key, ', ' order by p.canonical_key) into v_text
+    from public.wine_places p
+   where (p.canonical_key = 'united-states' or p.canonical_key like 'united-states.%')
+     and p.canonical_key not in (select key from _us2_rb);
+  if v_text is not null then
+    raise exception 'US-2 ${what}: a later US wave exists: write its own rollback (%)', v_text;
+  end if;
+end $$;
+`;
+}
+
+const rollbackHeader = (title, body) => `-- USA on the wine map, phase US-2 ROLLBACK: ${title} (spec
+-- docs/superpowers/specs/2026-09-29-usa-wine-map-design.md §16; plan
+-- docs/superpowers/plans/2026-09-29-usa-wine-map-us2.md Task 11).
+--
+${body.trim().split("\n").map((l) => (l ? `-- ${l}` : "--")).join("\n")}
+--
+-- Deliberately outside supabase/migrations/: a replay must never run it. Apply
+-- with the owner's applier (--check, --dry, then no flag). Rendered by
+-- scripts/usa-map/render-us2-sql.mjs; do not hand-edit.
+-- No begin/commit: the applier owns the transaction (D24).
+
+`;
+
+export function unstageSql(wave) {
+  const n = wave.places.length;
+  return `${rollbackHeader("unstage (after --stage, before the promote)", `
+Removes the ${n} DRAFT, non-current boundaries stage-usa-ava.mjs --stage
+committed, and nothing else: the places, their knowledge and the source
+snapshots stay (snapshots are immutable; a re-stage reuses them by source,
+revision and checksum). Ends with the checked neighbour refresh, which brings
+the cache and master's map-data checks back to green.`)}${rollbackPrelude(wave, "unstage")}
+do $$
+declare n int; v_text text;
+begin
+  select string_agg(e.key, ', ' order by e.key) into v_text
+    from _us2_rb e left join public.wine_places p on p.canonical_key = e.key
+   where p.id is null or p.publication_status <> 'DRAFT';
+  if v_text is not null then raise exception 'US-2 unstage: missing or not DRAFT (after the promote, use the unpublish file): %', v_text; end if;
+  select count(*) into n from public.wine_place_boundaries b join public.wine_places p on p.id = b.wine_place_id
+   where p.canonical_key in (select key from _us2_rb) and (b.is_current or b.quality_status <> 'DRAFT');
+  if n <> 0 then raise exception 'US-2 unstage: % US boundaries are current or not DRAFT', n; end if;
+  select count(*) into n from public.wine_place_boundaries b join public.wine_places p on p.id = b.wine_place_id
+   where p.canonical_key in (select key from _us2_rb) and b.quality_status = 'DRAFT' and not b.is_current;
+  if n <> ${n} then raise exception 'US-2 unstage: % DRAFT non-current US boundaries, expected ${n}', n; end if;
+end $$;
+
+delete from public.wine_place_boundaries b
+ using public.wine_places p
+ where p.id = b.wine_place_id and p.canonical_key in (select key from _us2_rb)
+   and b.quality_status = 'DRAFT' and not b.is_current;
+
+do $$
+declare n int;
+begin
+  select count(*) into n from public.wine_place_boundaries b join public.wine_places p on p.id = b.wine_place_id
+   where p.canonical_key in (select key from _us2_rb);
+  if n <> 0 then raise exception 'US-2 unstage: % US boundaries left', n; end if;
+  select count(*) into n from public.wine_places p
+   where p.canonical_key in (select key from _us2_rb) and p.publication_status = 'DRAFT';
+  if n <> ${n} then raise exception 'US-2 unstage: % DRAFT US places, expected ${n}', n; end if;
+end $$;
+
+${REFRESH_BLOCK("US-2 unstage")}`;
+}
+
+export function removeSql(wave) {
+  const n = wave.places.length;
+  const depths = [...new Set(wave.places.map((p) => depthOf(p.key)))].sort((a, b) => b - a);
+  const deletes = depths.map((d) => `delete from public.wine_places p
+ using _us2_rb e
+ where p.canonical_key = e.key and e.depth = ${d};`).join("\n");
+  return `${rollbackHeader("remove (abandon the wave before the promote)", `
+Deletes the ${n} US-2 places (deepest first), their relationships, boundaries
+and knowledge (articles, styles and grapes cascade), and the catalog
+(${US2_VERSIONS.catalog}) and knowledge (${US2_VERSIONS.knowledge}) history
+rows, so both can be applied again. Refuses once the promote has run: VERIFIED
+keys are locked for good, and the way back is the unpublish file.
+Kept on purpose: the source snapshots (immutable; a re-stage reuses them) and
+the Petite Sirah grape row the knowledge added (harmless; deleting it would
+need every grape FK checked).`)}${rollbackPrelude(wave, "remove")}
+do $$
+declare v_text text;
+begin
+  -- The lock check first, so after a promote this is always the message.
+  select string_agg(p.canonical_key, ', ' order by p.canonical_key) into v_text
+    from public.wine_places p join _us2_rb e on e.key = p.canonical_key
+   where p.canonical_key_locked_at is not null;
+  if v_text is not null then
+    raise exception 'US-2 remove: keys are locked (the promote ran): use the unpublish file instead (%)', v_text;
+  end if;
+  select string_agg(e.key, ', ' order by e.key) into v_text
+    from _us2_rb e left join public.wine_places p on p.canonical_key = e.key
+   where p.id is null or p.publication_status <> 'DRAFT';
+  if v_text is not null then raise exception 'US-2 remove: missing or not DRAFT: %', v_text; end if;
+end $$;
+
+delete from public.wine_place_relationships r
+ using public.wine_places p
+ where p.canonical_key in (select key from _us2_rb)
+   and (r.source_place_id = p.id or r.target_place_id = p.id);
+delete from public.wine_place_boundaries b
+ using public.wine_places p
+ where p.id = b.wine_place_id and p.canonical_key in (select key from _us2_rb);
+${deletes}
+delete from supabase_migrations.schema_migrations where version in ('${US2_VERSIONS.catalog}', '${US2_VERSIONS.knowledge}');
+
+do $$
+declare n int;
+begin
+  select count(*) into n from public.wine_places where canonical_key = 'united-states' or canonical_key like 'united-states.%';
+  if n <> 0 then raise exception 'US-2 remove: % united-states places left', n; end if;
+  select (select count(*) from public.wine_place_articles a where not exists (select 1 from public.wine_places p where p.id = a.wine_place_id))
+       + (select count(*) from public.wine_place_styles s where not exists (select 1 from public.wine_places p where p.id = s.wine_place_id))
+       + (select count(*) from public.wine_place_grapes g where not exists (select 1 from public.wine_places p where p.id = g.wine_place_id))
+    into n;
+  if n <> 0 then raise exception 'US-2 remove: % orphan knowledge rows', n; end if;
+  if exists (select 1 from supabase_migrations.schema_migrations where version in ('${US2_VERSIONS.catalog}', '${US2_VERSIONS.knowledge}')) then
+    raise exception 'US-2 remove: history rows left';
+  end if;
+end $$;
+
+${REFRESH_BLOCK("US-2 remove")}`;
+}
+
+export function unpublishSql(wave, links) {
+  checkLinks(links);
+  const n = wave.places.length;
+  const points = links.map((l) => `  (${sq(l.archetype_id)}::uuid, ${num(l.display_point[0])}, ${num(l.display_point[1])})`).join(",\n");
+  return `${rollbackHeader("unpublish (a roll forward after the promote)", `
+Takes the ${n} US-2 places off the map without touching their locked keys:
+archetype links first (their placements on US places deleted, their homes set
+to null, and R2's curated display point restored where the links cleared it),
+then every US boundary non-current and every US place DRAFT, then the checked
+refresh. Boundaries, relationships and knowledge stay, for a later re-promote.
+THEN DISPATCH A NEW TILES RELEASE FROM MASTER (promote=true), and
+never roll back the manifest (§17.3): that would remove other people's newer
+places.`)}${rollbackPrelude(wave, "unpublish")}
+drop table if exists pg_temp._us2_points;
+create temp table _us2_points (archetype_id uuid primary key, display_lon double precision not null,
+  display_lat double precision not null) on commit drop;
+insert into _us2_points values
+${points};
+
+do $$
+declare v_text text;
+begin
+  select string_agg(e.key, ', ' order by e.key) into v_text
+    from _us2_rb e left join public.wine_places p on p.canonical_key = e.key
+   where p.id is null or p.publication_status <> 'VERIFIED'
+      or (select count(*) from public.wine_place_boundaries b where b.wine_place_id = p.id and b.is_current) <> 1;
+  if v_text is not null then raise exception 'US-2 unpublish: not VERIFIED with one current boundary: %', v_text; end if;
+end $$;
+
+-- Archetype links first: a typical wine never points at a DRAFT place.
+drop table if exists pg_temp._us2_unlinked;
+create temp table _us2_unlinked on commit drop as
+select a.id from public.wine_archetypes a join public.wine_places p on p.id = a.wine_place_id
+ where p.canonical_key in (select key from _us2_rb);
+delete from public.wine_archetype_placements x
+ using public.wine_places p
+ where p.id = x.wine_place_id and p.canonical_key in (select key from _us2_rb);
+update public.wine_archetypes a
+   set wine_place_id = null
+  from public.wine_places p
+ where p.id = a.wine_place_id and p.canonical_key in (select key from _us2_rb);
+do $$
+begin
+  if ${DISPLAY_COLUMNS_LIVE} then
+    execute $q$
+      update public.wine_archetypes a
+         set display_lon = pt.display_lon, display_lat = pt.display_lat
+        from _us2_points pt
+       where a.id = pt.archetype_id and a.id in (select id from _us2_unlinked)
+         and a.wine_place_id is null and a.display_lon is null$q$;
+  end if;
+end $$;
+
+update public.wine_place_boundaries b
+   set is_current = false
+  from public.wine_places p
+ where p.id = b.wine_place_id and p.canonical_key in (select key from _us2_rb) and b.is_current;
+update public.wine_places p
+   set publication_status = 'DRAFT', updated_at = now()
+ where p.canonical_key in (select key from _us2_rb);
+
+do $$
+declare n int;
+begin
+  select count(*) into n from public.wine_places
+   where (canonical_key = 'united-states' or canonical_key like 'united-states.%') and publication_status = 'VERIFIED';
+  if n <> 0 then raise exception 'US-2 unpublish: % VERIFIED US places left', n; end if;
+  select count(*) into n from public.wine_place_boundaries b join public.wine_places p on p.id = b.wine_place_id
+   where p.canonical_key in (select key from _us2_rb) and b.is_current;
+  if n <> 0 then raise exception 'US-2 unpublish: % current US boundaries left', n; end if;
+  select count(*) into n from public.wine_places p
+   where p.canonical_key in (select key from _us2_rb) and p.canonical_key_locked_at is not null;
+  if n <> ${n} then raise exception 'US-2 unpublish: % of ${n} keys still locked (they never unlock)', n; end if;
+  select count(*) into n from public.wine_archetype_placements x join public.wine_places p on p.id = x.wine_place_id
+   where p.canonical_key in (select key from _us2_rb);
+  if n <> 0 then raise exception 'US-2 unpublish: % archetype placements on US places left', n; end if;
+  select count(*) into n from public.wine_archetypes a join public.wine_places p on p.id = a.wine_place_id
+   where p.canonical_key in (select key from _us2_rb);
+  if n <> 0 then raise exception 'US-2 unpublish: % archetypes still at home on a US place', n; end if;
+end $$;
+
+${REFRESH_BLOCK("US-2 unpublish")}`;
+}
+
 /** Every rendered file, path -> text. */
 export function renderAll(wave, links) {
   return {
     [US2_FILES.catalog]: catalogSql(wave),
     [US2_FILES.promote]: promoteSql(wave),
     [US2_FILES.links]: linksSql(links),
+    [US2_ROLLBACK_FILES.unstage]: unstageSql(wave),
+    [US2_ROLLBACK_FILES.remove]: removeSql(wave),
+    [US2_ROLLBACK_FILES.unpublish]: unpublishSql(wave, links),
   };
 }
 

@@ -2,8 +2,8 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 import { topLevelTransactionStatements } from "../migration-preflight.mjs";
-import { loadTrees, us2Wave, US2_FILES } from "./us2-wave.mjs";
-import { catalogSql, linksSql, loadLinks, promoteSql } from "./render-us2-sql.mjs";
+import { loadTrees, us2Wave, US2_FILES, US2_ROLLBACK_FILES } from "./us2-wave.mjs";
+import { catalogSql, linksSql, loadLinks, promoteSql, removeSql, unpublishSql, unstageSql } from "./render-us2-sql.mjs";
 
 const lf = (s) => s.replace(/\r\n/g, "\n");
 const wave = us2Wave(await loadTrees());
@@ -85,4 +85,30 @@ test("links: the three wines, their own sort_order, R2's points cleared and neve
   assert.ok(!/refresh_wine_place_neighbours/.test(sql), "no refresh needed");
   assert.throws(() => linksSql([{ ...links[0], placements: ["united-states.california"] }]), /home must be one of its placements/);
   assert.throws(() => linksSql([{ ...links[0], display_point: [1] }]), /display_point/);
+});
+
+test("rollbacks: each committed file equals its render, outside supabase/migrations, no transaction statements", async () => {
+  const renders = { unstage: unstageSql(wave), remove: removeSql(wave), unpublish: unpublishSql(wave, links) };
+  for (const [name, sql] of Object.entries(renders)) {
+    assert.ok(US2_ROLLBACK_FILES[name].startsWith("scripts/usa-map/"), name);
+    assert.equal(lf(await readFile(US2_ROLLBACK_FILES[name], "utf8")), sql, name);
+    assert.deepEqual(topLevelTransactionStatements(sql), [], name);
+    assert.ok(sql.includes("a later US wave exists"), `${name}: later-wave guard`);
+    assert.equal((sql.match(/^ {2}\('united-states[^']*', [012]\)/gm) ?? []).length, 16, `${name}: 16 keys`);
+    const tail = sql.slice(sql.lastIndexOf("do $$"));
+    assert.match(tail, /refresh_wine_place_neighbours\(\)/, `${name}: ends with the refresh`);
+  }
+  assert.ok(renders.remove.includes("keys are locked (the promote ran)"));
+  assert.ok(renders.remove.indexOf("keys are locked") < renders.remove.indexOf("missing or not DRAFT"), "lock check first");
+  assert.match(renders.remove, /delete from supabase_migrations\.schema_migrations where version in \('20260930084747', '20260930094747'\)/);
+  const depthOrder = [...renders.remove.matchAll(/e\.depth = (\d)/g)].map((m) => Number(m[1]));
+  assert.deepEqual(depthOrder, [2, 1, 0], "deepest first");
+  assert.ok(renders.unpublish.includes("never roll back the manifest"));
+  assert.ok(renders.unpublish.includes("not VERIFIED with one current boundary"));
+  const unlink = renders.unpublish.indexOf("delete from public.wine_archetype_placements");
+  const flip = renders.unpublish.indexOf("set publication_status = 'DRAFT'");
+  assert.ok(unlink > 0 && unlink < flip, "archetype links are cleared before the flip");
+  assert.ok(renders.unpublish.includes("set display_lon = pt.display_lon"), "R2's points restored");
+  assert.ok(!/delete from public\.wine_places\b/.test(renders.unpublish), "unpublish never deletes a place");
+  assert.ok(!/delete from public\.wine_boundary_source_snapshots/.test(renders.remove + renders.unstage), "snapshots are immutable");
 });
