@@ -9,6 +9,762 @@
   },
   "new_grapes": [],
   "places": {
+    "united-states.california.central-coast.monterey.hames-valley": {
+      "article": {
+        "description": "The southernmost Monterey County AVA, a valley of about 10,240 acres near Bradley toward the San Luis Obispo county line, at about 472 to 1,289 feet. About 2,200 acres are planted, and its growers favour Rhône varieties as well as Bordeaux ones.",
+        "climate": "Very warm with little coastal influence, and the widest day-to-night swing of the Monterey County AVAs.",
+        "soils": "Lockwood shaly loam and Chamise shaly loam.",
+        "grape_varieties": "Rhône varieties such as Syrah and Petite Sirah, with Cabernet Sauvignon and other Bordeaux varieties.",
+        "wine_styles": "Dry red wines from Rhône and Bordeaux varieties.",
+        "key_facts": [
+          "Established 1994 (27 CFR 9.147)",
+          "About 2,200 acres planted (Monterey County Vintners & Growers)",
+          "Elevations from about 472 to 1,289 feet (Monterey County Vintners & Growers)"
+        ]
+      },
+      "styles": [
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Syrah"
+        },
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Petite Sirah",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Merlot",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.147, Hames Valley (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.147"
+        },
+        {
+          "title": "TTB, AVA establishment dates",
+          "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/ava-establishment-dates"
+        },
+        {
+          "title": "Monterey County Vintners & Growers Association, Monterey County AVAs",
+          "url": "https://montereywines.org/about/avas/"
+        },
+        {
+          "title": "Scheid Vineyards, Hames Valley",
+          "url": "https://www.scheidvineyards.com/Vineyards/Hames-Valley"
+        }
+      ]
+    },
+    "united-states.california.central-coast.monterey.san-bernabe": {
+      "article": {
+        "description": "An AVA of about 24,796 acres of rolling foothills and valley floor in the Salinas Valley south of King City, about 9 miles long and 7 miles wide, within a single large vineyard estate. At establishment about 7,636 acres were planted, all below 700 feet.",
+        "climate": "About 13 inches of rain a year and around 30 frost days; marine wind from Monterey Bay moderates the heat, and the average daily swing is about 30 °F.",
+        "soils": "Wind-laid eolian sands such as Oceano and Garey, well to excessively drained.",
+        "grape_varieties": "Merlot, Syrah, Pinot Noir, Chardonnay, Sauvignon Blanc and Riesling among others.",
+        "wine_styles": "Dry white and red wines from many varieties.",
+        "key_facts": [
+          "Established 2004 (27 CFR 9.171)",
+          "About 24,796 acres, with about 7,636 planted at establishment (T.D. TTB-14)",
+          "Grapes are grown below 700 feet (T.D. TTB-14)"
+        ]
+      },
+      "styles": [
+        "WHITE",
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Chardonnay"
+        },
+        {
+          "name": "Merlot"
+        },
+        {
+          "name": "Syrah"
+        },
+        {
+          "name": "Pinot Noir",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Sauvignon Blanc",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Riesling",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.171, San Bernabe (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.171"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), T.D. TTB-14, San Bernabe and San Lucas (2004)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2004-06-29/html/04-14652.htm"
+        },
+        {
+          "title": "Monterey County Vintners & Growers Association, Monterey County AVAs",
+          "url": "https://montereywines.org/about/avas/"
+        }
+      ]
+    },
+    "united-states.california.central-coast.monterey.san-lucas": {
+      "article": {
+        "description": "An AVA of about 33,920 acres in the southern Salinas Valley around the town of San Lucas, south of King City, at about 325 to 1,250 feet. About 8,000 acres are planted. In 2004 about 1,281 acres of its northwest corner went to San Bernabe so that a large vineyard would not be split.",
+        "climate": "Moderate to warm with much less cooling from Monterey Bay than further north; summer temperatures can swing as much as 40 °F.",
+        "soils": "Lockwood shaly loam and the Snelling-Greenfield complex.",
+        "grape_varieties": "Cabernet Sauvignon and Chardonnay, with Merlot and Sauvignon Blanc.",
+        "wine_styles": "Dry red wines from Cabernet Sauvignon and Merlot, and dry whites.",
+        "key_facts": [
+          "Established 1987 (27 CFR 9.56)",
+          "About 8,000 acres planted (Monterey County Vintners & Growers)",
+          "Boundary realigned with San Bernabe in 2004 (T.D. TTB-14)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Chardonnay"
+        },
+        {
+          "name": "Merlot",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Sauvignon Blanc",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.56, San Lucas (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.56"
+        },
+        {
+          "title": "Monterey County Vintners & Growers Association, Monterey County AVAs",
+          "url": "https://montereywines.org/about/avas/"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), T.D. TTB-14, San Bernabe and San Lucas (2004)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2004-06-29/html/04-14652.htm"
+        }
+      ]
+    },
+    "united-states.california.central-coast.san-antonio-valley": {
+      "article": {
+        "description": "A basin of about 150,400 acres in southwestern Monterey County, the watershed of the San Antonio River, encircled by the Santa Lucia Range between the Pacific and the Salinas Valley. It is named after Mission San Antonio de Padua, founded in 1771. Over 700 acres were planted at establishment.",
+        "climate": "Shut off from marine air by the mountains: drier, hotter summer days and cooler nights, over 3,000 degree days, and wider seasonal swings than its neighbours.",
+        "soils": "Around 40 soil series, mostly alluvial on flat to gentle slopes, including Arbuckle gravelly loam, Lockwood loam and Placentia sandy loam.",
+        "grape_varieties": "Cabernet Sauvignon, Petite Sirah and Syrah, with Grenache, Tempranillo and Marsanne among some 20 varieties.",
+        "wine_styles": "Dry red wines from Cabernet Sauvignon, Petite Sirah and Rhône varieties.",
+        "key_facts": [
+          "Established 2006 (27 CFR 9.194)",
+          "About 150,400 acres; elevations from about 850 to 2,530 feet (T.D. TTB-46)",
+          "Named after Mission San Antonio de Padua, founded in 1771 (T.D. TTB-46)"
+        ]
+      },
+      "styles": [
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Syrah"
+        },
+        {
+          "name": "Petite Sirah",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Grenache",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Tempranillo",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Marsanne",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.194, San Antonio Valley (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.194"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), T.D. TTB-46, San Antonio Valley (2006)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2006-06-08/html/E6-8854.htm"
+        },
+        {
+          "title": "Monterey County Vintners & Growers Association, Monterey County AVAs",
+          "url": "https://montereywines.org/about/avas/"
+        }
+      ]
+    },
+    "united-states.california.central-coast.san-benito": {
+      "article": {
+        "description": "An AVA of about 45,000 acres in San Benito County, south of Hollister, between the Gabilan and Diablo ranges. It holds Cienega Valley, Lime Kiln Valley and Paicines, and some of the oldest vineyards in California; Almaden farmed much of it from the 1950s.",
+        "climate": "Moderate, with a maritime influence from Monterey Bay, about 20 miles away, and afternoon breezes; the mountain ranges shelter the valleys.",
+        "soils": "Varied, because of seismic activity: soils shift from granite to limestone within feet, with ancient seabed deposits.",
+        "grape_varieties": "Pinot Noir and Chardonnay make up more than half the county's vineyard; Cabernet Sauvignon, Merlot and Zinfandel grow in the warmer spots.",
+        "wine_styles": "Dry Chardonnay and Pinot Noir, and red wines from older Zinfandel plantings.",
+        "key_facts": [
+          "Established 1987 (27 CFR 9.110)",
+          "About 45,000 acres at establishment (Wine Institute, from the TTB final rule)",
+          "Contains Cienega Valley, Lime Kiln Valley and Paicines"
+        ]
+      },
+      "styles": [
+        "WHITE",
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Pinot Noir"
+        },
+        {
+          "name": "Chardonnay"
+        },
+        {
+          "name": "Cabernet Sauvignon",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Merlot",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Zinfandel",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.110, San Benito (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.110"
+        },
+        {
+          "title": "Wine Institute, American Viticultural Areas of California (acreage at establishment, from TTB final rules)",
+          "url": "https://wineinstitute.org/wp-content/uploads/2024/04/CA-AVAs_FINAL-FOR-WEBSITE_4.18.24.pdf"
+        },
+        {
+          "title": "Discover California Wines (Wine Institute), San Benito County wine is a Central Coast hidden gem",
+          "url": "https://discovercaliforniawines.com/blog/san-benito-county-wine-is-a-central-coast-hidden-gem/"
+        },
+        {
+          "title": "Please the Palate, The call of the Cienega Valley",
+          "url": "https://pleasethepalate.com/the-call-of-the-cienega-valley/"
+        }
+      ]
+    },
+    "united-states.california.central-coast.san-benito.cienega-valley": {
+      "article": {
+        "description": "A valley south of Hollister in western San Benito County, below the Gabilan Range, with Pescadero Creek running through its vineyards and the San Andreas fault dividing its floor. It holds some of the oldest continuously producing vineyards in California, including head-trained Zinfandel from 1906.",
+        "climate": "Moderate, sheltered by the mountains and cooled by Monterey Bay, about 20 miles away, with a daily afternoon breeze in summer.",
+        "soils": "Granite and limestone on the western side of the fault, granite and sandstone on the eastern side.",
+        "grape_varieties": "Old-vine Zinfandel and Pinot Noir, with Chardonnay.",
+        "wine_styles": "Dry red wines from old-vine Zinfandel and Pinot Noir, and dry Chardonnay.",
+        "key_facts": [
+          "Established 1982 (27 CFR 9.38)",
+          "The San Andreas fault divides the valley floor (Please the Palate)",
+          "Contains the Lime Kiln Valley AVA"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Zinfandel"
+        },
+        {
+          "name": "Pinot Noir"
+        },
+        {
+          "name": "Chardonnay",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.38, Cienega Valley (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.38"
+        },
+        {
+          "title": "TTB, AVA establishment dates",
+          "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/ava-establishment-dates"
+        },
+        {
+          "title": "Please the Palate, The call of the Cienega Valley",
+          "url": "https://pleasethepalate.com/the-call-of-the-cienega-valley/"
+        },
+        {
+          "title": "MiraCosta College geology field trips, The San Andreas fault in the Cienega Valley",
+          "url": "https://gotbooks.miracosta.edu/fieldtrips/Central_Coast/cienega_valley.html"
+        }
+      ]
+    },
+    "united-states.california.central-coast.san-benito.cienega-valley.lime-kiln-valley": {
+      "article": {
+        "description": "A very small AVA of about 2,300 acres at the southern end of the Cienega Valley, named after the lime kilns once worked on its limestone. Its Enz Vineyard, planted in 1923, is head-trained, dry-farmed and own-rooted.",
+        "climate": "Like the Cienega Valley around it: moderate, sheltered by the Gabilan Range, with Monterey Bay air in the afternoon.",
+        "soils": "A mix of granite and limestone-rich soils.",
+        "grape_varieties": "Mourvèdre and Zinfandel from old head-trained plantings.",
+        "wine_styles": "Dry red wines from Zinfandel and Mourvèdre.",
+        "key_facts": [
+          "Established 1982 (27 CFR 9.27)",
+          "About 2,300 acres at establishment (Wine Institute, from the TTB final rule)",
+          "Lies within the Cienega Valley AVA"
+        ]
+      },
+      "styles": [
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Mourvèdre"
+        },
+        {
+          "name": "Zinfandel"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.27, Lime Kiln Valley (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.27"
+        },
+        {
+          "title": "Wine Institute, American Viticultural Areas of California (acreage at establishment, from TTB final rules)",
+          "url": "https://wineinstitute.org/wp-content/uploads/2024/04/CA-AVAs_FINAL-FOR-WEBSITE_4.18.24.pdf"
+        },
+        {
+          "title": "Historic Vineyard Society, Enz Vineyard",
+          "url": "https://historicvineyardsociety.org/vineyard/enz-vineyard"
+        }
+      ]
+    },
+    "united-states.california.central-coast.san-benito.paicines": {
+      "article": {
+        "description": "An AVA of about 4,500 acres in San Benito County, separated from Monterey County by the Gabilan Range, south of Hollister around the settlement of Paicines. It has large vineyards but little name recognition.",
+        "climate": "Warmer than other parts of San Benito County but cooler than the Central Valley.",
+        "soils": "Soils of the valley floor and benches below the Gabilan Range.",
+        "grape_varieties": "Chardonnay and Cabernet Sauvignon, with Merlot and Zinfandel in this warmer part of San Benito.",
+        "wine_styles": "Dry Chardonnay and red wines from Cabernet Sauvignon and Merlot.",
+        "key_facts": [
+          "Established 1982 (27 CFR 9.39)",
+          "About 4,500 acres at establishment (Wine Institute, from the TTB final rule)",
+          "Lies within the San Benito AVA"
+        ]
+      },
+      "styles": [
+        "WHITE",
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Chardonnay"
+        },
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Merlot",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Zinfandel",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.39, Paicines (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.39"
+        },
+        {
+          "title": "Wine Institute, American Viticultural Areas of California (acreage at establishment, from TTB final rules)",
+          "url": "https://wineinstitute.org/wp-content/uploads/2024/04/CA-AVAs_FINAL-FOR-WEBSITE_4.18.24.pdf"
+        },
+        {
+          "title": "Discover California Wines (Wine Institute), San Benito County wine is a Central Coast hidden gem",
+          "url": "https://discovercaliforniawines.com/blog/san-benito-county-wine-is-a-central-coast-hidden-gem/"
+        },
+        {
+          "title": "Global AgInvesting, The Wine Group acquires more than 1,300 acres of vineyards in California (Paicines)",
+          "url": "https://globalaginvesting.com/the-wine-group-acquires-more-than-1300-acres-of-vineyards-in-california/"
+        }
+      ]
+    },
+    "united-states.california.central-coast.san-francisco-bay.lamorinda": {
+      "article": {
+        "description": "A hilly, largely suburban AVA of about 29,369 acres in Contra Costa County, named after the cities of Lafayette, Moraga and Orinda. At establishment 46 small vineyards, most under 5 acres, covered about 139 acres on steep slopes worked by hand.",
+        "climate": "Warmer than the surrounding areas: ridgelines block cool marine air and fog from the bays, so more growing degree days accumulate.",
+        "soils": "High clay from the weathering of the Orinda Formation, but thin on steep slopes, so water drains quickly.",
+        "grape_varieties": "Cabernet Sauvignon and Merlot, with Pinot Noir and Chardonnay.",
+        "wine_styles": "Dry red wines from Cabernet Sauvignon and Merlot, and some Chardonnay.",
+        "key_facts": [
+          "Established 2016 (27 CFR 9.254)",
+          "About 29,369 acres (T.D. TTB-133)",
+          "46 vineyards on about 139 acres at establishment (T.D. TTB-133)",
+          "Named after Lafayette, Moraga and Orinda (T.D. TTB-133)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Merlot"
+        },
+        {
+          "name": "Pinot Noir",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Chardonnay",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.254, Lamorinda (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.254"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), T.D. TTB-133, Lamorinda (2016)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2016-02-24/html/2016-03860.htm"
+        }
+      ]
+    },
+    "united-states.california.central-coast.san-francisco-bay.santa-clara-valley": {
+      "article": {
+        "description": "A large AVA of about 339,200 acres around the southern end of San Francisco Bay, from San Jose and the Peninsula cities south to Morgan Hill and Gilroy. By the 1850s the valley had more vineyards than any other part of California, and Almaden, founded in 1852, began here. It holds Pacheco Pass and San Ysidro District.",
+        "climate": "Mediterranean, cooled by the bay in the north and by marine air through gaps in the Santa Cruz Mountains in the south.",
+        "soils": "Alluvial valley soils and hillside soils at the foot of the Santa Cruz Mountains and the Diablo Range.",
+        "grape_varieties": "Cabernet Sauvignon, Pinot Noir and Chardonnay lead, with Petite Sirah, Zinfandel, Syrah and Merlot.",
+        "wine_styles": "Dry red and white wines from Cabernet Sauvignon, Pinot Noir and Chardonnay.",
+        "key_facts": [
+          "Established 1989 (27 CFR 9.126)",
+          "About 339,200 acres at establishment (Wine Institute, from the TTB final rule)",
+          "Almaden was founded here in 1852",
+          "Contains the Pacheco Pass and San Ysidro District AVAs"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Chardonnay"
+        },
+        {
+          "name": "Pinot Noir"
+        },
+        {
+          "name": "Petite Sirah",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Zinfandel",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Syrah",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.126, Santa Clara Valley (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.126"
+        },
+        {
+          "title": "Wine Institute, American Viticultural Areas of California (acreage at establishment, from TTB final rules)",
+          "url": "https://wineinstitute.org/wp-content/uploads/2024/04/CA-AVAs_FINAL-FOR-WEBSITE_4.18.24.pdf"
+        },
+        {
+          "title": "Santa Clara Valley Wine Growers Association, About us",
+          "url": "https://santaclarawines.com/about-us-1"
+        },
+        {
+          "title": "Morgan Hill Life, Santa Clara Valley: California's first wine production area",
+          "url": "https://morganhilllife.com/editorial-santa-clara-valley-californias-first-wine-production-area/"
+        }
+      ]
+    },
+    "united-states.california.central-coast.san-francisco-bay.santa-clara-valley.pacheco-pass": {
+      "article": {
+        "description": "A very small AVA of about 3,200 acres near the Pacheco Pass highway on the Santa Clara–San Benito county line, east of Gilroy. Italian families from Calabria planted orchards and vines here more than a century ago; the Casa de Fruta roadside stop grew out of them.",
+        "climate": "Inland and warm, with some marine air reaching the pass from the Monterey Bay side.",
+        "soils": "Soils of the small valley floor and lower slopes along Pacheco Creek.",
+        "grape_varieties": "Zinfandel and Merlot, with Cabernet Sauvignon and Chardonnay.",
+        "wine_styles": "Dry red wines from Zinfandel and Merlot, and some whites.",
+        "key_facts": [
+          "Established 1984 (27 CFR 9.88)",
+          "About 3,200 acres at establishment (Wine Institute, from the TTB final rule)",
+          "Lies within the Santa Clara Valley AVA"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Zinfandel"
+        },
+        {
+          "name": "Merlot"
+        },
+        {
+          "name": "Cabernet Sauvignon",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Chardonnay",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.88, Pacheco Pass (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.88"
+        },
+        {
+          "title": "Wine Institute, American Viticultural Areas of California (acreage at establishment, from TTB final rules)",
+          "url": "https://wineinstitute.org/wp-content/uploads/2024/04/CA-AVAs_FINAL-FOR-WEBSITE_4.18.24.pdf"
+        },
+        {
+          "title": "Santa Clara Valley Wine Growers Association, Casa de Fruta Winery",
+          "url": "https://santaclarawines.com/wineries-feed/casa-de-fruta-winery"
+        }
+      ]
+    },
+    "united-states.california.central-coast.san-francisco-bay.santa-clara-valley.san-ysidro-district": {
+      "article": {
+        "description": "A very small AVA of about 2,340 acres east of Gilroy in southern Santa Clara County, within the Santa Clara Valley AVA. It has only a few vineyards.",
+        "climate": "Warm inland days with some cooling marine air from Monterey Bay reaching the southern Santa Clara Valley.",
+        "soils": "Alluvial soils of the valley floor east of Gilroy.",
+        "grape_varieties": "Chardonnay and Merlot, with Cabernet Sauvignon.",
+        "wine_styles": "Dry Chardonnay and red wines from Merlot and Cabernet Sauvignon.",
+        "key_facts": [
+          "Established 1990 (27 CFR 9.130)",
+          "About 2,340 acres at establishment (Wine Institute, from the TTB final rule)",
+          "Lies within the Santa Clara Valley AVA"
+        ]
+      },
+      "styles": [
+        "WHITE",
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Chardonnay"
+        },
+        {
+          "name": "Merlot"
+        },
+        {
+          "name": "Cabernet Sauvignon",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.130, San Ysidro District (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.130"
+        },
+        {
+          "title": "Wine Institute, American Viticultural Areas of California (acreage at establishment, from TTB final rules)",
+          "url": "https://wineinstitute.org/wp-content/uploads/2024/04/CA-AVAs_FINAL-FOR-WEBSITE_4.18.24.pdf"
+        },
+        {
+          "title": "Santa Clara Valley Wine Growers Association, L & M Vineyard",
+          "url": "https://santaclarawines.com/wineries-feed/lm-vineyard"
+        }
+      ]
+    },
+    "united-states.california.central-coast.san-francisco-bay.santa-cruz-mountains.ben-lomond-mountain": {
+      "article": {
+        "description": "A ridge of about 38,400 acres on the ocean side of the Santa Cruz Mountains, around Bonny Doon, reaching about 2,600 feet. Its boundary mostly follows the 800-foot contour, so the AVA takes in only the upper ridge.",
+        "climate": "Close to the Pacific on the ocean side of the Santa Cruz Mountains, with vineyards high on the ridge.",
+        "soils": "Slightly acidic sandy loams on the ridge.",
+        "grape_varieties": "Pinot Noir and Chardonnay, with Cabernet Sauvignon, Syrah and Zinfandel.",
+        "wine_styles": "Dry Pinot Noir and Chardonnay, and some sparkling wine.",
+        "key_facts": [
+          "Established 1987 (27 CFR 9.118)",
+          "About 38,400 acres at establishment (Wine Institute, from the TTB final rule)",
+          "Its boundary mostly follows the 800-foot contour line (27 CFR 9.118)",
+          "Lies within the Santa Cruz Mountains AVA"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Pinot Noir"
+        },
+        {
+          "name": "Chardonnay"
+        },
+        {
+          "name": "Cabernet Sauvignon",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Syrah",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Zinfandel",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.118, Ben Lomond Mountain (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.118"
+        },
+        {
+          "title": "Wine Institute, American Viticultural Areas of California (acreage at establishment, from TTB final rules)",
+          "url": "https://wineinstitute.org/wp-content/uploads/2024/04/CA-AVAs_FINAL-FOR-WEBSITE_4.18.24.pdf"
+        },
+        {
+          "title": "San Francisco Chronicle, Beauregard, the new folks in sparkling wine",
+          "url": "https://preview-prod.w.sfchronicle.com/food/wine/article/Beauregard-the-new-folks-in-sparkling-wine-15511510.php"
+        }
+      ]
+    },
+    "united-states.california.central-coast.york-mountain": {
+      "article": {
+        "description": "A small, high AVA in the Santa Lucia Range west of Templeton, about seven miles from the Pacific at about 1,500 feet. Andrew York bought land here in 1882 and founded the winery that became York Mountain Winery, kept by his family until 1970. It lies next to Paso Robles but is a separate, older AVA.",
+        "climate": "Cooled by daily coastal winds and a regular fog layer: markedly cooler and wetter than the Paso Robles country to the east.",
+        "soils": "Mountain soils on steep slopes of the Santa Lucia Range.",
+        "grape_varieties": "Pinot Noir and Zinfandel, with Syrah, Grenache and Cabernet Sauvignon.",
+        "wine_styles": "Dry red wines from Pinot Noir, Zinfandel and Rhône varieties.",
+        "key_facts": [
+          "Established 1983 (27 CFR 9.80)",
+          "About seven miles from the Pacific at about 1,500 feet (Epoch Estate Wines)",
+          "Andrew York bought his homestead here in 1882 (Epoch Estate Wines)"
+        ]
+      },
+      "styles": [
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Pinot Noir"
+        },
+        {
+          "name": "Zinfandel"
+        },
+        {
+          "name": "Syrah",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Grenache",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Cabernet Sauvignon",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.80, York Mountain (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.80"
+        },
+        {
+          "title": "TTB, AVA establishment dates",
+          "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/ava-establishment-dates"
+        },
+        {
+          "title": "Epoch Estate Wines, York Mountain vineyard",
+          "url": "https://epochwines.com/yorkmountain"
+        },
+        {
+          "title": "Wine History Project of San Luis Obispo County, York Mountain Winery",
+          "url": "https://winehistoryproject.org/york-mountain-tasting-room-1970-2000/"
+        }
+      ]
+    },
+    "united-states.california.contra-costa": {
+      "article": {
+        "description": "An AVA of about 167,146 acres covering the flat and gently rolling north and east of Contra Costa County, around Oakley, Brentwood and Antioch, mostly below 100 feet. At establishment it had at least 60 vineyards on about 1,700 acres and 14 wineries.",
+        "climate": "Warm Mediterranean, about 3,000 to 4,275 growing degree days; cool, heavy marine air settles in the low ground at night, and it is drier than the country to the west.",
+        "soils": "Soils of flat and gently rolling ground, over 71% of it on slopes under 5%; mucky Delta island soils such as Jersey Island's were left out.",
+        "grape_varieties": "Zinfandel, Petite Sirah and Mourvèdre, with Cabernet Sauvignon and Chardonnay.",
+        "wine_styles": "Dry red wines from Zinfandel, Mourvèdre and Petite Sirah.",
+        "key_facts": [
+          "Established 2024 (27 CFR 9.291)",
+          "About 167,146 acres (T.D. TTB-191)",
+          "At least 60 vineyards on about 1,700 acres at establishment (T.D. TTB-191)",
+          "The same rule extended San Francisco Bay and Central Coast to take it in (T.D. TTB-191)"
+        ]
+      },
+      "styles": [
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Zinfandel"
+        },
+        {
+          "name": "Mourvèdre"
+        },
+        {
+          "name": "Petite Sirah"
+        },
+        {
+          "name": "Cabernet Sauvignon",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Chardonnay",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.291, Contra Costa (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.291"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), T.D. TTB-191, Contra Costa (2024)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2024-03-15/html/2024-05476.htm"
+        }
+      ]
+    },
     "united-states.california.north-coast.benmore-valley": {
       "article": {
         "description": "A small, high valley of about 1,440 acres in southwestern Lake County, at about 2,400 feet among mountains averaging 2,800 feet. Its only commercial vineyard was the Trione family's Chardonnay, grown for Geyser Peak; the harsh climate defeated it, most vines were removed, and the valley is now mainly grazing land. It is named after Benjamin Logan Moore, a 19th-century cattle rustler.",
