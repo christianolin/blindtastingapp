@@ -39,6 +39,10 @@ export function detailStatus(input: {
   depthVisible: boolean;
   otherCountriesInView: boolean;
   pastDepthZoom: boolean;
+  /** The selected place, when some of its own children in view are hidden
+      only by the size rule (reveal.ts): a drill-down landed before they are
+      big enough to draw (review 2026-09-30, Northern Rhône at z7.5). */
+  selection?: { name: string; drawn: number; hidden: number } | null;
 }): DetailStatus {
   if (input.tree === "loading") return { text: "", retry: false };
   if (input.tree === "failed") {
@@ -49,6 +53,16 @@ export function detailStatus(input: {
   }
   if (input.detail === "all") {
     return { text: `Subregions for all countries. ${DETAIL_WARNING}`, retry: false };
+  }
+  if (input.selection && input.selection.hidden > 0) {
+    // New copy (2026-09-30), awaiting the owner's approval like the rest.
+    return {
+      text:
+        input.selection.drawn > 0
+          ? `Zoom in to see all the subregions of ${input.selection.name}.`
+          : `Zoom in to see the subregions of ${input.selection.name}.`,
+      retry: false,
+    };
   }
   if (!input.focusName) {
     return {

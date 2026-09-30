@@ -447,6 +447,118 @@ export function placeFeature(row) {
   };
 }
 
+// ---------------------------------------------------------------------------
+// reveal_area (owner, 2026-09-30: "you need to zoom further in before smaller
+// places appear"). The app draws a subregion (tier >= 2) from the first whole
+// zoom at which it is N CSS px across, judging size by a feature's planar deg²
+// (src/lib/wine-map/reveal.ts: area · 4^z >= K). Judged by `area` alone, two
+// things go wrong, and both need knowledge only the export has:
+//
+// - FAMILIES. A vineyard mosaic comes in piece by piece: Vosne-Romanée's
+//   grands crus land with Romanée-Conti, La Grande Rue and La Romanée missing,
+//   holes in the strip. A place therefore also comes in with its family (the
+//   tier >= 2 places sharing its primary parent) once the family's MEDIAN
+//   member is N px across, provided it is itself at least N/FAMILY_PX_RATIO.
+//   The median, not the largest, so a county with one huge AVA does not pull
+//   its specks in (Cole Ranch, Rockpile and High Valley stay back in the
+//   owner's North Coast view).
+// - PIECES. A multi-part place is drawn with all its parts, so a scattered
+//   AVA throws confetti (Mendocino Ridge: 71 slivers under 8 px at z7.5). Each
+//   part of a tier >= 2 place becomes its own feature, same properties, and a
+//   part other than the largest waits until it is N/PIECE_PX_RATIO across; the
+//   largest always comes with its place.
+//
+// Both reduce to ONE number per feature, `reveal_area`, which the app's
+// filter reads in place of `area` (and falls back from, so older tiles are
+// unchanged):
+//   place:  max(area, min(familyMedian, FAMILY_PX_RATIO² · area))
+//   piece:  largest -> place; other -> min(place, PIECE_PX_RATIO² · piece area)
+// Both are ratios of N, so the app's knob (REVEAL_MIN_PX) and ?revealPx= keep
+// meaning what they say. `area` itself stays the whole footprint on every
+// piece (click resolution picks the smallest overlapping place by it). The
+// key is ABSENT wherever it would equal `area`, and countries and regions
+// (tier <= 1, exempt from the rule) are never split, so the world archive and
+// every single-part place without a family effect stay byte-identical.
+export const FAMILY_PX_RATIO = 2;
+export const PIECE_PX_RATIO = 3;
+
+function median(values) {
+  const sorted = [...values].sort((x, y) => x - y);
+  const mid = sorted.length >> 1;
+  return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+}
+
+// Six significant digits: the tiny grands crus are 1e-6 deg², where area's
+// fixed 8 decimals would leave two.
+function roundArea(value) {
+  return Number(value.toPrecision(6));
+}
+
+/** id -> reveal_area for every tier >= 2 row whose family moves it. Rows are
+    export rows (id, display_tier, primary_parent_id, area). */
+export function familyRevealAreas(rows) {
+  const families = new Map();
+  for (const row of rows) {
+    if (row.display_tier < 2 || !row.primary_parent_id) continue;
+    const list = families.get(row.primary_parent_id) ?? [];
+    list.push(row);
+    families.set(row.primary_parent_id, list);
+  }
+  const out = new Map();
+  const factor = FAMILY_PX_RATIO ** 2;
+  for (const list of families.values()) {
+    if (list.length < 2) continue;
+    const m = median(list.map((row) => Number(row.area ?? 0)));
+    for (const row of list) {
+      const area = Number(row.area ?? 0);
+      const reveal = Math.max(area, Math.min(m, factor * area));
+      if (reveal > area) out.set(row.id, roundArea(reveal));
+    }
+  }
+  return out;
+}
+
+// Planar deg² of one polygon (outer ring minus holes), the unit ST_Area gives
+// for SRID 4326 and the export's `area` is in.
+function ringArea(ring) {
+  let sum = 0;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i, i += 1) {
+    sum += (ring[j][0] + ring[i][0]) * (ring[j][1] - ring[i][1]);
+  }
+  return Math.abs(sum) / 2;
+}
+function polygonArea(polygon) {
+  return polygon.reduce((total, ring, i) => total + (i === 0 ? ringArea(ring) : -ringArea(ring)), 0);
+}
+
+/** A place's tile features: one, or for a multi-part tier >= 2 place one per
+    part, largest first, each with its reveal_area (see above). `familyArea`
+    is familyRevealAreas' value for the row, if any. */
+export function placeFeatures(row, familyArea) {
+  const feature = placeFeature(row);
+  if (row.display_tier < 2) return [feature];
+  const area = Number(row.area ?? 0);
+  const placeReveal = typeof familyArea === "number" && familyArea > area ? familyArea : area;
+  const geometry = feature.geometry;
+  const parts = geometry?.type === "MultiPolygon" ? geometry.coordinates : null;
+  if (!parts || parts.length < 2) {
+    if (placeReveal > area) feature.properties.reveal_area = placeReveal;
+    return [feature];
+  }
+  const factor = PIECE_PX_RATIO ** 2;
+  return parts
+    .map((polygon) => ({ polygon, area: polygonArea(polygon) }))
+    .sort((a, b) => b.area - a.area)
+    .map(({ polygon, area: partArea }, i) => {
+      const reveal = i === 0 ? placeReveal : Math.min(placeReveal, roundArea(factor * partArea));
+      return {
+        ...feature,
+        properties: { ...feature.properties, ...(reveal !== area ? { reveal_area: reveal } : {}) },
+        geometry: { type: "MultiPolygon", coordinates: [polygon] },
+      };
+    });
+}
+
 // Ranked per-island labels (owner brief: one label per region at everyday
 // zooms). Components arrive largest-first ([lon, lat, area] from the export
 // SQL); rank 1 — in practice the region's best-known heartland (Côte d'Or

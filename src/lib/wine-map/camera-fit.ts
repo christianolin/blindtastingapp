@@ -15,25 +15,38 @@ import { bboxZoomForPx } from "./reveal";
     across (reveal.ts) are already drawn. */
 export const CHIP_MIN_ZOOM = 5.5;
 
-/** A selection flight's deepest cap: the reveal net (REVEAL_CAP_ZOOM, z16)
-    plus headroom. Was 16. */
+/** A selection flight's deepest cap while the size rule is on: the reveal net
+    (REVEAL_CAP_ZOOM, z16) plus headroom. */
 export const CAMERA_MAX_ZOOM = 17;
+/** The cap with the rule off (?revealPx=0 or REVEAL_MIN_PX = 0): the cap from
+    before the rule, so the kill switch restores the old camera too. */
+export const CAMERA_MAX_ZOOM_RULE_OFF = 16;
 
 /** Where a tree, search, details or ?place= pick flies (design 2026-09-30,
     "small places appear later"): where the place can be seen.
 
-    Leaf: today's [min_zoom + 0.35, min_zoom + 1.5], raised to the size floor,
+    Leaf: the old [min_zoom + 0.35, min_zoom + 1.5], raised to the size floor,
     the first whole zoom where the place's bbox is 2N px across (the side of a
     square of its Web-Mercator area). A place filling a quarter of its box or
     more is drawn there by its ordinary fill; a sparser one is drawn by the
     selected-place overlay fill (shard-specs selectedFillFilter).
 
-    Parent: today's framing (deepest child + 0.5), raised only if the parent
-    itself is size-delayed. Its floor is its own tile zoom floor(min_zoom):
-    today's floor 0 let six picks (Chablis 1er Cru, Corton, ...) land where
-    nothing is drawn, not even the ring.
+    Parent: the old framing (deepest child + 0.5; the fit to its bbox usually
+    lands shallower), never below its own tile zoom floor(min_zoom): the old
+    floor 0 let six picks (Chablis 1er Cru, Corton, ...) land where nothing is
+    drawn, not even the ring, and the cap never undercuts that floor, whatever
+    its children's min_zoom. It is raised further only if even its bbox is
+    under N px there: its footprint is no bigger than its bbox, so the parent
+    then really is size-delayed. A parent drawn at the old landing is not
+    moved (Libournais, Montalcino, Malibu Coast). The landing does not wait
+    for every child: a parent that fits the screen can hold children under
+    N px, which come in as the viewer zooms (the status line says so,
+    detail-status.ts), or with their family once the tiles carry reveal_area
+    (reveal.ts).
 
-    Countries and regions (tier <= 1) get no size floor: the rule exempts them. */
+    Countries and regions (tier <= 1) get no size floor: the rule exempts them.
+    With the rule off (revealPx 0) this is exactly the old camera: a parent's
+    floor is 0 and the cap is z16. */
 export function selectionZooms(input: {
   tier: number;
   /** The place's catalogue min_zoom. */
@@ -43,16 +56,18 @@ export function selectionZooms(input: {
   /** reveal.ts's threshold for this visit (0 = the rule is off). */
   revealPx: number;
 }): { minZoom: number; maxZoom: number } {
-  const n = input.tier >= 2 && input.revealPx > 0 ? input.revealPx : 0;
-  const sizeFloor = n > 0 ? bboxZoomForPx(input.bbox, 2 * n) : 0;
+  const on = input.revealPx > 0;
+  const cap = on ? CAMERA_MAX_ZOOM : CAMERA_MAX_ZOOM_RULE_OFF;
+  const n = input.tier >= 2 && on ? input.revealPx : 0;
   if (input.childMinZooms.length > 0) {
-    const maxZoom = Math.min(
-      CAMERA_MAX_ZOOM,
-      Math.max(Math.max(...input.childMinZooms) + 0.5, sizeFloor + 0.5),
-    );
-    return { minZoom: Math.min(Math.max(Math.floor(input.minZoom), sizeFloor), maxZoom), maxZoom };
+    const deepest = Math.max(...input.childMinZooms) + 0.5;
+    if (!on) return { minZoom: 0, maxZoom: Math.min(cap, deepest) };
+    const floor = Math.max(Math.floor(input.minZoom), n > 0 ? bboxZoomForPx(input.bbox, n) : 0);
+    const maxZoom = Math.min(cap, Math.max(deepest, floor + 0.5));
+    return { minZoom: Math.min(floor, maxZoom), maxZoom };
   }
-  const maxZoom = Math.min(CAMERA_MAX_ZOOM, Math.max(input.minZoom + 1.5, sizeFloor + 0.5));
+  const sizeFloor = n > 0 ? bboxZoomForPx(input.bbox, 2 * n) : 0;
+  const maxZoom = Math.min(cap, Math.max(input.minZoom + 1.5, sizeFloor + 0.5));
   return { minZoom: Math.min(Math.max(input.minZoom + 0.35, sizeFloor), maxZoom), maxZoom };
 }
 

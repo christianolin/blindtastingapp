@@ -22,7 +22,8 @@ import {
   NEIGHBOUR_MIN_ZOOM,
 } from "@/lib/wine-map/mount-policy";
 import {
-  currentRevealPx,
+  familyInView,
+  REVEAL_MIN_PX,
   revealK,
   revealLatitude,
   sizeHiddenInView,
@@ -325,7 +326,13 @@ export function TileWineMap({
   selectedContextKey = null,
   tree = null,
   selectionFallback = null,
+  revealPx = REVEAL_MIN_PX,
 }: {
+  /** reveal.ts's threshold for this visit (?revealPx= or the knob; 0 = off).
+      The explorer reads it once when it mounts and hands the same value to
+      its camera, so the map's filters and the camera always agree, and a
+      client-side navigation to a new visit reads the URL again. */
+  revealPx?: number;
   /** One country (default): subregion depth for the focus country alone, and
       other countries' shards mounted only from z8. All countries: depth for
       every country at once (spec 2026-09-23 §7). */
@@ -499,11 +506,9 @@ export function TileWineMap({
   );
   // When a subregion appears (lib/wine-map/reveal.ts; owner, 2026-09-30: "you
   // need to zoom further in before smaller places appear"): from the first
-  // whole zoom at which it is revealPx CSS px across. The threshold is fixed
-  // for the visit (?revealPx= overrides the knob) and read through the same
-  // function the explorer's camera reads, so the two always agree; each
-  // shard's constant K comes from its manifest bbox's mid-latitude.
-  const revealPx = useMemo(() => currentRevealPx(), []);
+  // whole zoom at which it is revealPx CSS px across. The threshold is the
+  // explorer's (a prop, fixed for the visit); each shard's constant K comes
+  // from its manifest bbox's mid-latitude.
   const revealKs = useMemo(
     () =>
       Object.fromEntries(
@@ -942,6 +947,17 @@ export function TileWineMap({
   // that only the size rule (reveal.ts) hides: more zoom will draw it, so the
   // status line keeps "Zoom in" instead of "No subregions mapped here".
   const [depthHidden, setDepthHidden] = useState(false);
+  // The selection cue (review 2026-09-30): at the last scan, how many of the
+  // selected place's own children in view were drawn, and how many did only
+  // the size rule hide. A drill-down can land where its children are too
+  // small yet (Northern Rhône at z7.5), and the status line then says so.
+  const [selectionFamily, setSelectionFamily] = useState<DetailReport["selectionFamily"]>(null);
+  // Read by the idle scan, so a new selection does not re-bind it; the scan
+  // after the selection's flight lands sees the new key.
+  const selectedKeyRef = useRef(selectedKey);
+  useEffect(() => {
+    selectedKeyRef.current = selectedKey;
+  }, [selectedKey]);
   // The grape filter's keys as a set, for that probe (null: no filter).
   const visibleKeySet = useMemo(
     () => (visibleKeys ? new Set(visibleKeys) : null),
@@ -1085,6 +1101,53 @@ export function TileWineMap({
       }
     }
     setDepthHidden(hidden);
+    // The selection cue's probe: the selected place's children, in its own
+    // shard (a place and its children share the region segment), when that
+    // shard draws subregions at all (the focus country, or All countries).
+    let family: DetailReport["selectionFamily"] = null;
+    const selKey = selectedKeyRef.current;
+    const selShard = selKey ? (selKey.split(".")[1] ?? null) : null;
+    if (
+      selKey !== null &&
+      selShard !== null &&
+      revealPx > 0 &&
+      mountedShards.includes(selShard) &&
+      (detail === "all" || countryOfShard(shardCountries, selShard) === focusNow)
+    ) {
+      try {
+        const source = shardSourceId(selShard);
+        if (map.getSource(source)) {
+          const own = map.querySourceFeatures(source, {
+            sourceLayer: "places",
+            filter: ["==", ["get", "key"], selKey],
+          });
+          const id = own.map((f) => f.properties?.id).find((v): v is string => typeof v === "string");
+          if (id) {
+            const b = map.getBounds();
+            const counts = familyInView({
+              features: map.querySourceFeatures(source, {
+                sourceLayer: "places",
+                filter: ["==", ["get", "parent_id"], id],
+              }),
+              view: [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()],
+              tileZoom: Math.floor(zoomNow),
+              k: revealKs[selShard] ?? revealK(revealPx, 45),
+              px: revealPx,
+              visibleKeys: visibleKeySet,
+            });
+            family = { key: selKey, ...counts };
+          }
+        }
+      } catch {
+        // A lost context or a source mid-reload: no cue this scan.
+      }
+    }
+    setSelectionFamily((prev) =>
+      prev === family ||
+      (prev !== null && family !== null && prev.key === family.key && prev.drawn === family.drawn && prev.hidden === family.hidden)
+        ? prev
+        : family,
+    );
     // Read from the ref, not state: syncMountedShards writes it at moveend,
     // before the idle that scheduled this scan.
     setScanFocus(focusNow);
@@ -1105,7 +1168,7 @@ export function TileWineMap({
     // world-fills and the legend would never see a shard layer. It tracks the
     // viewport-gated mount set, so the scan queries only layers that actually
     // exist; scanView is passed straight to onIdle, which re-binds for free.
-  }, [mountedShards, noFills, shardCountries, revealPx, revealKs, visibleKeySet]);
+  }, [mountedShards, noFills, shardCountries, revealPx, revealKs, visibleKeySet, detail]);
 
   // queryRenderedFeatures over every fill layer is not cheap, and onIdle fires
   // at the end of each gesture — so a burst of small pans/zooms ran a full
@@ -1232,8 +1295,9 @@ export function TileWineMap({
       depthCountries,
       countriesInView: focus.inView,
       pastDepthZoom,
+      selectionFamily,
     });
-  }, [focus, depthCountries, pastDepthZoom]);
+  }, [focus, depthCountries, pastDepthZoom, selectionFamily]);
 
   // A cameraTarget that arrives BEFORE the map instance exists used to be
   // dropped: @vis.gl/react-maplibre creates the map inside an async import, so

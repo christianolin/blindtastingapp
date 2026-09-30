@@ -2,6 +2,8 @@
 
 > Copied into the repo on 2026-09-30 with the implementation (branch `map-reveal`). The evidence files it names
 > (`reveal/final/*`, `before-*.png`) stayed in the session scratchpad and are not part of the repository.
+>
+> **Amended the same day after review: see §10 at the end.** Where §10 and the body disagree, §10 wins.
 
 Owner, 2026-09-30, with a photo of the North Coast (Napa Valley selected, the Napa fit, about z7.5):
 
@@ -555,7 +557,7 @@ Add this bullet under "Wine map performance":
 > design `.superpowers/…/design-final.md`).
 >
 > - **The rule.** A subregion (tier ≥ 2) is drawn from the first whole zoom at which it is at least
->   `REVEAL_MIN_PX` CSS px across (`src/lib/wine-map/reveal.ts`; 24, the owner's pick of 16/24/32; 0 = off).
+>   `REVEAL_MIN_PX` CSS px across (`src/lib/wine-map/reveal.ts`; 24 by default, 16/24/32 awaiting the owner's pick; 0 = off).
 >   "Across" is the side of a square of its on-screen area, from the tile's `area` and a per-shard latitude
 >   constant.
 > - **Never earlier than `floor(min_zoom)`.** So `min_zoom` now means "never before"; read reveal zooms through
@@ -763,8 +765,8 @@ the Germany collaborator: new places follow the rule automatically through the `
 
 **Rollback:**
 - **Deploy:** Vercel Instant Rollback, or `git revert`. No tile, manifest or database state needs undoing.
-- **Kill switch:** `REVEAL_MIN_PX = 0` returns today's filters byte for byte. The only thing that stays is the
-  parent-floor bug fix.
+- **Kill switch:** `REVEAL_MIN_PX = 0` returns today's filters and today's camera (parent floor 0, z16 cap), byte
+  for byte (§10).
 - **One visit:** `?revealPx=0` shows today's map.
 
 ---
@@ -818,3 +820,50 @@ the Germany collaborator: new places follow the rule automatically through the `
   - `size-client-sim.txt`, `export-rule-sim*.txt`, `hc/sim.md`.
 - **The shared evidence:** `understand-code.md`, `understand-data.md`, `understand-live.md`, `places.json`,
   `before-*.png`.
+
+---
+
+## 10. Review amendments (2026-09-30)
+
+A review of the prototype (`f2c902c`) confirmed eleven findings. The fixes:
+
+1. **The overlay fill's stacking.** `shard-selected-fill-*` was appended at the top of the style, so below its reveal
+   zoom it veiled every shard's outlines and labels (the "Na" of "Napa Valley" over Oakville at z8.5), and at the
+   reveal zoom the ordinary fill took over underneath them: a jump. It is now inserted just below the owner shard's
+   outlines, where the ordinary fill sits; the casing, ring and label stay on top, and `firstOverlayId` skips the
+   fill so a later shard lands below the casing, never inside the owner's stack. Live: fills 76, overlay fill 77,
+   outlines 78, labels 79.
+2. **The parent cap could undercut the parent floor** (a parent at min_zoom 12 with children at 11 landed at z11.5).
+   The cap now includes `floor(min_zoom) + 0.5`.
+3. **`?revealPx=` was cached for the module's lifetime**, so it survived client-side navigation. `currentRevealPx()`
+   now reads the URL each call; the explorer reads it once per mount and passes it to the map (`revealPx` prop)
+   and its camera. Live: a hard load at 16, then client navigation back without it, gives the 24 px K.
+4. **Kill switch.** `revealPx = 0` now also restores the old camera: parent floor 0 and the z16 cap
+   (`CAMERA_MAX_ZOOM_RULE_OFF`). The parent-floor fix applies only with the rule on.
+5. **A parent drawn at its old landing was pushed a zoom deeper** (the parent floor tested a 2N-px bbox). A parent is
+   now raised only when even its bbox is under N px there. Libournais lands at z7.5 again.
+6. **The "24 px" claim.** The rule tests the whole tile zoom; what appears is at least N px, but a hidden place can be
+   up to 2N on screen between whole zooms. Documented as such (reveal.ts, CLAUDE.md); not changed, since it errs
+   later, which is the owner's ask.
+7. **CLAUDE.md said 24 was the owner's pick.** It is the default; 16/24/32 still wait on his comparison.
+8. **No cue when a drill-down lands before its children.** The idle scan now probes the selected place's own
+   children (`familyInView`): when some in view are hidden only by size, the status line says "Zoom in to see the
+   subregions of {place}." (none drawn) or "Zoom in to see all the subregions of {place}." (some drawn). New copy
+   for the owner to approve. Live: Northern Rhône, Jura, Centre-Loire, Montagne de Reims, Libournais and Napa
+   Valley get the first; Burgundy, Côte de Nuits and Vosne-Romanée the second.
+9. **Holes in families and confetti in scattered places** (Vosne-Romanée's grands crus missing Romanée-Conti,
+   La Romanée and La Grande Rue at its landing; Mendocino Ridge's 71 slivers in the owner's view). Both need
+   knowledge only the export has, so the tiles now carry `reveal_area`, which the filter reads before `area`:
+   - a place comes in with its family (tier >= 2 siblings under one parent) once the family's **median** member is
+     N px, if it is itself at least N/2 (`FAMILY_PX_RATIO` 2);
+   - each part of a multi-part subregion is its own feature; a part other than the largest waits until it is N/3
+     (`PIECE_PX_RATIO` 3), and the largest comes with its place.
+
+   Simulated on the design's own data (`reveal/fix/family-sim.txt`) at N = 24: Vosne-Romanée 9 of 9 children at its
+   landing (6 today with the rule), Côte de Nuits 8 of 8 (6), families appearing at a single zoom 149 of 259 (82),
+   the owner's views unchanged in substance (z7.5: 45 drawn, none under 24 px; the three extras are 24-32 px), and
+   0 parts under 8 px drawn in the owner's view (72), and 0-1 world-wide at z7-z10 (about 1,200). The median was chosen
+   over the largest sibling because the largest brings Rockpile and High Valley back into the owner's photo view.
+   **This part takes effect only with the next tiles release**; until then the app reads `area` alone and behaves
+   as §0-§9 describe. Burgundy (2 of 6 districts at its landing) and Libournais stay partial, and say so (item 8).
+

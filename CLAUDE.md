@@ -2202,10 +2202,27 @@ a raw subquery, regardless of which two tables look involved at a glance.
     `docs/superpowers/specs/2026-09-30-wine-map-reveal-by-size.md`).
     - **The rule.** A subregion (tier >= 2) is drawn from the first whole zoom
       at which it is at least `REVEAL_MIN_PX` CSS px across
-      (`src/lib/wine-map/reveal.ts`; 24, the owner's pick of 16/24/32; 0 =
-      off). "Across" is the side of a square of its on-screen area, from the
-      tile's `area` and a per-shard latitude constant (`revealK`, the shard's
-      manifest bbox mid-latitude).
+      (`src/lib/wine-map/reveal.ts`; 24 is the DEFAULT, not yet the owner's
+      pick: 16/24/32 wait on his live `?revealPx=` comparison; 0 = off).
+      "Across" is the side of a square of its on-screen area, from the tile's
+      size (below) and a per-shard latitude constant (`revealK`, the shard's
+      manifest bbox mid-latitude). Filters see only the tile's WHOLE zoom, so
+      what appears is at least N px, but between whole zooms a place still
+      hidden can be up to 2N on screen (Romanée-Conti: 21 px at z13, hidden
+      until z14, 39 px at z13.9). That errs later, which is the ask.
+    - **The size is `reveal_area`, else `area`.** Tiles exported after
+      2026-09-30 (`scripts/wine-map-tiles/lib.mjs`'s `familyRevealAreas` /
+      `placeFeatures`) give every tier >= 2 feature a `reveal_area`: a place
+      comes in with its family (siblings under one parent) once the family's
+      MEDIAN member is N px, if it is itself at least N/2 (no holes in a
+      vineyard mosaic: Vosne-Romanée's grands crus), and every part of a
+      multi-part subregion is its own feature, a part other than the largest
+      waiting until it is N/3 (no confetti: Mendocino Ridge's 71 slivers).
+      `area` stays the whole footprint on every part (click resolution uses
+      it). The key is absent where it would equal `area`, and regions and
+      countries are never split, so older tiles and the world archive behave
+      exactly as before. Takes effect with the first tiles release after
+      this change; until then the app reads `area` alone.
     - **Never earlier than `floor(min_zoom)`.** So `min_zoom` now means
       "never before"; read reveal zooms through `reveal.ts` (`revealZoom`).
     - **Exemptions and the net.** Countries and regions are exempt, so the
@@ -2216,13 +2233,29 @@ a raw subquery, regardless of which two tables look involved at a glance.
       `queryRenderedFeatures` and label collision still see opacity-0 features.
     - **The selection.** The selected place is always drawn, by
       `shard-selected-fill-*` (`selectedFillFilter`): the ordinary fill's paint
-      and filter with the size term negated, at the bottom of the four overlays.
+      and filter with the size term negated. It sits where the ordinary fill
+      sits, just above the owner shard's fills and below its outlines and
+      labels (never at the top of the style: it veiled labels until the reveal
+      zoom); the casing, ring and label stay on top, and `firstOverlayId`
+      skips the fill, so a shard added later lands below the casing.
     - **Picks.** Tree, search and `?place=` picks land where the place is drawn
-      (`selectionZooms`, `camera-fit.ts`); a parent's floor is its own tile zoom.
+      (`selectionZooms`, `camera-fit.ts`). A parent's floor is its own tile
+      zoom, and its cap never undercuts that floor; it is raised further only
+      when even its bbox is under N px (a parent drawn at its old landing is
+      not moved). A parent that fits the screen can still hold children under
+      N px; the status line then says "Zoom in to see the subregions of
+      {place}." (or "all the subregions" when some are drawn), from the idle
+      scan's `familyInView` probe of the selected place's children.
     - **Status line.** The "No subregions mapped here" line checks with
       `querySourceFeatures` (`sizeHiddenInView`) that nothing in view is only
       size-hidden.
-    - **Comparing.** `?revealPx=` (0..64) overrides the knob for one visit.
+    - **Comparing.** `?revealPx=` (0..64) overrides the knob for one visit:
+      the explorer reads it once when it mounts (`currentRevealPx`, never
+      cached at module level: a module outlives a client-side navigation) and
+      hands the same value to the map (`revealPx` prop) and its camera.
+    - **Kill switch.** `REVEAL_MIN_PX = 0` (or `?revealPx=0`) is the map from
+      before the rule: filters, the parent floor 0 and the z16 camera cap
+      (`CAMERA_MAX_ZOOM_RULE_OFF`); no selection cue.
     - **Do not.** Never bake the rule into tippecanoe `minzoom`: the ring could
       no longer draw a small selected place, and shard `max_zoom` would drop
       features.

@@ -614,11 +614,13 @@ export function selectedFillFilter(inputs: ShardSpecInputs): unknown[] | null {
 /** The selected place's overlays on its own shard's source, bottom to top:
     its fill where the size rule alone hides it (only with `inputs` and the
     rule on), the casing, the ring and the bigger label. ShardController keeps
-    them at the very top of the style: the ring above every fill and outline,
-    and the label placed first, so it wins every collision (D4). The fill
-    paints exactly as the ordinary fill (same colour and focus/opacity arms;
-    feature-state `sel` is per feature), so there is no jump at the reveal
-    zoom. Fresh objects per call, as shardLayerSpecs. */
+    the casing, ring and label at the very top of the style: the ring above
+    every fill and outline, and the label placed first, so it wins every
+    collision (D4). The fill it puts where the owner's ordinary fill sits,
+    just below the owner's outlines and labels, and it paints exactly as the
+    ordinary fill (same colour and focus/opacity arms; feature-state `sel` is
+    per feature): at the reveal zoom neither colour nor stacking jumps.
+    Fresh objects per call, as shardLayerSpecs. */
 export function shardOverlaySpecs(
   key: string,
   palette: MapPalette,

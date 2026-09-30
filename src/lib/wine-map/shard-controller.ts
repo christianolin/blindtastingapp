@@ -105,6 +105,8 @@ const WORLD_ORDER: readonly string[] = [
 ];
 const SHARD_LAYER_PREFIX = "shard-";
 const OVERLAY_PREFIX = "shard-selected-";
+/** The overlay fill sits inside its owner's stack, not at the top. */
+const OVERLAY_FILL_PREFIX = "shard-selected-fill-";
 const BASE_LAYER_ID = /^shard-(?:fills|outlines|labels)-(.+)$/;
 const OVERLAY_LAYER_ID = /^shard-selected-(?:fill|casing|ring|label)-(.+)$/;
 const DEFAULT_BUDGET_MS = 8;
@@ -452,11 +454,15 @@ export class ShardController {
     try {
       this.removeOverlays(key);
       this.wrote = true;
-      // Appended: the top of the style, above every shard added so far and,
-      // through firstOverlayId, every shard added later. The fill comes first,
-      // so it sits under the casing and ring, and firstOverlayId finds it.
+      // The fill goes where the owner's ordinary fill sits: just below its own
+      // outlines, so every outline and label is painted over it, as over the
+      // ordinary fill that takes over at the reveal zoom (no jump in stacking;
+      // review 2026-09-30). The casing, ring and label are appended: the top
+      // of the style, above every shard added so far and, through
+      // firstOverlayId (which skips the fill), every shard added later.
+      const fillBefore = shardLayerIds(key).outlines;
       for (const layer of specs) {
-        style.addLayer(layer, undefined, NO_VALIDATE);
+        style.addLayer(layer, layer.id === ids.fill ? fillBefore : undefined, NO_VALIDATE);
         if (!this.map.getLayer(layer.id)) throw new Error(`${layer.id} was not added`);
       }
       this.appliedOverlay = { key, inputs };
@@ -505,8 +511,13 @@ export class ShardController {
     }
   }
 
+  /** The lowest overlay at the top of the style: the casing. The overlay fill
+      lives inside its owner shard's stack, so a shard added later must not
+      be inserted before it. */
   private firstOverlayId(): string | undefined {
-    return this.map.getLayersOrder().find((id) => id.startsWith(OVERLAY_PREFIX));
+    return this.map
+      .getLayersOrder()
+      .find((id) => id.startsWith(OVERLAY_PREFIX) && !id.startsWith(OVERLAY_FILL_PREFIX));
   }
 
   /** Puts every world layer back below the first shard layer, in

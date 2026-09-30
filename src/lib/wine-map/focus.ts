@@ -259,10 +259,15 @@ export function scanPastDepthZoom(input: {
 /** What TileWineMap tells the explorer. It reports whenever a value changes,
     and the status line and the chips are built from it. `depthCountries` are
     the countries whose tier >= 2 features the idle scan actually saw on
-    screen. `pastDepthZoom` is scanPastDepthZoom for the current focus. */
+    screen. `pastDepthZoom` is scanPastDepthZoom for the current focus.
+    `selectionFamily` is the idle scan's count of the selected place's own
+    children in view: how many the map draws, and how many only the size rule
+    (reveal.ts) still hides; null when there is no selection or its shard
+    draws no subregions. */
 export type DetailReport = {
   focusCountry: string | null;
   depthCountries: string[];
   countriesInView: string[];
   pastDepthZoom: boolean;
+  selectionFamily: { key: string; drawn: number; hidden: number } | null;
 };

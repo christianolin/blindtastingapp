@@ -253,6 +253,7 @@ export function TileWineMapExplorer({
     depthCountries: [],
     countriesInView: [],
     pastDepthZoom: false,
+    selectionFamily: null,
   }));
   // A tapped country chip: focus without selection. The next real selection
   // clears it, and so does its country leaving the view after being on it.
@@ -502,6 +503,12 @@ export function TileWineMapExplorer({
   // Bumped by the error boundary's Retry: a new key remounts TileWineMap from
   // scratch (a fresh MapLibre instance) and clears the boundary's error.
   const [mapKey, setMapKey] = useState(0);
+  // The size rule's threshold (lib/wine-map/reveal.ts): ?revealPx= or the
+  // knob, read ONCE per visit, when the explorer mounts, and handed to the
+  // map's filters and to the selection camera alike, so the two agree. A
+  // client-side navigation back to the map mounts a new explorer and reads
+  // the URL again (review 2026-09-30: a module-level cache did not).
+  const [revealPx] = useState(currentRevealPx);
   const remountMap = useCallback(() => setMapKey((key) => key + 1), []);
 
   // The three selection requests all go through the per-key cache
@@ -776,7 +783,7 @@ export function TileWineMapExplorer({
       minZoom: context.place.min_zoom,
       childMinZooms: context.children.map((c) => c.min_zoom),
       bbox: context.boundary.bbox,
-      revealPx: currentRevealPx(),
+      revealPx,
     });
     return {
       bbox: context.boundary.bbox,
@@ -787,7 +794,7 @@ export function TileWineMapExplorer({
       // height free at the bottom, so the place lands in the visible half.
       padding: sheetCameraPadding(selectSnapRef.current),
     };
-  }, [context]);
+  }, [context, revealPx]);
 
   // The map's selection emphasis while the tree is missing (loading, failed,
   // or older than the tiles): the context's children and parent — and only
@@ -827,6 +834,18 @@ export function TileWineMapExplorer({
     },
     [detail, manifest, report.countriesInView, shardCountries],
   );
+  // The selection cue: the selected place, when the map's last scan found
+  // children of it in view that only the size rule still hides.
+  const selectionCue = useMemo(() => {
+    const family = report.selectionFamily;
+    if (!family || family.hidden === 0 || family.key !== selectedKey) return null;
+    if (!context || context.place.key !== family.key) return null;
+    return {
+      name: english ? englishName(context.place.name) : context.place.name,
+      drawn: family.drawn,
+      hidden: family.hidden,
+    };
+  }, [report.selectionFamily, selectedKey, context, english]);
   const focusName = useMemo(() => {
     const root = report.focusCountry
       ? (tree ?? []).find((node) => node.key === report.focusCountry)
@@ -851,6 +870,7 @@ export function TileWineMapExplorer({
     // honest advice (controller ruling R3); the map judges it from the same
     // idle scan that measured depth.
     pastDepthZoom: report.pastDepthZoom,
+    selection: selectionCue,
   });
   const markedChip = detail === "one" && depthShown ? report.focusCountry : null;
 
@@ -1452,6 +1472,7 @@ export function TileWineMapExplorer({
                   onContextLost={dropToOne}
                   onHealthy={confirmHealthy}
                   english={english}
+                  revealPx={revealPx}
                 />
               </MapErrorBoundary>
             ) : manifestError ? (

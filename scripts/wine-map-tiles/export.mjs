@@ -15,6 +15,8 @@ import {
   labelFeatures,
   pgConfig,
   placeFeature,
+  placeFeatures,
+  familyRevealAreas,
   releaseVersion,
 } from "./lib.mjs";
 
@@ -195,12 +197,19 @@ assertMultiCountryArchive(rows);
 assert.ok(world.rows.length >= 2 && Object.keys(shards).length >= 1, "empty archive");
 
 await mkdir(WORK_DIR, { recursive: true });
+// reveal_area (lib.mjs): each subregion's family effect, from every row, and
+// its parts as their own features. The world archive holds countries and
+// regions only, which are never split.
+const familyAreas = familyRevealAreas(rows);
 const outputs = [
   ["world-places.geojson", featureCollection(world.rows.map(placeFeature))],
   ["world-labels.geojson", featureCollection(world.rows.flatMap(labelFeatures))],
 ];
 for (const [key, bucket] of Object.entries(shards)) {
-  outputs.push([`${key}-places.geojson`, featureCollection(bucket.rows.map(placeFeature))]);
+  outputs.push([
+    `${key}-places.geojson`,
+    featureCollection(bucket.rows.flatMap((row) => placeFeatures(row, familyAreas.get(row.id)))),
+  ]);
   outputs.push([
     `${key}-labels.geojson`,
     featureCollection(

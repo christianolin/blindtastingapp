@@ -24,6 +24,10 @@ import {
   countryOfKey,
   coverageBoxFor,
   featureOutsideCoverage,
+  familyRevealAreas,
+  placeFeatures,
+  FAMILY_PX_RATIO,
+  PIECE_PX_RATIO,
 } from "./lib.mjs";
 
 const EXPORT_ROW = {
@@ -490,4 +494,110 @@ test("outline appears only for an outline boundary, on the fill and on every lab
     const feature = placeFeature({ ...EXPORT_ROW, display });
     assert.equal(Object.hasOwn(feature.properties, "outline"), false, String(display));
   }
+});
+
+// reveal_area (owner, 2026-09-30; src/lib/wine-map/reveal.ts reads it first).
+const square = (x, y, s) => [[[x, y], [x + s, y], [x + s, y + s], [x, y + s], [x, y]]];
+const subregion = (id, area, parent = "vosne", extra = {}) => ({
+  ...EXPORT_ROW,
+  id,
+  canonical_key: `france.bourgogne.${id}`,
+  display_tier: 4,
+  primary_parent_id: parent,
+  area: String(area),
+  geometry: JSON.stringify({ type: "MultiPolygon", coordinates: [square(0, 0, Math.sqrt(area))] }),
+  ...extra,
+});
+
+test("reveal ratios are 2 (family) and 3 (pieces) of the app's threshold", () => {
+  assert.equal(FAMILY_PX_RATIO, 2);
+  assert.equal(PIECE_PX_RATIO, 3);
+});
+
+test("familyRevealAreas: a small place comes in with its family's median member, never under half the threshold", () => {
+  // Vosne-Romanée's grands crus (deg², live catalogue): the median is ~7e-6.
+  const rows = [
+    subregion("romanee-conti", 0.00000218),
+    subregion("la-romanee", 0.00000085),
+    subregion("la-tache", 0.00000718),
+    subregion("richebourg", 0.00000958),
+    subregion("echezeaux", 0.0000445),
+  ];
+  const out = familyRevealAreas(rows);
+  // Romanée-Conti: 4 x its area (8.72e-6) is above the median 7.18e-6 -> the median.
+  assert.equal(out.get("romanee-conti"), 0.00000718);
+  // La Romanée: 4 x 8.5e-7 = 3.4e-6, under the median -> capped at 4 x its area.
+  assert.equal(out.get("la-romanee"), 0.0000034);
+  // At or above the median: no key (reveal_area would equal area).
+  assert.equal(out.has("la-tache"), false);
+  assert.equal(out.has("richebourg"), false);
+  assert.equal(out.has("echezeaux"), false);
+});
+
+test("familyRevealAreas ignores lone children, regions and countries", () => {
+  const rows = [
+    subregion("alone", 0.00001, "p1"),
+    { ...subregion("region-a", 0.1, "fr"), display_tier: 1 },
+    { ...subregion("region-b", 0.000001, "fr"), display_tier: 1 },
+    subregion("no-parent", 0.000001, null),
+    subregion("no-parent-2", 0.1, null),
+  ];
+  assert.equal(familyRevealAreas(rows).size, 0);
+});
+
+test("placeFeatures leaves countries, regions and plain single-part places byte-identical", () => {
+  assert.deepEqual(placeFeatures(EXPORT_ROW), [placeFeature(EXPORT_ROW)]);
+  const single = subregion("single", 0.0001);
+  assert.deepEqual(placeFeatures(single), [placeFeature(single)]);
+  assert.deepEqual(placeFeatures(single, 0.00005), [placeFeature(single)]); // a family value below area is ignored
+  const withFamily = placeFeatures(single, 0.0002);
+  assert.equal(withFamily.length, 1);
+  assert.equal(withFamily[0].properties.reveal_area, 0.0002);
+  assert.equal(withFamily[0].properties.area, 0.0001);
+  // A multi-part region is never split.
+  const region = { ...EXPORT_ROW, geometry: JSON.stringify({ type: "MultiPolygon", coordinates: [square(0, 0, 1), square(3, 3, 0.01)] }) };
+  assert.deepEqual(placeFeatures(region), [placeFeature(region)]);
+});
+
+test("placeFeatures splits a scattered subregion: the largest part comes with its place, a small one waits until a third of the threshold", () => {
+  // Mendocino Ridge-like: one 0.01 deg² part and two slivers.
+  const parts = [square(5, 5, 0.001), square(0, 0, 0.1), square(3, 3, 0.02)];
+  const total = 0.01 + 0.0004 + 0.000001;
+  const row = subregion("ridge", total, "mendocino", {
+    geometry: JSON.stringify({ type: "MultiPolygon", coordinates: parts }),
+  });
+  const features = placeFeatures(row);
+  assert.equal(features.length, 3);
+  // Largest first, carrying the place's own size (no key: it equals area).
+  assert.deepEqual(features[0].geometry, { type: "MultiPolygon", coordinates: [parts[1]] });
+  assert.equal("reveal_area" in features[0].properties, false);
+  // Each other part: 9 x its own area, never more than the place's.
+  assert.equal(features[1].properties.reveal_area, 0.0036);
+  assert.equal(features[2].properties.reveal_area, 0.000009);
+  for (const f of features) {
+    assert.equal(f.properties.area, total); // every piece keeps the whole footprint
+    assert.equal(f.properties.key, "france.bourgogne.ridge");
+    assert.deepEqual(f.tippecanoe, placeFeature(row).tippecanoe);
+  }
+  // With a family value, the largest part takes it, and no part exceeds it.
+  const fam = placeFeatures(row, 0.02);
+  assert.equal(fam[0].properties.reveal_area, 0.02);
+  assert.equal(fam[1].properties.reveal_area, 0.0036);
+  // A part bigger than a ninth of the place is capped at the place.
+  const even = subregion("even", 0.02, "p", {
+    geometry: JSON.stringify({ type: "MultiPolygon", coordinates: [square(0, 0, 0.1), square(1, 1, 0.1)] }),
+  });
+  const [a, b] = placeFeatures(even);
+  assert.equal("reveal_area" in a.properties, false);
+  assert.equal("reveal_area" in b.properties, false);
+});
+
+test("placeFeatures subtracts holes from a part's area", () => {
+  const withHole = [[[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]], [[0.25, 0.25], [0.75, 0.25], [0.75, 0.75], [0.25, 0.75], [0.25, 0.25]]];
+  const row = subregion("holed", 2, "p", {
+    geometry: JSON.stringify({ type: "MultiPolygon", coordinates: [withHole, square(5, 5, 0.1)] }),
+  });
+  const [big, small] = placeFeatures(row);
+  assert.deepEqual(big.geometry.coordinates, [withHole]);
+  assert.equal(small.properties.reveal_area, 0.09);
 });

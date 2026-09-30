@@ -8,11 +8,13 @@
 // Areas, tiers, min_zooms and bboxes are the live catalogue's (release
 // 20260930T132635Z, one read-only SELECT); latitudes are each shard's
 // manifest bbox mid-latitude.
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { featureFilter } from "@maplibre/maplibre-gl-style-spec";
 import { bundledStyleEngine } from "../testing/bundled-style-engine";
 import {
   bboxZoomForPx,
+  currentRevealPx,
+  familyInView,
   REVEAL_CAP_ZOOM,
   REVEAL_MIN_PX,
   REVEAL_PX_MAX,
@@ -292,5 +294,92 @@ describe("sizeHiddenInView", () => {
       geometry: { type: "MultiPolygon", coordinates: [[[[5.0, 45.0], [7.0, 45.0], [7.0, 46.5], [5.0, 45.0]]]] },
     };
     expect(sizeHiddenInView({ ...base, features: [wide] })).toBe(true);
+  });
+});
+
+// Review 2026-09-30: the threshold used to be cached for the JS module's
+// lifetime, which outlives a client-side navigation, so ?revealPx= from one
+// visit carried into the next. The explorer now reads it once per mount.
+describe("currentRevealPx", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("follows the current URL on every read (no module cache)", () => {
+    const location = { search: "?revealPx=16" };
+    vi.stubGlobal("window", { location });
+    expect(currentRevealPx()).toBe(16);
+    location.search = "";
+    expect(currentRevealPx()).toBe(REVEAL_MIN_PX);
+    location.search = "?place=x&revealPx=32";
+    expect(currentRevealPx()).toBe(32);
+    location.search = "?revealPx=0";
+    expect(currentRevealPx()).toBe(0);
+  });
+
+  it("is the knob on the server", () => {
+    expect(typeof window).toBe("undefined");
+    expect(currentRevealPx()).toBe(REVEAL_MIN_PX);
+  });
+});
+
+// reveal_area (scripts/wine-map-tiles/lib.mjs revealAreas): tiles built after
+// 2026-09-30 carry it and the term reads it first; older tiles carry only
+// `area`, and then nothing changes.
+describe("revealTerm reads reveal_area before area", () => {
+  const k = revealK(24, 47.0641);
+  // Romanée-Conti: 21 px at z13 by its own area, so it waits for z14 ...
+  const alone = { tier: 4, area: 0.00000218, min_zoom: 13 };
+  // ... unless its family's median grand cru is 24 px at z13 (reveal_area =
+  // min(family median, 4 x its area)), when it comes in with them.
+  const withFamily = { ...alone, reveal_area: 4 * 0.00000218 };
+
+  for (const engine of engines) {
+    it(`agrees with revealPasses on reveal_area, area and odd values (${engine.name})`, () => {
+      const f = engine.compile(revealTerm(k, 24));
+      const cases: Props[] = [
+        alone,
+        withFamily,
+        { tier: 4, reveal_area: 1e-9, area: 1 }, // a small piece of a big place: reveal_area wins
+        { tier: 4, reveal_area: "0.1", area: 1e-9 }, // a non-number reveal_area falls back to area
+        { tier: 4, reveal_area: null },
+        { tier: 1, reveal_area: 1e-12 }, // regions stay exempt
+      ];
+      for (const props of cases) {
+        for (let z = 0; z <= 17; z += 1) {
+          expect(f(props, z), `${JSON.stringify(props)} z${z}`).toBe(revealPasses(props, z, k, 24));
+        }
+      }
+      expect(revealZoom(alone, k, 24)).toBe(14);
+      expect(revealZoom(withFamily, k, 24)).toBe(13);
+      expect(f({ tier: 4, reveal_area: 1e-9, area: 1 }, 12)).toBe(false);
+      expect(f({ tier: 4, reveal_area: "0.1", area: 1e-9 }, 12)).toBe(false);
+      expect(f({ tier: 4, reveal_area: null }, 5)).toBe(true);
+    });
+  }
+});
+
+describe("familyInView (the selection cue's probe)", () => {
+  const k = revealK(24, 44.595);
+  const view: Bbox = [4.5, 44.8, 5.2, 45.6];
+  const square = (x: number, y: number) => ({ type: "Polygon", coordinates: [[[x, y], [x + 0.02, y], [x + 0.02, y + 0.02], [x, y]]] });
+  const hermitage = { properties: { key: "hermitage", tier: 3, area: 0.00017304 }, geometry: square(4.83, 45.07) };
+  const crozes = { properties: { key: "crozes", tier: 3, area: 0.02 }, geometry: square(4.85, 45.1) };
+  const far = { properties: { key: "far", tier: 3, area: 0.00017304 }, geometry: square(3, 43) };
+
+  it("counts drawn and size-hidden children in view, per key", () => {
+    expect(familyInView({ features: [hermitage, crozes, far], view, tileZoom: 8, k, px: 24, visibleKeys: null })).toEqual({ drawn: 1, hidden: 1 });
+    expect(familyInView({ features: [hermitage, far], view, tileZoom: 7, k, px: 24, visibleKeys: null })).toEqual({ drawn: 0, hidden: 1 });
+    expect(familyInView({ features: [hermitage, crozes], view, tileZoom: 11, k, px: 24, visibleKeys: null })).toEqual({ drawn: 2, hidden: 0 });
+  });
+
+  it("a place drawn in one of its features is drawn (pieces, tile edges)", () => {
+    const smallPiece = { ...crozes, properties: { ...crozes.properties, reveal_area: 1e-9 } };
+    expect(familyInView({ features: [smallPiece, crozes], view, tileZoom: 8, k, px: 24, visibleKeys: null })).toEqual({ drawn: 1, hidden: 0 });
+  });
+
+  it("ignores grape-filtered children, and says nothing with the rule off", () => {
+    expect(familyInView({ features: [hermitage], view, tileZoom: 8, k, px: 24, visibleKeys: new Set(["crozes"]) })).toEqual({ drawn: 0, hidden: 0 });
+    expect(familyInView({ features: [hermitage], view, tileZoom: 8, k, px: 0, visibleKeys: null })).toEqual({ drawn: 1, hidden: 0 });
   });
 });

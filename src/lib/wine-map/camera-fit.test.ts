@@ -16,6 +16,7 @@ import {
   selectionFit,
   selectionZooms,
   CAMERA_MAX_ZOOM,
+  CAMERA_MAX_ZOOM_RULE_OFF,
 } from "./camera-fit";
 import { SHARD_MIN_ZOOM } from "./mount-policy";
 import type { Bbox } from "./shard-specs";
@@ -275,7 +276,9 @@ describe("selectionZooms", () => {
     for (const px of [0, 16, 24]) {
       expect(leaf(PAUILLAC, 3, 9, px), `Pauillac ${px}`).toEqual(today(9, []));
       expect(leaf(RRV, 4, 7, px), `Russian River Valley ${px}`).toEqual(today(7, []));
-      // A parent keeps its framing; only its floor rises to its own tile zoom.
+    }
+    // A parent keeps its framing; only its floor rises to its own tile zoom.
+    for (const px of [16, 24, 32]) {
       expect(selectionZooms({ tier: 3, minZoom: 6, childMinZooms: [7], bbox: NAPA, revealPx: px })).toEqual({
         minZoom: 6,
         maxZoom: today(6, [7]).maxZoom,
@@ -283,10 +286,62 @@ describe("selectionZooms", () => {
     }
   });
 
-  it("with the rule off, every leaf lands as today", () => {
-    for (const minZoom of [4, 6, 7, 9.5, 12, 13, 14]) {
-      expect(leaf(COLE_RANCH, 3, minZoom, 0)).toEqual(today(minZoom, []));
+  // The kill switch (review 2026-09-30): REVEAL_MIN_PX = 0 or ?revealPx=0 is
+  // the old camera exactly, parents and the z16 cap included.
+  it("with the rule off, every pick lands exactly as before the rule", () => {
+    expect(CAMERA_MAX_ZOOM_RULE_OFF).toBe(16);
+    for (const minZoom of [4, 6, 7, 9.5, 12, 13, 14, 14.9, 15.5]) {
+      expect(leaf(COLE_RANCH, 3, minZoom, 0), `leaf ${minZoom}`).toEqual(today(minZoom, []));
+      for (const children of [[minZoom], [minZoom + 1], [minZoom - 1], [15.8], [11, 12]]) {
+        for (const tier of [0, 1, 2, 4]) {
+          expect(
+            selectionZooms({ tier, minZoom, childMinZooms: children, bbox: CHABLIS_1ER, revealPx: 0 }),
+            `parent ${tier} ${minZoom} ${children}`,
+          ).toEqual(today(minZoom, children));
+        }
+      }
     }
+  });
+
+  // Review 2026-09-30: a parent whose children all sit below its own tile
+  // zoom was capped under that zoom, where neither it nor its ring is drawn.
+  it("never caps a parent below its own tile zoom, whatever its children's min_zoom", () => {
+    for (const px of [16, 24, 32]) {
+      for (const bbox of [CHABLIS_1ER, COLE_RANCH, NAPA]) {
+        for (const tier of [1, 2, 3]) {
+          const z = selectionZooms({ tier, minZoom: 12, childMinZooms: [11, 11], bbox, revealPx: px });
+          expect(z.minZoom, `${tier} ${px}`).toBeGreaterThanOrEqual(12);
+          expect(z.maxZoom, `${tier} ${px}`).toBeGreaterThanOrEqual(12.5);
+        }
+      }
+    }
+    expect(selectionZooms({ tier: 3, minZoom: 12, childMinZooms: [11, 11], bbox: CHABLIS_1ER, revealPx: 24 })).toEqual({
+      minZoom: 12,
+      maxZoom: 12.5,
+    });
+  });
+
+  // Review 2026-09-30: the parent floor tested a 2N-px bbox, stricter than the
+  // N-px footprint the fill needs, so ten parents already drawn at their old
+  // landing were pushed a zoom deeper. Libournais is 33 px across at z7.
+  it("does not move a parent that is drawn at its old landing", () => {
+    const LIBOURNAIS: Bbox = [-0.3413, 44.8379, -0.0474, 44.9977];
+    const MONTALCINO: Bbox = [11.34984, 42.95799, 11.58996, 43.1129];
+    const MALIBU_COAST: Bbox = [-119.08114, 34.00018, -118.56485, 34.2054];
+    const EICHHOFFEN: Bbox = [7.425805, 48.368634, 7.453398, 48.386819];
+    for (const px of [16, 24]) {
+      expect(selectionZooms({ tier: 2, minZoom: 6, childMinZooms: [7], bbox: LIBOURNAIS, revealPx: px }).maxZoom).toBe(7.5);
+      expect(selectionZooms({ tier: 2, minZoom: 6, childMinZooms: [7], bbox: MONTALCINO, revealPx: px }).maxZoom).toBe(7.5);
+      expect(selectionZooms({ tier: 2, minZoom: 6, childMinZooms: [6], bbox: MALIBU_COAST, revealPx: px }).maxZoom).toBe(6.5);
+      // Its floor rises to where its bbox is N px (z9 or z10), under the same cap.
+      expect(selectionZooms({ tier: 2, minZoom: 8, childMinZooms: [10], bbox: EICHHOFFEN, revealPx: px }).maxZoom).toBe(10.5);
+    }
+    // A parent whose very bbox is under N px at its old cap is raised, to the
+    // first zoom where the bbox is N px across (then it can be drawn at all).
+    expect(selectionZooms({ tier: 3, minZoom: 6, childMinZooms: [7], bbox: COLE_RANCH, revealPx: 24 })).toEqual({
+      minZoom: 11,
+      maxZoom: 11.5,
+    });
   });
 
   it("lands a tiny place where it is drawn", () => {
@@ -297,14 +352,19 @@ describe("selectionZooms", () => {
   });
 
   it("floors a parent at its own tile zoom (Chablis 1er Cru landed at 11.77, drawing nothing)", () => {
-    for (const px of [0, 24]) {
+    for (const px of [16, 24, 32]) {
       const z = selectionZooms({ tier: 4, minZoom: 12, childMinZooms: [14], bbox: CHABLIS_1ER, revealPx: px });
       expect(z).toEqual({ minZoom: 12, maxZoom: 14.5 });
     }
+    // The kill switch brings the old floor back with everything else.
+    expect(selectionZooms({ tier: 4, minZoom: 12, childMinZooms: [14], bbox: CHABLIS_1ER, revealPx: 0 })).toEqual({
+      minZoom: 0,
+      maxZoom: 14.5,
+    });
   });
 
   it("never floors a country or region above its own tile zoom", () => {
-    for (const px of [0, 16, 24, 32, 64]) {
+    for (const px of [16, 24, 32, 64]) {
       expect(selectionZooms({ tier: 0, minZoom: 1.5, childMinZooms: [1.5], bbox: USA, revealPx: px })).toEqual({
         minZoom: 1,
         maxZoom: 2,

@@ -134,3 +134,36 @@ describe("detailStatus with a size-hidden subregion", () => {
     ).toBe("No subregions mapped here for France yet.");
   });
 });
+
+// Review 2026-09-30: a drill-down (Northern Rhône at z7.5) could land where
+// every child is still under the size threshold, while the line said
+// "Subregions: France." The selected place's own children now speak first.
+describe("detailStatus with a selection whose children are size-hidden", () => {
+  const shown = { ...base, focusName: "France", depthVisible: true };
+  it("says to zoom in for the selected place when none of its children is drawn", () => {
+    expect(
+      detailStatus({ ...shown, selection: { name: "Rhône septentrional", drawn: 0, hidden: 8 } }).text,
+    ).toBe("Zoom in to see the subregions of Rhône septentrional.");
+  });
+
+  it("says 'all the subregions' when some are drawn", () => {
+    expect(detailStatus({ ...shown, selection: { name: "Bourgogne", drawn: 2, hidden: 4 } }).text).toBe(
+      "Zoom in to see all the subregions of Bourgogne.",
+    );
+  });
+
+  it("says nothing new when every child in view is drawn, or there is no selection", () => {
+    expect(detailStatus({ ...shown, selection: { name: "Bourgogne", drawn: 6, hidden: 0 } }).text).toBe(
+      "Subregions: France.",
+    );
+    expect(detailStatus({ ...shown, selection: null }).text).toBe("Subregions: France.");
+  });
+
+  it("never replaces loading, failure, the fallback notice or the All countries warning", () => {
+    const selection = { name: "Jura", drawn: 0, hidden: 4 };
+    expect(detailStatus({ ...shown, selection, tree: "loading" }).text).toBe("");
+    expect(detailStatus({ ...shown, selection, tree: "failed" }).retry).toBe(true);
+    expect(detailStatus({ ...shown, selection, fellBack: true }).text).toMatch(/^Switched/);
+    expect(detailStatus({ ...shown, selection, detail: "all" }).text).toMatch(/^Subregions for all countries/);
+  });
+});

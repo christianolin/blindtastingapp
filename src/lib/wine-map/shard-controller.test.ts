@@ -817,9 +817,8 @@ describe("ShardController", () => {
 
 // The size rule (design 2026-09-30, "small places appear later"): the base
 // filters carry its term, and the selected shard gets a fourth overlay, the
-// fill that draws a size-hidden selected place, at the bottom of the four.
+// fill that draws a size-hidden selected place, inside that shard's own stack.
 describe("ShardController with the size rule on", () => {
-  const fills = (key: string) => [`shard-selected-fill-${key}`, ...overlays(key)];
 
   it("26. writes the size term into every base filter, and rewrites them only when K or px change", () => {
     const { map, frames, controller } = setup();
@@ -847,11 +846,27 @@ describe("ShardController with the size rule on", () => {
     expect(map.mutations().filter(([n]) => n === "setFilter")).toHaveLength(6);
   });
 
-  it("27. adds four overlays, the fill at the bottom, and removes all four when the selection moves", () => {
+  // Where the overlay fill must sit (review 2026-09-30): exactly where the
+  // owner's ordinary fill sits, above it and below its outlines and labels,
+  // so nothing is veiled until the reveal zoom and then unveiled.
+  const expectFillInStack = (map: { getLayersOrder(): string[] }, key: string) => {
+    const order = map.getLayersOrder();
+    const at = order.indexOf(`shard-selected-fill-${key}`);
+    expect(at).toBeGreaterThan(0);
+    expect(order[at - 1]).toBe(`shard-fills-${key}`);
+    expect(order[at + 1]).toBe(`shard-outlines-${key}`);
+    expect(order[at + 2]).toBe(`shard-labels-${key}`);
+    expect(order.slice(-3)).toEqual(overlays(key));
+  };
+
+  it("27. adds four overlays, the fill in its shard's stack, and removes all four when the selection moves", () => {
     const { map, frames, controller } = setup();
     controller.setDesired(desired({ keys: ["alsace", "bourgogne"], selectedShard: "bourgogne", revealPx: 24 }));
     frames.drain();
-    expect(map.getLayersOrder().slice(-4)).toEqual(fills("bourgogne"));
+    expectFillInStack(map, "bourgogne");
+    // Below every other shard's outlines and labels too.
+    const order = map.getLayersOrder();
+    expect(order.indexOf("shard-selected-fill-bourgogne")).toBeLessThan(order.indexOf("shard-labels-bourgogne"));
     const inputs = desired({ revealPx: 24 }).inputs("bourgogne");
     expect(map.getLayer("shard-selected-fill-bourgogne")).toEqual(
       shardOverlaySpecs("bourgogne", MAP_PALETTES.light, inputs)[0],
@@ -865,24 +880,27 @@ describe("ShardController with the size rule on", () => {
       ["removeLayer", "shard-selected-ring-bourgogne"],
       ["removeLayer", "shard-selected-casing-bourgogne"],
       ["removeLayer", "shard-selected-fill-bourgogne"],
-      ["addLayer", "shard-selected-fill-alsace", undefined, V],
+      ["addLayer", "shard-selected-fill-alsace", "shard-outlines-alsace", V],
       ["addLayer", "shard-selected-casing-alsace", undefined, V],
       ["addLayer", "shard-selected-ring-alsace", undefined, V],
       ["addLayer", "shard-selected-label-alsace", undefined, V],
       ["setGlobalStateProperty", GS.tick, 1],
     ]);
-    expect(map.getLayersOrder().slice(-4)).toEqual(fills("alsace"));
+    expectFillInStack(map, "alsace");
     expect(map.getLayersOrder().some((id) => id.endsWith("-bourgogne") && id.startsWith("shard-selected-"))).toBe(false);
   });
 
-  it("28. a shard added later lands below the fill overlay too", () => {
+  it("28. a shard added later lands below the casing, and never inside the owner's stack", () => {
     const { map, frames, controller } = setup();
     controller.setDesired(desired({ keys: ["bourgogne"], selectedShard: "bourgogne", revealPx: 24 }));
     frames.drain();
     controller.setDesired(desired({ keys: ["bourgogne", "toscana"], selectedShard: "bourgogne", revealPx: 24 }));
     frames.drain();
-    expect(map.calls).toContainEqual(["addLayer", "shard-fills-toscana", "shard-selected-fill-bourgogne", V]);
-    expect(map.getLayersOrder().slice(-4)).toEqual(fills("bourgogne"));
+    expect(map.calls).toContainEqual(["addLayer", "shard-fills-toscana", "shard-selected-casing-bourgogne", V]);
+    expectFillInStack(map, "bourgogne");
+    const order = map.getLayersOrder();
+    expect(order.indexOf("shard-fills-toscana")).toBeGreaterThan(order.indexOf("shard-labels-bourgogne"));
+    expect(order.indexOf("shard-labels-toscana")).toBeLessThan(order.indexOf("shard-selected-casing-bourgogne"));
   });
 
   it("29. repaints the overlay fill on a ramp latch, new area slugs or a theme flip, and refilters it on a country change", () => {

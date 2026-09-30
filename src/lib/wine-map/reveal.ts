@@ -7,13 +7,31 @@
 // layer and are never delayed. `wine_places.min_zoom` therefore means "never
 // before", not "appears at": read reveal zooms through this module.
 //
+// The test runs at the tile's WHOLE zoom (filters see nothing finer), so what
+// appears is always at least REVEAL_MIN_PX across, but between whole zooms a
+// place still hidden can be up to twice that on screen: Romanée-Conti is 21 px
+// at z13, so it waits for z14, and at z13.9 it is 39 px and still hidden.
+// That errs towards later, which is the owner's ask.
+//
+// The size a feature is judged by is its `reveal_area` when the tiles carry
+// one (scripts/wine-map-tiles/lib.mjs revealAreas, releases built after
+// 2026-09-30), else its `area`. reveal_area lets a small place come in with
+// its family (once the family's median member is REVEAL_MIN_PX across, if it
+// is itself at least half that), so a vineyard mosaic shows no holes; and it
+// holds each small piece of a multi-part place back until that piece is a
+// third of REVEAL_MIN_PX, so a scattered AVA shows no confetti. Both are
+// ratios of REVEAL_MIN_PX, so the knob and ?revealPx= still mean what they say.
+//
 // Pure: no maplibre value import, so vitest runs the expression through both
 // engines (reveal.test.ts).
 import type { Bbox } from "./shard-specs";
 
-/** THE owner's knob: a place appears once it is this many CSS px across.
-    24 = WCAG 2.2's minimum target size, so what appears can be tapped.
-    Alternatives: 16 (lighter), 32 (stricter). 0 = off (today's map). */
+/** THE owner's knob: a place appears once it is this many CSS px across at a
+    whole zoom. 24 = WCAG 2.2's minimum target size, so what appears can be
+    tapped. It is the DEFAULT, not yet the owner's pick: 16 (lighter) and 32
+    (stricter) wait on his comparison (?revealPx=). 0 = off: the filters and
+    the selection camera (camera-fit.ts selectionZooms) are then exactly the
+    map before this rule. */
 export const REVEAL_MIN_PX = 24;
 /** ?revealPx= is clamped to 0..REVEAL_PX_MAX. */
 export const REVEAL_PX_MAX = 64;
@@ -26,6 +44,8 @@ const PX_PER_DEG_Z0 = 512 / 360; // 512-px tiles
 const AREA_WHEN_MISSING = 1e9;
 /** `number`, never `to-number`: a missing or non-numeric tier reads 0 → drawn. */
 const TIER = ["number", ["get", "tier"], 0];
+/** The size a feature is judged by: reveal_area, else area, else drawn. */
+const SIZE = ["number", ["get", "reveal_area"], ["get", "area"], AREA_WHEN_MISSING];
 
 /** The threshold a page URL asks for: `?revealPx=` (clamped), else the knob. */
 export function revealPxFromSearch(search: string): number {
@@ -35,12 +55,14 @@ export function revealPxFromSearch(search: string): number {
   return Number.isFinite(value) ? Math.min(REVEAL_PX_MAX, Math.max(0, value)) : REVEAL_MIN_PX;
 }
 
-let pagePx: number | null = null;
-/** This page load's threshold, read once, so the map's filters and the
-    explorer's camera always agree. SSR-safe. */
+/** The threshold the current URL asks for. Read it ONCE per visit: the
+    explorer does, when it mounts, and hands that one value to the map's
+    filters and to its own camera, so the two always agree. Never cached here:
+    a module outlives a client-side navigation, and a cached value carried one
+    visit's ?revealPx= into the next (review 2026-09-30). SSR-safe. */
 export function currentRevealPx(): number {
   if (typeof window === "undefined") return REVEAL_MIN_PX;
-  return (pagePx ??= revealPxFromSearch(window.location.search));
+  return revealPxFromSearch(window.location.search);
 }
 
 /** A shard's mid-latitude, from its manifest bbox (45 when missing). */
@@ -49,8 +71,8 @@ export function revealLatitude(bbox: Bbox | undefined): number {
 }
 
 /** One shard's constant: at tile zoom z a feature is at least `minPx` across iff
-    area · 4^z >= K, `area` being the tile's planar deg² of the whole footprint
-    (side_px = sqrt(area / cos φ) · 512 · 2^z / 360). The shard's mid-latitude
+    area · 4^z >= K, `area` being the tile's planar deg² of the whole footprint,
+    or its reveal_area, which is in the same unit (side_px = sqrt(area / cos φ) · 512 · 2^z / 360). The shard's mid-latitude
     stands in for the feature's: within ±0.02 zoom from p1 to p99. */
 export function revealK(minPx: number, latitude: number): number {
   return (minPx / PX_PER_DEG_Z0) ** 2 * Math.cos((latitude * Math.PI) / 180);
@@ -66,8 +88,14 @@ export function revealTerm(k: number, minPx: number): unknown[] | null {
     "any",
     ["<=", TIER, 1],
     [">=", ["zoom"], REVEAL_CAP_ZOOM],
-    [">=", ["*", ["number", ["get", "area"], AREA_WHEN_MISSING], ["^", 4, ["zoom"]]], k],
+    [">=", ["*", SIZE, ["^", 4, ["zoom"]]], k],
   ];
+}
+
+/** SIZE in JS: reveal_area, else area, else drawn (fail open). */
+function revealSize(props: Readonly<Record<string, unknown>>): number {
+  if (typeof props.reveal_area === "number") return props.reveal_area;
+  return typeof props.area === "number" ? props.area : AREA_WHEN_MISSING;
 }
 
 /** revealTerm in JS with the same doubles (the status probe and the tests). */
@@ -80,8 +108,7 @@ export function revealPasses(
   if (!(minPx > 0)) return true;
   const tier = typeof props.tier === "number" ? props.tier : 0;
   if (tier <= 1 || tileZoom >= REVEAL_CAP_ZOOM) return true;
-  const area = typeof props.area === "number" ? props.area : AREA_WHEN_MISSING;
-  return area * Math.pow(4, tileZoom) >= k;
+  return revealSize(props) * Math.pow(4, tileZoom) >= k;
 }
 
 /** The first whole zoom a feature is drawn at: its tile zoom floor(min_zoom)
@@ -161,4 +188,35 @@ export function sizeHiddenInView(input: {
     if (!b || (b[0] <= view[2] && b[2] >= view[0] && b[1] <= view[3] && b[3] >= view[1])) return true;
   }
   return false;
+}
+
+/** The selection cue's probe (review 2026-09-30: a drill-down landed where its
+    children are all size-hidden, with nothing on screen to say so). Given the
+    loaded tile features of the selected place's direct children (one place can
+    arrive as several features: tile edges, and its pieces once the tiles carry
+    reveal_area), how many of them in view does the map draw at this tile zoom,
+    and how many does ONLY the size rule hide? Places the grape filter drops
+    count as neither. Counted per key; a key drawn in any feature is drawn. */
+export function familyInView(input: {
+  features: readonly { properties?: Readonly<Record<string, unknown>> | null; geometry?: unknown }[];
+  view: Bbox;
+  tileZoom: number;
+  k: number;
+  px: number;
+  visibleKeys: ReadonlySet<string> | null;
+}): { drawn: number; hidden: number } {
+  const { view, tileZoom, k, px, visibleKeys } = input;
+  const drawn = new Set<string>();
+  const hidden = new Set<string>();
+  for (const feature of input.features) {
+    const p = feature.properties ?? {};
+    if (typeof p.key !== "string") continue;
+    if (visibleKeys && !visibleKeys.has(p.key)) continue;
+    const b = geometryBbox(feature.geometry);
+    if (b && !(b[0] <= view[2] && b[2] >= view[0] && b[1] <= view[3] && b[3] >= view[1])) continue;
+    if (revealPasses(p, tileZoom, k, px)) drawn.add(p.key);
+    else hidden.add(p.key);
+  }
+  for (const key of drawn) hidden.delete(key);
+  return { drawn: drawn.size, hidden: hidden.size };
 }
