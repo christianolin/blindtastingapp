@@ -2,13 +2,61 @@
   "_provenance": {
     "what": "Details-panel knowledge for the United States wine map, US-3 core batch: 86 California AVAs (spec docs/superpowers/specs/2026-09-29-usa-wine-map-design.md §10; plan docs/superpowers/plans/2026-09-30-usa-wine-map-us3.md). Turned into supabase/migrations/20260930164747_usa_us3_core_knowledge.sql by scripts/wine-map-sources/gen-place-profiles-migration.mjs --source data/wine-map/place-profiles-usa-us3-core.json --bare.",
     "wave": "us3-core",
-    "status": "DRAFT",
-    "owner_approval": null,
+    "status": "APPROVED",
+    "owner_approval": {
+      "answer": "Owner waived the copy review on 2026-09-30 (\"ignore my friends changes and just go ahead. no need for my review\"). Written in session from the sources listed under each place; read by the main session in data/wine-map/review/usa-us3-core-knowledge-*.md.",
+      "date": "2026-09-30"
+    },
     "written_in_session": "From 2026-09-30, from public sources only (listed under each place); no API batch (AGENTS.md).",
     "rules": "Plain English, no praise words, figures only where a listed source publishes them, never 'official boundary' (spec §18). Exactly one key fact 'Established YYYY (27 CFR 9.N)', as TTB lists it. Descriptions of 2-4 sentences, at most 700 characters. At most 8 grapes; the 1-3 signature grapes are PRINCIPAL and the rest ACCESSORY. At least two sources per place, one of them the CFR section or the Federal Register final rule. share_pct is left out."
   },
   "new_grapes": [],
   "places": {
+    "united-states.california.central-coast.alisos-canyon": {
+      "article": {
+        "description": "A small AVA of about 5,774 acres near Los Alamos in northern Santa Barbara County, where the San Antonio Creek valley runs about 20 miles west to the Pacific. At establishment it had nine commercial vineyards on about 238 acres and one winery, and Syrah is its most planted grape.",
+        "climate": "Winkler Region II, about 25 miles from the ocean, in a transition between coast and inland: cool marine air and fog arrive along the San Antonio Creek valley.",
+        "soils": "Mostly sandstone and shale soils of the Paso Robles Formation (63%) and Careaga Sandstone (13%), sandy and quick-draining, with calcium from shale and a rare streak of limestone.",
+        "grape_varieties": "Syrah first, with Grenache, Viognier and Cabernet Franc.",
+        "wine_styles": "Dry red wines, mainly Syrah and Grenache, and some Viognier.",
+        "key_facts": [
+          "Established 2020 (27 CFR 9.270)",
+          "About 5,774 acres (TTB final rule)",
+          "Nine vineyards on about 238 acres at establishment (TTB final rule)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Syrah"
+        },
+        {
+          "name": "Grenache",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Cabernet Franc",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.270, Alisos Canyon (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.270"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), Alisos Canyon (2020)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2020-08-25/html/2020-16933.htm"
+        },
+        {
+          "title": "Santa Barbara Vintners, Alisos Canyon",
+          "url": "https://sbcountywines.com/portfolio_page/alisos-canyon/"
+        }
+      ]
+    },
     "united-states.california.central-coast.carmel-valley": {
       "article": {
         "description": "A sheltered valley inland from Carmel in the Santa Lucia Range, west of the Salinas Valley. About 300 of its 19,000 acres are planted, many on hillsides, to Cabernet Sauvignon, Merlot and other Bordeaux varieties.",
@@ -89,7 +137,7 @@
           "url": "https://www.law.cornell.edu/cfr/text/27/9.288"
         },
         {
-          "title": "Federal Register final rule (govinfo), T.D. TTB-181, Gabilan Mountains (2022)",
+          "title": "Federal Register final rule (govinfo), Gabilan Mountains (2022)",
           "url": "https://www.govinfo.gov/content/pkg/FR-2022-08-15/html/2022-17508.htm"
         },
         {
@@ -146,7 +194,7 @@
           "url": "https://montereywines.org/about/avas/"
         },
         {
-          "title": "Federal Register final rule (govinfo), T.D. TTB-181, Gabilan Mountains (2022)",
+          "title": "Federal Register final rule (govinfo), Gabilan Mountains (2022)",
           "url": "https://www.govinfo.gov/content/pkg/FR-2022-08-15/html/2022-17508.htm"
         }
       ]
@@ -192,7 +240,7 @@
           "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/ava-establishment-dates"
         },
         {
-          "title": "Federal Register final rule (govinfo), T.D. TTB-181, Gabilan Mountains (2022)",
+          "title": "Federal Register final rule (govinfo), Gabilan Mountains (2022)",
           "url": "https://www.govinfo.gov/content/pkg/FR-2022-08-15/html/2022-17508.htm"
         },
         {
@@ -1267,7 +1315,7 @@
           "url": "https://www.law.cornell.edu/cfr/text/27/9.282"
         },
         {
-          "title": "Federal Register final rule (govinfo), T.D. TTB-177, San Luis Obispo Coast (2022)",
+          "title": "Federal Register final rule (govinfo), San Luis Obispo Coast (2022)",
           "url": "https://www.govinfo.gov/content/pkg/FR-2022-03-09/html/2022-05000.htm"
         }
       ]
@@ -1281,7 +1329,7 @@
         "wine_styles": "Dry Pinot Noir and Chardonnay, Zinfandel, and sparkling wine.",
         "key_facts": [
           "Established 1990 (27 CFR 9.129)",
-          "More sheltered from direct marine influence than the open coast (T.D. TTB-177)",
+          "More sheltered from direct marine influence than the open coast (TTB final rule, 2022)",
           "Lies within the San Luis Obispo Coast AVA"
         ]
       },
@@ -1316,7 +1364,7 @@
           "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/ava-establishment-dates"
         },
         {
-          "title": "Federal Register final rule (govinfo), T.D. TTB-177, San Luis Obispo Coast (2022)",
+          "title": "Federal Register final rule (govinfo), San Luis Obispo Coast (2022)",
           "url": "https://www.govinfo.gov/content/pkg/FR-2022-03-09/html/2022-05000.htm"
         },
         {
@@ -1334,7 +1382,7 @@
         "wine_styles": "Dry Chardonnay and Pinot Noir, and aromatic whites.",
         "key_facts": [
           "Established 1982 (27 CFR 9.35)",
-          "Mostly Region II, with Region I pockets (T.D. TTB-177)",
+          "Mostly Region II, with Region I pockets (TTB final rule, 2022)",
           "The Paragon Vineyard was planted in 1973 (Tasting Table)",
           "Lies within the San Luis Obispo Coast AVA"
         ]
@@ -1369,12 +1417,880 @@
           "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/ava-establishment-dates"
         },
         {
-          "title": "Federal Register final rule (govinfo), T.D. TTB-177, San Luis Obispo Coast (2022)",
+          "title": "Federal Register final rule (govinfo), San Luis Obispo Coast (2022)",
           "url": "https://www.govinfo.gov/content/pkg/FR-2022-03-09/html/2022-05000.htm"
         },
         {
           "title": "Tasting Table, Everything you need to know about SLO Coast wine",
           "url": "https://www.tastingtable.com/947801/everything-you-need-to-know-about-slo-coast-wine"
+        }
+      ]
+    },
+    "united-states.california.central-coast.santa-maria-valley": {
+      "article": {
+        "description": "A broad valley on the Santa Barbara–San Luis Obispo county line, running east–west and open to the Pacific, so ocean wind and fog flow straight up it. It was California's second AVA, after Napa Valley, and grows mostly Chardonnay and Pinot Noir. The Bien Nacido Vineyard was planted in 1973.",
+        "climate": "Cool, Region I: fog comes in off the ocean most mornings and afternoons, the wind is steady, and summer days stay around the mid-70s °F, giving one of the longest growing seasons in California.",
+        "soils": "Sandy and loamy soils on the valley floor and benches, well drained.",
+        "grape_varieties": "Chardonnay and Pinot Noir, with Syrah as the third grape.",
+        "wine_styles": "Dry Chardonnay and Pinot Noir, and cool-climate Syrah.",
+        "key_facts": [
+          "Established 1981 (27 CFR 9.28)",
+          "California's second AVA (Santa Barbara Vintners)",
+          "Spans Santa Barbara and San Luis Obispo counties",
+          "About 7,500 acres of vineyards (Santa Maria Valley Wine Country)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Chardonnay"
+        },
+        {
+          "name": "Pinot Noir"
+        },
+        {
+          "name": "Syrah",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.28, Santa Maria Valley (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.28"
+        },
+        {
+          "title": "TTB, AVA establishment dates",
+          "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/ava-establishment-dates"
+        },
+        {
+          "title": "Santa Barbara Vintners, Areas and AVAs",
+          "url": "https://sbcountywines.com/region/areas-avas/"
+        },
+        {
+          "title": "Santa Maria Valley Wine Country, Benchmark for success",
+          "url": "https://santamariavalley.com/blog/benchmark-for-success/"
+        }
+      ]
+    },
+    "united-states.california.central-coast.santa-ynez-valley": {
+      "article": {
+        "description": "A long east–west valley in Santa Barbara County, the Santa Ynez River's, that opens to the Pacific at Lompoc and runs inland past Buellton, Solvang and Los Olivos toward Lake Cachuma. Temperatures rise by about a degree for every mile from the sea, so it grows Pinot Noir and Chardonnay in the west, Rhône varieties in the middle and Bordeaux varieties in the east. It holds Sta. Rita Hills, Ballard Canyon, Los Olivos District and Happy Canyon of Santa Barbara.",
+        "climate": "Cool in the west and warm in the east: fog settles on the vines at night and clears by midday, and a single vineyard often sees swings of more than 50 °F between day and night.",
+        "soils": "Varied: marine sands and sedimentary soils in the west, alluvial terraces in the middle, and serpentine-rich soils in the far east.",
+        "grape_varieties": "Chardonnay, Pinot Noir and Syrah lead, with Sauvignon Blanc, Cabernet Sauvignon and Grenache.",
+        "wine_styles": "Dry reds and whites from Burgundy, Rhône and Bordeaux varieties, and some dry rosé.",
+        "key_facts": [
+          "Established 1983 (27 CFR 9.54)",
+          "Contains Sta. Rita Hills, Ballard Canyon, Los Olivos District and Happy Canyon of Santa Barbara",
+          "Temperature rises about 1 °F per mile inland (Santa Barbara Vintners)",
+          "County plantings 2023: Chardonnay 3,471 acres, Pinot Noir 2,913, Syrah 975 (Santa Barbara Vintners)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE",
+        "ROSE"
+      ],
+      "grapes": [
+        {
+          "name": "Chardonnay"
+        },
+        {
+          "name": "Pinot Noir"
+        },
+        {
+          "name": "Syrah"
+        },
+        {
+          "name": "Sauvignon Blanc",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Cabernet Sauvignon",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Grenache",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.54, Santa Ynez Valley (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.54"
+        },
+        {
+          "title": "TTB, AVA establishment dates",
+          "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/ava-establishment-dates"
+        },
+        {
+          "title": "Santa Barbara Vintners, 2024 facts and figures",
+          "url": "https://sbcountywines.com/wp-content/uploads/2024/09/2024-Facts-Figures.pdf"
+        }
+      ]
+    },
+    "united-states.california.central-coast.santa-ynez-valley.ballard-canyon": {
+      "article": {
+        "description": "A small north–south canyon of about 7,800 acres between Solvang, Buellton and Los Olivos, in the middle of the Santa Ynez Valley. About 550 acres are planted, and its growers focus on Syrah: over half the vineyard is Syrah and another 30% other Rhône varieties.",
+        "climate": "In between the cool west and warm east of the valley; the north–south canyon brings its own pattern of wind, fog and marine influence.",
+        "soils": "Soils of the canyon's slopes and floor within the Santa Ynez Valley's sedimentary hills.",
+        "grape_varieties": "Syrah over half the vineyard, with Grenache, Viognier and Roussanne making up about 30% more.",
+        "wine_styles": "Dry red wines, above all Syrah, and Rhône-style whites.",
+        "key_facts": [
+          "Established 2013 (27 CFR 9.230)",
+          "About 7,800 acres, 550 planted (Santa Barbara Vintners)",
+          "Over half the vineyard is Syrah (Santa Barbara Vintners)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Syrah"
+        },
+        {
+          "name": "Grenache",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Viognier",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Roussanne",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.230, Ballard Canyon (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.230"
+        },
+        {
+          "title": "TTB, AVA establishment dates",
+          "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/ava-establishment-dates"
+        },
+        {
+          "title": "Santa Barbara Vintners, Ballard Canyon",
+          "url": "https://sbcountywines.com/portfolio_page/ballard-canyon/"
+        }
+      ]
+    },
+    "united-states.california.central-coast.santa-ynez-valley.happy-canyon-of-santa-barbara": {
+      "article": {
+        "description": "The far eastern end of the Santa Ynez Valley, northeast of Santa Ynez near Lake Cachuma, about 23,900 acres of foothills rising from 500 to about 3,430 feet. It is the warmest part of the valley and grows mainly Bordeaux varieties. \"of Santa Barbara\" was added to the name because the United States has several other Happy Canyons.",
+        "climate": "The warmest part of the Santa Ynez Valley, about 3,340 growing degree days: a north–south ridge blocks the Pacific breezes, and rainfall averages about 16 inches.",
+        "soils": "Alluvial soils below and upland soils above, with green serpentine parent material that gives high magnesium levels, and loams and clay loams with chert and serpentine cobbles.",
+        "grape_varieties": "Cabernet Sauvignon, Sauvignon Blanc, Cabernet Franc, Merlot and Petit Verdot, with Syrah and other Rhône varieties.",
+        "wine_styles": "Dry Bordeaux-style reds and dry Sauvignon Blanc.",
+        "key_facts": [
+          "Established 2009 (27 CFR 9.217)",
+          "About 23,941 acres, with 492 acres of vineyard in 6 vineyards at establishment (TTB final rule)",
+          "About 3,340 growing degree days (TTB final rule)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Sauvignon Blanc"
+        },
+        {
+          "name": "Cabernet Franc",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Merlot",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Petit Verdot",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Syrah",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.217, Happy Canyon of Santa Barbara (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.217"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), Happy Canyon of Santa Barbara (2009)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2009-10-08/html/E9-24329.htm"
+        },
+        {
+          "title": "Santa Barbara Vintners, Happy Canyon of Santa Barbara",
+          "url": "https://sbcountywines.com/portfolio_page/happy-canyon-of-santa-barbara/"
+        }
+      ]
+    },
+    "united-states.california.central-coast.santa-ynez-valley.los-olivos-district": {
+      "article": {
+        "description": "A broad alluvial terrace of the Santa Ynez River, about 22,820 acres around Los Olivos, Ballard, Santa Ynez and Solvang, in the middle of the Santa Ynez Valley. With about 1,120 acres in 47 vineyards at establishment, it holds the largest concentration of vineyards among the valley's sub-AVAs, including several of its older vineyards.",
+        "climate": "About 30 miles inland, with less marine fog than the west: warm days and cool nights.",
+        "soils": "More than 95% from the Positas-Ballard-Santa Ynez association: moderately to well drained gravelly fine sandy loams and clay loams of low to moderate fertility, on gently sloping ground.",
+        "grape_varieties": "Sauvignon Blanc, Cabernet Sauvignon and Cabernet Franc, with Syrah and other Rhône varieties, and some Spanish and Italian varieties.",
+        "wine_styles": "Dry Sauvignon Blanc and dry reds from Bordeaux and Rhône varieties.",
+        "key_facts": [
+          "Established 2016 (27 CFR 9.253)",
+          "About 22,820 acres (TTB final rule)",
+          "About 47 vineyards on 1,120 acres and 12 wineries at establishment (TTB final rule)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Sauvignon Blanc"
+        },
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Syrah"
+        },
+        {
+          "name": "Cabernet Franc",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Grenache",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Merlot",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.253, Los Olivos District (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.253"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), Los Olivos District (2016)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2016-01-21/html/2016-01155.htm"
+        },
+        {
+          "title": "Santa Barbara Vintners, Los Olivos District",
+          "url": "https://sbcountywines.com/portfolio_page/los-olivos-district/"
+        }
+      ]
+    },
+    "united-states.california.central-coast.santa-ynez-valley.sta-rita-hills": {
+      "article": {
+        "description": "The western end of the Santa Ynez Valley between Buellton and Lompoc, a corridor of hills between the Purisima Hills and the Santa Rosa Hills along the Santa Ynez River. Established as Santa Rita Hills, it was renamed Sta. Rita Hills in 2006 after an objection from the Chilean producer Viña Santa Rita. More than 59 vineyards grow about 2,700 acres, mostly Pinot Noir and Chardonnay.",
+        "climate": "Cool, Region I: fog in the mornings and afternoon ocean breezes; the establishing rule found it markedly cooler during ripening than the Santa Ynez Valley to the east.",
+        "soils": "A high share of alluvial and marine sands, with sedimentary soils and patches of diatomaceous earth and limestone.",
+        "grape_varieties": "Pinot Noir and Chardonnay, with Syrah among some 18 other varieties.",
+        "wine_styles": "Dry Pinot Noir and Chardonnay, and cool-climate Syrah.",
+        "key_facts": [
+          "Established 2001 (27 CFR 9.162)",
+          "Renamed from Santa Rita Hills to Sta. Rita Hills, effective 2006 (T.D. TTB-37)",
+          "Over 59 vineyards on about 2,700 acres (Santa Barbara Vintners)",
+          "Elevations from sea level to about 1,800 feet (TTB final rule)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Pinot Noir"
+        },
+        {
+          "name": "Chardonnay"
+        },
+        {
+          "name": "Syrah",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.162, Sta. Rita Hills (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.162"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), Santa Rita Hills (2001)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2001-05-31/html/01-13645.htm"
+        },
+        {
+          "title": "Santa Barbara Vintners, Sta. Rita Hills",
+          "url": "https://sbcountywines.com/portfolio_page/sta-rita-hills-2/"
+        }
+      ]
+    },
+    "united-states.california.central-valley.lodi": {
+      "article": {
+        "description": "A large AVA at the northern end of the San Joaquin Valley, around the city of Lodi in San Joaquin and Sacramento counties, beside the Sacramento–San Joaquin River Delta. It grows more than 100 varieties, but Zinfandel leads: Lodi crushes about 40% of California's Zinfandel, and it has many old vines. In 2006 seven smaller AVAs were established within it.",
+        "climate": "Mediterranean: warm days and cool evenings, when the \"Delta breeze\" draws cool air from San Francisco Bay through the Delta, even in high summer.",
+        "soils": "Deep, well-drained sandy loams around the city of Lodi in the west, and older clays and cobbly volcanic soils in the eastern foothills.",
+        "grape_varieties": "Zinfandel above all, with Cabernet Sauvignon, Chardonnay, Merlot, Petite Sirah and Syrah among more than 100 varieties.",
+        "wine_styles": "Dry red wines, above all Zinfandel, dry whites and dry rosé.",
+        "key_facts": [
+          "Established 1986 (27 CFR 9.107)",
+          "Seven AVAs were established within it in 2006 (TTB final rule, 2006)",
+          "Crushes about 40% of California's Zinfandel (Lodi Winegrape Commission)",
+          "Lodi Rules (2005) was California's first third-party-certified sustainable winegrowing program"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE",
+        "ROSE"
+      ],
+      "grapes": [
+        {
+          "name": "Zinfandel"
+        },
+        {
+          "name": "Cabernet Sauvignon",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Chardonnay",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Petite Sirah",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Merlot",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Syrah",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.107, Lodi (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.107"
+        },
+        {
+          "title": "TTB, AVA establishment dates",
+          "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/ava-establishment-dates"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), seven Lodi viticultural areas (2006)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2006-07-17/html/E6-11079.htm"
+        },
+        {
+          "title": "Lodi Winegrape Commission, Sustainable winegrowing",
+          "url": "https://www.lodiwine.com/About/Place/Sustainable-Winegrowing"
+        }
+      ]
+    },
+    "united-states.california.central-valley.lodi.alta-mesa": {
+      "article": {
+        "description": "A \"high table\" of river terraces in Sacramento County, in the north of the Lodi AVA, about 55,400 acres with some 5,000 planted. It is one of the warmer parts of Lodi, and its flat, mesa-like surface gives it its name.",
+        "climate": "Warmer than the Delta side, with more than 200 degree days above Jahant and Mokelumne River; a mean annual temperature of about 60.5 °F and about 18.5 inches of rain.",
+        "soils": "About 90% San Joaquin series, dense heavy clay, on flat terraces between 35 and 138 feet.",
+        "grape_varieties": "Zinfandel, Cabernet Sauvignon, Syrah, Merlot and Cabernet Franc, with Tempranillo.",
+        "wine_styles": "Dry red wines from Zinfandel and Bordeaux and Rhône varieties.",
+        "key_facts": [
+          "Established 2006 (27 CFR 9.195)",
+          "About 55,400 acres, some 5,000 planted (TTB final rule, 2006)",
+          "Elevations from about 35 to 138 feet (TTB final rule, 2006)"
+        ]
+      },
+      "styles": [
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Zinfandel"
+        },
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Syrah",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Merlot",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Cabernet Franc",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Tempranillo",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.195, Alta Mesa (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.195"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), seven Lodi viticultural areas (2006)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2006-07-17/html/E6-11079.htm"
+        },
+        {
+          "title": "Lodi Winegrape Commission, Lodi's San Joaquin series soil: Jahant, Cosumnes River and Alta Mesa",
+          "url": "https://www.lodiwine.com/blog/Lodi-San-Joaquin-Series-Soil-Exploring-the-Jahant-Cosumnes-River-and-Alta-Mesa-Viticultural-Areas"
+        }
+      ]
+    },
+    "united-states.california.central-valley.lodi.borden-ranch": {
+      "article": {
+        "description": "Old alluvial fans, terraces and hills on the eastern side of the Lodi AVA, across the Sacramento–San Joaquin county line, rising from 73 to 520 feet toward the Sierra foothills. About 70,000 acres, with more than 11,000 planted. It is named after the ranch Ivey Lewis Borden set up in 1864.",
+        "climate": "Windier, warmer and wetter than the western lowlands, with about 20 inches of rain and strong winds from the Delta and down from the Sierra.",
+        "soils": "The oldest soils in the valley, with heavy surface cobble: Redding, Hicksville, Corning and Yellowlark series, and old volcanic clays.",
+        "grape_varieties": "Mostly red: Zinfandel, Cabernet Sauvignon, Merlot, Petite Sirah, Syrah and Petit Verdot, with Chardonnay and Sauvignon Blanc.",
+        "wine_styles": "Dry red wines from Zinfandel and Bordeaux and Rhône varieties, and some whites.",
+        "key_facts": [
+          "Established 2006 (27 CFR 9.196)",
+          "About 70,000 acres, more than 11,000 planted (TTB final rule, 2006)",
+          "Elevations from 73 to 520 feet (TTB final rule, 2006)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Zinfandel"
+        },
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Merlot",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Petite Sirah",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Syrah",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Chardonnay",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.196, Borden Ranch (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.196"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), seven Lodi viticultural areas (2006)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2006-07-17/html/E6-11079.htm"
+        },
+        {
+          "title": "Lodi Winegrape Commission, Lodi's hillside appellations: Clements Hills, Borden Ranch and Sloughhouse",
+          "url": "https://www.lodiwine.com/blog/Lodi-Hillside-Appellations"
+        }
+      ]
+    },
+    "united-states.california.central-valley.lodi.clements-hills": {
+      "article": {
+        "description": "Rounded hills in the southeast of the Lodi AVA, entirely in San Joaquin County, where the San Joaquin Valley floor meets the Sierra foothills, from about 90 to over 400 feet. About 85,400 acres with some 16,000 planted, it is named after the town of Clements, itself named in 1882 after the settler Thomas Clements.",
+        "climate": "Warmer and wetter than the western Lodi areas, with less fog and wind; about 21 to 22 inches of rain a year.",
+        "soils": "Old red, brown and yellow loams, clay loams and clays of the Redding, Cometa, Yellowlark and Montpellier series, with granitic and volcanic sediment; some deep sandy loams hold old own-rooted Zinfandel.",
+        "grape_varieties": "Zinfandel and Cabernet Sauvignon, with Petite Sirah, Merlot, Syrah, Barbera, Tempranillo and Chardonnay.",
+        "wine_styles": "Dry red wines from Zinfandel, Bordeaux, Rhône and Spanish varieties.",
+        "key_facts": [
+          "Established 2006 (27 CFR 9.197)",
+          "About 85,400 acres, some 16,000 planted (TTB final rule, 2006)",
+          "Rainfall about 21 to 22 inches a year (TTB final rule, 2006)"
+        ]
+      },
+      "styles": [
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Zinfandel"
+        },
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Petite Sirah",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Merlot",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Syrah",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Tempranillo",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.197, Clements Hills (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.197"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), seven Lodi viticultural areas (2006)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2006-07-17/html/E6-11079.htm"
+        },
+        {
+          "title": "Lodi Winegrape Commission, Lodi's hillside appellations: Clements Hills, Borden Ranch and Sloughhouse",
+          "url": "https://www.lodiwine.com/blog/Lodi-Hillside-Appellations"
+        }
+      ]
+    },
+    "united-states.california.central-valley.lodi.cosumnes-river": {
+      "article": {
+        "description": "The low, wet northwest corner of the Lodi AVA along the Cosumnes River, near sea level to about 48 feet, among wetlands, levees and sloughs next to the Delta. About 54,700 acres, with some 3,000 planted at establishment. The name comes from a Miwok term.",
+        "climate": "The coolest of the seven Lodi AVAs, with a mean annual temperature of about 60 °F, persistent fog and a cool, breezy growing season; about 17.4 inches of rain.",
+        "soils": "About 60% young, moderately fertile silty soils of the floodplains, and 40% reddish gravelly clay loams of the San Joaquin series.",
+        "grape_varieties": "Chardonnay, Sauvignon Blanc and Pinot Gris, with Cabernet Sauvignon, Merlot, Syrah and Vermentino.",
+        "wine_styles": "Dry white wines from Chardonnay, Sauvignon Blanc and Pinot Gris, and some reds.",
+        "key_facts": [
+          "Established 2006 (27 CFR 9.198)",
+          "About 54,700 acres (TTB final rule, 2006)",
+          "Elevations from near sea level to about 48 feet (TTB final rule, 2006)"
+        ]
+      },
+      "styles": [
+        "WHITE",
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Chardonnay"
+        },
+        {
+          "name": "Sauvignon Blanc"
+        },
+        {
+          "name": "Pinot Gris",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Cabernet Sauvignon",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Merlot",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Syrah",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Vermentino",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.198, Cosumnes River (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.198"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), seven Lodi viticultural areas (2006)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2006-07-17/html/E6-11079.htm"
+        },
+        {
+          "title": "Lodi Winegrape Commission, Lodi's San Joaquin series soil: Jahant, Cosumnes River and Alta Mesa",
+          "url": "https://www.lodiwine.com/blog/Lodi-San-Joaquin-Series-Soil-Exploring-the-Jahant-Cosumnes-River-and-Alta-Mesa-Viticultural-Areas"
+        }
+      ]
+    },
+    "united-states.california.central-valley.lodi.jahant": {
+      "article": {
+        "description": "The smallest of the seven Lodi AVAs, about 28,000 acres of river terraces and old floodplain in the centre of the Lodi AVA, dotted with lakes and sloughs, from 10 to 100 feet. About 8,000 acres are planted. It is named after Peter Jahant and his brothers, settlers of the 1850s; Charles Jahant planted 130 acres of grapes in 1912.",
+        "climate": "Cool, dry and windy, with long spells of Delta wind and marine fog; mean annual temperature about 60.1 °F and about 18 inches of rain.",
+        "soils": "Pink Rocklin-Jahant loam, sandy loams and sandy clay loams whose clay holds enough water for some dry-farming.",
+        "grape_varieties": "Zinfandel, Petite Sirah and Tempranillo among the most planted, with Cabernet Sauvignon and Chardonnay.",
+        "wine_styles": "Dry red wines from Zinfandel, Petite Sirah and Tempranillo.",
+        "key_facts": [
+          "Established 2006 (27 CFR 9.199)",
+          "About 28,000 acres, some 8,000 planted (TTB final rule, 2006)",
+          "Charles Jahant planted 130 acres of grapes in 1912 (TTB final rule, 2006)"
+        ]
+      },
+      "styles": [
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Zinfandel"
+        },
+        {
+          "name": "Petite Sirah"
+        },
+        {
+          "name": "Tempranillo"
+        },
+        {
+          "name": "Cabernet Sauvignon",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Chardonnay",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.199, Jahant (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.199"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), seven Lodi viticultural areas (2006)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2006-07-17/html/E6-11079.htm"
+        },
+        {
+          "title": "Lodi Winegrape Commission, Lodi's San Joaquin series soil: Jahant, Cosumnes River and Alta Mesa",
+          "url": "https://www.lodiwine.com/blog/Lodi-San-Joaquin-Series-Soil-Exploring-the-Jahant-Cosumnes-River-and-Alta-Mesa-Viticultural-Areas"
+        }
+      ]
+    },
+    "united-states.california.central-valley.lodi.mokelumne-river": {
+      "article": {
+        "description": "The heart of the Lodi AVA around the city of Lodi, a young alluvial fan of the Mokelumne River, about 85,700 acres with some 42,000 planted, over 40% of Lodi's vineyard. Its deep sandy loams hold many old, own-rooted Zinfandel vines.",
+        "climate": "Among the coolest parts of Lodi: strong Delta winds blow more than 70% of the time, and degree days run 50 to 450 below the other areas; about 17.6 inches of rain.",
+        "soils": "Deep, well-drained Tokay and Acampo sandy loams, in places 50 to 100 feet deep before hardpan, low in water-holding capacity.",
+        "grape_varieties": "Zinfandel above all, including old own-rooted vines, with Cabernet Sauvignon, Chardonnay, Petite Sirah, Carignan and Cinsault.",
+        "wine_styles": "Dry red wines, above all old-vine Zinfandel, and dry whites.",
+        "key_facts": [
+          "Established 2006 (27 CFR 9.200)",
+          "About 85,700 acres, some 42,000 planted (TTB final rule, 2006)",
+          "Elevations from about 5 to 100 feet (TTB final rule, 2006)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Zinfandel"
+        },
+        {
+          "name": "Cabernet Sauvignon",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Chardonnay",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Petite Sirah",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Carignan",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Cinsault",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.200, Mokelumne River (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.200"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), seven Lodi viticultural areas (2006)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2006-07-17/html/E6-11079.htm"
+        },
+        {
+          "title": "Lodi Winegrape Commission, Mokelumne River AVA: Lodi's largest and most historic viticultural area",
+          "url": "https://www.lodiwine.com/blog/Lodi-Wine-History--The-Mokelumne-River-Viticultural-Area"
+        }
+      ]
+    },
+    "united-states.california.central-valley.lodi.sloughhouse": {
+      "article": {
+        "description": "The northeastern corner of the Lodi AVA in Sacramento County, the most varied terrain of the seven, from rolling hills and plains to the Sierra bedrock foothills, 73 to 590 feet. About 78,800 acres with some 7,000 planted, it is named after the Sloughhouse Inn, a stagecoach stop of the 1850s.",
+        "climate": "The warmest and wettest of the Lodi AVAs, with little marine influence and less fog; mean annual temperature about 61.6 °F and about 23 inches of rain.",
+        "soils": "Older alluvial fan soils of the Redding, Corning, Pentz and Hadlesville series in the west, and old soils from metamorphic and volcanic rock higher up.",
+        "grape_varieties": "Mostly red: Zinfandel, Cabernet Sauvignon, Petite Sirah, Syrah, Grenache and Mourvèdre, with Chardonnay and Sauvignon Blanc.",
+        "wine_styles": "Dry red wines from Zinfandel, Bordeaux and Rhône varieties.",
+        "key_facts": [
+          "Established 2006 (27 CFR 9.201)",
+          "About 78,800 acres, some 7,000 planted (TTB final rule, 2006)",
+          "The warmest of the seven Lodi AVAs (TTB final rule, 2006)"
+        ]
+      },
+      "styles": [
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Zinfandel"
+        },
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Petite Sirah",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Syrah",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Grenache",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Mourvèdre",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.201, Sloughhouse (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.201"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), seven Lodi viticultural areas (2006)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2006-07-17/html/E6-11079.htm"
+        },
+        {
+          "title": "Lodi Winegrape Commission, Lodi's hillside appellations: Clements Hills, Borden Ranch and Sloughhouse",
+          "url": "https://www.lodiwine.com/blog/Lodi-Hillside-Appellations"
+        }
+      ]
+    },
+    "united-states.california.el-dorado": {
+      "article": {
+        "description": "An AVA covering the wine-growing part of El Dorado County in the Sierra Nevada foothills, between the North Fork of the American River and the Cosumnes River, east of Sacramento. Its vineyards are among the highest in California, mostly between 2,500 and 3,500 feet, and vines were first planted here during the Gold Rush of the 1850s. It overlaps much of the Sierra Foothills AVA and holds Fair Play.",
+        "climate": "Mountain climate: warm, sunny days above the fog, cool nights, winter snow on the vines, high summer UV and later ripening than the valley below.",
+        "soils": "Granitic soils and volcanic and sedimentary deposits, well drained.",
+        "grape_varieties": "Zinfandel, Syrah and Barbera lead, with Cabernet Sauvignon, Merlot, Grenache, Viognier and Chardonnay.",
+        "wine_styles": "Dry red wines from Zinfandel, Rhône and Italian varieties, and dry whites.",
+        "key_facts": [
+          "Established 1983 (27 CFR 9.61)",
+          "Bounded by the North Fork of the American River and the South Fork of the Cosumnes River (27 CFR 9.61)",
+          "Most vineyards lie between 2,500 and 3,500 feet (El Dorado Winery Association)",
+          "Contains the Fair Play AVA"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Zinfandel"
+        },
+        {
+          "name": "Syrah"
+        },
+        {
+          "name": "Barbera",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Cabernet Sauvignon",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Grenache",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Viognier",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.61, El Dorado (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.61"
+        },
+        {
+          "title": "TTB, AVA establishment dates",
+          "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/ava-establishment-dates"
+        },
+        {
+          "title": "Liz Thach MW, El Dorado wine country",
+          "url": "https://lizthachmw.com/winetravelstories/el-dorado-wine-country/"
+        }
+      ]
+    },
+    "united-states.california.el-dorado.fair-play": {
+      "article": {
+        "description": "A high area of rolling hills in southern El Dorado County, about 33 square miles around the old Gold Rush mining camp of Fair Play, within both the El Dorado and Sierra Foothills AVAs. Horace Bigelow founded the first commercial vineyard in 1887. At establishment it had about 350 acres of vines, 250 in production.",
+        "climate": "High Region III, under 3,500 degree days, with 35 to 40 inches of rain in an average year and a growing season of about 230 to 250 days.",
+        "soils": "Deep, moderately to well-drained granitic soils of the Holland, Shaver and Musick series, sandy loams and coarse sandy loams.",
+        "grape_varieties": "Zinfandel is the most planted red, with Syrah, Barbera, Grenache and other Rhône and Italian varieties.",
+        "wine_styles": "Dry red wines from Zinfandel and Rhône and Italian varieties, and some whites.",
+        "key_facts": [
+          "Established 2001 (27 CFR 9.168)",
+          "Vineyards from about 2,000 to 2,800 feet (ATF final rule, 2001)",
+          "About 350 acres of vines at establishment (ATF final rule, 2001)",
+          "Named after a Gold Rush mining camp (ATF final rule, 2001)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Zinfandel"
+        },
+        {
+          "name": "Syrah"
+        },
+        {
+          "name": "Barbera",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Grenache",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.168, Fair Play (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.168"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), Fair Play (2001)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2001-02-26/html/01-4633.htm"
+        },
+        {
+          "title": "El Dorado Winery Association, At a glance: Fair Play wine country",
+          "url": "https://eldoradowines.org/?p=2875"
         }
       ]
     },
@@ -2088,7 +3004,7 @@
           "url": "https://www.law.cornell.edu/cfr/text/27/9.296"
         },
         {
-          "title": "Federal Register final rule (govinfo), T.D. TTB-199, Crystal Springs of Napa Valley (2024)",
+          "title": "Federal Register final rule (govinfo), Crystal Springs of Napa Valley (2024)",
           "url": "https://www.govinfo.gov/content/pkg/FR-2024-10-16/html/2024-23655.htm"
         },
         {
@@ -3677,6 +4593,167 @@
         {
           "title": "Napa Valley Vintners, Wild Horse Valley AVA",
           "url": "https://napavintners.com/napa_valley/wild-horse-valley-ava/"
+        }
+      ]
+    },
+    "united-states.california.sierra-foothills.california-shenandoah-valley": {
+      "article": {
+        "description": "A valley in the Sierra Nevada foothills across the Amador–El Dorado county line, around Plymouth, with Amador's main concentration of wineries. It is known for old-vine Zinfandel, some of it head-trained and dry-farmed from the 1920s and earlier.",
+        "climate": "Warm days and cool nights at about 1,500 feet, with the heat for Zinfandel, Barbera and Sangiovese to ripen.",
+        "soils": "Decomposed granite and quartz-rich sandy soils with some clay, well drained and infertile.",
+        "grape_varieties": "Zinfandel above all, with Barbera, Syrah and Sangiovese.",
+        "wine_styles": "Dry red wines, above all old-vine Zinfandel, and Barbera.",
+        "key_facts": [
+          "Established 1982 (27 CFR 9.37)",
+          "Spans Amador and El Dorado counties",
+          "Deaver Ranch's head-trained Zinfandel includes vines from the 1920s (Turley Wine Cellars)"
+        ]
+      },
+      "styles": [
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Zinfandel"
+        },
+        {
+          "name": "Barbera",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Syrah",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Sangiovese",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.37, California Shenandoah Valley (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.37"
+        },
+        {
+          "title": "TTB, AVA establishment dates",
+          "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/ava-establishment-dates"
+        },
+        {
+          "title": "Turley Wine Cellars, Deaver Ranch Zinfandel",
+          "url": "https://www.turleywinecellars.com/vinesandwines/deaver-ranch-zinfandel"
+        },
+        {
+          "title": "Turley Wine Cellars, Amador old vines Zinfandel",
+          "url": "https://www.turleywinecellars.com/vinesandwines/amador-old-vines-zinfandel"
+        }
+      ]
+    },
+    "united-states.california.sierra-foothills.fiddletown": {
+      "article": {
+        "description": "A small AVA in Amador County around the Gold Rush town of Fiddletown, east of the Shenandoah Valley in the Sierra Nevada foothills. Like its neighbour, it is known for old-vine Zinfandel, grown at around 1,500 feet.",
+        "climate": "Warm, sunny days and cool nights in the Sierra foothills, giving Zinfandel and Barbera good acid and tannin structure.",
+        "soils": "Decomposed granite and reddish volcanic soils, sandy and well drained.",
+        "grape_varieties": "Zinfandel above all, with Barbera and Syrah.",
+        "wine_styles": "Dry red wines, above all old-vine Zinfandel.",
+        "key_facts": [
+          "Established 1983 (27 CFR 9.81)",
+          "In Amador County",
+          "Named after the Gold Rush town of Fiddletown"
+        ]
+      },
+      "styles": [
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Zinfandel"
+        },
+        {
+          "name": "Barbera",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Syrah",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.81, Fiddletown (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.81"
+        },
+        {
+          "title": "TTB, AVA establishment dates",
+          "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/ava-establishment-dates"
+        },
+        {
+          "title": "Turley Wine Cellars, Amador old vines Zinfandel",
+          "url": "https://www.turleywinecellars.com/vinesandwines/amador-old-vines-zinfandel"
+        }
+      ]
+    },
+    "united-states.california.south-coast.temecula-valley": {
+      "article": {
+        "description": "An inland valley in southwestern Riverside County, with vineyards at about 1,400 to 1,600 feet between the coastal mountains and Mount San Jacinto. Cool Pacific air reaches it each afternoon through the Rainbow Gap and the Santa Margarita Gap in the coastal mountains. It was called Temecula until 2004.",
+        "climate": "Warm days and cool nights: around late morning, heat over the desert to the east draws cool ocean air through the gaps, and the day-to-night swing can reach 40 to 50 °F.",
+        "soils": "Decomposed granite, rocky and sandy loams.",
+        "grape_varieties": "Cabernet Sauvignon is the most planted, with Syrah, Chardonnay, Merlot, and Mediterranean varieties such as Sangiovese, Tempranillo and Viognier.",
+        "wine_styles": "Dry reds from Bordeaux and Mediterranean varieties, dry whites and rosé.",
+        "key_facts": [
+          "Established 1984 (27 CFR 9.50)",
+          "Named Temecula until June 2004 (27 CFR 9.50)",
+          "Its boundary uses the 1,400- and 1,500-foot contour lines in places (27 CFR 9.50)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE",
+        "ROSE"
+      ],
+      "grapes": [
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Syrah"
+        },
+        {
+          "name": "Chardonnay",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Merlot",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Sangiovese",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Tempranillo",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Viognier",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.50, Temecula Valley (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.50"
+        },
+        {
+          "title": "TTB, AVA establishment dates",
+          "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/ava-establishment-dates"
+        },
+        {
+          "title": "Temecula Valley Winegrowers Association, Fact sheet",
+          "url": "https://www.temeculawines.org/files/TVWA-Fact-Sheet---FINAL.pdf"
+        },
+        {
+          "title": "Wilson Creek Winery, The Rainbow Gap in Temecula Valley",
+          "url": "https://www.wilsoncreekwinery.com/rainbow-gap-temecula/"
         }
       ]
     }
