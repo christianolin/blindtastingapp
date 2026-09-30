@@ -26,7 +26,7 @@ Rendered by `scripts/usa-map/render-us3-notes.mjs` from the California tree repo
 | `united-states.california.central-coast.paso-robles.san-miguel-district` | San Miguel District | 9.246 | 2014-10-09 | San Luis Obispo | 77 | central-coast.paso-robles (legal_record, 99.15%) | none |
 | `united-states.california.central-coast.paso-robles.santa-margarita-ranch` | Santa Margarita Ranch | 9.247 | 2014-10-09 | San Luis Obispo | 71 | central-coast.paso-robles (legal_record, 99.43%) | none |
 | `united-states.california.central-coast.paso-robles.templeton-gap-district` | Templeton Gap District | 9.248 | 2014-10-09 | San Luis Obispo | 77 | central-coast.paso-robles (legal_record, 98.22%) | none |
-| `united-states.california.central-coast.san-francisco-bay` | San Francisco Bay | 9.157 | 1999-01-20 | Alameda, Contra Costa, San Benito, San Francisco, San Mateo, Santa Clara, Santa Cruz, Solano | 7424 | central-coast (legal_record, 96.61%) | OVERLAPS contra-costa 33.63% |
+| `united-states.california.central-coast.san-francisco-bay` | San Francisco Bay | 9.157 | 1999-01-20 | Alameda, Contra Costa, San Benito, San Francisco, San Mateo, Santa Clara, Santa Cruz, Solano | 7424 | central-coast (legal_record, 96.61%) | none |
 | `united-states.california.central-coast.san-francisco-bay.livermore-valley` | Livermore Valley | 9.46 | 1982-09-01 | Alameda | 961 | central-coast.san-francisco-bay (measured, 99.99%) | none |
 | `united-states.california.central-coast.san-francisco-bay.santa-cruz-mountains` | Santa Cruz Mountains | 9.31 | 1981-12-04 | San Mateo, Santa Clara, Santa Cruz | 1654 | central-coast.san-francisco-bay (measured, 99.94%) | none |
 | `united-states.california.central-coast.san-luis-obispo-coast` | San Luis Obispo Coast | 9.282 | 2022-03-09 | San Luis Obispo | 1632 | central-coast (measured, 99.55%) | none |
@@ -106,6 +106,7 @@ Rendered by `scripts/usa-map/render-us3-notes.mjs` from the California tree repo
 | `united-states.california.central-coast.san-benito.cienega-valley` | Cienega Valley | 9.38 | 1982-08-19 | San Benito | 29 | central-coast.san-benito (measured, 99.97%) | none |
 | `united-states.california.central-coast.san-benito.cienega-valley.lime-kiln-valley` | Lime Kiln Valley | 9.27 | 1982-06-04 | San Benito | 9 | central-coast.san-benito.cienega-valley (measured, 99.96%) | none |
 | `united-states.california.central-coast.san-benito.paicines` | Paicines | 9.39 | 1982-08-16 | San Benito | 77 | central-coast.san-benito (measured, 100.00%) | none |
+| `united-states.california.central-coast.san-francisco-bay.contra-costa` | Contra Costa | 9.291 | 2024-03-15 | Contra Costa | 690 | central-coast.san-francisco-bay (override, 33.63%) | none |
 | `united-states.california.central-coast.san-francisco-bay.lamorinda` | Lamorinda | 9.254 | 2016-02-24 | Contra Costa | 119 | central-coast.san-francisco-bay (measured, 100.00%) | none |
 | `united-states.california.central-coast.san-francisco-bay.santa-clara-valley` | Santa Clara Valley | 9.126 | 1989-03-28 | Alameda, San Benito, Santa Clara | 1285 | central-coast.san-francisco-bay (legal_record, 98.20%) | none |
 | `united-states.california.central-coast.san-francisco-bay.santa-clara-valley.pacheco-pass` | Pacheco Pass | 9.88 | 1984-03-12 | San Benito, Santa Clara | 11 | central-coast.san-francisco-bay.santa-clara-valley (measured, 100.00%) | none |
@@ -123,7 +124,7 @@ Rendered by `scripts/usa-map/render-us3-notes.mjs` from the California tree repo
 | `united-states.california.central-valley.salado-creek` | Salado Creek | 9.163 | 2004-06-29 | Stanislaus | 12 | central-valley | none |
 | `united-states.california.central-valley.tracy-hills` | Tracy Hills | 9.204 | 2006-11-08 | San Joaquin, Stanislaus | 152 | central-valley | none |
 | `united-states.california.central-valley.winters-highlands` | Winters Highlands | 9.290 | 2023-08-29 | Solano, Yolo | 22 | central-valley | none |
-| `united-states.california.contra-costa` | Contra Costa | 9.291 | 2024-03-15 | Contra Costa | 690 | united-states.california | OVERLAPS central-coast 33.67%; OVERLAPS central-coast.san-francisco-bay 33.63% |
+| `united-states.california.comptche` | Comptche | 9.292 | 2024-04-08 | Mendocino | 7 | united-states.california | none |
 | `united-states.california.covelo` | Covelo | 9.187 | 2006-02-16 | Mendocino | 158 | united-states.california | none |
 | `united-states.california.cucamonga-valley` | Cucamonga Valley | 9.150 | 1995-03-31 | Riverside, San Bernardino | 552 | united-states.california | none |
 | `united-states.california.dos-rios` | Dos Rios | 9.175 | 2005-10-14 | Mendocino | 65 | united-states.california | none |
@@ -138,7 +139,6 @@ Rendered by `scripts/usa-map/render-us3-notes.mjs` from the California tree repo
 | `united-states.california.north-coast.clear-lake.kelsey-bench-lake-county` | Kelsey Bench-Lake County | 9.233 | 2013-10-02 | Lake | 37 | north-coast.clear-lake (measured, 99.96%) | none |
 | `united-states.california.north-coast.clear-lake.upper-lake-valley` | Upper Lake Valley | 9.286 | 2022-06-03 | Lake | 80 | north-coast.clear-lake (measured, 100.00%) | none |
 | `united-states.california.north-coast.cole-ranch` | Cole Ranch | 9.42 | 1983-04-15 | Mendocino | 1 | north-coast (measured, 100.00%) | OVERLAPS north-coast.mendocino 69.40% |
-| `united-states.california.north-coast.comptche` | Comptche | 9.292 | 2024-04-08 | Mendocino | 7 | north-coast (measured, 100.00%) | none |
 | `united-states.california.north-coast.eagle-peak-mendocino-county` | Eagle Peak Mendocino County | 9.237 | 2014-10-09 | Mendocino | 107 | north-coast (measured, 100.00%) | none |
 | `united-states.california.north-coast.guenoc-valley` | Guenoc Valley | 9.26 | 1981-11-19 | Lake | 22 | north-coast (measured, 100.00%) | none |
 | `united-states.california.north-coast.high-valley` | High Valley | 9.189 | 2005-07-01 | Lake | 66 | north-coast (measured, 100.00%) | OVERLAPS north-coast.clear-lake 75.91% |

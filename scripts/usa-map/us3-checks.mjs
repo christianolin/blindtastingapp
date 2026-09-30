@@ -26,7 +26,8 @@ export const CLICK_KEYS = Object.freeze({
 export const CHILDREN = Object.freeze({
   core: { [k("north-coast")]: 13, [k("north-coast.napa-valley")]: 15, [k("central-coast.paso-robles")]: 11,
     [k("central-valley.lodi")]: 7, [k("central-coast.santa-ynez-valley")]: 4, [k("central-valley")]: 1 },
-  rest: { [k("north-coast")]: 22, [k("central-valley")]: 11, [k("central-coast.monterey")]: 5, [k("central-valley.clarksburg")]: 1 },
+  rest: { [k("north-coast")]: 21, [k("central-valley")]: 11, [k("central-coast.monterey")]: 5, [k("central-valley.clarksburg")]: 1,
+    [k("central-coast.san-francisco-bay")]: 5 },
 });
 // The relationships §15 US-3 names (plan decision 3 for Russian River Valley).
 export const EXPECTED_EDGES = Object.freeze({

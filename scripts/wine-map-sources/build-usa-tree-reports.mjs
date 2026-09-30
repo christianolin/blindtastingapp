@@ -182,8 +182,14 @@ export function summaryMarkdown(tree, reports) {
     L.push("| AVA | Placed at | Container | Measured inside |", "|---|---|---|---:|");
     for (const r of tree.review.near_within) L.push(`| ${r.name} | \`${r.key}\` | ${r.container} | ${(r.ratio * 100).toFixed(2)}% |`);
   }
+  L.push("", "## The legal record over the outlines (usa-tree-config.json)", "");
+  L.push("A `legal_exclusions` pair is one the CFR says does not nest although the outlines do: no parent, no ALTERNATE_PARENT and no OVERLAPS edge. A `parent_overrides` place is keyed under the named AVA whatever the outlines measure (basis `override`). Keys lock at each wave's promote.", "");
+  L.push(...listOrNone([
+    ...tree.review.legal_exclusions.map((r) => `- ${r.name} is not within ${r.excluded_from} (${(r.ratio * 100).toFixed(2)}% measured inside; keyed \`${r.key}\`): ${r.rule}`),
+    ...tree.review.parent_overrides.map((r) => `- ${r.name} keyed under \`${r.parent_key}\` (${r.parent_inside === null ? "never measured" : `${(r.parent_inside * 100).toFixed(2)}% measured inside`}): ${r.rule ?? "no rule recorded"}`),
+  ]));
   L.push("", "## Overlaps with a place's own ancestor (no edge stored)", "");
-  L.push("The tree already nests the place under this ancestor through a smaller AVA, so an OVERLAPS edge would contradict it. Listed so the digitizing gap is visible.", "");
+  L.push("The tree already nests the place under this ancestor (through a smaller AVA, or by a `parent_overrides` entry), so an OVERLAPS edge would contradict it. Listed so the digitizing gap is visible.", "");
   L.push(...listOrNone(tree.review.ancestor_overlaps.map((r) => `- ${r.name} in ${r.ancestor}: ${(r.ratio * 100).toFixed(2)}% measured inside (\`${r.key}\`)`)));
   L.push("", "## For review", "");
   L.push(`- Land share under ${pct(tree.thresholds.landShareReview)}: ${tree.review.low_land_share.map((r) => `${r.key} ${pct(r.land_share)}`).join("; ") || "none"}`);

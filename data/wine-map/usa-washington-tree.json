@@ -3,7 +3,7 @@
   "_spec": "docs/superpowers/specs/2026-09-29-usa-wine-map-design.md §8.3",
   "_inputs": {
     "measurements_sha256": "72339AB6F6A804F831F00D6D8A27106CFC0BE2C5EE078B23EC41FAD4CB26BA42",
-    "config_sha256": "9730213BB6AAFF9FD9E10274B2F812C514ED7C6BB39BCDDD30247D1FF23A127D",
+    "config_sha256": "18D7FC0CAFD06D740CCC50DF3B646364BA4B7A11F07F7ECE303704952EAE0416",
     "diff_sha256": "80DF4951FE4A9AE42B6999B90EFC1D797B3976A7921A9CF7A7994462AC1B75A2",
     "ttb_list_sha256": "C745F493AE24E0777F1177E3056785942B6C14160AA54D348F8520220B660A87"
   },
@@ -828,6 +828,8 @@
     ],
     "near_within": [],
     "ancestor_overlaps": [],
+    "legal_exclusions": [],
+    "parent_overrides": [],
     "legal_record_nests": [
       {
         "key": "united-states.washington.columbia-valley.lake-chelan",

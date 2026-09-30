@@ -3,7 +3,7 @@
   "_spec": "docs/superpowers/specs/2026-09-29-usa-wine-map-design.md §8.3",
   "_inputs": {
     "measurements_sha256": "72339AB6F6A804F831F00D6D8A27106CFC0BE2C5EE078B23EC41FAD4CB26BA42",
-    "config_sha256": "9730213BB6AAFF9FD9E10274B2F812C514ED7C6BB39BCDDD30247D1FF23A127D",
+    "config_sha256": "18D7FC0CAFD06D740CCC50DF3B646364BA4B7A11F07F7ECE303704952EAE0416",
     "diff_sha256": "80DF4951FE4A9AE42B6999B90EFC1D797B3976A7921A9CF7A7994462AC1B75A2",
     "ttb_list_sha256": "C745F493AE24E0777F1177E3056785942B6C14160AA54D348F8520220B660A87"
   },
@@ -29,14 +29,14 @@
     "by_tier": {
       "1": 1,
       "2": 34,
-      "3": 52,
-      "4": 62,
+      "3": 51,
+      "4": 63,
       "5": 7
     },
     "outline": 6,
     "edges": {
       "ALTERNATE_PARENT": 2,
-      "OVERLAPS": 27
+      "OVERLAPS": 25
     }
   },
   "places": [
@@ -1122,6 +1122,39 @@
       }
     },
     {
+      "key": "united-states.california.central-coast.san-francisco-bay.contra-costa",
+      "slug": "contra-costa",
+      "name": "Contra Costa",
+      "kind": "APPELLATION",
+      "display_tier": 4,
+      "min_zoom": 7,
+      "label_min_zoom": 9,
+      "sort_order": 10,
+      "parent_key": "united-states.california.central-coast.san-francisco-bay",
+      "parent_basis": "override",
+      "parent_inside": 0.336329,
+      "breadcrumb": "United States › California › Central Coast › San Francisco Bay › Contra Costa",
+      "is_appellation": true,
+      "appellation_system": "AVA",
+      "appellation_level": "subregional",
+      "display": null,
+      "navigation_node": false,
+      "map_state": "CA",
+      "map_state_source": "dominant",
+      "ucd_ava_id": "contra_costa",
+      "cfr_section": "9.291",
+      "area_km2": 690.176,
+      "land_share": 0.987747,
+      "containment_share": 1,
+      "legal_states": [
+        "CA"
+      ],
+      "legal_source": "ttb",
+      "state_shares": {
+        "CA": 1
+      }
+    },
+    {
       "key": "united-states.california.central-coast.san-francisco-bay.lamorinda",
       "slug": "lamorinda",
       "name": "Lamorinda",
@@ -1129,7 +1162,7 @@
       "display_tier": 4,
       "min_zoom": 7,
       "label_min_zoom": 9,
-      "sort_order": 10,
+      "sort_order": 20,
       "parent_key": "united-states.california.central-coast.san-francisco-bay",
       "parent_basis": "measured",
       "parent_inside": 1,
@@ -1162,7 +1195,7 @@
       "display_tier": 4,
       "min_zoom": 7,
       "label_min_zoom": 9,
-      "sort_order": 20,
+      "sort_order": 30,
       "parent_key": "united-states.california.central-coast.san-francisco-bay",
       "parent_basis": "measured",
       "parent_inside": 0.999891,
@@ -1195,7 +1228,7 @@
       "display_tier": 4,
       "min_zoom": 7,
       "label_min_zoom": 9,
-      "sort_order": 30,
+      "sort_order": 40,
       "parent_key": "united-states.california.central-coast.san-francisco-bay",
       "parent_basis": "legal_record",
       "parent_inside": 0.981974,
@@ -1294,7 +1327,7 @@
       "display_tier": 4,
       "min_zoom": 7,
       "label_min_zoom": 9,
-      "sort_order": 40,
+      "sort_order": 50,
       "parent_key": "united-states.california.central-coast.san-francisco-bay",
       "parent_basis": "measured",
       "parent_inside": 0.999431,
@@ -2339,9 +2372,9 @@
       }
     },
     {
-      "key": "united-states.california.contra-costa",
-      "slug": "contra-costa",
-      "name": "Contra Costa",
+      "key": "united-states.california.comptche",
+      "slug": "comptche",
+      "name": "Comptche",
       "kind": "APPELLATION",
       "display_tier": 2,
       "min_zoom": 6,
@@ -2350,7 +2383,7 @@
       "parent_key": "united-states.california",
       "parent_basis": null,
       "parent_inside": null,
-      "breadcrumb": "United States › California › Contra Costa",
+      "breadcrumb": "United States › California › Comptche",
       "is_appellation": true,
       "appellation_system": "AVA",
       "appellation_level": "regional",
@@ -2358,10 +2391,10 @@
       "navigation_node": false,
       "map_state": "CA",
       "map_state_source": "dominant",
-      "ucd_ava_id": "contra_costa",
-      "cfr_section": "9.291",
-      "area_km2": 690.176,
-      "land_share": 0.987747,
+      "ucd_ava_id": "comptche",
+      "cfr_section": null,
+      "area_km2": 7.053,
+      "land_share": 1,
       "containment_share": 1,
       "legal_states": [
         "CA"
@@ -2999,39 +3032,6 @@
       }
     },
     {
-      "key": "united-states.california.north-coast.comptche",
-      "slug": "comptche",
-      "name": "Comptche",
-      "kind": "APPELLATION",
-      "display_tier": 3,
-      "min_zoom": 6,
-      "label_min_zoom": 7,
-      "sort_order": 40,
-      "parent_key": "united-states.california.north-coast",
-      "parent_basis": "measured",
-      "parent_inside": 1,
-      "breadcrumb": "United States › California › North Coast › Comptche",
-      "is_appellation": true,
-      "appellation_system": "AVA",
-      "appellation_level": "subregional",
-      "display": null,
-      "navigation_node": false,
-      "map_state": "CA",
-      "map_state_source": "dominant",
-      "ucd_ava_id": "comptche",
-      "cfr_section": null,
-      "area_km2": 7.053,
-      "land_share": 1,
-      "containment_share": 1,
-      "legal_states": [
-        "CA"
-      ],
-      "legal_source": "ttb",
-      "state_shares": {
-        "CA": 1
-      }
-    },
-    {
       "key": "united-states.california.north-coast.eagle-peak-mendocino-county",
       "slug": "eagle-peak-mendocino-county",
       "name": "Eagle Peak Mendocino County",
@@ -3039,7 +3039,7 @@
       "display_tier": 3,
       "min_zoom": 6,
       "label_min_zoom": 7,
-      "sort_order": 50,
+      "sort_order": 40,
       "parent_key": "united-states.california.north-coast",
       "parent_basis": "measured",
       "parent_inside": 1,
@@ -3072,7 +3072,7 @@
       "display_tier": 3,
       "min_zoom": 6,
       "label_min_zoom": 7,
-      "sort_order": 60,
+      "sort_order": 50,
       "parent_key": "united-states.california.north-coast",
       "parent_basis": "measured",
       "parent_inside": 1,
@@ -3105,7 +3105,7 @@
       "display_tier": 3,
       "min_zoom": 6,
       "label_min_zoom": 7,
-      "sort_order": 70,
+      "sort_order": 60,
       "parent_key": "united-states.california.north-coast",
       "parent_basis": "measured",
       "parent_inside": 1,
@@ -3138,7 +3138,7 @@
       "display_tier": 3,
       "min_zoom": 6,
       "label_min_zoom": 7,
-      "sort_order": 80,
+      "sort_order": 70,
       "parent_key": "united-states.california.north-coast",
       "parent_basis": "measured",
       "parent_inside": 1,
@@ -3171,7 +3171,7 @@
       "display_tier": 3,
       "min_zoom": 6,
       "label_min_zoom": 7,
-      "sort_order": 90,
+      "sort_order": 80,
       "parent_key": "united-states.california.north-coast",
       "parent_basis": "measured",
       "parent_inside": 1,
@@ -3204,7 +3204,7 @@
       "display_tier": 3,
       "min_zoom": 6,
       "label_min_zoom": 7,
-      "sort_order": 100,
+      "sort_order": 90,
       "parent_key": "united-states.california.north-coast",
       "parent_basis": "measured",
       "parent_inside": 1,
@@ -3237,7 +3237,7 @@
       "display_tier": 3,
       "min_zoom": 6,
       "label_min_zoom": 7,
-      "sort_order": 110,
+      "sort_order": 100,
       "parent_key": "united-states.california.north-coast",
       "parent_basis": "measured",
       "parent_inside": 1,
@@ -3435,7 +3435,7 @@
       "display_tier": 3,
       "min_zoom": 6,
       "label_min_zoom": 7,
-      "sort_order": 120,
+      "sort_order": 110,
       "parent_key": "united-states.california.north-coast",
       "parent_basis": "measured",
       "parent_inside": 1,
@@ -3468,7 +3468,7 @@
       "display_tier": 3,
       "min_zoom": 6,
       "label_min_zoom": 7,
-      "sort_order": 130,
+      "sort_order": 120,
       "parent_key": "united-states.california.north-coast",
       "parent_basis": "measured",
       "parent_inside": 0.998493,
@@ -3996,7 +3996,7 @@
       "display_tier": 3,
       "min_zoom": 6,
       "label_min_zoom": 7,
-      "sort_order": 140,
+      "sort_order": 130,
       "parent_key": "united-states.california.north-coast",
       "parent_basis": "measured",
       "parent_inside": 1,
@@ -4227,7 +4227,7 @@
       "display_tier": 3,
       "min_zoom": 6,
       "label_min_zoom": 7,
-      "sort_order": 150,
+      "sort_order": 140,
       "parent_key": "united-states.california.north-coast",
       "parent_basis": "measured",
       "parent_inside": 0.998623,
@@ -4260,7 +4260,7 @@
       "display_tier": 3,
       "min_zoom": 6,
       "label_min_zoom": 7,
-      "sort_order": 160,
+      "sort_order": 150,
       "parent_key": "united-states.california.north-coast",
       "parent_basis": "measured",
       "parent_inside": 1,
@@ -4293,7 +4293,7 @@
       "display_tier": 3,
       "min_zoom": 6,
       "label_min_zoom": 7,
-      "sort_order": 170,
+      "sort_order": 160,
       "parent_key": "united-states.california.north-coast",
       "parent_basis": "measured",
       "parent_inside": 1,
@@ -4326,7 +4326,7 @@
       "display_tier": 3,
       "min_zoom": 6,
       "label_min_zoom": 7,
-      "sort_order": 180,
+      "sort_order": 170,
       "parent_key": "united-states.california.north-coast",
       "parent_basis": "measured",
       "parent_inside": 0.998355,
@@ -4359,7 +4359,7 @@
       "display_tier": 3,
       "min_zoom": 6,
       "label_min_zoom": 7,
-      "sort_order": 190,
+      "sort_order": 180,
       "parent_key": "united-states.california.north-coast",
       "parent_basis": "measured",
       "parent_inside": 0.99776,
@@ -4458,7 +4458,7 @@
       "display_tier": 3,
       "min_zoom": 6,
       "label_min_zoom": 7,
-      "sort_order": 200,
+      "sort_order": 190,
       "parent_key": "united-states.california.north-coast",
       "parent_basis": "measured",
       "parent_inside": 0.999704,
@@ -4590,7 +4590,7 @@
       "display_tier": 3,
       "min_zoom": 6,
       "label_min_zoom": 7,
-      "sort_order": 210,
+      "sort_order": 200,
       "parent_key": "united-states.california.north-coast",
       "parent_basis": "legal_record",
       "parent_inside": 0.920777,
@@ -4623,7 +4623,7 @@
       "display_tier": 3,
       "min_zoom": 6,
       "label_min_zoom": 7,
-      "sort_order": 220,
+      "sort_order": 210,
       "parent_key": "united-states.california.north-coast",
       "parent_basis": "measured",
       "parent_inside": 1,
@@ -5225,20 +5225,6 @@
     },
     {
       "type": "OVERLAPS",
-      "source_key": "united-states.california.contra-costa",
-      "target_key": "united-states.california.central-coast",
-      "basis": "partial_overlap",
-      "ratio": 0.3367
-    },
-    {
-      "type": "OVERLAPS",
-      "source_key": "united-states.california.contra-costa",
-      "target_key": "united-states.california.central-coast.san-francisco-bay",
-      "basis": "partial_overlap",
-      "ratio": 0.3363
-    },
-    {
-      "type": "OVERLAPS",
       "source_key": "united-states.california.el-dorado",
       "target_key": "united-states.california.sierra-foothills",
       "basis": "partial_overlap",
@@ -5488,6 +5474,16 @@
         "computed_not_in_ucd_within": [
           "San Luis Obispo Coast"
         ],
+        "ucd_contains_not_computed": [],
+        "unresolved_tokens": []
+      },
+      {
+        "key": "united-states.california.comptche",
+        "name": "Comptche",
+        "ucd_within_not_computed": [
+          "North Coast"
+        ],
+        "computed_not_in_ucd_within": [],
         "ucd_contains_not_computed": [],
         "unresolved_tokens": []
       },
@@ -5851,7 +5847,42 @@
     "low_containment": [],
     "state_list_disagreements": [],
     "near_within": [],
-    "ancestor_overlaps": [],
+    "ancestor_overlaps": [
+      {
+        "key": "united-states.california.central-coast.san-francisco-bay.contra-costa",
+        "name": "Contra Costa",
+        "ancestor": "Central Coast",
+        "ancestor_key": "united-states.california.central-coast",
+        "ratio": 0.3367
+      },
+      {
+        "key": "united-states.california.central-coast.san-francisco-bay.contra-costa",
+        "name": "Contra Costa",
+        "ancestor": "San Francisco Bay",
+        "ancestor_key": "united-states.california.central-coast.san-francisco-bay",
+        "ratio": 0.3363
+      }
+    ],
+    "legal_exclusions": [
+      {
+        "key": "united-states.california.comptche",
+        "name": "Comptche",
+        "excluded_from": "North Coast",
+        "excluded_from_key": "united-states.california.north-coast",
+        "ratio": 1,
+        "rule": "27 CFR 9.292 (T.D. TTB-192, published 2024-04-08): \"The Comptche viticultural area as described in this section is not included within the North Coast viticultural area as described in § 9.30.\""
+      }
+    ],
+    "parent_overrides": [
+      {
+        "key": "united-states.california.central-coast.san-francisco-bay.contra-costa",
+        "name": "Contra Costa",
+        "parent_key": "united-states.california.central-coast.san-francisco-bay",
+        "parent_basis": "override",
+        "parent_inside": 0.336329,
+        "rule": "T.D. TTB-191 (published 2024-03-15, effective 2024-04-15) expanded the San Francisco Bay and Central Coast AVAs \"to entirely encompass the Contra Costa AVA\". The UC Davis San Francisco Bay (valid from 2008) and Central Coast (2006) outlines predate it, so only 33.6% of Contra Costa measures inside them."
+      }
+    ],
     "legal_record_nests": [
       {
         "key": "united-states.california.central-coast.paso-robles.creston-district",

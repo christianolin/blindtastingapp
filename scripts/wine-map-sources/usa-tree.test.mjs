@@ -333,3 +333,39 @@ test("a parent_overrides entry naming an AVA that does not contain the place bui
   const t2 = buildUsaTree({ avas, pairs: PAIRS, config });
   assert.deepEqual([place(t2, "Small").parent_basis, place(t2, "Small").parent_inside], ["override", null]);
 });
+
+test("a legal_exclusions pair yields no nesting and no edge, and is listed for review", () => {
+  const avas = [...AVAS, ava("big", "Big", 500, CA), ava("small", "Small", 40, CA, { ucd_within: ["Big"] })];
+  const pairs = [...PAIRS, pair("small", "big", 1, 0.08)];
+  const config = { ...CONFIG, legal_exclusions: [{ inner: "Small", outer: "Big", rule: "27 CFR 9.999: not within Big" }] };
+  const t = buildUsaTree({ avas, pairs, config });
+  const p = place(t, "Small");
+  assert.equal(p.parent_key, "united-states.california");
+  assert.equal(p.parent_basis, null);
+  assert.deepEqual(t.edges.filter((e) => e.source_key === p.key || e.target_key === p.key), []);
+  assert.deepEqual(t.review.legal_exclusions, [{
+    key: p.key, name: "Small", excluded_from: "Big", excluded_from_key: place(t, "Big").key, ratio: 1, rule: "27 CFR 9.999: not within Big",
+  }]);
+  assert.deepEqual(tree().review.legal_exclusions, []);
+  // Without the exclusion the same pair nests.
+  assert.equal(place(buildUsaTree({ avas, pairs, config: CONFIG }), "Small").parent_key, place(t, "Big").key);
+  // An exclusion of a pair never measured is a typo, not a no-op.
+  assert.throws(() => buildUsaTree({ avas, pairs: PAIRS, config }), /legal_exclusions: never measured: Small in Big/);
+  assert.throws(() => buildUsaTree({ avas, pairs, config: { ...CONFIG, legal_exclusions: [{ inner: "Small", outer: "Big" }] } }), /needs inner, outer and rule/);
+});
+
+test("a parent_overrides entry may carry its rule, which the review lists", () => {
+  const avas = [...AVAS, ava("big", "Big", 500, CA), ava("small", "Small", 40, CA)];
+  const config = { ...CONFIG, parent_overrides: { Small: { parent: "Big", rule: "T.D. TTB-999 expanded Big to take in Small" } } };
+  const t = buildUsaTree({ avas, pairs: [...PAIRS, pair("small", "big", 0.34, 0.03)], config });
+  const p = place(t, "Small");
+  assert.equal(p.parent_key, place(t, "Big").key);
+  assert.deepEqual(t.review.parent_overrides, [{
+    key: p.key, name: "Small", parent_key: place(t, "Big").key, parent_basis: "override", parent_inside: 0.34,
+    rule: "T.D. TTB-999 expanded Big to take in Small",
+  }]);
+  // The partial overlap with its own parent is no edge (ancestor overlap).
+  assert.deepEqual(t.edges.filter((e) => e.source_key === p.key), []);
+  assert.throws(() => buildUsaTree({ avas, pairs: PAIRS, config: { ...CONFIG, parent_overrides: { Small: { rule: "x" } } } }), /parent_overrides\[Small\]/);
+  assert.deepEqual(tree().review.parent_overrides, []);
+});

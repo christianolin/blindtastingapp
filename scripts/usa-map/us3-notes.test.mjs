@@ -22,7 +22,7 @@ test("the fact sheet has one row per AVA with its CFR section, TTB date and coun
   const md = factSheetMarkdown({ waves, tree: trees.CA, props });
   assert.equal((md.match(/^\| `united-states\.california\./gm) ?? []).length, 150);
   assert.match(md, /\| `united-states\.california\.north-coast\.napa-valley\.oakville` \| Oakville \| 9\.134 \| 1993-07-02 \| Napa \|/);
-  assert.match(md, /\| `united-states\.california\.north-coast\.comptche` \| Comptche \| 9\.292 \| 2024-04-08 \| Mendocino \|/);
+  assert.match(md, /\| `united-states\.california\.comptche` \| Comptche \| 9\.292 \| 2024-04-08 \| Mendocino \|/);
 });
 
 test("Review Focus 1: the tree review lists every lock a reader may not expect, with its ratio", () => {

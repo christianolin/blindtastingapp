@@ -34,8 +34,9 @@ insert into _us3_catalog values
   ('united-states.california.central-coast.san-benito.cienega-valley', 'cienega-valley', 'Cienega Valley', 'APPELLATION', 4, 7, 9, true, 'AVA', 'subregional', 10, 'united-states.california.central-coast.san-benito', 4),
   ('united-states.california.central-coast.san-benito.cienega-valley.lime-kiln-valley', 'lime-kiln-valley', 'Lime Kiln Valley', 'APPELLATION', 5, 8, 10, true, 'AVA', 'subregional', 10, 'united-states.california.central-coast.san-benito.cienega-valley', 5),
   ('united-states.california.central-coast.san-benito.paicines', 'paicines', 'Paicines', 'APPELLATION', 4, 7, 9, true, 'AVA', 'subregional', 20, 'united-states.california.central-coast.san-benito', 4),
-  ('united-states.california.central-coast.san-francisco-bay.lamorinda', 'lamorinda', 'Lamorinda', 'APPELLATION', 4, 7, 9, true, 'AVA', 'subregional', 10, 'united-states.california.central-coast.san-francisco-bay', 4),
-  ('united-states.california.central-coast.san-francisco-bay.santa-clara-valley', 'santa-clara-valley', 'Santa Clara Valley', 'APPELLATION', 4, 7, 9, true, 'AVA', 'subregional', 30, 'united-states.california.central-coast.san-francisco-bay', 4),
+  ('united-states.california.central-coast.san-francisco-bay.contra-costa', 'contra-costa', 'Contra Costa', 'APPELLATION', 4, 7, 9, true, 'AVA', 'subregional', 10, 'united-states.california.central-coast.san-francisco-bay', 4),
+  ('united-states.california.central-coast.san-francisco-bay.lamorinda', 'lamorinda', 'Lamorinda', 'APPELLATION', 4, 7, 9, true, 'AVA', 'subregional', 20, 'united-states.california.central-coast.san-francisco-bay', 4),
+  ('united-states.california.central-coast.san-francisco-bay.santa-clara-valley', 'santa-clara-valley', 'Santa Clara Valley', 'APPELLATION', 4, 7, 9, true, 'AVA', 'subregional', 40, 'united-states.california.central-coast.san-francisco-bay', 4),
   ('united-states.california.central-coast.san-francisco-bay.santa-clara-valley.pacheco-pass', 'pacheco-pass', 'Pacheco Pass', 'APPELLATION', 5, 8, 10, true, 'AVA', 'subregional', 10, 'united-states.california.central-coast.san-francisco-bay.santa-clara-valley', 5),
   ('united-states.california.central-coast.san-francisco-bay.santa-clara-valley.san-ysidro-district', 'san-ysidro-district', 'San Ysidro District', 'APPELLATION', 5, 8, 10, true, 'AVA', 'subregional', 20, 'united-states.california.central-coast.san-francisco-bay.santa-clara-valley', 5),
   ('united-states.california.central-coast.san-francisco-bay.santa-cruz-mountains.ben-lomond-mountain', 'ben-lomond-mountain', 'Ben Lomond Mountain', 'APPELLATION', 5, 8, 10, true, 'AVA', 'subregional', 10, 'united-states.california.central-coast.san-francisco-bay.santa-cruz-mountains', 5),
@@ -51,7 +52,7 @@ insert into _us3_catalog values
   ('united-states.california.central-valley.salado-creek', 'salado-creek', 'Salado Creek', 'APPELLATION', 2, 6, 6, true, 'AVA', 'regional', 90, 'united-states.california.central-valley', 3),
   ('united-states.california.central-valley.tracy-hills', 'tracy-hills', 'Tracy Hills', 'APPELLATION', 2, 6, 6, true, 'AVA', 'regional', 100, 'united-states.california.central-valley', 3),
   ('united-states.california.central-valley.winters-highlands', 'winters-highlands', 'Winters Highlands', 'APPELLATION', 2, 6, 6, true, 'AVA', 'regional', 110, 'united-states.california.central-valley', 3),
-  ('united-states.california.contra-costa', 'contra-costa', 'Contra Costa', 'APPELLATION', 2, 6, 6, true, 'AVA', 'regional', 40, 'united-states.california', 2),
+  ('united-states.california.comptche', 'comptche', 'Comptche', 'APPELLATION', 2, 6, 6, true, 'AVA', 'regional', 40, 'united-states.california', 2),
   ('united-states.california.covelo', 'covelo', 'Covelo', 'APPELLATION', 2, 6, 6, true, 'AVA', 'regional', 50, 'united-states.california', 2),
   ('united-states.california.cucamonga-valley', 'cucamonga-valley', 'Cucamonga Valley', 'APPELLATION', 2, 6, 6, true, 'AVA', 'regional', 60, 'united-states.california', 2),
   ('united-states.california.dos-rios', 'dos-rios', 'Dos Rios', 'APPELLATION', 2, 6, 6, true, 'AVA', 'regional', 70, 'united-states.california', 2),
@@ -66,17 +67,16 @@ insert into _us3_catalog values
   ('united-states.california.north-coast.clear-lake.kelsey-bench-lake-county', 'kelsey-bench-lake-county', 'Kelsey Bench-Lake County', 'APPELLATION', 4, 7, 9, true, 'AVA', 'subregional', 20, 'united-states.california.north-coast.clear-lake', 4),
   ('united-states.california.north-coast.clear-lake.upper-lake-valley', 'upper-lake-valley', 'Upper Lake Valley', 'APPELLATION', 4, 7, 9, true, 'AVA', 'subregional', 40, 'united-states.california.north-coast.clear-lake', 4),
   ('united-states.california.north-coast.cole-ranch', 'cole-ranch', 'Cole Ranch', 'APPELLATION', 3, 6, 7, true, 'AVA', 'subregional', 30, 'united-states.california.north-coast', 3),
-  ('united-states.california.north-coast.comptche', 'comptche', 'Comptche', 'APPELLATION', 3, 6, 7, true, 'AVA', 'subregional', 40, 'united-states.california.north-coast', 3),
-  ('united-states.california.north-coast.eagle-peak-mendocino-county', 'eagle-peak-mendocino-county', 'Eagle Peak Mendocino County', 'APPELLATION', 3, 6, 7, true, 'AVA', 'subregional', 50, 'united-states.california.north-coast', 3),
-  ('united-states.california.north-coast.guenoc-valley', 'guenoc-valley', 'Guenoc Valley', 'APPELLATION', 3, 6, 7, true, 'AVA', 'subregional', 70, 'united-states.california.north-coast', 3),
-  ('united-states.california.north-coast.high-valley', 'high-valley', 'High Valley', 'APPELLATION', 3, 6, 7, true, 'AVA', 'subregional', 80, 'united-states.california.north-coast', 3),
-  ('united-states.california.north-coast.long-valley-lake-county', 'long-valley-lake-county', 'Long Valley-Lake County', 'APPELLATION', 3, 6, 7, true, 'AVA', 'subregional', 90, 'united-states.california.north-coast', 3),
+  ('united-states.california.north-coast.eagle-peak-mendocino-county', 'eagle-peak-mendocino-county', 'Eagle Peak Mendocino County', 'APPELLATION', 3, 6, 7, true, 'AVA', 'subregional', 40, 'united-states.california.north-coast', 3),
+  ('united-states.california.north-coast.guenoc-valley', 'guenoc-valley', 'Guenoc Valley', 'APPELLATION', 3, 6, 7, true, 'AVA', 'subregional', 60, 'united-states.california.north-coast', 3),
+  ('united-states.california.north-coast.high-valley', 'high-valley', 'High Valley', 'APPELLATION', 3, 6, 7, true, 'AVA', 'subregional', 70, 'united-states.california.north-coast', 3),
+  ('united-states.california.north-coast.long-valley-lake-county', 'long-valley-lake-county', 'Long Valley-Lake County', 'APPELLATION', 3, 6, 7, true, 'AVA', 'subregional', 80, 'united-states.california.north-coast', 3),
   ('united-states.california.north-coast.mendocino.mcdowell-valley', 'mcdowell-valley', 'McDowell Valley', 'APPELLATION', 4, 7, 9, true, 'AVA', 'subregional', 20, 'united-states.california.north-coast.mendocino', 4),
   ('united-states.california.north-coast.mendocino.potter-valley', 'potter-valley', 'Potter Valley', 'APPELLATION', 4, 7, 9, true, 'AVA', 'subregional', 30, 'united-states.california.north-coast.mendocino', 4),
   ('united-states.california.north-coast.mendocino.redwood-valley', 'redwood-valley', 'Redwood Valley', 'APPELLATION', 4, 7, 9, true, 'AVA', 'subregional', 40, 'united-states.california.north-coast.mendocino', 4),
   ('united-states.california.north-coast.mendocino.yorkville-highlands', 'yorkville-highlands', 'Yorkville Highlands', 'APPELLATION', 4, 7, 9, true, 'AVA', 'subregional', 50, 'united-states.california.north-coast.mendocino', 4),
-  ('united-states.california.north-coast.solano-county-green-valley', 'solano-county-green-valley', 'Solano County Green Valley', 'APPELLATION', 3, 6, 7, true, 'AVA', 'subregional', 180, 'united-states.california.north-coast', 3),
-  ('united-states.california.north-coast.suisun-valley', 'suisun-valley', 'Suisun Valley', 'APPELLATION', 3, 6, 7, true, 'AVA', 'subregional', 210, 'united-states.california.north-coast', 3),
+  ('united-states.california.north-coast.solano-county-green-valley', 'solano-county-green-valley', 'Solano County Green Valley', 'APPELLATION', 3, 6, 7, true, 'AVA', 'subregional', 170, 'united-states.california.north-coast', 3),
+  ('united-states.california.north-coast.suisun-valley', 'suisun-valley', 'Suisun Valley', 'APPELLATION', 3, 6, 7, true, 'AVA', 'subregional', 200, 'united-states.california.north-coast', 3),
   ('united-states.california.palos-verdes-peninsula', 'palos-verdes-peninsula', 'Palos Verdes Peninsula', 'APPELLATION', 2, 6, 6, true, 'AVA', 'regional', 140, 'united-states.california', 2),
   ('united-states.california.seiad-valley', 'seiad-valley', 'Seiad Valley', 'APPELLATION', 2, 6, 6, true, 'AVA', 'regional', 150, 'united-states.california', 2),
   ('united-states.california.sierra-foothills.north-yuba', 'north-yuba', 'North Yuba', 'APPELLATION', 3, 6, 7, true, 'AVA', 'subregional', 30, 'united-states.california.sierra-foothills', 3),
@@ -274,14 +274,14 @@ begin
   if v_text is not null then raise exception 'US-3 rest catalog: kind counts off: %', v_text; end if;
 
   select string_agg(format('tier %s=%s (expected %s)', e.tier, coalesce(x.n, 0), e.n), '; ') into v_text
-    from (values ('2', 27), ('3', 19), ('4', 14), ('5', 4)) e(tier, n)
+    from (values ('2', 27), ('3', 18), ('4', 15), ('5', 4)) e(tier, n)
     left join (select p.display_tier::text tier, count(*)::int n from public.wine_places p
                  join _us3_catalog v on v.key = p.canonical_key group by 1) x on x.tier = e.tier
    where coalesce(x.n, 0) <> e.n;
   if v_text is not null then raise exception 'US-3 rest catalog: tier counts off: %', v_text; end if;
 
   select string_agg(format('%s=%s (expected %s)', e.parent, coalesce(x.n, 0), e.n), '; ') into v_text
-    from (values ('united-states.california', 17), ('united-states.california.central-coast', 3), ('united-states.california.central-coast.monterey', 3), ('united-states.california.central-coast.san-benito', 2), ('united-states.california.central-coast.san-benito.cienega-valley', 1), ('united-states.california.central-coast.san-francisco-bay', 2), ('united-states.california.central-coast.san-francisco-bay.santa-clara-valley', 2), ('united-states.california.central-coast.san-francisco-bay.santa-cruz-mountains', 1), ('united-states.california.central-valley', 10), ('united-states.california.central-valley.clarksburg', 1), ('united-states.california.malibu-coast', 2), ('united-states.california.north-coast', 9), ('united-states.california.north-coast.clear-lake', 3), ('united-states.california.north-coast.mendocino', 4), ('united-states.california.sierra-foothills', 1), ('united-states.california.south-coast', 3)) e(parent, n)
+    from (values ('united-states.california', 17), ('united-states.california.central-coast', 3), ('united-states.california.central-coast.monterey', 3), ('united-states.california.central-coast.san-benito', 2), ('united-states.california.central-coast.san-benito.cienega-valley', 1), ('united-states.california.central-coast.san-francisco-bay', 3), ('united-states.california.central-coast.san-francisco-bay.santa-clara-valley', 2), ('united-states.california.central-coast.san-francisco-bay.santa-cruz-mountains', 1), ('united-states.california.central-valley', 10), ('united-states.california.central-valley.clarksburg', 1), ('united-states.california.malibu-coast', 2), ('united-states.california.north-coast', 8), ('united-states.california.north-coast.clear-lake', 3), ('united-states.california.north-coast.mendocino', 4), ('united-states.california.sierra-foothills', 1), ('united-states.california.south-coast', 3)) e(parent, n)
     left join (select pp.canonical_key parent, count(*)::int n
                  from public.wine_places p join public.wine_places pp on pp.id = p.primary_parent_id
                  join _us3_catalog v on v.key = p.canonical_key group by 1) x on x.parent = e.parent

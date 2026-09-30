@@ -94,7 +94,7 @@ test("owner 2026-09-29: Central Valley holds 11 members; Tehachapi Mountains and
   }
 });
 
-test("no OVERLAPS edge joins a place to its own ancestor; Red Hill's is listed for review", async () => {
+test("no OVERLAPS edge joins a place to its own ancestor; Red Hill's and Contra Costa's are listed for review", async () => {
   const reports = await allReports();
   for (const r of reports) {
     const byKey = new Map(r.places.map((p) => [p.key, p]));
@@ -104,10 +104,25 @@ test("no OVERLAPS edge joins a place to its own ancestor; Red Hill's is listed f
     }
   }
   assert.deepEqual(reports.flatMap((r) => r.review.ancestor_overlaps).map((x) => [x.name, x.ancestor, x.ratio]),
-    [["Red Hill Douglas County, Oregon", "Southern Oregon", 0.6775]]);
+    [["Contra Costa", "Central Coast", 0.3367], ["Contra Costa", "San Francisco Bay", 0.3363], ["Red Hill Douglas County, Oregon", "Southern Oregon", 0.6775]]);
+});
+
+test("US-3 review fixes 2026-09-30: the legal record over the outlines (Comptche, Contra Costa)", async () => {
+  const reports = await allReports();
+  const ca = reports.find((r) => r.state === "CA");
+  const p = (n) => ca.places.find((x) => x.name === n);
+  // 27 CFR 9.292: Comptche is not within North Coast, although the outline covers it.
+  assert.equal(p("Comptche").key, "united-states.california.comptche");
+  assert.deepEqual(ca.review.legal_exclusions.map((x) => [x.name, x.excluded_from, x.ratio]), [["Comptche", "North Coast", 1]]);
+  assert.deepEqual(ca.edges.filter((e) => [e.source_key, e.target_key].includes(p("Comptche").key)), []);
+  // T.D. TTB-191: San Francisco Bay and Central Coast were expanded to take in Contra Costa.
+  assert.equal(p("Contra Costa").key, "united-states.california.central-coast.san-francisco-bay.contra-costa");
+  assert.deepEqual(ca.review.parent_overrides.map((x) => [x.name, x.parent_key, x.parent_basis, x.parent_inside]),
+    [["Contra Costa", "united-states.california.central-coast.san-francisco-bay", "override", 0.336329]]);
+  assert.deepEqual(reports.filter((r) => r.state !== "CA").flatMap((r) => [...r.review.legal_exclusions, ...r.review.parent_overrides]), []);
 });
 
 test("counts per state after the owner's decisions", async () => {
   const got = Object.fromEntries((await allReports()).map((r) => [r.state, [r.counts.places, r.counts.edges.ALTERNATE_PARENT ?? 0, r.counts.edges.OVERLAPS ?? 0, r.counts.outline]]));
-  assert.deepEqual(got, { CA: [156, 2, 27, 6], WA: [19, 2, 2, 2], OR: [21, 3, 0, 2], NY: [11, 0, 0, 2] });
+  assert.deepEqual(got, { CA: [156, 2, 25, 6], WA: [19, 2, 2, 2], OR: [21, 3, 0, 2], NY: [11, 0, 0, 2] });
 });

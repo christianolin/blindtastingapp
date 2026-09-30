@@ -21,6 +21,17 @@
 // names b and a measures >= `withinLegalRecord` (90%) inside it. The second
 // arm is the only place UC Davis's text decides anything; `contains` is only
 // compared.
+//
+// The legal record can also say the opposite of the outlines. A
+// `legal_exclusions` entry names a pair that the CFR says do not nest although
+// the digitized outlines do (Comptche: "not included within the North Coast
+// viticultural area", 27 CFR 9.292, T.D. TTB-192): that pair yields no
+// containment, no ALTERNATE_PARENT and no OVERLAPS edge, and is listed under
+// review.legal_exclusions with its measured ratio. A `parent_overrides` entry
+// (a name, or { parent, rule, note }) puts a place under a named AVA or
+// navigation node whatever the outlines measure (Contra Costa under San
+// Francisco Bay, T.D. TTB-191, whose expansion the UC Davis outlines predate);
+// it is listed under review.parent_overrides.
 import { foldAvaName, placeSlug } from "./usa-ava-lib.mjs";
 
 export const DEFAULT_THRESHOLDS = Object.freeze({
@@ -141,6 +152,16 @@ export function buildUsaTree({ avas, pairs, config }) {
   const containBasis = new Map(); // `${inner}>${outer}` -> { basis, ratio }
   const insideRatio = new Map(); // `${inner}>${outer}` -> measured ratio, for every pair
 
+  // Legal exclusions: pairs the CFR says do not nest (see the header).
+  const exclusionOf = new Map(); // `${inner}>${outer}` -> the config entry
+  for (const [i, x] of (config.legal_exclusions ?? []).entries()) {
+    if (!x || typeof x.rule !== "string" || !x.rule) throw new Error(`legal_exclusions[${i}]: needs inner, outer and rule`);
+    const inner = idForName(x.inner, `legal_exclusions[${i}].inner`);
+    const outer = idForName(x.outer, `legal_exclusions[${i}].outer`);
+    exclusionOf.set(`${inner}>${outer}`, x);
+  }
+  const exclusionsFound = [];
+
   // 2. Containment and partial overlap (§8.3).
   const containers = new Map(avas.map((a) => [a.id, []]));
   const overlaps = [];
@@ -151,6 +172,11 @@ export function buildUsaTree({ avas, pairs, config }) {
     if (!a || !b) throw new Error(`pair names an unknown AVA: ${p.a} / ${p.b}`);
     insideRatio.set(`${a.id}>${b.id}`, p.a_in_b);
     insideRatio.set(`${b.id}>${a.id}`, p.b_in_a);
+    const excluded = [[a.id, b.id, p.a_in_b], [b.id, a.id, p.b_in_a]].find(([i, o]) => exclusionOf.has(`${i}>${o}`));
+    if (excluded) {
+      exclusionsFound.push({ inner: excluded[0], outer: excluded[1], ratio: excluded[2], rule: exclusionOf.get(`${excluded[0]}>${excluded[1]}`).rule });
+      continue;
+    }
     const aBasis = nestBasis(a.id, b.id, p.a_in_b);
     const bBasis = nestBasis(b.id, a.id, p.b_in_a);
     for (const [inner, outer, ratio, basis] of [[a.id, b.id, p.a_in_b, aBasis], [b.id, a.id, p.b_in_a, bBasis]]) {
@@ -172,6 +198,12 @@ export function buildUsaTree({ avas, pairs, config }) {
     }
   }
 
+  if (exclusionsFound.length !== exclusionOf.size) {
+    const found = new Set(exclusionsFound.map((x) => `${x.inner}>${x.outer}`));
+    const missing = [...exclusionOf.keys()].filter((k) => !found.has(k)).map((k) => k.split(">").map((id) => byId.get(id).name).join(" in "));
+    throw new Error(`legal_exclusions: never measured: ${missing.join(", ")}`);
+  }
+
   // 3. Primary parent (D7).
   const umbrellaState = new Map();
   for (const [code, names] of Object.entries(config.umbrellas ?? {})) {
@@ -184,6 +216,13 @@ export function buildUsaTree({ avas, pairs, config }) {
     && a.counties.length > 0
     && a.counties.every((c) => n.counties.map(countyKey).includes(countyKey(c))));
   const parentOverrides = config.parent_overrides ?? {};
+  const overrideTarget = (name) => {
+    const v = parentOverrides[name];
+    if (typeof v === "string") return v;
+    if (v && typeof v.parent === "string") return v.parent;
+    throw new Error(`parent_overrides[${name}]: needs an AVA name, a navigation node slug, or { parent, rule }`);
+  };
+  for (const name of Object.keys(parentOverrides)) idForName(name, "parent_overrides");
   const byArea = (x, y) => byId.get(x).area_km2 - byId.get(y).area_km2 || byId.get(x).name.localeCompare(byId.get(y).name);
   const primary = new Map();
   for (const a of avas) {
@@ -192,7 +231,7 @@ export function buildUsaTree({ avas, pairs, config }) {
     const sameState = containers.get(a.id).filter((id) => mapState.get(id) === state).sort(byArea);
     let parent;
     if (Object.hasOwn(parentOverrides, a.name)) {
-      const target = parentOverrides[a.name];
+      const target = overrideTarget(a.name);
       const node = navNodes.find((n) => n.state === state && n.slug === target);
       parent = node ? { type: "nav", node } : { type: "ava", id: idForName(target, `parent_overrides[${a.name}]`) };
     } else if (sameState.length > 0) {
@@ -437,6 +476,23 @@ export function buildUsaTree({ avas, pairs, config }) {
       }))
       .sort((x, y) => x.key.localeCompare(y.key) || x.container.localeCompare(y.container)),
     ancestor_overlaps: ancestorOverlaps.sort((x, y) => x.key.localeCompare(y.key)),
+    legal_exclusions: exclusionsFound
+      .filter((x) => inWave(x.inner))
+      .map((x) => ({
+        key: keyOf(x.inner), name: nameOf(x.inner), excluded_from: nameOf(x.outer),
+        excluded_from_key: inWave(x.outer) ? keyOf(x.outer) : null, ratio: round4(x.ratio), rule: x.rule,
+      }))
+      .sort((x, y) => x.key.localeCompare(y.key)),
+    parent_overrides: Object.keys(parentOverrides)
+      .map((name) => idForName(name, "parent_overrides"))
+      .filter((id) => inWave(id))
+      .map((id) => {
+        const v = parentOverrides[nameOf(id)];
+        const p = ordered.find((x) => x.ucd_ava_id === id);
+        return { key: p.key, name: p.name, parent_key: p.parent_key, parent_basis: p.parent_basis, parent_inside: p.parent_inside,
+          rule: typeof v === "string" ? null : (v.rule ?? null) };
+      })
+      .sort((x, y) => x.key.localeCompare(y.key)),
     legal_record_nests: [...containBasis.entries()]
       .filter(([k, v]) => v.basis === "legal_record" && inWave(k.split(">")[0]))
       .map(([k, v]) => {

@@ -49,7 +49,7 @@ test("tiers and zooms follow spec §4; every label at z10 or below (D16)", () =>
     }
   }
   assert.deepEqual(count(core.places, (p) => p.display_tier), { 2: 2, 3: 33, 4: 48, 5: 3 });
-  assert.deepEqual(count(rest.places, (p) => p.display_tier), { 2: 27, 3: 19, 4: 14, 5: 4 });
+  assert.deepEqual(count(rest.places, (p) => p.display_tier), { 2: 27, 3: 18, 4: 15, 5: 4 });
 });
 
 test("classification (D4): AVA everywhere; regional directly under the state or Central Valley", () => {
@@ -81,11 +81,21 @@ test("Review Focus 1: the placements the promote locks are the tree's", () => {
   for (const t of ["napa-valley", "sonoma-coast", "sonoma-valley"]) {
     assert.equal(edge(core, "north-coast.los-carneros", `north-coast.${t}`)?.type, "OVERLAPS", t);
   }
+  // The legal record over the outlines (US-3 review fixes, 2026-09-30):
+  // 27 CFR 9.292 keeps Comptche out of North Coast although the outline covers
+  // it; T.D. TTB-191 expanded San Francisco Bay and Central Coast to take in
+  // Contra Costa, which the UC Davis outlines predate.
+  assert.equal(key(rest, "comptche"), `${C}comptche`);
+  assert.deepEqual([...core.edges, ...rest.edges].filter((e) => [e.source_key, e.target_key].includes(`${C}comptche`)), []);
+  const cc = rest.places.find((p) => p.slug === "contra-costa");
+  assert.equal(cc.key, `${C}central-coast.san-francisco-bay.contra-costa`);
+  assert.deepEqual([cc.parent_basis, cc.parent_inside], ["override", 0.336329]);
+  assert.deepEqual([...core.edges, ...rest.edges].filter((e) => [e.source_key, e.target_key].includes(cc.key)), []);
 });
 
-test("edges: 24 in core, 5 in rest, each where its second endpoint lands, never to an own ancestor", () => {
+test("edges: 24 in core, 3 in rest, each where its second endpoint lands, never to an own ancestor", () => {
   assert.deepEqual(count(core.edges, (e) => e.type), { ALTERNATE_PARENT: 2, OVERLAPS: 22 });
-  assert.deepEqual(count(rest.edges, (e) => e.type), { OVERLAPS: 5 });
+  assert.deepEqual(count(rest.edges, (e) => e.type), { OVERLAPS: 3 });
   assert.ok(edge(rest, "north-coast.wild-horse-valley", "north-coast.solano-county-green-valley"));
   assert.equal(core.edges.length + rest.edges.length, trees.CA.edges.length);
   const parentOf = new Map(trees.CA.places.map((p) => [p.key, p.parent_key]));
@@ -104,9 +114,9 @@ test("parent containment checks: thresholds by basis, and the tree's own figures
   assert.equal(core.parentChecks.length, 84);
   assert.equal(rest.parentChecks.length, 37);
   assert.deepEqual(count(core.parentChecks, (c) => c.basis), { measured: 74, legal_record: 10 });
-  assert.deepEqual(count(rest.parentChecks, (c) => c.basis), { measured: 33, legal_record: 4 });
+  assert.deepEqual(count(rest.parentChecks, (c) => c.basis), { measured: 32, legal_record: 4, override: 1 });
   for (const c of [...core.parentChecks, ...rest.parentChecks]) {
-    assert.equal(c.min, c.basis === "measured" ? 0.995 : 0.9, c.key);
+    assert.equal(c.min, { measured: 0.995, legal_record: 0.9 }[c.basis] ?? Math.floor((c.tree_inside - 0.01) * 1e4) / 1e4, c.key);
     assert.ok(c.tree_inside >= c.min, c.key);
     assert.ok(c.parent_ucd_ava_id, c.key);
   }
@@ -134,7 +144,7 @@ test("prior waves, counts after each batch, versions and files", () => {
   assert.equal(rest.priorKeys.length, 16 + 86);
   assert.deepEqual([core.prior.present.length, rest.prior.present.length], [0, 86]);
   assert.deepEqual(core.after, { caPlaces: 92, caAva: 90, caEdges: 24 });
-  assert.deepEqual(rest.after, { caPlaces: 156, caAva: 154, caEdges: 29 });
+  assert.deepEqual(rest.after, { caPlaces: 156, caAva: 154, caEdges: 27 });
   for (const v of [...Object.values(US3_VERSIONS.core), ...Object.values(US3_VERSIONS.rest)]) assert.match(v, /^\d{10}4747$/);
   assert.equal(US3_FILES.core.links, "supabase/migrations/20260930184747_usa_archetype_links_2.sql");
   assert.equal(US3_FILES.rest.promote, "supabase/migrations/20260930214747_usa_us3_rest_promote.sql");

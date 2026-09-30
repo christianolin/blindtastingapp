@@ -1,6 +1,6 @@
 # US-3 tree review: what the promotes lock
 
-Rendered by `scripts/usa-map/render-us3-notes.mjs` from `data/wine-map/usa-california-tree.json`. Keys lock at each batch's promote (spec §8.3). The tree decides (spec D7): a place nests in an AVA only when ≥ 99.5% of it measures inside, or ≥ 90% when UC Davis's `within` names that AVA. Each case below is where UC Davis names a container the tree does not nest the place in; it gets an `OVERLAPS` edge instead when more than 1% overlaps. Changing one needs a `parent_overrides` entry in `usa-tree-config.json` and re-committed tree reports before that batch's catalog renders.
+Rendered by `scripts/usa-map/render-us3-notes.mjs` from `data/wine-map/usa-california-tree.json`. Keys lock at each batch's promote (spec §8.3). The tree decides (spec D7): a place nests in an AVA only when ≥ 99.5% of it measures inside, or ≥ 90% when UC Davis's `within` names that AVA. Each case below is where UC Davis names a container the tree does not nest the place in; it gets an `OVERLAPS` edge instead when more than 1% overlaps. Changing one needs a `parent_overrides` or `legal_exclusions` entry in `usa-tree-config.json` and re-committed tree reports before that batch's catalog renders.
 
 ## Core batch (86 places)
 
@@ -81,6 +81,7 @@ Rendered by `scripts/usa-map/render-us3-notes.mjs` from `data/wine-map/usa-calif
 
 ### Containers UC Davis names that the tree does not nest in
 
+- Comptche (`comptche`, keyed under united-states.california): UC Davis says within North Coast; the CFR says it is not within (`legal_exclusions`; 100.00% measured inside), no edge.
 - Cole Ranch (`north-coast.cole-ranch`, keyed under north-coast): UC Davis says within Mendocino; OVERLAPS, 69.40% inside.
 - High Valley (`north-coast.high-valley`, keyed under north-coast): UC Davis says within Clear Lake; OVERLAPS, 75.91% inside.
 
@@ -91,12 +92,15 @@ Rendered by `scripts/usa-map/render-us3-notes.mjs` from `data/wine-map/usa-calif
 - `north-coast.mendocino.potter-valley` in `north-coast.mendocino`: 93.34% inside.
 - `north-coast.suisun-valley` in `north-coast`: 92.08% inside.
 
+### The legal record over the outlines (`usa-tree-config.json`)
+
+- `comptche` is not within `north-coast` although 100.00% of it measures inside: 27 CFR 9.292 (T.D. TTB-192, published 2024-04-08): "The Comptche viticultural area as described in this section is not included within the North Coast viticultural area as described in § 9.30."
+- `central-coast.san-francisco-bay.contra-costa` in `central-coast.san-francisco-bay` by `parent_overrides` (33.63% measured inside; the stage and the promote check it at ≥ 32.63%): T.D. TTB-191 (published 2024-03-15, effective 2024-04-15) expanded the San Francisco Bay and Central Coast AVAs "to entirely encompass the Contra Costa AVA". The UC Davis San Francisco Bay (valid from 2008) and Central Coast (2006) outlines predate it, so only 33.6% of Contra Costa measures inside them.
+
 ### Edges this batch stores
 
 | Type | Source | Target | Ratio |
 |---|---|---|---|
-| OVERLAPS | `contra-costa` | `central-coast` | 33.67% |
-| OVERLAPS | `contra-costa` | `central-coast.san-francisco-bay` | 33.63% |
 | OVERLAPS | `north-coast.cole-ranch` | `north-coast.mendocino` | 69.40% |
 | OVERLAPS | `north-coast.high-valley` | `north-coast.clear-lake` | 75.91% |
 | OVERLAPS | `north-coast.wild-horse-valley` | `north-coast.solano-county-green-valley` | 65.94% |

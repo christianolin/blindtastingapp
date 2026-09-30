@@ -44,6 +44,18 @@ export const US3_KNOWLEDGE = Object.freeze({
 export const PRIOR_PROMOTE = Object.freeze({ core: US2_VERSIONS.promote, rest: US3_VERSIONS.core.promote });
 // D7: >= 99.5% measured inside, or >= 90% when UC Davis's `within` names the container.
 const PARENT_MIN = Object.freeze({ measured: 0.995, legal_record: 0.9 });
+// A parent_overrides placement (basis "override", spec D7/§8.2) is not held to
+// D7's thresholds: the legal record puts it there although the outlines do not
+// (Contra Costa in San Francisco Bay, T.D. TTB-191, 33.6% measured). Its floor
+// is the tree's own measurement less one point, so the stage (which also
+// requires the tree's figure within 1e-4) and the promote (0.001 slack) still
+// catch an outline that changed under it. An override the tree never measured
+// cannot be checked, so it is refused here.
+const OVERRIDE_SLACK = 0.01;
+export const overrideMin = (p) => {
+  if (typeof p.parent_inside !== "number") throw new Error(`${p.key}: parent_overrides placement was never measured against ${p.parent_key}`);
+  return Math.floor((p.parent_inside - OVERRIDE_SLACK) * 1e4) / 1e4;
+};
 
 export const loadBatches = async (read = (p) => readFile(p, "utf8")) => JSON.parse(await read(BATCHES_PATH));
 export const loadTtb = async (read = (p) => readFile(p, "utf8")) => JSON.parse(await read(TTB_PATH));
@@ -125,7 +137,7 @@ export function us3Wave(trees, batches, ttb, batch) {
     .filter((e) => all.has(e.source_key) && all.has(e.target_key) && (waveSet.has(e.source_key) || waveSet.has(e.target_key)))
     .sort((a, b) => a.source_key.localeCompare(b.source_key) || a.target_key.localeCompare(b.target_key) || a.type.localeCompare(b.type));
   const parentChecks = places.filter((p) => p.parent_basis).map((p) => {
-    const min = PARENT_MIN[p.parent_basis];
+    const min = p.parent_basis === "override" ? overrideMin(p) : PARENT_MIN[p.parent_basis];
     if (min === undefined) throw new Error(`${p.key}: parent_basis ${p.parent_basis} has no threshold`);
     return { key: p.key, parent_key: p.parent_key, basis: p.parent_basis, tree_inside: p.parent_inside, min,
       parent_ucd_ava_id: byKey.get(p.parent_key).ucd_ava_id };

@@ -464,6 +464,53 @@
         }
       ]
     },
+    "united-states.california.central-coast.san-francisco-bay.contra-costa": {
+      "article": {
+        "description": "An AVA of about 167,146 acres covering the flat and gently rolling north and east of Contra Costa County, around Oakley, Brentwood and Antioch, mostly below 100 feet. At establishment it had at least 60 vineyards on about 1,700 acres and 14 wineries.",
+        "climate": "Warm Mediterranean, about 3,000 to 4,275 growing degree days; cool, heavy marine air settles in the low ground at night, and it is drier than the country to the west.",
+        "soils": "Soils of flat and gently rolling ground, over 71% of it on slopes under 5%; mucky Delta island soils such as Jersey Island's were left out.",
+        "grape_varieties": "Zinfandel, Petite Sirah and Mourvèdre, with Cabernet Sauvignon and Chardonnay.",
+        "wine_styles": "Dry red wines from Zinfandel, Mourvèdre and Petite Sirah.",
+        "key_facts": [
+          "Established 2024 (27 CFR 9.291)",
+          "About 167,146 acres (T.D. TTB-191)",
+          "At least 60 vineyards on about 1,700 acres at establishment (T.D. TTB-191)",
+          "The same rule extended San Francisco Bay and Central Coast to take it in (T.D. TTB-191)"
+        ]
+      },
+      "styles": [
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Zinfandel"
+        },
+        {
+          "name": "Mourvèdre"
+        },
+        {
+          "name": "Petite Sirah"
+        },
+        {
+          "name": "Cabernet Sauvignon",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Chardonnay",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.291, Contra Costa (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.291"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), T.D. TTB-191, Contra Costa (2024)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2024-03-15/html/2024-05476.htm"
+        }
+      ]
+    },
     "united-states.california.central-coast.san-francisco-bay.lamorinda": {
       "article": {
         "description": "A hilly, largely suburban AVA of about 29,369 acres in Contra Costa County, named after the cities of Lafayette, Moraga and Orinda. At establishment 46 small vineyards, most under 5 acres, covered about 139 acres on steep slopes worked by hand.",
@@ -1265,18 +1312,17 @@
         }
       ]
     },
-    "united-states.california.contra-costa": {
+    "united-states.california.comptche": {
       "article": {
-        "description": "An AVA of about 167,146 acres covering the flat and gently rolling north and east of Contra Costa County, around Oakley, Brentwood and Antioch, mostly below 100 feet. At establishment it had at least 60 vineyards on about 1,700 acres and 14 wineries.",
-        "climate": "Warm Mediterranean, about 3,000 to 4,275 growing degree days; cool, heavy marine air settles in the low ground at night, and it is drier than the country to the west.",
-        "soils": "Soils of flat and gently rolling ground, over 71% of it on slopes under 5%; mucky Delta island soils such as Jersey Island's were left out.",
-        "grape_varieties": "Zinfandel, Petite Sirah and Mourvèdre, with Cabernet Sauvignon and Chardonnay.",
-        "wine_styles": "Dry red wines from Zinfandel, Mourvèdre and Petite Sirah.",
+        "description": "A low valley of about 1,422 acres in coastal Mendocino County, around the hamlet of Comptche, surrounded by forest and short, steep ridges. TTB kept it out of the North Coast AVA because its climate and soils differ. At establishment three vineyards grew over 30 acres, all of it Pinot Noir.",
+        "climate": "Cool: about 2,259 growing degree days, and vineyards between 220 and 250 feet in a valley from 187 to 400 feet.",
+        "soils": "Shallow, well-drained, infertile Bearwallow-Wolfey soils over fractured sandstone, and deep, clay-rich Perrygulch loam on the bottomland.",
+        "grape_varieties": "Pinot Noir is the only grape grown commercially.",
+        "wine_styles": "Dry Pinot Noir from a handful of vineyards.",
         "key_facts": [
-          "Established 2024 (27 CFR 9.291)",
-          "About 167,146 acres (T.D. TTB-191)",
-          "At least 60 vineyards on about 1,700 acres at establishment (T.D. TTB-191)",
-          "The same rule extended San Francisco Bay and Central Coast to take it in (T.D. TTB-191)"
+          "Established 2024 (27 CFR 9.292)",
+          "About 1,421.8 acres, outside the North Coast AVA (T.D. TTB-192)",
+          "Three vineyards covering over 30 acres at establishment (T.D. TTB-192)"
         ]
       },
       "styles": [
@@ -1284,31 +1330,17 @@
       ],
       "grapes": [
         {
-          "name": "Zinfandel"
-        },
-        {
-          "name": "Mourvèdre"
-        },
-        {
-          "name": "Petite Sirah"
-        },
-        {
-          "name": "Cabernet Sauvignon",
-          "role": "ACCESSORY"
-        },
-        {
-          "name": "Chardonnay",
-          "role": "ACCESSORY"
+          "name": "Pinot Noir"
         }
       ],
       "sources": [
         {
-          "title": "27 CFR 9.291, Contra Costa (eCFR text via Cornell LII)",
-          "url": "https://www.law.cornell.edu/cfr/text/27/9.291"
+          "title": "27 CFR 9.292, Comptche (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.292"
         },
         {
-          "title": "Federal Register final rule (govinfo), T.D. TTB-191, Contra Costa (2024)",
-          "url": "https://www.govinfo.gov/content/pkg/FR-2024-03-15/html/2024-05476.htm"
+          "title": "Federal Register final rule (govinfo), T.D. TTB-192, Comptche (2024)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2024-04-08/html/2024-07395.htm"
         }
       ]
     },
@@ -1965,38 +1997,6 @@
         {
           "title": "Mendocino Winegrowers, Cole Ranch",
           "url": "https://mendowine.com/ava/cole-ranch/"
-        }
-      ]
-    },
-    "united-states.california.north-coast.comptche": {
-      "article": {
-        "description": "A low valley of about 1,422 acres in coastal Mendocino County, around the hamlet of Comptche, surrounded by forest and short, steep ridges. TTB kept it out of the North Coast AVA because its climate and soils differ. At establishment three vineyards grew over 30 acres, all of it Pinot Noir.",
-        "climate": "Cool: about 2,259 growing degree days, and vineyards between 220 and 250 feet in a valley from 187 to 400 feet.",
-        "soils": "Shallow, well-drained, infertile Bearwallow-Wolfey soils over fractured sandstone, and deep, clay-rich Perrygulch loam on the bottomland.",
-        "grape_varieties": "Pinot Noir is the only grape grown commercially.",
-        "wine_styles": "Dry Pinot Noir from a handful of vineyards.",
-        "key_facts": [
-          "Established 2024 (27 CFR 9.292)",
-          "About 1,421.8 acres, outside the North Coast AVA (T.D. TTB-192)",
-          "Three vineyards covering over 30 acres at establishment (T.D. TTB-192)"
-        ]
-      },
-      "styles": [
-        "RED"
-      ],
-      "grapes": [
-        {
-          "name": "Pinot Noir"
-        }
-      ],
-      "sources": [
-        {
-          "title": "27 CFR 9.292, Comptche (eCFR text via Cornell LII)",
-          "url": "https://www.law.cornell.edu/cfr/text/27/9.292"
-        },
-        {
-          "title": "Federal Register final rule (govinfo), T.D. TTB-192, Comptche (2024)",
-          "url": "https://www.govinfo.gov/content/pkg/FR-2024-04-08/html/2024-07395.htm"
         }
       ]
     },

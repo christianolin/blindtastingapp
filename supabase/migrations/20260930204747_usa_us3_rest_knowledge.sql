@@ -246,6 +246,33 @@ select p.id, g.id, 'ACCESSORY', true, null, null, 'PUBLISHED'
   from public.wine_places p, public.grapes g
  where p.canonical_key = 'united-states.california.central-coast.san-benito.paicines' and g.name = 'Zinfandel';
 
+-- united-states.california.central-coast.san-francisco-bay.contra-costa
+insert into public.wine_place_articles (wine_place_id, description, climate, soils, grape_varieties, wine_styles, key_facts, editorial_status)
+select id, 'An AVA of about 167,146 acres covering the flat and gently rolling north and east of Contra Costa County, around Oakley, Brentwood and Antioch, mostly below 100 feet. At establishment it had at least 60 vineyards on about 1,700 acres and 14 wineries.', 'Warm Mediterranean, about 3,000 to 4,275 growing degree days; cool, heavy marine air settles in the low ground at night, and it is drier than the country to the west.', 'Soils of flat and gently rolling ground, over 71% of it on slopes under 5%; mucky Delta island soils such as Jersey Island''s were left out.', 'Zinfandel, Petite Sirah and Mourvèdre, with Cabernet Sauvignon and Chardonnay.', 'Dry red wines from Zinfandel, Mourvèdre and Petite Sirah.', array['Established 2024 (27 CFR 9.291)', 'About 167,146 acres (T.D. TTB-191)', 'At least 60 vineyards on about 1,700 acres at establishment (T.D. TTB-191)', 'The same rule extended San Francisco Bay and Central Coast to take it in (T.D. TTB-191)']::text[], 'PUBLISHED'
+  from public.wine_places where canonical_key = 'united-states.california.central-coast.san-francisco-bay.contra-costa';
+insert into public.wine_place_styles (wine_place_id, style, sort_order, editorial_status)
+select id, 'RED', 0, 'PUBLISHED' from public.wine_places where canonical_key = 'united-states.california.central-coast.san-francisco-bay.contra-costa';
+insert into public.wine_place_grapes (wine_place_id, grape_id, role, permitted, share_pct, local_note, editorial_status)
+select p.id, g.id, 'PRINCIPAL', true, null, null, 'PUBLISHED'
+  from public.wine_places p, public.grapes g
+ where p.canonical_key = 'united-states.california.central-coast.san-francisco-bay.contra-costa' and g.name = 'Zinfandel';
+insert into public.wine_place_grapes (wine_place_id, grape_id, role, permitted, share_pct, local_note, editorial_status)
+select p.id, g.id, 'PRINCIPAL', true, null, null, 'PUBLISHED'
+  from public.wine_places p, public.grapes g
+ where p.canonical_key = 'united-states.california.central-coast.san-francisco-bay.contra-costa' and g.name = 'Mourvèdre';
+insert into public.wine_place_grapes (wine_place_id, grape_id, role, permitted, share_pct, local_note, editorial_status)
+select p.id, g.id, 'PRINCIPAL', true, null, null, 'PUBLISHED'
+  from public.wine_places p, public.grapes g
+ where p.canonical_key = 'united-states.california.central-coast.san-francisco-bay.contra-costa' and g.name = 'Petite Sirah';
+insert into public.wine_place_grapes (wine_place_id, grape_id, role, permitted, share_pct, local_note, editorial_status)
+select p.id, g.id, 'ACCESSORY', true, null, null, 'PUBLISHED'
+  from public.wine_places p, public.grapes g
+ where p.canonical_key = 'united-states.california.central-coast.san-francisco-bay.contra-costa' and g.name = 'Cabernet Sauvignon';
+insert into public.wine_place_grapes (wine_place_id, grape_id, role, permitted, share_pct, local_note, editorial_status)
+select p.id, g.id, 'ACCESSORY', true, null, null, 'PUBLISHED'
+  from public.wine_places p, public.grapes g
+ where p.canonical_key = 'united-states.california.central-coast.san-francisco-bay.contra-costa' and g.name = 'Chardonnay';
+
 -- united-states.california.central-coast.san-francisco-bay.lamorinda
 insert into public.wine_place_articles (wine_place_id, description, climate, soils, grape_varieties, wine_styles, key_facts, editorial_status)
 select id, 'A hilly, largely suburban AVA of about 29,369 acres in Contra Costa County, named after the cities of Lafayette, Moraga and Orinda. At establishment 46 small vineyards, most under 5 acres, covered about 139 acres on steep slopes worked by hand.', 'Warmer than the surrounding areas: ridgelines block cool marine air and fog from the bays, so more growing degree days accumulate.', 'High clay from the weathering of the Orinda Formation, but thin on steep slopes, so water drains quickly.', 'Cabernet Sauvignon and Merlot, with Pinot Noir and Chardonnay.', 'Dry red wines from Cabernet Sauvignon and Merlot, and some Chardonnay.', array['Established 2016 (27 CFR 9.254)', 'About 29,369 acres (T.D. TTB-133)', '46 vineyards on about 139 acres at establishment (T.D. TTB-133)', 'Named after Lafayette, Moraga and Orinda (T.D. TTB-133)']::text[], 'PUBLISHED'
@@ -641,32 +668,16 @@ select p.id, g.id, 'ACCESSORY', true, null, null, 'PUBLISHED'
   from public.wine_places p, public.grapes g
  where p.canonical_key = 'united-states.california.central-valley.winters-highlands' and g.name = 'Sauvignon Blanc';
 
--- united-states.california.contra-costa
+-- united-states.california.comptche
 insert into public.wine_place_articles (wine_place_id, description, climate, soils, grape_varieties, wine_styles, key_facts, editorial_status)
-select id, 'An AVA of about 167,146 acres covering the flat and gently rolling north and east of Contra Costa County, around Oakley, Brentwood and Antioch, mostly below 100 feet. At establishment it had at least 60 vineyards on about 1,700 acres and 14 wineries.', 'Warm Mediterranean, about 3,000 to 4,275 growing degree days; cool, heavy marine air settles in the low ground at night, and it is drier than the country to the west.', 'Soils of flat and gently rolling ground, over 71% of it on slopes under 5%; mucky Delta island soils such as Jersey Island''s were left out.', 'Zinfandel, Petite Sirah and Mourvèdre, with Cabernet Sauvignon and Chardonnay.', 'Dry red wines from Zinfandel, Mourvèdre and Petite Sirah.', array['Established 2024 (27 CFR 9.291)', 'About 167,146 acres (T.D. TTB-191)', 'At least 60 vineyards on about 1,700 acres at establishment (T.D. TTB-191)', 'The same rule extended San Francisco Bay and Central Coast to take it in (T.D. TTB-191)']::text[], 'PUBLISHED'
-  from public.wine_places where canonical_key = 'united-states.california.contra-costa';
+select id, 'A low valley of about 1,422 acres in coastal Mendocino County, around the hamlet of Comptche, surrounded by forest and short, steep ridges. TTB kept it out of the North Coast AVA because its climate and soils differ. At establishment three vineyards grew over 30 acres, all of it Pinot Noir.', 'Cool: about 2,259 growing degree days, and vineyards between 220 and 250 feet in a valley from 187 to 400 feet.', 'Shallow, well-drained, infertile Bearwallow-Wolfey soils over fractured sandstone, and deep, clay-rich Perrygulch loam on the bottomland.', 'Pinot Noir is the only grape grown commercially.', 'Dry Pinot Noir from a handful of vineyards.', array['Established 2024 (27 CFR 9.292)', 'About 1,421.8 acres, outside the North Coast AVA (T.D. TTB-192)', 'Three vineyards covering over 30 acres at establishment (T.D. TTB-192)']::text[], 'PUBLISHED'
+  from public.wine_places where canonical_key = 'united-states.california.comptche';
 insert into public.wine_place_styles (wine_place_id, style, sort_order, editorial_status)
-select id, 'RED', 0, 'PUBLISHED' from public.wine_places where canonical_key = 'united-states.california.contra-costa';
+select id, 'RED', 0, 'PUBLISHED' from public.wine_places where canonical_key = 'united-states.california.comptche';
 insert into public.wine_place_grapes (wine_place_id, grape_id, role, permitted, share_pct, local_note, editorial_status)
 select p.id, g.id, 'PRINCIPAL', true, null, null, 'PUBLISHED'
   from public.wine_places p, public.grapes g
- where p.canonical_key = 'united-states.california.contra-costa' and g.name = 'Zinfandel';
-insert into public.wine_place_grapes (wine_place_id, grape_id, role, permitted, share_pct, local_note, editorial_status)
-select p.id, g.id, 'PRINCIPAL', true, null, null, 'PUBLISHED'
-  from public.wine_places p, public.grapes g
- where p.canonical_key = 'united-states.california.contra-costa' and g.name = 'Mourvèdre';
-insert into public.wine_place_grapes (wine_place_id, grape_id, role, permitted, share_pct, local_note, editorial_status)
-select p.id, g.id, 'PRINCIPAL', true, null, null, 'PUBLISHED'
-  from public.wine_places p, public.grapes g
- where p.canonical_key = 'united-states.california.contra-costa' and g.name = 'Petite Sirah';
-insert into public.wine_place_grapes (wine_place_id, grape_id, role, permitted, share_pct, local_note, editorial_status)
-select p.id, g.id, 'ACCESSORY', true, null, null, 'PUBLISHED'
-  from public.wine_places p, public.grapes g
- where p.canonical_key = 'united-states.california.contra-costa' and g.name = 'Cabernet Sauvignon';
-insert into public.wine_place_grapes (wine_place_id, grape_id, role, permitted, share_pct, local_note, editorial_status)
-select p.id, g.id, 'ACCESSORY', true, null, null, 'PUBLISHED'
-  from public.wine_places p, public.grapes g
- where p.canonical_key = 'united-states.california.contra-costa' and g.name = 'Chardonnay';
+ where p.canonical_key = 'united-states.california.comptche' and g.name = 'Pinot Noir';
 
 -- united-states.california.covelo
 insert into public.wine_place_articles (wine_place_id, description, climate, soils, grape_varieties, wine_styles, key_facts, editorial_status)
@@ -985,17 +996,6 @@ insert into public.wine_place_grapes (wine_place_id, grape_id, role, permitted, 
 select p.id, g.id, 'ACCESSORY', true, null, null, 'PUBLISHED'
   from public.wine_places p, public.grapes g
  where p.canonical_key = 'united-states.california.north-coast.cole-ranch' and g.name = 'Merlot';
-
--- united-states.california.north-coast.comptche
-insert into public.wine_place_articles (wine_place_id, description, climate, soils, grape_varieties, wine_styles, key_facts, editorial_status)
-select id, 'A low valley of about 1,422 acres in coastal Mendocino County, around the hamlet of Comptche, surrounded by forest and short, steep ridges. TTB kept it out of the North Coast AVA because its climate and soils differ. At establishment three vineyards grew over 30 acres, all of it Pinot Noir.', 'Cool: about 2,259 growing degree days, and vineyards between 220 and 250 feet in a valley from 187 to 400 feet.', 'Shallow, well-drained, infertile Bearwallow-Wolfey soils over fractured sandstone, and deep, clay-rich Perrygulch loam on the bottomland.', 'Pinot Noir is the only grape grown commercially.', 'Dry Pinot Noir from a handful of vineyards.', array['Established 2024 (27 CFR 9.292)', 'About 1,421.8 acres, outside the North Coast AVA (T.D. TTB-192)', 'Three vineyards covering over 30 acres at establishment (T.D. TTB-192)']::text[], 'PUBLISHED'
-  from public.wine_places where canonical_key = 'united-states.california.north-coast.comptche';
-insert into public.wine_place_styles (wine_place_id, style, sort_order, editorial_status)
-select id, 'RED', 0, 'PUBLISHED' from public.wine_places where canonical_key = 'united-states.california.north-coast.comptche';
-insert into public.wine_place_grapes (wine_place_id, grape_id, role, permitted, share_pct, local_note, editorial_status)
-select p.id, g.id, 'PRINCIPAL', true, null, null, 'PUBLISHED'
-  from public.wine_places p, public.grapes g
- where p.canonical_key = 'united-states.california.north-coast.comptche' and g.name = 'Pinot Noir';
 
 -- united-states.california.north-coast.eagle-peak-mendocino-county
 insert into public.wine_place_articles (wine_place_id, description, climate, soils, grape_varieties, wine_styles, key_facts, editorial_status)
@@ -1575,6 +1575,7 @@ begin
     ('united-states.california.central-coast.san-benito.cienega-valley', 2, 3, 1),
     ('united-states.california.central-coast.san-benito.cienega-valley.lime-kiln-valley', 1, 2, 1),
     ('united-states.california.central-coast.san-benito.paicines', 2, 4, 1),
+    ('united-states.california.central-coast.san-francisco-bay.contra-costa', 1, 5, 1),
     ('united-states.california.central-coast.san-francisco-bay.lamorinda', 2, 4, 1),
     ('united-states.california.central-coast.san-francisco-bay.santa-clara-valley', 2, 6, 1),
     ('united-states.california.central-coast.san-francisco-bay.santa-clara-valley.pacheco-pass', 2, 4, 1),
@@ -1592,7 +1593,7 @@ begin
     ('united-states.california.central-valley.salado-creek', 2, 3, 1),
     ('united-states.california.central-valley.tracy-hills', 2, 3, 1),
     ('united-states.california.central-valley.winters-highlands', 2, 6, 1),
-    ('united-states.california.contra-costa', 1, 5, 1),
+    ('united-states.california.comptche', 1, 1, 1),
     ('united-states.california.covelo', 2, 2, 1),
     ('united-states.california.cucamonga-valley', 1, 5, 1),
     ('united-states.california.dos-rios', 1, 4, 1),
@@ -1607,7 +1608,6 @@ begin
     ('united-states.california.north-coast.clear-lake.kelsey-bench-lake-county', 2, 5, 1),
     ('united-states.california.north-coast.clear-lake.upper-lake-valley', 2, 2, 1),
     ('united-states.california.north-coast.cole-ranch', 2, 4, 1),
-    ('united-states.california.north-coast.comptche', 1, 1, 1),
     ('united-states.california.north-coast.eagle-peak-mendocino-county', 1, 1, 1),
     ('united-states.california.north-coast.guenoc-valley', 2, 4, 1),
     ('united-states.california.north-coast.high-valley', 2, 6, 1),

@@ -3,7 +3,7 @@
 --
 -- Re-checks in SQL every invariant the stage asserted, then flips the 64
 -- California AVAs of the rest batch to VERIFIED and their boundaries to
--- VALIDATED + current, and stores the batch's 5 edges (§8.3; an edge ships
+-- VALIDATED + current, and stores the batch's 3 edges (§8.3; an edge ships
 -- with the batch its second endpoint lands in). Checks read only
 -- united-states.california.*, so another state's wave can run in any order.
 -- Ends with the neighbour refresh, which must return >= 0.
@@ -32,6 +32,7 @@ insert into _us3_promote values
   ('united-states.california.central-coast.san-benito.cienega-valley', 'cienega_valley', false, 'united-states.california.central-coast.san-benito', 0.995),
   ('united-states.california.central-coast.san-benito.cienega-valley.lime-kiln-valley', 'lime_kiln_valley', false, 'united-states.california.central-coast.san-benito.cienega-valley', 0.995),
   ('united-states.california.central-coast.san-benito.paicines', 'paicines', false, 'united-states.california.central-coast.san-benito', 0.995),
+  ('united-states.california.central-coast.san-francisco-bay.contra-costa', 'contra_costa', false, 'united-states.california.central-coast.san-francisco-bay', 0.3263),
   ('united-states.california.central-coast.san-francisco-bay.lamorinda', 'lamorinda', false, 'united-states.california.central-coast.san-francisco-bay', 0.995),
   ('united-states.california.central-coast.san-francisco-bay.santa-clara-valley', 'santa_clara_valley', false, 'united-states.california.central-coast.san-francisco-bay', 0.9),
   ('united-states.california.central-coast.san-francisco-bay.santa-clara-valley.pacheco-pass', 'pacheco_pass', false, 'united-states.california.central-coast.san-francisco-bay.santa-clara-valley', 0.995),
@@ -49,7 +50,7 @@ insert into _us3_promote values
   ('united-states.california.central-valley.salado-creek', 'salado_creek', false, 'united-states.california.central-valley', null),
   ('united-states.california.central-valley.tracy-hills', 'tracy_hills', false, 'united-states.california.central-valley', null),
   ('united-states.california.central-valley.winters-highlands', 'winters_highlands', false, 'united-states.california.central-valley', null),
-  ('united-states.california.contra-costa', 'contra_costa', false, 'united-states.california', null),
+  ('united-states.california.comptche', 'comptche', false, 'united-states.california', null),
   ('united-states.california.covelo', 'covelo', false, 'united-states.california', null),
   ('united-states.california.cucamonga-valley', 'cucamonga_valley', false, 'united-states.california', null),
   ('united-states.california.dos-rios', 'dos_rios', false, 'united-states.california', null),
@@ -64,7 +65,6 @@ insert into _us3_promote values
   ('united-states.california.north-coast.clear-lake.kelsey-bench-lake-county', 'kelsey_bench_lake_county', false, 'united-states.california.north-coast.clear-lake', 0.995),
   ('united-states.california.north-coast.clear-lake.upper-lake-valley', 'upper_lake_valley', false, 'united-states.california.north-coast.clear-lake', 0.995),
   ('united-states.california.north-coast.cole-ranch', 'cole_ranch', false, 'united-states.california.north-coast', 0.995),
-  ('united-states.california.north-coast.comptche', 'comptche', false, 'united-states.california.north-coast', 0.995),
   ('united-states.california.north-coast.eagle-peak-mendocino-county', 'eagle_peak_mendocino_county', false, 'united-states.california.north-coast', 0.995),
   ('united-states.california.north-coast.guenoc-valley', 'guenoc_valley', false, 'united-states.california.north-coast', 0.995),
   ('united-states.california.north-coast.high-valley', 'high_valley', false, 'united-states.california.north-coast', 0.995),
@@ -196,8 +196,6 @@ create temp table _us3_edges (
   type public.wine_place_relationship_type not null, ratio double precision, note text not null
 ) on commit drop;
 insert into _us3_edges values
-  ('united-states.california.contra-costa', 'united-states.california.central-coast', 'OVERLAPS', 0.3367, 'US-3 rest, California tree report: basis partial_overlap, ratio 0.3367'),
-  ('united-states.california.contra-costa', 'united-states.california.central-coast.san-francisco-bay', 'OVERLAPS', 0.3363, 'US-3 rest, California tree report: basis partial_overlap, ratio 0.3363'),
   ('united-states.california.north-coast.cole-ranch', 'united-states.california.north-coast.mendocino', 'OVERLAPS', 0.694, 'US-3 rest, California tree report: basis partial_overlap, ratio 0.694'),
   ('united-states.california.north-coast.high-valley', 'united-states.california.north-coast.clear-lake', 'OVERLAPS', 0.7591, 'US-3 rest, California tree report: basis partial_overlap, ratio 0.7591'),
   ('united-states.california.north-coast.wild-horse-valley', 'united-states.california.north-coast.solano-county-green-valley', 'OVERLAPS', 0.6594, 'US-3 rest, California tree report: basis partial_overlap, ratio 0.6594');
@@ -414,7 +412,7 @@ begin
   select count(*) into n from public.wine_place_relationships r
     join public.wine_places s on s.id = r.source_place_id join public.wine_places t on t.id = r.target_place_id
    where (s.canonical_key = 'united-states.california' or s.canonical_key like 'united-states.california.%') or (t.canonical_key = 'united-states.california' or t.canonical_key like 'united-states.california.%');
-  if n <> 29 then raise exception 'US-3 rest promote: % California relationships, expected 29', n; end if;
+  if n <> 27 then raise exception 'US-3 rest promote: % California relationships, expected 27', n; end if;
   select string_agg(format('%s %s %s', e.type, e.source_key, e.target_key), ', ') into v_text
     from _us3_edges e
    where (select count(*) from public.wine_place_relationships r

@@ -34,7 +34,21 @@
       "spec": "§6.2 step 6, option (a); applies to map and scoring alike (D6)"
     }
   },
-  "parent_overrides": {},
+  "parent_overrides": {
+    "Contra Costa": {
+      "parent": "San Francisco Bay",
+      "rule": "T.D. TTB-191 (published 2024-03-15, effective 2024-04-15) expanded the San Francisco Bay and Central Coast AVAs \"to entirely encompass the Contra Costa AVA\". The UC Davis San Francisco Bay (valid from 2008) and Central Coast (2006) outlines predate it, so only 33.6% of Contra Costa measures inside them.",
+      "note": "Keyed under San Francisco Bay, and so under Central Coast, by the legal record (added 2026-09-30 in the US-3 review fixes, before the rest catalog is applied). The two containers' drawn outlines still leave out about two thirds of Contra Costa until a later boundary cycle restages them (spec §20)."
+    }
+  },
+  "legal_exclusions": [
+    {
+      "inner": "Comptche",
+      "outer": "North Coast",
+      "rule": "27 CFR 9.292 (T.D. TTB-192, published 2024-04-08): \"The Comptche viticultural area as described in this section is not included within the North Coast viticultural area as described in § 9.30.\"",
+      "note": "Comptche lies inside the North Coast outline, which TTB did not redraw; it is keyed under California with no edge to North Coast (added 2026-09-30 in the US-3 review fixes, before the rest catalog is applied). The North Coast display outline still covers it (spec §20)."
+    }
+  ],
   "thresholds": {
     "within": 0.995,
     "withinLegalRecord": 0.9,
