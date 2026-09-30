@@ -1115,7 +1115,7 @@
     },
     "united-states.california.central-coast.san-francisco-bay": {
       "article": {
-        "description": "A large AVA around San Francisco Bay, mainly in San Francisco, San Mateo, Santa Clara, Alameda and Contra Costa counties and partly in Santa Cruz and San Benito. It groups the bay's wine areas, including Livermore Valley, Santa Clara Valley, Lamorinda and the Santa Cruz Mountains, which overlap it. When it was established, nearly 5,800 acres were planted and over 39 wineries operated.",
+        "description": "A large AVA around San Francisco Bay, mainly in San Francisco, San Mateo, Santa Clara, Alameda and Contra Costa counties and partly in Santa Cruz and San Benito. It groups the bay's wine areas, including Livermore Valley, Santa Clara Valley, Lamorinda and the Santa Cruz Mountains, which lie within it; in 2024 it was expanded to take in the Contra Costa AVA. When it was established, nearly 5,800 acres were planted and over 39 wineries operated.",
         "climate": "A marine climate shaped by the bay and the Pacific: fog and low cloud come through the Golden Gate and other gaps, cooling summer days and warming winter nights, with heat increasing inland; the South Bay averages about 18 inches of rain a year.",
         "soils": "Varied: alluvial valley floors, gravel in Livermore Valley and mountain soils in the Santa Cruz range.",
         "grape_varieties": "Cabernet Sauvignon and Chardonnay are the most planted, with Petite Sirah, Zinfandel and Pinot Noir.",
@@ -1124,7 +1124,8 @@
           "Established 1999 (27 CFR 9.157)",
           "About 2,448 square miles in seven counties (T.D. ATF-407)",
           "Nearly 5,800 acres planted at establishment (T.D. ATF-407)",
-          "The same rule extended the Central Coast AVA to include it (T.D. ATF-407)"
+          "The same rule extended the Central Coast AVA to include it (T.D. ATF-407)",
+          "Expanded in 2024 to take in the Contra Costa AVA (T.D. TTB-191)"
         ]
       },
       "styles": [
@@ -1159,6 +1160,10 @@
         {
           "title": "Federal Register final rule (govinfo), T.D. ATF-407, San Francisco Bay (1999)",
           "url": "https://www.govinfo.gov/content/pkg/FR-1999-01-20/html/99-1209.htm"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), T.D. TTB-191, Contra Costa and the San Francisco Bay and Central Coast expansions (2024)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2024-03-15/html/2024-05476.htm"
         },
         {
           "title": "Livermore Valley Winegrowers, History",
@@ -2190,7 +2195,7 @@
     },
     "united-states.california.el-dorado": {
       "article": {
-        "description": "An AVA covering the wine-growing part of El Dorado County in the Sierra Nevada foothills, between the North Fork of the American River and the Cosumnes River, east of Sacramento. Its vineyards are among the highest in California, mostly between 2,500 and 3,500 feet, and vines were first planted here during the Gold Rush of the 1850s. It overlaps much of the Sierra Foothills AVA and holds Fair Play.",
+        "description": "An AVA covering the wine-growing part of El Dorado County in the Sierra Nevada foothills, between the North Fork of the American River and the Cosumnes River, east of Sacramento. Its vineyards are among the highest in California, mostly between 2,500 and 3,500 feet, and vines were first planted here during the Gold Rush of the 1850s. Most of it lies within the much larger Sierra Foothills AVA, and it holds Fair Play.",
         "climate": "Mountain climate: warm, sunny days above the fog, cool nights, winter snow on the vines, high summer UV and later ripening than the valley below.",
         "soils": "Granitic soils and volcanic and sedimentary deposits, well drained.",
         "grape_varieties": "Zinfandel, Syrah and Barbera lead, with Cabernet Sauvignon, Merlot, Grenache, Viognier and Chardonnay.",
