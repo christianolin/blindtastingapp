@@ -9,6 +9,626 @@
   },
   "new_grapes": [],
   "places": {
+    "united-states.california.central-coast.carmel-valley": {
+      "article": {
+        "description": "A sheltered valley inland from Carmel in the Santa Lucia Range, west of the Salinas Valley. About 300 of its 19,000 acres are planted, many on hillsides, to Cabernet Sauvignon, Merlot and other Bordeaux varieties.",
+        "climate": "Coastal influence with moderate swings on the hillsides; the day-to-night difference draws out ripening.",
+        "soils": "San Andreas fine sandy loam and Arroyo Seco gravelly sandy loam.",
+        "grape_varieties": "Cabernet Sauvignon and Merlot, with other Bordeaux varieties, Chardonnay and Pinot Noir.",
+        "wine_styles": "Dry red wines from Cabernet Sauvignon and Merlot, and some Chardonnay and Pinot Noir.",
+        "key_facts": [
+          "Established 1982 (27 CFR 9.58)",
+          "About 300 of 19,000 acres planted (Monterey County Vintners & Growers)",
+          "Elevations from about 203 to 2,762 feet (Monterey County Vintners & Growers)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Merlot"
+        },
+        {
+          "name": "Chardonnay",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Pinot Noir",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.58, Carmel Valley (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.58"
+        },
+        {
+          "title": "TTB, AVA establishment dates",
+          "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/ava-establishment-dates"
+        },
+        {
+          "title": "Monterey County Vintners & Growers Association, Monterey County AVAs",
+          "url": "https://montereywines.org/about/avas/"
+        }
+      ]
+    },
+    "united-states.california.central-coast.gabilan-mountains": {
+      "article": {
+        "description": "A mountain AVA of about 98,000 acres in the Gabilan Range, across the Monterey–San Benito county line east of the Salinas Valley. It holds the smaller Chalone and Mt. Harlan AVAs. At establishment it had six commercial vineyards, about 436 acres, and four wineries.",
+        "climate": "High and dry: the area averages about 2,370 feet, has fewer than 2.5 hours of fog or cloud a day from June to September (7 to 9 in the areas around it) and about 17 inches of rain a year.",
+        "soils": "Moderately coarse soils over granite bedrock, mainly of the Sheridan-Cieneba-Auberry association, rich in calcium from limestone and quick to drain.",
+        "grape_varieties": "Pinot Noir and Chardonnay, the grapes of Chalone and Mt. Harlan, which it contains.",
+        "wine_styles": "Dry Pinot Noir and Chardonnay from high, limestone-rich sites.",
+        "key_facts": [
+          "Established 2022 (27 CFR 9.288)",
+          "About 98,000 acres in Monterey and San Benito counties (TTB final rule)",
+          "Six vineyards, about 436 acres, and four wineries at establishment (TTB final rule)",
+          "Contains the Chalone and Mt. Harlan AVAs"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Pinot Noir"
+        },
+        {
+          "name": "Chardonnay"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.288, Gabilan Mountains (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.288"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), T.D. TTB-181, Gabilan Mountains (2022)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2022-08-15/html/2022-17508.htm"
+        },
+        {
+          "title": "Monterey County Vintners & Growers Association, Monterey County AVAs",
+          "url": "https://montereywines.org/about/avas/"
+        }
+      ]
+    },
+    "united-states.california.central-coast.gabilan-mountains.chalone": {
+      "article": {
+        "description": "A high bench below the Pinnacles in the Gabilan Range, across the Monterey–San Benito county line. It has the oldest producing vines in Monterey County, and soils with limestone and granite unusual in the region. About 300 acres are planted.",
+        "climate": "Warm and dry: the height, from about 1,200 to 2,300 feet, keeps it above most of the coastal fog, and rainfall is low.",
+        "soils": "Vista coarse sandy loam and the McCoy-Gilroy complex, over granite with limestone.",
+        "grape_varieties": "Chardonnay and Pinot Noir, with Pinot Blanc, Chenin Blanc and Syrah.",
+        "wine_styles": "Dry Chardonnay, Pinot Noir, Pinot Blanc and Chenin Blanc.",
+        "key_facts": [
+          "Established 1982 (27 CFR 9.24)",
+          "About 300 acres planted (Monterey County Vintners & Growers)",
+          "Elevations from about 1,201 to 2,323 feet (Monterey County Vintners & Growers)",
+          "Lies within the Gabilan Mountains AVA"
+        ]
+      },
+      "styles": [
+        "WHITE",
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Chardonnay"
+        },
+        {
+          "name": "Pinot Noir"
+        },
+        {
+          "name": "Chenin Blanc",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Pinot Blanc",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.24, Chalone (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.24"
+        },
+        {
+          "title": "TTB, AVA establishment dates",
+          "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/ava-establishment-dates"
+        },
+        {
+          "title": "Monterey County Vintners & Growers Association, Monterey County AVAs",
+          "url": "https://montereywines.org/about/avas/"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), T.D. TTB-181, Gabilan Mountains (2022)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2022-08-15/html/2022-17508.htm"
+        }
+      ]
+    },
+    "united-states.california.central-coast.gabilan-mountains.mt-harlan": {
+      "article": {
+        "description": "A small, high AVA of about 7,400 acres in the Gabilan Range in San Benito County, south of Hollister. Its boundary follows the 1,800-foot contour, and its only vineyards are Calera's, planted on limestone, which is rare in California, at an average of about 2,200 feet. Pinot Noir is its main grape.",
+        "climate": "Cooled by the height, about 3 °F for every 1,000 feet, and by Pacific air that reaches it through Monterey Bay; part of the high, dry Gabilan Mountains area, with little summer fog.",
+        "soils": "Limestone-rich soils over granite bedrock in the Gabilan Range.",
+        "grape_varieties": "Pinot Noir first, with Chardonnay and Viognier.",
+        "wine_styles": "Dry Pinot Noir and Chardonnay, and some Viognier.",
+        "key_facts": [
+          "Established 1990 (27 CFR 9.131)",
+          "Its boundary follows the 1,800-foot contour line (27 CFR 9.131)",
+          "About 7,400 acres; Calera's are the only vineyards (Calera Wine Company)",
+          "Lies within the Gabilan Mountains AVA"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Pinot Noir"
+        },
+        {
+          "name": "Chardonnay",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Viognier",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.131, Mt. Harlan (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.131"
+        },
+        {
+          "title": "TTB, AVA establishment dates",
+          "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/ava-establishment-dates"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), T.D. TTB-181, Gabilan Mountains (2022)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2022-08-15/html/2022-17508.htm"
+        },
+        {
+          "title": "Calera Wine Company, Our vineyards",
+          "url": "https://www.calerawine.com/pages/vineyards"
+        }
+      ]
+    },
+    "united-states.california.central-coast.monterey": {
+      "article": {
+        "description": "A large AVA that runs almost the whole length of Monterey County, mostly along the Salinas Valley from Monterey Bay south toward the San Luis Obispo County line. It holds Arroyo Seco, Santa Lucia Highlands, Hames Valley, San Bernabe and San Lucas. About 40,000 acres are planted, and Chardonnay is more than half of them.",
+        "climate": "Cool to hot along its roughly 100-mile length: wind and fog from Monterey Bay funnel up the Salinas Valley in the afternoon, so the north is cool and the south warm, with a long growing season and little rain.",
+        "soils": "Loams and sandy loams on the valley floor and benches, from the Chualar and Garey series to Lockwood shaly loam in the south.",
+        "grape_varieties": "Chardonnay over half the vineyard, with Pinot Noir, Riesling, Cabernet Sauvignon, Merlot, Syrah and Sauvignon Blanc.",
+        "wine_styles": "Dry Chardonnay and Pinot Noir, and red wines from the warmer south.",
+        "key_facts": [
+          "Established 1984 (27 CFR 9.98)",
+          "About 40,000 acres planted; Chardonnay over 50% (Monterey County Vintners & Growers)",
+          "Elevations from sea level to about 2,320 feet (Monterey County Vintners & Growers)"
+        ]
+      },
+      "styles": [
+        "WHITE",
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Chardonnay"
+        },
+        {
+          "name": "Pinot Noir"
+        },
+        {
+          "name": "Riesling",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Cabernet Sauvignon",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Merlot",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Syrah",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Sauvignon Blanc",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.98, Monterey (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.98"
+        },
+        {
+          "title": "TTB, AVA establishment dates",
+          "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/ava-establishment-dates"
+        },
+        {
+          "title": "Monterey County Vintners & Growers Association, Monterey County AVAs",
+          "url": "https://montereywines.org/about/avas/"
+        }
+      ]
+    },
+    "united-states.california.central-coast.monterey.arroyo-seco": {
+      "article": {
+        "description": "An AVA around the Arroyo Seco, the \"dry riverbed\" that leaves the Santa Lucia Range through a gorge and spreads its stones across the Salinas Valley near Greenfield. The large river stones help drainage. About 7,000 acres are planted, led by Chardonnay and Riesling.",
+        "climate": "Moderate: partly sheltered from the Salinas Valley's afternoon wind by the gorge and the hills.",
+        "soils": "Stony alluvial soils with large river cobbles: Garey sandy loam, Oceano loamy sand and Lockwood shaly loam.",
+        "grape_varieties": "Chardonnay and Riesling, with Pinot Noir, Zinfandel and Bordeaux and Rhône varieties.",
+        "wine_styles": "Dry and off-dry Riesling, dry Chardonnay, and red wines.",
+        "key_facts": [
+          "Established 1983 (27 CFR 9.59)",
+          "About 7,000 acres planted (Monterey County Vintners & Growers)",
+          "Elevations from about 266 to 1,670 feet (Monterey County Vintners & Growers)"
+        ]
+      },
+      "styles": [
+        "WHITE",
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Chardonnay"
+        },
+        {
+          "name": "Riesling"
+        },
+        {
+          "name": "Pinot Noir",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Cabernet Sauvignon",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Zinfandel",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.59, Arroyo Seco (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.59"
+        },
+        {
+          "title": "TTB, AVA establishment dates",
+          "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/ava-establishment-dates"
+        },
+        {
+          "title": "Monterey County Vintners & Growers Association, Monterey County AVAs",
+          "url": "https://montereywines.org/about/avas/"
+        }
+      ]
+    },
+    "united-states.california.central-coast.monterey.santa-lucia-highlands": {
+      "article": {
+        "description": "A band of terraces on the eastern slope of the Santa Lucia Range, facing southeast across the Salinas Valley, from near Chualar to near Greenfield. It is known for Pinot Noir and Chardonnay; about 5,000 acres are planted.",
+        "climate": "Cool and steady: wind and fog from Monterey Bay cool the terraces every afternoon.",
+        "soils": "Chualar loam and Arroyo Seco gravelly sandy loam on the benches and alluvial fans.",
+        "grape_varieties": "Pinot Noir and Chardonnay, with Syrah the third grape.",
+        "wine_styles": "Dry Pinot Noir and Chardonnay, and some Syrah.",
+        "key_facts": [
+          "Established 1992 (27 CFR 9.139)",
+          "About 5,000 acres planted (Monterey County Vintners & Growers)",
+          "Elevations from about 98 to 2,349 feet (Monterey County Vintners & Growers)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Pinot Noir"
+        },
+        {
+          "name": "Chardonnay"
+        },
+        {
+          "name": "Syrah",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.139, Santa Lucia Highlands (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.139"
+        },
+        {
+          "title": "TTB, AVA establishment dates",
+          "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/ava-establishment-dates"
+        },
+        {
+          "title": "Monterey County Vintners & Growers Association, Monterey County AVAs",
+          "url": "https://montereywines.org/about/avas/"
+        }
+      ]
+    },
+    "united-states.california.central-coast.san-francisco-bay": {
+      "article": {
+        "description": "A large AVA around San Francisco Bay, mainly in San Francisco, San Mateo, Santa Clara, Alameda and Contra Costa counties and partly in Santa Cruz and San Benito. It groups the bay's wine areas, including Livermore Valley, Santa Clara Valley, Lamorinda and the Santa Cruz Mountains, which overlap it. When it was established, nearly 5,800 acres were planted and over 39 wineries operated.",
+        "climate": "A marine climate shaped by the bay and the Pacific: fog and low cloud come through the Golden Gate and other gaps, cooling summer days and warming winter nights, with heat increasing inland; the South Bay averages about 18 inches of rain a year.",
+        "soils": "Varied: alluvial valley floors, gravel in Livermore Valley and mountain soils in the Santa Cruz range.",
+        "grape_varieties": "Cabernet Sauvignon and Chardonnay are the most planted, with Petite Sirah, Zinfandel and Pinot Noir.",
+        "wine_styles": "Dry red and white wines, from Cabernet Sauvignon and Zinfandel to Chardonnay.",
+        "key_facts": [
+          "Established 1999 (27 CFR 9.157)",
+          "About 2,448 square miles in seven counties (T.D. ATF-407)",
+          "Nearly 5,800 acres planted at establishment (T.D. ATF-407)",
+          "The same rule extended the Central Coast AVA to include it (T.D. ATF-407)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Chardonnay"
+        },
+        {
+          "name": "Petite Sirah",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Zinfandel",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Pinot Noir",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.157, San Francisco Bay (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.157"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), T.D. ATF-407, San Francisco Bay (1999)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-1999-01-20/html/99-1209.htm"
+        },
+        {
+          "title": "Livermore Valley Winegrowers, History",
+          "url": "https://www.lvwine.org/history.php"
+        }
+      ]
+    },
+    "united-states.california.central-coast.san-francisco-bay.livermore-valley": {
+      "article": {
+        "description": "An east–west valley in Alameda County, east of San Francisco Bay, and one of California's oldest wine regions. Robert Livermore planted vines in the 1840s, and Carl H. Wente and James Concannon founded wineries in 1883. In 1889 a Livermore dry white won the Grand Prix at the Paris Exposition, and the first varietally labelled Chardonnay came from Wente in 1936.",
+        "climate": "Warm afternoons cooled by marine breezes and fog: heat rising over the Central Valley to the east pulls cool bay air through the valley in the late afternoon.",
+        "soils": "Mainly gravel, which drains freely and limits vigour.",
+        "grape_varieties": "Cabernet Sauvignon and Chardonnay lead, with Sauvignon Blanc, Semillon, Petite Sirah and Zinfandel; nearly 80% of California's Chardonnay vines trace back to a Livermore Valley clone.",
+        "wine_styles": "Dry reds from Cabernet Sauvignon and Petite Sirah, and dry whites from Chardonnay, Sauvignon Blanc and Semillon.",
+        "key_facts": [
+          "Established 1982 (27 CFR 9.46)",
+          "More than 3,000 acres of vineyards and over 40 wineries (Livermore Valley Winegrowers)",
+          "Wente and Concannon founded their wineries in 1883 (Livermore Valley Winegrowers)",
+          "Wente made the first varietally labelled Chardonnay in 1936 (Livermore Valley Winegrowers)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Chardonnay"
+        },
+        {
+          "name": "Sauvignon Blanc",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Semillon",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Petite Sirah",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Zinfandel",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.46, Livermore Valley (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.46"
+        },
+        {
+          "title": "TTB, AVA establishment dates",
+          "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/ava-establishment-dates"
+        },
+        {
+          "title": "Livermore Valley Winegrowers, History",
+          "url": "https://www.lvwine.org/history.php"
+        }
+      ]
+    },
+    "united-states.california.central-coast.san-francisco-bay.santa-cruz-mountains": {
+      "article": {
+        "description": "A mountain AVA in San Mateo, Santa Clara and Santa Cruz counties, between the Pacific and Monterey Bay on one side and San Francisco Bay and the Santa Clara Valley on the other. It was the first California AVA whose borders follow the mountains' elevation, geology and vegetation rather than a valley. It has more than 80 wineries and some 200 growers, and its vineyards have been noted since the 1870s.",
+        "climate": "Cooled by the ocean on the western side and warmer on the eastern slopes facing the bay; many vineyards lie above the fog.",
+        "soils": "Variable mountain soils, from sandstone and shale to decomposed rock, on steep slopes cut by the San Andreas fault system.",
+        "grape_varieties": "Pinot Noir, Cabernet Sauvignon and Chardonnay, with Merlot and Zinfandel.",
+        "wine_styles": "Dry Pinot Noir, Cabernet Sauvignon and Chardonnay.",
+        "key_facts": [
+          "Established 1981 (27 CFR 9.31)",
+          "Its boundary follows the 400-, 600- and 800-foot contour lines in places (27 CFR 9.31)",
+          "Elevations from 400 feet to over 3,000 feet (Santa Cruz Mountains Winegrowers)",
+          "More than 80 wineries and 200 growers (Santa Cruz Mountains Winegrowers)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Pinot Noir"
+        },
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Chardonnay"
+        },
+        {
+          "name": "Merlot",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Zinfandel",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.31, Santa Cruz Mountains (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.31"
+        },
+        {
+          "title": "TTB, AVA establishment dates",
+          "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/ava-establishment-dates"
+        },
+        {
+          "title": "Santa Cruz Mountains Winegrowers Association (Wines of the Santa Cruz Mountains)",
+          "url": "https://winesofthesantacruzmountains.com/"
+        }
+      ]
+    },
+    "united-states.california.north-coast.clear-lake": {
+      "article": {
+        "description": "The largest AVA in Lake County, nearly 220,000 acres around Clear Lake, California's largest natural freshwater lake wholly within the state. Vineyards sit high, from about 1,300 feet at the lakeshore to the slopes of Mount Konocti and beyond. It holds Red Hills Lake County, Big Valley District, Kelsey Bench and Upper Lake Valley.",
+        "climate": "High and inland, with warm days and cold nights; the lake moderates temperatures near its shore, and the elevation makes this one of the cooler inland growing areas in California.",
+        "soils": "Alluvial soils on the valley floors around the lake and rocky red volcanic soils on the flanks of Mount Konocti, a dormant volcano.",
+        "grape_varieties": "Cabernet Sauvignon and Sauvignon Blanc lead, with Zinfandel, Petite Sirah and Merlot.",
+        "wine_styles": "Dry red wines, mainly Cabernet Sauvignon, and dry Sauvignon Blanc.",
+        "key_facts": [
+          "Established 1984 (27 CFR 9.99)",
+          "Nearly 220,000 acres, the largest AVA in Lake County (Lake County Winegrape Commission)",
+          "Elevations from about 1,300 feet (Lake County Winegrape Commission)",
+          "Lake County's first vineyards were planted in the 1870s (Discover California Wines)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Sauvignon Blanc"
+        },
+        {
+          "name": "Zinfandel",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Petite Sirah",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Merlot",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.99, Clear Lake (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.99"
+        },
+        {
+          "title": "TTB, AVA establishment dates",
+          "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/ava-establishment-dates"
+        },
+        {
+          "title": "Lake County Winegrape Commission, Clear Lake AVA",
+          "url": "https://www.lakecountywinegrape.org/region/lake-county-ava/clear-lake-ava/"
+        },
+        {
+          "title": "Discover California Wines (Wine Institute), Lake County",
+          "url": "https://discovercaliforniawines.com/discover-california/north-coast/lake-county/"
+        }
+      ]
+    },
+    "united-states.california.north-coast.clear-lake.red-hills-lake-county": {
+      "article": {
+        "description": "Rolling hills on the southwest shore of Clear Lake, between Lower Lake and Kelseyville, at the foot of Mount Konocti. The hills take their name from iron-red volcanic soil scattered with black obsidian from the volcano's eruptions. Most of its vines grow at 2,000 feet or higher, and Cabernet Sauvignon leads.",
+        "climate": "High-elevation and sunny, with cool nights; the lake and the height keep the growing season temperate.",
+        "soils": "Red, iron-rich, stony volcanic soils with black obsidian, quartz crystals and volcanic gravel.",
+        "grape_varieties": "Cabernet Sauvignon above all, with Cabernet Franc, Petite Sirah, Syrah, Zinfandel and Sauvignon Blanc.",
+        "wine_styles": "Dry red wines, chiefly Cabernet Sauvignon.",
+        "key_facts": [
+          "Established 2004 (27 CFR 9.169)",
+          "Its boundary follows contour lines from 1,400 to 3,000 feet (27 CFR 9.169)",
+          "Most vines are planted at 2,000 feet or higher (Lake County Winegrape Commission)",
+          "Boundary amended in 2024 (T.D. TTB-190)"
+        ]
+      },
+      "styles": [
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Cabernet Franc",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Petite Sirah",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Syrah",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Zinfandel",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.169, Red Hills Lake County (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.169"
+        },
+        {
+          "title": "TTB, AVA establishment dates",
+          "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/ava-establishment-dates"
+        },
+        {
+          "title": "Lake County Winegrape Commission, Red Hills Lake County AVA",
+          "url": "https://www.lakecountywinegrape.org/region/lake-county-ava/red-hills-ava/"
+        }
+      ]
+    },
     "united-states.california.north-coast.fountaingrove-district": {
       "article": {
         "description": "An AVA of about 38,000 acres on the Mayacamas slopes northeast of Santa Rosa, between the Russian River Valley, Knights Valley and Sonoma Valley. It is named after the Fountain Grove colony that Thomas Lake Harris founded in 1875, whose winery Kanaye Nagasawa later ran. About 500 acres are planted.",
@@ -122,6 +742,171 @@
         {
           "title": "Sonoma County Tourism, Carneros wine region and appellation",
           "url": "https://www.sonomacounty.com/articles/carneros-sonoma-wine-region-and-appellation/"
+        }
+      ]
+    },
+    "united-states.california.north-coast.mendocino": {
+      "article": {
+        "description": "The main AVA of Mendocino County, north of Sonoma, taking in the inland valleys along the upper Russian River around Ukiah, Hopland and Redwood Valley, and the Anderson Valley toward the coast. It holds Anderson Valley, McDowell Valley, Potter Valley, Redwood Valley and Yorkville Highlands. Much of the county is redwood forest, and vines were first planted here in 1850.",
+        "climate": "Contrasting: Anderson Valley, open to the Pacific, is cool and foggy, while the inland valleys behind the coastal ranges are warm and dry in summer.",
+        "soils": "Alluvial soils on the valley floors of the Russian River and its tributaries, and older, often red, well-drained soils on the benches and hills.",
+        "grape_varieties": "Chardonnay, Cabernet Sauvignon and Pinot Noir make up most of the county's crop, followed by Zinfandel, Merlot, Sauvignon Blanc and Syrah.",
+        "wine_styles": "Dry whites and reds from Chardonnay, Cabernet Sauvignon, Pinot Noir and Zinfandel, and sparkling wine from Anderson Valley.",
+        "key_facts": [
+          "Established 1984 (27 CFR 9.93)",
+          "Contains Anderson Valley, McDowell Valley, Potter Valley, Redwood Valley and Yorkville Highlands",
+          "2022 county crush: Chardonnay 38%, Cabernet Sauvignon 22.4%, Pinot Noir 12.4% (USDA crush report)",
+          "About 60% of Mendocino County is redwood forest (Discover California Wines)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE",
+        "SPARKLING"
+      ],
+      "grapes": [
+        {
+          "name": "Chardonnay"
+        },
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Pinot Noir"
+        },
+        {
+          "name": "Zinfandel",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Merlot",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Sauvignon Blanc",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Syrah",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.93, Mendocino (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.93"
+        },
+        {
+          "title": "TTB, AVA establishment dates",
+          "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/ava-establishment-dates"
+        },
+        {
+          "title": "Wine Industry Advisor, 2022 Mendocino grape crush report (USDA preliminary crush report)",
+          "url": "https://wineindustryadvisor.com/2023/02/13/2022-mendocino-grape-crush-report"
+        },
+        {
+          "title": "Discover California Wines (Wine Institute), Mendocino County",
+          "url": "https://discovercaliforniawines.com/discover-california/north-coast/mendocino-county/"
+        }
+      ]
+    },
+    "united-states.california.north-coast.mendocino.anderson-valley": {
+      "article": {
+        "description": "A narrow valley following the Navarro River northwest toward the Pacific, through Boonville and Philo, in Mendocino County. Its northwest end is only a few miles from the ocean. It grows Pinot Noir and Chardonnay, Alsace varieties such as Gewürztraminer and Riesling, and base wine for sparkling wine; about 2,457 acres are planted in some 90 vineyards.",
+        "climate": "Cool and marine: Pacific fog follows the Navarro River into the valley on summer nights and burns off by midday; inland around Boonville days are warmer, and the valley averages about 53 °F over the year.",
+        "soils": "Clay on the valley flats and loams over sandstone and shale on the benches and hillsides.",
+        "grape_varieties": "Pinot Noir first, with Chardonnay and the Alsace varieties Gewürztraminer, Riesling and Pinot Gris.",
+        "wine_styles": "Dry Pinot Noir and Chardonnay, aromatic dry whites, and traditional-method sparkling wine.",
+        "key_facts": [
+          "Established 1983 (27 CFR 9.86)",
+          "About 2,457 acres planted in some 90 vineyards (Anderson Valley Winegrowers Association)",
+          "Average annual temperature about 53 °F (Anderson Valley Winegrowers Association)",
+          "Lies within the Mendocino AVA"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE",
+        "SPARKLING"
+      ],
+      "grapes": [
+        {
+          "name": "Pinot Noir"
+        },
+        {
+          "name": "Chardonnay"
+        },
+        {
+          "name": "Gewürztraminer",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Riesling",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Pinot Gris",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.86, Anderson Valley (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.86"
+        },
+        {
+          "title": "TTB, AVA establishment dates",
+          "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/ava-establishment-dates"
+        },
+        {
+          "title": "Anderson Valley Winegrowers Association, About Anderson Valley",
+          "url": "https://avwines.com/about-anderson-valley/"
+        }
+      ]
+    },
+    "united-states.california.north-coast.mendocino-ridge": {
+      "article": {
+        "description": "An AVA made only of coastal ridge-tops in Mendocino County, at or above 1,200 feet, a few miles from the Pacific. The outer boundary encloses about 262,400 acres, but only the 87,466 acres above 1,200 feet count, so the AVA is a scatter of separate hilltops. When it was established there were about 75 acres of vines in six vineyards, many of them Zinfandel.",
+        "climate": "Cool and coastal: the ridge-tops are cooler by day and warmer by night than the valley floors, a difference of about 10 °F, and the grapes keep high natural acidity.",
+        "soils": "Well-drained \"timber\" soils of sandstone mixed with loamy clay on narrow, forested ridge-tops; the rule judged only about 2% of the land above 1,200 feet suitable for vines.",
+        "grape_varieties": "Zinfandel above all, including old plantings, with some Pinot Noir and Syrah.",
+        "wine_styles": "Dry red wines, mainly Zinfandel from ridge-top vineyards.",
+        "key_facts": [
+          "Established 1997 (27 CFR 9.158)",
+          "Includes only land at or above 1,200 feet (TTB final rule, T.D. ATF-392)",
+          "87,466 of 262,400 enclosed acres lie above 1,200 feet (T.D. ATF-392)",
+          "About 75 acres of vines in six vineyards at establishment (T.D. ATF-392)",
+          "About 209 acres now planted in 18 vineyards (Zinfandel Advocates & Producers)"
+        ]
+      },
+      "styles": [
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Zinfandel"
+        },
+        {
+          "name": "Pinot Noir",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Syrah",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.158, Mendocino Ridge (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.158"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), T.D. ATF-392, Mendocino Ridge (1997)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-1997-10-27/pdf/97-28300.pdf"
+        },
+        {
+          "title": "Zinfandel Advocates & Producers, Preserving the Zinfandel legacy of Mendocino County",
+          "url": "https://zinfandel.org/preserving-the-zinfandel-legacy-of-mendocino-county/"
         }
       ]
     },
