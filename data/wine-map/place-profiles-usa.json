@@ -2,8 +2,8 @@
   "_provenance": {
     "what": "Details-panel knowledge for the United States wine map, wave US-2: the country, California, New York, Oregon and Washington, their umbrella AVAs and the Central Valley grouping (spec docs/superpowers/specs/2026-09-29-usa-wine-map-design.md §10). Turned into supabase/migrations/20260930094747_usa_us2_knowledge.sql by scripts/wine-map-sources/gen-place-profiles-migration.mjs --source data/wine-map/place-profiles-usa.json --bare.",
     "wave": "us2",
-    "status": "DRAFT",
-    "owner_approval": null,
+    "status": "APPROVED",
+    "owner_approval": { "answer": "Owner waived the copy review on 2026-09-30 (\"ignore my friends changes and just go ahead. no need for my review\"). The five questions were answered by the main session: New York keeps Concord and the hybrids in the text only; Puget Sound keeps Madeleine Angevine and Siegerrebe in the text only; Central Valley keeps its Sweet and Fortified styles; the signature-grape split stands as drafted; the three US typical wines are linked at the sitting.", "date": "2026-09-30" },
     "written_in_session": "2026-09-29, from public sources only (listed under each place); no API batch (AGENTS.md). Every text is provisional owner copy until the owner answers OK on data/wine-map/review/usa-us2-knowledge.md.",
     "rules": "Plain English, no praise words, figures only where a listed source publishes them, never 'official boundary' (spec §18). Each place's signature grapes are PRINCIPAL and the others ACCESSORY (role); the details panel lists PRINCIPAL first and tags the rest 'accessory', each group alphabetically, and the grape shortlists count PRINCIPAL links before ACCESSORY ones. share_pct is left out everywhere because no source here publishes a per-place share for every listed grape."
   },
