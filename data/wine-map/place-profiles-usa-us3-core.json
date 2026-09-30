@@ -9,6 +9,122 @@
   },
   "new_grapes": [],
   "places": {
+    "united-states.california.north-coast.fountaingrove-district": {
+      "article": {
+        "description": "An AVA of about 38,000 acres on the Mayacamas slopes northeast of Santa Rosa, between the Russian River Valley, Knights Valley and Sonoma Valley. It is named after the Fountain Grove colony that Thomas Lake Harris founded in 1875, whose winery Kanaye Nagasawa later ran. About 500 acres are planted.",
+        "climate": "Warm, Region II on the Winkler scale: warmer than the Russian River Valley but more marine-influenced than Alexander Valley and northern Napa.",
+        "soils": "Rolling hills with soils from Sonoma Volcanics and Franciscan Formation bedrock.",
+        "grape_varieties": "Cabernet Sauvignon, with Chardonnay, Sauvignon Blanc, Merlot, Cabernet Franc, Zinfandel and Syrah.",
+        "wine_styles": "Dry red wines led by Cabernet Sauvignon, and dry whites.",
+        "key_facts": [
+          "Established 2015 (27 CFR 9.250)",
+          "About 38,000 acres, 500 of them planted (Sonoma County Tourism)",
+          "Named after the Fountain Grove colony of 1875 (Sonoma County Tourism)",
+          "Labels must also show \"Sonoma County\" (Cal. Bus. & Prof. Code §25246)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Merlot",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Syrah",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Zinfandel",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Chardonnay",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Sauvignon Blanc",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.250, Fountaingrove District (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.250"
+        },
+        {
+          "title": "TTB, AVA establishment dates",
+          "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/ava-establishment-dates"
+        },
+        {
+          "title": "Sonoma County Tourism, Fountaingrove District wine region and appellation",
+          "url": "https://www.sonomacounty.com/articles/fountaingrove-district-wine-region-and-appellation/"
+        },
+        {
+          "title": "California Business and Professions Code §25246 (Sonoma County conjunctive labeling)",
+          "url": "https://california.public.law/codes/business_and_professions_code_section_25246"
+        }
+      ]
+    },
+    "united-states.california.north-coast.los-carneros": {
+      "article": {
+        "description": "A low, rolling AVA at the north shore of San Pablo Bay, spanning the southern ends of Napa and Sonoma counties. It was the first AVA defined by its climate rather than by geography, and it is known for Pinot Noir, Chardonnay and sparkling wine. The name, \"the rams\", dates from Mexican land grants of the 1830s, and the land was sheep ranches, dairies and hay fields before vines took over in the 1970s.",
+        "climate": "Cool and windy: marine air and fog come straight off San Pablo Bay, summer days rarely pass 80 °F, the difference between day and night is small, and rainfall, at up to about 24 inches, is the lowest in Napa Valley.",
+        "soils": "Shallow, dense clay soils, not very fertile, over a hard claypan that keeps roots near the surface and holds yields down; loams and hillside alluvium in the north.",
+        "grape_varieties": "Pinot Noir and Chardonnay above all, with Merlot, Syrah and some Cabernet Sauvignon.",
+        "wine_styles": "Dry Pinot Noir and Chardonnay, and sparkling wine made from both.",
+        "key_facts": [
+          "Established 1983 (27 CFR 9.32)",
+          "Spans Napa and Sonoma counties",
+          "Over 8,000 acres of vineyard (Napa Valley Vintners)",
+          "Elevations from sea level to about 700 feet (Napa Valley Vintners)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE",
+        "SPARKLING"
+      ],
+      "grapes": [
+        {
+          "name": "Pinot Noir"
+        },
+        {
+          "name": "Chardonnay"
+        },
+        {
+          "name": "Merlot",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Syrah",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.32, Los Carneros (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.32"
+        },
+        {
+          "title": "TTB, AVA establishment dates",
+          "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/ava-establishment-dates"
+        },
+        {
+          "title": "Napa Valley Vintners, Los Carneros AVA",
+          "url": "https://napavintners.com/napa_valley/los-carneros-ava/"
+        },
+        {
+          "title": "Sonoma County Tourism, Carneros wine region and appellation",
+          "url": "https://www.sonomacounty.com/articles/carneros-sonoma-wine-region-and-appellation/"
+        }
+      ]
+    },
     "united-states.california.north-coast.napa-valley": {
       "article": {
         "description": "California's first AVA, a valley about 30 miles long between the Mayacamas Mountains to the west and the Vaca Range to the east, in Napa County. Fifteen smaller AVAs lie within it, from Calistoga at the northern end to Coombsville and Oak Knoll District near the city of Napa, and Los Carneros and Wild Horse Valley overlap its southern edge. It is known above all for Cabernet Sauvignon.",
@@ -907,6 +1023,1016 @@
         {
           "title": "California Business and Professions Code §25240 (Napa Valley conjunctive labeling)",
           "url": "https://california.public.law/codes/business_and_professions_code_section_25240"
+        }
+      ]
+    },
+    "united-states.california.north-coast.northern-sonoma": {
+      "article": {
+        "description": "A large umbrella AVA over northern Sonoma County that takes in Alexander Valley, Dry Creek Valley, Knights Valley, Russian River Valley and its sub-AVAs, from valley floors to mountain peaks. It was petitioned by E. & J. Gallo so that its Sonoma wines from vineyards in different valleys could carry one appellation, and few labels use it today.",
+        "climate": "Varied: cool and foggy toward the Russian River Valley and the coast, warmer in the inland valleys of Alexander and Knights Valley.",
+        "soils": "Varied, from river gravels and alluvium on the valley floors to volcanic and sedimentary soils in the hills.",
+        "grape_varieties": "Cabernet Sauvignon, Chardonnay and Zinfandel, with Sauvignon Blanc, Pinot Noir and Merlot.",
+        "wine_styles": "Dry red and white wines, from Cabernet Sauvignon and Zinfandel to Chardonnay.",
+        "key_facts": [
+          "Established 1985 (27 CFR 9.70)",
+          "About 329,000 acres, Sonoma County's second-largest AVA after Sonoma Coast (Sonoma County Tourism)",
+          "Petitioned by E. & J. Gallo (Sonoma County Tourism)",
+          "Labels must also show \"Sonoma County\" (Cal. Bus. & Prof. Code §25246)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Chardonnay"
+        },
+        {
+          "name": "Zinfandel"
+        },
+        {
+          "name": "Sauvignon Blanc",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Pinot Noir",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Merlot",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.70, Northern Sonoma (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.70"
+        },
+        {
+          "title": "TTB, AVA establishment dates",
+          "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/ava-establishment-dates"
+        },
+        {
+          "title": "Sonoma County Tourism, Northern Sonoma wine region and appellation",
+          "url": "https://www.sonomacounty.com/articles/northern-sonoma-wine-region-and-appellation/"
+        },
+        {
+          "title": "California Business and Professions Code §25246 (Sonoma County conjunctive labeling)",
+          "url": "https://california.public.law/codes/business_and_professions_code_section_25246"
+        }
+      ]
+    },
+    "united-states.california.north-coast.northern-sonoma.alexander-valley": {
+      "article": {
+        "description": "The valley of the upper Russian River in Sonoma County, from the Mendocino County line southeast to Healdsburg, with the Mayacamas range to the east. It is Sonoma County's largest planted AVA, known for Cabernet Sauvignon since the 1960s and 1970s. It is named after the pioneer Cyrus Alexander; the Italian Swiss Colony was founded at Asti in the 1880s.",
+        "climate": "Warm days with heat spikes, tempered by cool marine air from the Pacific that brings cool evenings.",
+        "soils": "Alluvial soils laid down by the meandering Russian River over gravel deposits, with hillside soils on the benches and slopes.",
+        "grape_varieties": "Cabernet Sauvignon first, with Merlot and other Bordeaux varieties, Chardonnay, Sauvignon Blanc and old-vine Zinfandel.",
+        "wine_styles": "Dry red wines, mostly Cabernet Sauvignon, and dry whites from Chardonnay and Sauvignon Blanc.",
+        "key_facts": [
+          "Established 1984 (27 CFR 9.53)",
+          "About 15,000 acres of vineyard (Sonoma County Tourism)",
+          "Named after the pioneer Cyrus Alexander (Sonoma County Tourism)",
+          "Labels must also show \"Sonoma County\" (Cal. Bus. & Prof. Code §25246)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Merlot",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Chardonnay",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Zinfandel",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Sauvignon Blanc",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.53, Alexander Valley (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.53"
+        },
+        {
+          "title": "TTB, AVA establishment dates",
+          "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/ava-establishment-dates"
+        },
+        {
+          "title": "Sonoma County Tourism, Alexander Valley wine region and appellation",
+          "url": "https://www.sonomacounty.com/articles/alexander-valley-wine-region-and-appellation/"
+        },
+        {
+          "title": "Sonoma County Winegrowers, Sonoma County terroir",
+          "url": "https://sonomawinegrape.org/sonoma-county-terroir"
+        },
+        {
+          "title": "California Business and Professions Code §25246 (Sonoma County conjunctive labeling)",
+          "url": "https://california.public.law/codes/business_and_professions_code_section_25246"
+        }
+      ]
+    },
+    "united-states.california.north-coast.northern-sonoma.dry-creek-valley": {
+      "article": {
+        "description": "A narrow valley about 16 miles long and 2 miles wide northwest of Healdsburg, running from the Russian River up to Lake Sonoma. It is known above all for Zinfandel, including old vines that survived Prohibition when growers switched to prunes, and for Sauvignon Blanc. Over 70 wineries, mostly family-owned, work here.",
+        "climate": "In between the cooler Russian River Valley and warmer Alexander Valley: fog tempers the valley in the mornings without dominating it.",
+        "soils": "Very rocky, free-draining soils, planted on hillsides, benches and the valley floor.",
+        "grape_varieties": "Zinfandel first, with Sauvignon Blanc, Cabernet Sauvignon, Petite Sirah and the Rhône varieties Grenache, Syrah and Mourvèdre.",
+        "wine_styles": "Dry red wines, above all Zinfandel, and dry Sauvignon Blanc.",
+        "key_facts": [
+          "Established 1983 (27 CFR 9.64)",
+          "Over 9,000 acres of vineyard (Sonoma County Tourism)",
+          "About 16 miles long and 2 miles wide (Sonoma County Tourism)",
+          "Labels must also show \"Sonoma County\" (Cal. Bus. & Prof. Code §25246)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Zinfandel"
+        },
+        {
+          "name": "Sauvignon Blanc",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Cabernet Sauvignon",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Petite Sirah",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Syrah",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Grenache",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.64, Dry Creek Valley (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.64"
+        },
+        {
+          "title": "TTB, AVA establishment dates",
+          "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/ava-establishment-dates"
+        },
+        {
+          "title": "Sonoma County Tourism, Dry Creek Valley wine region and appellation",
+          "url": "https://www.sonomacounty.com/articles/dry-creek-valley-wine-region-and-appellation/"
+        },
+        {
+          "title": "Sonoma County Winegrowers, Sonoma County terroir",
+          "url": "https://sonomawinegrape.org/sonoma-county-terroir"
+        },
+        {
+          "title": "California Business and Professions Code §25246 (Sonoma County conjunctive labeling)",
+          "url": "https://california.public.law/codes/business_and_professions_code_section_25246"
+        }
+      ]
+    },
+    "united-states.california.north-coast.northern-sonoma.knights-valley": {
+      "article": {
+        "description": "A warm, high valley in eastern Sonoma County below Mount St. Helena, between Alexander Valley and Napa's Calistoga, reached by Highway 128. It is named after Thomas B. Knight, and it has stayed rural: cattle and vineyards, few wineries. Cabernet Sauvignon and the other Bordeaux varieties lead.",
+        "climate": "Warm and inland, cut off from most of the coastal fog, with cooler air at night coming down from the surrounding hills.",
+        "soils": "Soils of the valley floor and of the lower slopes of Mount St. Helena, an old volcano that towers over the valley.",
+        "grape_varieties": "Cabernet Sauvignon and other Bordeaux varieties lead, with Sauvignon Blanc, Chardonnay and Syrah.",
+        "wine_styles": "Dry red wines, mainly Cabernet Sauvignon, and dry Sauvignon Blanc.",
+        "key_facts": [
+          "Established 1983 (27 CFR 9.76)",
+          "About 2,000 acres of vineyard (Sonoma County Tourism)",
+          "Named after Thomas B. Knight (Sonoma County Tourism)",
+          "Labels must also show \"Sonoma County\" (Cal. Bus. & Prof. Code §25246)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Sauvignon Blanc",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Merlot",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Cabernet Franc",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Chardonnay",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.76, Knights Valley (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.76"
+        },
+        {
+          "title": "TTB, AVA establishment dates",
+          "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/ava-establishment-dates"
+        },
+        {
+          "title": "Sonoma County Tourism, Knights Valley wine region and appellation",
+          "url": "https://www.sonomacounty.com/articles/knights-valley-wine-region-and-appellation/"
+        },
+        {
+          "title": "California Business and Professions Code §25246 (Sonoma County conjunctive labeling)",
+          "url": "https://california.public.law/codes/business_and_professions_code_section_25246"
+        }
+      ]
+    },
+    "united-states.california.north-coast.northern-sonoma.russian-river-valley": {
+      "article": {
+        "description": "A cool AVA at the centre of Sonoma County, on the lower Russian River and the Santa Rosa Plain, from Healdsburg south toward Sebastopol and Santa Rosa. It does not follow the river all the way to the sea. Chardonnay and Pinot Noir are its main grapes, then Zinfandel. Most of it also lies inside the Sonoma Coast AVA, which overlaps it.",
+        "climate": "Warm days tempered by Pacific fog that lingers in the hills west of Sebastopol into the late afternoon; temperatures can drop 35 to 40 °F from day to night, and the growing season runs long.",
+        "soils": "Varied; the fine-grained Goldridge sandy loam, well drained and moderate in vigour, dominates its western Green Valley corner.",
+        "grape_varieties": "Chardonnay, Pinot Noir and Zinfandel lead by acreage, with Sauvignon Blanc, Syrah, Merlot and Pinot Gris.",
+        "wine_styles": "Dry Chardonnay and Pinot Noir, Zinfandel, and sparkling wine from the cooler western parts.",
+        "key_facts": [
+          "Established 1983 (27 CFR 9.66)",
+          "Over 70 wineries (Sonoma County Tourism)",
+          "Its boundary has been amended several times since 1983 (27 CFR 9.66)",
+          "Labels must also show \"Sonoma County\" (Cal. Bus. & Prof. Code §25246)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE",
+        "SPARKLING"
+      ],
+      "grapes": [
+        {
+          "name": "Chardonnay"
+        },
+        {
+          "name": "Pinot Noir"
+        },
+        {
+          "name": "Zinfandel",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Sauvignon Blanc",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Syrah",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.66, Russian River Valley (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.66"
+        },
+        {
+          "title": "TTB, AVA establishment dates",
+          "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/ava-establishment-dates"
+        },
+        {
+          "title": "Sonoma County Tourism, Russian River Valley wine region and appellation",
+          "url": "https://www.sonomacounty.com/articles/ava-wines-sonoma-county-russian-river-valley/"
+        },
+        {
+          "title": "Sonoma County Winegrowers, Sonoma County terroir",
+          "url": "https://sonomawinegrape.org/sonoma-county-terroir"
+        },
+        {
+          "title": "Sonoma County Winegrowers, The importance of Green Valley of Russian River Valley",
+          "url": "https://sonomawinegrape.org/the-importance-of-green-valley-of-russian-river-valley/"
+        },
+        {
+          "title": "California Business and Professions Code §25246 (Sonoma County conjunctive labeling)",
+          "url": "https://california.public.law/codes/business_and_professions_code_section_25246"
+        }
+      ]
+    },
+    "united-states.california.north-coast.northern-sonoma.russian-river-valley.chalk-hill": {
+      "article": {
+        "description": "A hilly corner of the Russian River Valley east of Windsor, rising to about 1,600 feet toward Knights Valley. The pale soil that gave it its name is not chalk but white volcanic ash. It has more than 1,400 acres of vineyard but only a handful of wineries.",
+        "climate": "Warmer than most of the Russian River Valley, with less fog and steady breezes.",
+        "soils": "White, quartz-rich volcanic tuff (ash) that looks like chalk, with loams on the slopes.",
+        "grape_varieties": "Chardonnay and Sauvignon Blanc, with Cabernet Sauvignon, Merlot and Cabernet Franc; some Syrah and Zinfandel.",
+        "wine_styles": "Dry whites from Chardonnay and Sauvignon Blanc, and Bordeaux-variety reds.",
+        "key_facts": [
+          "Established 1983 (27 CFR 9.52)",
+          "More than 1,400 acres of vineyard and five wineries (Sonoma County Tourism)",
+          "Elevations reach about 1,600 feet (Sonoma County Tourism)",
+          "Labels must also show \"Sonoma County\" (Cal. Bus. & Prof. Code §25246)"
+        ]
+      },
+      "styles": [
+        "WHITE",
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Chardonnay"
+        },
+        {
+          "name": "Sauvignon Blanc",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Cabernet Sauvignon",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Merlot",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Cabernet Franc",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.52, Chalk Hill (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.52"
+        },
+        {
+          "title": "TTB, AVA establishment dates",
+          "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/ava-establishment-dates"
+        },
+        {
+          "title": "Sonoma County Tourism, Chalk Hill wine region and appellation",
+          "url": "https://www.sonomacounty.com/articles/chalk-hill-wine-region-and-appellation/"
+        },
+        {
+          "title": "California Business and Professions Code §25246 (Sonoma County conjunctive labeling)",
+          "url": "https://california.public.law/codes/business_and_professions_code_section_25246"
+        }
+      ]
+    },
+    "united-states.california.north-coast.northern-sonoma.russian-river-valley.green-valley-of-russian-river-valley": {
+      "article": {
+        "description": "The coolest, foggiest corner of the Russian River Valley, in wooded hills between Sebastopol, Occidental and Forestville, following the watersheds of Green Valley, Atascadero and Purrington creeks. Apple orchards shared the land with vines for decades. It was called Sonoma County Green Valley until 2007, when it was renamed to avoid confusion with Solano County Green Valley.",
+        "climate": "Fog arrives early and stays late: the hills trap it, so days are cool and the range between day and night is narrow; sheltered from much of the wind.",
+        "soils": "Goldridge fine sandy loam dominates: well drained, deep-rooting, and moderately vigorous, with enough clay to hold some moisture in dry years.",
+        "grape_varieties": "Pinot Noir and Chardonnay, with Syrah a distant third.",
+        "wine_styles": "Dry Pinot Noir and Chardonnay, and sparkling wine from both.",
+        "key_facts": [
+          "Established 1983 (27 CFR 9.57)",
+          "Named Sonoma County Green Valley from 1983 until 2007 (27 CFR 9.57)",
+          "About 19,000 acres, 3,600 of them planted (Sonoma County Tourism)",
+          "Labels must also show \"Sonoma County\" (Cal. Bus. & Prof. Code §25246)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE",
+        "SPARKLING"
+      ],
+      "grapes": [
+        {
+          "name": "Pinot Noir"
+        },
+        {
+          "name": "Chardonnay"
+        },
+        {
+          "name": "Syrah",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.57, Green Valley of Russian River Valley (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.57"
+        },
+        {
+          "title": "TTB, AVA establishment dates",
+          "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/ava-establishment-dates"
+        },
+        {
+          "title": "Sonoma County Tourism, Green Valley of Russian River Valley wine region and appellation",
+          "url": "https://www.sonomacounty.com/articles/green-valley-russian-river-valley-wine-region-and-appellation/"
+        },
+        {
+          "title": "Sonoma County Winegrowers, The importance of Green Valley of Russian River Valley",
+          "url": "https://sonomawinegrape.org/the-importance-of-green-valley-of-russian-river-valley/"
+        },
+        {
+          "title": "California Business and Professions Code §25246 (Sonoma County conjunctive labeling)",
+          "url": "https://california.public.law/codes/business_and_professions_code_section_25246"
+        }
+      ]
+    },
+    "united-states.california.north-coast.petaluma-gap": {
+      "article": {
+        "description": "A wind-defined AVA of about 202,500 acres across southern Sonoma County and northern Marin County, from the Pacific to San Pablo Bay. A gap in the coastal hills lets ocean wind and fog flow inland, and the AVA is drawn around that corridor. Pinot Noir is about three quarters of its vineyard.",
+        "climate": "Windy and cool: afternoon wind through low hills of under 600 feet lowers photosynthesis, so grapes hang longer, with smaller berries and thicker skins, and can be picked at lower sugar.",
+        "soils": "Varied soils on low rolling hills; the petition defined the area by its wind rather than its soils.",
+        "grape_varieties": "Pinot Noir about 75% of the vineyard, then Chardonnay and Syrah.",
+        "wine_styles": "Dry Pinot Noir, Chardonnay and Syrah, and some sparkling wine.",
+        "key_facts": [
+          "Established 2017 (27 CFR 9.261)",
+          "Spans Sonoma and Marin counties",
+          "About 80 vineyards on some 4,000 acres at the petition (TTB final rule)",
+          "Pinot Noir 75%, Chardonnay 13%, Syrah 12% of the vineyard (Sonoma County Tourism)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Pinot Noir"
+        },
+        {
+          "name": "Chardonnay",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Syrah",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.261, Petaluma Gap (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.261"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), Petaluma Gap (2017)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2017-12-07/html/2017-26410.htm"
+        },
+        {
+          "title": "Sonoma County Tourism, Petaluma Gap wine region and appellation",
+          "url": "https://www.sonomacounty.com/articles/petaluma-gap-wine-region-and-appellation/"
+        }
+      ]
+    },
+    "united-states.california.north-coast.pine-mountain-cloverdale-peak": {
+      "article": {
+        "description": "A mountain AVA of about 4,600 acres on the ridges northeast of Cloverdale, along Pine Mountain Road, crossing from Sonoma into Mendocino County. Only land above the 1,600-foot contour is included, and about 230 acres are planted, around 80% of them to Cabernet Sauvignon.",
+        "climate": "Often above morning fog: days are cooler and lightly breezy, nights warmer than in the valleys below.",
+        "soils": "Mountain soils among oak woodland, madrone and scrub, with spring-fed ponds between the vineyard blocks.",
+        "grape_varieties": "Cabernet Sauvignon about 80% of the vineyard, with Merlot, Malbec and Cabernet Franc.",
+        "wine_styles": "Dry red wines, mainly Cabernet Sauvignon.",
+        "key_facts": [
+          "Established 2011 (27 CFR 9.220)",
+          "Spans Sonoma and Mendocino counties",
+          "Its boundary follows the 1,600-foot contour line (27 CFR 9.220)",
+          "About 230 of 4,600 acres planted (Sonoma County Tourism)"
+        ]
+      },
+      "styles": [
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Merlot",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Malbec",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Cabernet Franc",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.220, Pine Mountain-Cloverdale Peak (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.220"
+        },
+        {
+          "title": "TTB, AVA establishment dates",
+          "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/ava-establishment-dates"
+        },
+        {
+          "title": "Sonoma County Tourism, Pine Mountain-Cloverdale Peak wine region and appellation",
+          "url": "https://www.sonomacounty.com/articles/pine-mountain-cloverdale-peak-wine-region-and-appellation/"
+        }
+      ]
+    },
+    "united-states.california.north-coast.rockpile": {
+      "article": {
+        "description": "A ridge-top AVA in northwest Sonoma County, above Dry Creek Valley and overlooking Lake Sonoma. It covers only ground above the 800-foot contour; of some 15,000 acres, about 160 are planted, mostly since 1992. It is known for Zinfandel.",
+        "climate": "Sunny, with less fog than the valleys below: an inversion layer from Lake Sonoma keeps the fog beneath the vineyards.",
+        "soils": "Upland soils on steep ridges; before vines the area was sheep ranches and hunting clubs for about a century.",
+        "grape_varieties": "Zinfandel first, with Cabernet Sauvignon, Petite Sirah and Syrah.",
+        "wine_styles": "Dry red wines, above all Zinfandel, and some Petite Sirah and Syrah.",
+        "key_facts": [
+          "Established 2002 (27 CFR 9.173)",
+          "Its boundary mostly follows the 800-foot contour line (27 CFR 9.173)",
+          "Elevations from about 800 to 2,100 feet (Sonoma County Tourism)",
+          "Labels must also show \"Sonoma County\" (Cal. Bus. & Prof. Code §25246)"
+        ]
+      },
+      "styles": [
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Zinfandel"
+        },
+        {
+          "name": "Cabernet Sauvignon",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Petite Sirah",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Syrah",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.173, Rockpile (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.173"
+        },
+        {
+          "title": "TTB, AVA establishment dates",
+          "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/ava-establishment-dates"
+        },
+        {
+          "title": "Sonoma County Tourism, Rockpile wine region and appellation",
+          "url": "https://www.sonomacounty.com/articles/rockpile-wine-region-and-appellation/"
+        },
+        {
+          "title": "California Business and Professions Code §25246 (Sonoma County conjunctive labeling)",
+          "url": "https://california.public.law/codes/business_and_professions_code_section_25246"
+        }
+      ]
+    },
+    "united-states.california.north-coast.sonoma-coast": {
+      "article": {
+        "description": "Sonoma County's largest AVA, reaching from the wind-swept Pacific coast in the north to the salt marshes of San Pablo Bay in the south. It holds West Sonoma Coast and Fort Ross-Seaview, and overlaps the Russian River Valley and Los Carneros. Pinot Noir and Chardonnay are its main grapes.",
+        "climate": "Shaped by the Pacific: afternoon fog covers the lower ground while ridge-top vineyards often rise above it, and wind and fog pour in through the Petaluma Gap in the south.",
+        "soils": "Varied: thin, sandy soils over Franciscan rocks on the coastal ridges and heavy adobe clays near San Pablo Bay in the south.",
+        "grape_varieties": "Pinot Noir and Chardonnay, with Syrah as a runner-up and some Zinfandel.",
+        "wine_styles": "Dry Pinot Noir and Chardonnay, and sparkling wine.",
+        "key_facts": [
+          "Established 1987 (27 CFR 9.116)",
+          "Sonoma County's largest AVA (Sonoma County Tourism)",
+          "Contains West Sonoma Coast (2022) and Fort Ross-Seaview (2011)",
+          "Labels must also show \"Sonoma County\" (Cal. Bus. & Prof. Code §25246)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE",
+        "SPARKLING"
+      ],
+      "grapes": [
+        {
+          "name": "Pinot Noir"
+        },
+        {
+          "name": "Chardonnay"
+        },
+        {
+          "name": "Syrah",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Zinfandel",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.116, Sonoma Coast (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.116"
+        },
+        {
+          "title": "TTB, AVA establishment dates",
+          "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/ava-establishment-dates"
+        },
+        {
+          "title": "Sonoma County Tourism, Sonoma Coast wine region and appellation",
+          "url": "https://www.sonomacounty.com/wine/wine-areas-avas/sonoma-coast-wine-region-and-appellation/"
+        },
+        {
+          "title": "California Business and Professions Code §25246 (Sonoma County conjunctive labeling)",
+          "url": "https://california.public.law/codes/business_and_professions_code_section_25246"
+        }
+      ]
+    },
+    "united-states.california.north-coast.sonoma-coast.west-sonoma-coast": {
+      "article": {
+        "description": "The westernmost strip of Sonoma County, about 141,800 acres of steep coastal ridges along the San Andreas fault, from Annapolis in the north through Fort Ross-Seaview to Freestone and Occidental. It lies within Sonoma Coast and holds all of Fort Ross-Seaview. At establishment it had about 47 commercial vineyards and some 1,028 acres of vines.",
+        "climate": "Marine: days cooler and nights warmer than inland, fewer growing degree days than to the east, and less wind than the Petaluma Gap to the south; many vineyards sit above the fog.",
+        "soils": "Thin, sandy, well-drained soils over hard Franciscan Complex rocks, unlike the Wilson Grove Formation farther east.",
+        "grape_varieties": "Pinot Noir and Chardonnay, with some Syrah.",
+        "wine_styles": "Dry Pinot Noir and Chardonnay, and some Syrah.",
+        "key_facts": [
+          "Established 2022 (27 CFR 9.283)",
+          "About 141,846 acres (TTB final rule)",
+          "About 47 commercial vineyards and 1,028 acres of vines at establishment (TTB final rule)",
+          "Labels must also show \"Sonoma County\" (Cal. Bus. & Prof. Code §25246)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Pinot Noir"
+        },
+        {
+          "name": "Chardonnay"
+        },
+        {
+          "name": "Syrah",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.283, West Sonoma Coast (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.283"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), T.D. TTB-179, West Sonoma Coast (2022)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2022-05-23/html/2022-10590.htm"
+        },
+        {
+          "title": "Sonoma County Tourism, West Sonoma Coast wine region and appellation",
+          "url": "https://www.sonomacounty.com/articles/west-sonoma-coast-wine-region-and-appellation/"
+        },
+        {
+          "title": "California Business and Professions Code §25246 (Sonoma County conjunctive labeling)",
+          "url": "https://california.public.law/codes/business_and_professions_code_section_25246"
+        }
+      ]
+    },
+    "united-states.california.north-coast.sonoma-coast.west-sonoma-coast.fort-ross-seaview": {
+      "article": {
+        "description": "Ridge-top land above Fort Ross State Historic Park, between Jenner and The Sea Ranch, overlooking the Pacific. The AVA covers only ground above the 920-foot contour, so its vineyards sit above the marine layer. Russian settlers planted grapes at Fort Ross in 1817; modern planting began in 1973.",
+        "climate": "Cool and close to the cold Pacific, but above the fog: the ridges get more summer sun than the coast and valleys below.",
+        "soils": "Thin, well-drained soils on steep coastal ridges over Franciscan rocks.",
+        "grape_varieties": "Pinot Noir and Chardonnay, with some Syrah and Zinfandel.",
+        "wine_styles": "Dry Pinot Noir and Chardonnay from ridge-top vineyards.",
+        "key_facts": [
+          "Established 2011 (27 CFR 9.221)",
+          "Its boundary mostly follows the 920-foot contour line (27 CFR 9.221)",
+          "About 27,500 acres with about 500 acres of vineyard (Sonoma County Tourism)",
+          "Labels must also show \"Sonoma County\" (Cal. Bus. & Prof. Code §25246)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Pinot Noir"
+        },
+        {
+          "name": "Chardonnay"
+        },
+        {
+          "name": "Syrah",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Zinfandel",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.221, Fort Ross-Seaview (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.221"
+        },
+        {
+          "title": "TTB, AVA establishment dates",
+          "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/ava-establishment-dates"
+        },
+        {
+          "title": "Sonoma County Tourism, Fort Ross-Seaview wine region and appellation",
+          "url": "https://www.sonomacounty.com/articles/fort-ross-seaview-wine-region-and-appellation/"
+        },
+        {
+          "title": "California Business and Professions Code §25246 (Sonoma County conjunctive labeling)",
+          "url": "https://california.public.law/codes/business_and_professions_code_section_25246"
+        }
+      ]
+    },
+    "united-states.california.north-coast.sonoma-valley": {
+      "article": {
+        "description": "The valley of Sonoma Creek in southeast Sonoma County, between the Mayacamas range and Sonoma Mountain, from Sugarloaf Ridge down to San Pablo Bay, with the town of Sonoma at its heart. Commercial winemaking in California began here in the 1850s, and old Zinfandel plantings date from then. It holds Bennett Valley, Moon Mountain District and Sonoma Mountain.",
+        "climate": "Three zones: mild days and cool bay winds in the flat south near Carneros, warmer around Glen Ellen where Sonoma Mountain holds the heat, and cooler again in the north around Kenwood, where Pacific fog and wind reach.",
+        "soils": "Fertile, loamy soils that hold water on the valley floor, and meagre, rocky, well-drained soils higher up the slopes.",
+        "grape_varieties": "Cabernet Sauvignon is now the leading grape, with old-vine Zinfandel, Merlot, Chardonnay, Pinot Noir and Syrah.",
+        "wine_styles": "Dry red wines from Cabernet Sauvignon and Zinfandel, and dry Chardonnay.",
+        "key_facts": [
+          "Established 1981 (27 CFR 9.29)",
+          "More than 14,000 acres of vineyard (Sonoma County Tourism)",
+          "Commercial winemaking in California began here in the 1850s (Sonoma County Tourism)",
+          "Labels must also show \"Sonoma County\" (Cal. Bus. & Prof. Code §25246)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Zinfandel"
+        },
+        {
+          "name": "Chardonnay"
+        },
+        {
+          "name": "Merlot",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Pinot Noir",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Syrah",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.29, Sonoma Valley (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.29"
+        },
+        {
+          "title": "TTB, AVA establishment dates",
+          "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/ava-establishment-dates"
+        },
+        {
+          "title": "Sonoma County Tourism, Sonoma Valley wine region and appellation",
+          "url": "https://www.sonomacounty.com/articles/sonoma-valley-wine-region-and-appellation/"
+        },
+        {
+          "title": "Sonoma County Winegrowers, Sonoma County terroir",
+          "url": "https://sonomawinegrape.org/sonoma-county-terroir"
+        },
+        {
+          "title": "California Business and Professions Code §25246 (Sonoma County conjunctive labeling)",
+          "url": "https://california.public.law/codes/business_and_professions_code_section_25246"
+        }
+      ]
+    },
+    "united-states.california.north-coast.sonoma-valley.bennett-valley": {
+      "article": {
+        "description": "A small upland valley south of Santa Rosa, ringed by Sonoma Mountain, Bennett Peak and Taylor Mountain, on high ground between Sonoma Valley and the Cotati Valley. Isaac DeTurk founded a winery here in 1862; after phylloxera and Prohibition the vines returned in the late 1970s with Matanzas Creek. About 650 acres are planted.",
+        "climate": "Cool: Pacific air and fog reach it through the Petaluma Gap and Crane Canyon on summer afternoons.",
+        "soils": "Clay-like volcanic soils on the valley floor and the surrounding slopes.",
+        "grape_varieties": "Merlot and Chardonnay made its name, with Cabernet Sauvignon, Pinot Noir, Syrah and Sauvignon Blanc.",
+        "wine_styles": "Dry Merlot, Chardonnay and Pinot Noir, and some Syrah.",
+        "key_facts": [
+          "Established 2003 (27 CFR 9.142)",
+          "About 650 acres of vineyard (Sonoma County Tourism)",
+          "Isaac DeTurk founded the Belle Mount winery here in 1862 (Sonoma County Tourism)",
+          "Labels must also show \"Sonoma County\" (Cal. Bus. & Prof. Code §25246)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Merlot"
+        },
+        {
+          "name": "Chardonnay"
+        },
+        {
+          "name": "Pinot Noir"
+        },
+        {
+          "name": "Cabernet Sauvignon",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Syrah",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Sauvignon Blanc",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.142, Bennett Valley (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.142"
+        },
+        {
+          "title": "TTB, AVA establishment dates",
+          "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/ava-establishment-dates"
+        },
+        {
+          "title": "Sonoma County Tourism, Bennett Valley wine region and appellation",
+          "url": "https://www.sonomacounty.com/articles/bennett-valley-wine-region-and-appellation/"
+        },
+        {
+          "title": "Sonoma County Winegrowers, Sonoma County terroir",
+          "url": "https://sonomawinegrape.org/sonoma-county-terroir"
+        },
+        {
+          "title": "California Business and Professions Code §25246 (Sonoma County conjunctive labeling)",
+          "url": "https://california.public.law/codes/business_and_professions_code_section_25246"
+        }
+      ]
+    },
+    "united-states.california.north-coast.sonoma-valley.moon-mountain-district-sonoma-county": {
+      "article": {
+        "description": "The western slopes of the Mayacamas range above Sonoma Valley, facing Sonoma Mountain across the valley, from about 200 to 2,200 feet. About 1,500 of its 17,663 acres are planted. It holds the Monte Rosso vineyard, first planted in 1886 and named by Louis M. Martini in 1938. The legal name already includes \"Sonoma County\".",
+        "climate": "Afternoon sun with crosswinds from the Pacific and San Pablo Bay; the higher vineyards get stronger sun.",
+        "soils": "Rocky, iron-rich volcanic soils and loams.",
+        "grape_varieties": "Zinfandel and Cabernet Sauvignon, with Merlot, Cabernet Franc, Petit Verdot, Malbec and some Chardonnay.",
+        "wine_styles": "Dry red wines, mostly Cabernet Sauvignon and old-vine Zinfandel.",
+        "key_facts": [
+          "Established 2013 (27 CFR 9.231)",
+          "17,663 acres, about 1,500 of them planted (Sonoma County Tourism)",
+          "Elevations from about 200 to 2,200 feet (Sonoma County Tourism)"
+        ]
+      },
+      "styles": [
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Zinfandel"
+        },
+        {
+          "name": "Merlot",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Cabernet Franc",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Petit Verdot",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Malbec",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.231, Moon Mountain District Sonoma County (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.231"
+        },
+        {
+          "title": "TTB, AVA establishment dates",
+          "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/ava-establishment-dates"
+        },
+        {
+          "title": "Sonoma County Tourism, Moon Mountain District wine region and appellation",
+          "url": "https://www.sonomacounty.com/articles/moon-mountain-wine-region-and-appellation/"
+        }
+      ]
+    },
+    "united-states.california.north-coast.sonoma-valley.sonoma-mountain": {
+      "article": {
+        "description": "The north and east slopes of Sonoma Mountain above Glen Ellen, in the northwest of Sonoma Valley, between about 400 and 1,200 feet. Its vineyards are scattered among woods and grazing land; Jack London farmed here. About 800 acres are planted.",
+        "climate": "The eastern slopes are sheltered from fog, sunny and warm; the western flank gets cool wind and fog from the Petaluma Gap.",
+        "soils": "Hillside soils on a series of stacked hills dotted with live oak, the vineyards isolated among woods and grazing land.",
+        "grape_varieties": "Cabernet Sauvignon on the warm eastern side, Pinot Noir on the western side, with Chardonnay, Syrah, Sauvignon Blanc and Zinfandel.",
+        "wine_styles": "Dry Cabernet Sauvignon and Pinot Noir, and dry Chardonnay.",
+        "key_facts": [
+          "Established 1985 (27 CFR 9.102)",
+          "About 800 acres of vineyard (Sonoma County Tourism)",
+          "Elevations from about 400 to 1,200 feet (Sonoma County Tourism)",
+          "Labels must also show \"Sonoma County\" (Cal. Bus. & Prof. Code §25246)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Pinot Noir",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Chardonnay",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Zinfandel",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Syrah",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.102, Sonoma Mountain (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.102"
+        },
+        {
+          "title": "TTB, AVA establishment dates",
+          "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/ava-establishment-dates"
+        },
+        {
+          "title": "Sonoma County Tourism, Sonoma Mountain wine region and appellation",
+          "url": "https://www.sonomacounty.com/articles/sonoma-mountain-wine-region-and-appellation/"
+        },
+        {
+          "title": "California Business and Professions Code §25246 (Sonoma County conjunctive labeling)",
+          "url": "https://california.public.law/codes/business_and_professions_code_section_25246"
+        }
+      ]
+    },
+    "united-states.california.north-coast.wild-horse-valley": {
+      "article": {
+        "description": "A small upland AVA in the hills east of the city of Napa, straddling the line between Napa and Solano counties. Most of it lies above the fog, and its vineyards were first planted in 1881 and replanted from 1978. Chardonnay and Pinot Noir are its main grapes.",
+        "climate": "The coolest of the AVAs that reach into Napa Valley, because of its height and San Pablo Bay nearby; summer days rarely pass 90 °F and the difference between day and night is small.",
+        "soils": "Shallow volcanic soils with little water-holding capacity, so irrigation is usually needed.",
+        "grape_varieties": "Chardonnay and Pinot Noir, planted from 1978 on.",
+        "wine_styles": "Dry Chardonnay and Pinot Noir from upland vineyards.",
+        "key_facts": [
+          "Established 1988 (27 CFR 9.124)",
+          "Spans Napa and Solano counties",
+          "Elevations from about 850 to 2,130 feet (Napa Valley Vintners)",
+          "Rainfall up to about 35 inches a year (Napa Valley Vintners)"
+        ]
+      },
+      "styles": [
+        "WHITE",
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Chardonnay"
+        },
+        {
+          "name": "Pinot Noir"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.124, Wild Horse Valley (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.124"
+        },
+        {
+          "title": "TTB, AVA establishment dates",
+          "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/wine/ava-establishment-dates"
+        },
+        {
+          "title": "Napa Valley Vintners, Wild Horse Valley AVA",
+          "url": "https://napavintners.com/napa_valley/wild-horse-valley-ava/"
         }
       ]
     }
