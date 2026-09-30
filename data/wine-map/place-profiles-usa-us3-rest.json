@@ -718,6 +718,502 @@
         }
       ]
     },
+    "united-states.california.central-valley.capay-valley": {
+      "article": {
+        "description": "A long valley of about 102,400 acres, some 150 square miles, in northwestern Yolo County along Cache Creek, bordering Napa, Lake and Colusa counties. \"Capay\" comes from the Wintun word for \"stream\". Only about 25 acres were planted when it was proposed; hillside vineyards such as Casey Flat Ranch, at about 2,000 feet, have been added since.",
+        "climate": "Long, warm growing days with wide day-to-night swings, and harvest earlier than in Napa Valley.",
+        "soils": "Sandy to rocky soils over fractured sandstone on the hillsides, and alluvial soils along Cache Creek.",
+        "grape_varieties": "Syrah and Cabernet Sauvignon, with Cabernet Franc, Mourvèdre, Viognier and Sauvignon Blanc.",
+        "wine_styles": "Dry red wines from Bordeaux and Rhône varieties, dry whites and rosé.",
+        "key_facts": [
+          "Established 2002 (27 CFR 9.176)",
+          "About 102,400 acres at establishment (Wine Institute, from the TTB final rule)",
+          "About 25 acres planted when proposed (Wine Spectator)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE",
+        "ROSE"
+      ],
+      "grapes": [
+        {
+          "name": "Syrah"
+        },
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Cabernet Franc",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Mourvèdre",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Viognier",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Sauvignon Blanc",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.176, Capay Valley (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.176"
+        },
+        {
+          "title": "Wine Institute, American Viticultural Areas of California (acreage at establishment, from TTB final rules)",
+          "url": "https://wineinstitute.org/wp-content/uploads/2024/04/CA-AVAs_FINAL-FOR-WEBSITE_4.18.24.pdf"
+        },
+        {
+          "title": "Wine Spectator, New appellation proposed for Northern California",
+          "url": "https://www.winespectator.com/articles/new-appellation-proposed-for-northern-california-21362"
+        },
+        {
+          "title": "Pull That Cork, Casey Flat Ranch in the Capay Valley AVA",
+          "url": "https://pullthatcork.com/2014/casey-flat-ranch-a-hidden-gem-in-the-capay-valley-ava/"
+        }
+      ]
+    },
+    "united-states.california.central-valley.clarksburg": {
+      "article": {
+        "description": "Flat farmland along the Sacramento River in the Delta, south of Sacramento, across Sacramento, Solano and Yolo counties. The AVA was about 64,640 acres until 2022, when about 27,945 acres on Grand Island and Ryer Island were added. It is known above all for Chenin Blanc, and it holds Merritt Island.",
+        "climate": "Warm days and cool nights: the \"Delta breeze\" brings cold air and fog from San Francisco Bay up the river channels in the evening; about 16 inches of rain a year.",
+        "soils": "Poorly drained clay and clay loam soils of the Delta's alluvial fans, basins and flood plains, from about 10 feet below to 5 feet above sea level.",
+        "grape_varieties": "Chenin Blanc stands out, with Petite Sirah, Chardonnay and Pinot Gris.",
+        "wine_styles": "Dry and off-dry Chenin Blanc, and red wines from Petite Sirah.",
+        "key_facts": [
+          "Established 1984 (27 CFR 9.95)",
+          "About 64,640 acres, expanded by about 27,945 acres in 2022 (T.D. TTB-178)",
+          "Contains the Merritt Island AVA"
+        ]
+      },
+      "styles": [
+        "WHITE",
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Chenin Blanc"
+        },
+        {
+          "name": "Petite Sirah",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Chardonnay",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Pinot Gris",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.95, Clarksburg (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.95"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), T.D. TTB-178, Expansion of the Clarksburg viticultural area (2022)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2022-03-09/html/2022-05001.htm"
+        },
+        {
+          "title": "Discover Rio Vista, Hidden wineries of the Delta (Clarksburg)",
+          "url": "https://discoverriovista.com/wp-content/uploads/2018/01/Jan-Apr-2018-Hidden-Wineries.pdf"
+        }
+      ]
+    },
+    "united-states.california.central-valley.clarksburg.merritt-island": {
+      "article": {
+        "description": "An island of about 5,000 acres in the Sacramento River Delta in Yolo County, about six miles south of Sacramento, within the Clarksburg AVA. It was petitioned by Bogle Vineyards; commercial grape-growing began in 1969, and Chenin Blanc was its principal grape.",
+        "climate": "Cool evenings and fog from San Francisco Bay reach the island along the Delta channels.",
+        "soils": "Fertile, rich loams of the Delta island.",
+        "grape_varieties": "Chenin Blanc was the principal grape among eight varieties grown.",
+        "wine_styles": "Dry and off-dry Chenin Blanc, and other whites.",
+        "key_facts": [
+          "Established 1983 (27 CFR 9.68)",
+          "About 5,000 acres at establishment (Wine Institute, from the TTB final rule)",
+          "Lies within the Clarksburg AVA"
+        ]
+      },
+      "styles": [
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Chenin Blanc"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.68, Merritt Island (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.68"
+        },
+        {
+          "title": "Wine Institute, American Viticultural Areas of California (acreage at establishment, from TTB final rules)",
+          "url": "https://wineinstitute.org/wp-content/uploads/2024/04/CA-AVAs_FINAL-FOR-WEBSITE_4.18.24.pdf"
+        },
+        {
+          "title": "TTB, Merritt Island viticultural area final rule (1983)",
+          "url": "https://www.ttb.gov/media/68894/download"
+        }
+      ]
+    },
+    "united-states.california.central-valley.diablo-grande": {
+      "article": {
+        "description": "An area of about 30,000 acres in the Diablo Range in western Stanislaus County, west of Patterson, named after the resort community and Mount Diablo. When it was established in 1998 about 35 acres were planted, at 1,000 to 1,800 feet, the highest vineyards in Stanislaus County.",
+        "climate": "Warmer than Modesto but cooler than Newman, Tracy and Westley, above the fog belt of the lower land, with 14 to 23% more rain than the areas around it.",
+        "soils": "Residual soils from sandstone, such as Arburua loam, Wisflat sandy loam and Contra Costa clay loam, unlike the alluvial soils below.",
+        "grape_varieties": "Merlot and Chardonnay, with other varieties in small plantings.",
+        "wine_styles": "Dry Merlot and Chardonnay from hillside vineyards.",
+        "key_facts": [
+          "Established 1998 (27 CFR 9.156)",
+          "About 30,000 acres; about 35 acres planted at establishment (T.D. ATF-399)",
+          "Vineyards at 1,000 to 1,800 feet (T.D. ATF-399)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Merlot"
+        },
+        {
+          "name": "Chardonnay"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.156, Diablo Grande (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.156"
+        },
+        {
+          "title": "TTB, T.D. ATF-399, Diablo Grande (1998)",
+          "url": "https://www.ttb.gov/images/pdfs/rrd/tdatf399.htm"
+        },
+        {
+          "title": "Bay Crossings, Diablo Grande wine gallery",
+          "url": "https://www.baycrossings.com/san-franciscos-wine-country-at-mission-and-3rddiablo-grande-wine-gallery/"
+        }
+      ]
+    },
+    "united-states.california.central-valley.dunnigan-hills": {
+      "article": {
+        "description": "Gently rolling hills of about 89,000 acres in northwestern Yolo County, on the west side of the Sacramento Valley. R.H. Phillips, whose vineyard grew to about 1,500 acres, was its pioneering winery.",
+        "climate": "Mediterranean and hot, but good air drainage lowers the risk of spring frost and gives cooler summers than the valley floor.",
+        "soils": "Soils of low rolling hills on the valley's western edge.",
+        "grape_varieties": "Chardonnay and Syrah, with other French and Rhône varieties.",
+        "wine_styles": "Dry Chardonnay and red wines from Syrah and other Rhône varieties.",
+        "key_facts": [
+          "Established 1993 (27 CFR 9.145)",
+          "About 89,000 acres at establishment (Wine Institute, from the TTB final rule)",
+          "R.H. Phillips's vineyard grew to about 1,500 acres (Beverage Tasting Institute)"
+        ]
+      },
+      "styles": [
+        "WHITE",
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Chardonnay"
+        },
+        {
+          "name": "Syrah"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.145, Dunnigan Hills (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.145"
+        },
+        {
+          "title": "Wine Institute, American Viticultural Areas of California (acreage at establishment, from TTB final rules)",
+          "url": "https://wineinstitute.org/wp-content/uploads/2024/04/CA-AVAs_FINAL-FOR-WEBSITE_4.18.24.pdf"
+        },
+        {
+          "title": "Beverage Tasting Institute (tastings.com), Dunnigan Hills",
+          "url": "https://www.tastings.com/Drinkipedia/Dunnigan-Hills-Definition.aspx"
+        }
+      ]
+    },
+    "united-states.california.central-valley.madera": {
+      "article": {
+        "description": "A large AVA of about 448,000 acres in the hot, irrigated San Joaquin Valley across Madera and Fresno counties. It is known above all for dessert and fortified wines: Quady, founded in Madera in 1975, makes Muscat dessert wines and a port-style wine here.",
+        "climate": "Hot, dry and irrigated, typical of the central San Joaquin Valley.",
+        "soils": "Deep alluvial soils of the San Joaquin Valley floor.",
+        "grape_varieties": "Muscat varieties and Zinfandel, with Chenin Blanc and Portuguese varieties for port-style wines.",
+        "wine_styles": "Sweet Muscat dessert wines, port-style fortified wines, and dry table wines.",
+        "key_facts": [
+          "Established 1984 (27 CFR 9.92)",
+          "About 448,000 acres at establishment (Wine Institute, from the TTB final rule)",
+          "Quady Winery was founded in Madera in 1975 (Quady)"
+        ]
+      },
+      "styles": [
+        "SWEET",
+        "FORTIFIED",
+        "WHITE",
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Muscat"
+        },
+        {
+          "name": "Zinfandel"
+        },
+        {
+          "name": "Chenin Blanc",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.92, Madera (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.92"
+        },
+        {
+          "title": "Wine Institute, American Viticultural Areas of California (acreage at establishment, from TTB final rules)",
+          "url": "https://wineinstitute.org/wp-content/uploads/2024/04/CA-AVAs_FINAL-FOR-WEBSITE_4.18.24.pdf"
+        },
+        {
+          "title": "Quady Winery, About",
+          "url": "https://www.quadywinery.com/about"
+        }
+      ]
+    },
+    "united-states.california.central-valley.paulsell-valley": {
+      "article": {
+        "description": "An AVA of about 34,155 acres of rolling hills in eastern Stanislaus County, between Knights Ferry and the Modesto Reservoir, from 140 to 612 feet. At establishment three commercial vineyards covered about 826 acres, with a fourth of 700 acres planned.",
+        "climate": "Warm, dry and inland: 4,201 to 5,204 growing degree days a year (2012-2017), with growing-season lows of about 55 to 58 °F.",
+        "soils": "Mostly from volcanic tuff, the Pentz and Peters series, well drained, on mound-and-swale ground cut by arroyos.",
+        "grape_varieties": "Cabernet Sauvignon, Petit Verdot and Petite Sirah lead.",
+        "wine_styles": "Dry red wines from Cabernet Sauvignon and Bordeaux varieties.",
+        "key_facts": [
+          "Established 2022 (27 CFR 9.285)",
+          "About 34,155 acres (T.D. TTB-181)",
+          "Three vineyards on about 826 acres at establishment (T.D. TTB-181)"
+        ]
+      },
+      "styles": [
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Petit Verdot",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Petite Sirah",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.285, Paulsell Valley (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.285"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), T.D. TTB-181, Paulsell Valley (2022)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2022-06-03/html/2022-11716.htm"
+        },
+        {
+          "title": "Wine, Wit and Wisdom, California earns another: the Paulsell Valley AVA",
+          "url": "https://winewitandwisdomswe.com/2022/06/08/california-earns-another-the-paulsell-valley-ava/"
+        }
+      ]
+    },
+    "united-states.california.central-valley.river-junction": {
+      "article": {
+        "description": "A very small AVA of about 1,300 acres in southern San Joaquin County, west of Modesto, where the Stanislaus River meets the San Joaquin. It has a single producer, McManis Family Vineyards, whose petition created it, and it grows Chardonnay.",
+        "climate": "The river basin stays a few degrees cooler than the farmland around it.",
+        "soils": "Alluvial flood-plain soils and sandy loams near the rivers.",
+        "grape_varieties": "Chardonnay, from the McManis estate vineyard.",
+        "wine_styles": "Dry Chardonnay from a single estate vineyard.",
+        "key_facts": [
+          "Established 2001 (27 CFR 9.164)",
+          "About 1,300 acres at establishment (Wine Institute, from the TTB final rule)",
+          "A single producer, McManis Family Vineyards (McManis)"
+        ]
+      },
+      "styles": [
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Chardonnay"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.164, River Junction (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.164"
+        },
+        {
+          "title": "Wine Institute, American Viticultural Areas of California (acreage at establishment, from TTB final rules)",
+          "url": "https://wineinstitute.org/wp-content/uploads/2024/04/CA-AVAs_FINAL-FOR-WEBSITE_4.18.24.pdf"
+        },
+        {
+          "title": "McManis Family Vineyards, Chardonnay (River Junction estate vineyard)",
+          "url": "https://trialto.kork.ca/en/our-wineries/mcmanis/chardonnay/2023"
+        }
+      ]
+    },
+    "united-states.california.central-valley.salado-creek": {
+      "article": {
+        "description": "A very small AVA of about 2,940 acres in western Stanislaus County, southwest of Patterson, on the edge of the Central Valley below the Diablo Range. At establishment a single vineyard had 44 acres of grapes.",
+        "climate": "Warm and inland: the Diablo Range to the west shields it from marine air; rainfall averages about 13 inches.",
+        "soils": "Fine sandy loam over deep loam subsoil, from sandstone and shale.",
+        "grape_varieties": "Cabernet Sauvignon, with Chardonnay and Tempranillo.",
+        "wine_styles": "Dry red wines from Cabernet Sauvignon and some whites.",
+        "key_facts": [
+          "Established 2004 (27 CFR 9.163)",
+          "About 2,940 acres at establishment (Wine Institute, from the TTB final rule)",
+          "Southwest of Patterson, below the Diablo Range"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Chardonnay",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Tempranillo",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.163, Salado Creek (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.163"
+        },
+        {
+          "title": "Wine Institute, American Viticultural Areas of California (acreage at establishment, from TTB final rules)",
+          "url": "https://wineinstitute.org/wp-content/uploads/2024/04/CA-AVAs_FINAL-FOR-WEBSITE_4.18.24.pdf"
+        },
+        {
+          "title": "Wine Routes, Salado Creek Winery & Vineyard",
+          "url": "https://www.wineroutes.com/winery/salado-creek-winery-and-vineyard/wines"
+        }
+      ]
+    },
+    "united-states.california.central-valley.tracy-hills": {
+      "article": {
+        "description": "An AVA of about 39,200 acres on east-sloping land between the San Joaquin Valley floor and the Diablo Range foothills, south and southwest of Tracy, across San Joaquin and Stanislaus counties. At establishment it had about 1,005 acres of vineyards, from 100 to 500 feet. It was first proposed as \"Mt. Oso\".",
+        "climate": "Dry: it lies in the rain shadow of Mt. Oso, with about 8 to 9 inches of rain, less fog, dew, frost and hail than around it, and about 4,033 degree days.",
+        "soils": "Alluvial soils washed down from the Diablo Range, unlike the sedimentary mountain soils above and the heavy clays to the east.",
+        "grape_varieties": "Cabernet Sauvignon and Syrah, with Chardonnay.",
+        "wine_styles": "Dry red wines from Cabernet Sauvignon and Syrah, and some Chardonnay.",
+        "key_facts": [
+          "Established 2006 (27 CFR 9.204)",
+          "About 39,200 acres with about 1,005 acres of vineyards (TTB final rule, 2006)",
+          "Rainfall about 8 to 9 inches a year (TTB proposed rule, 2005)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Syrah"
+        },
+        {
+          "name": "Chardonnay",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.204, Tracy Hills (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.204"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), Tracy Hills (2006)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2006-11-08/html/E6-18894.htm"
+        },
+        {
+          "title": "Qorkz, Tracy Hills",
+          "url": "https://www.qorkz.com/collections/tracy-hills"
+        }
+      ]
+    },
+    "united-states.california.central-valley.winters-highlands": {
+      "article": {
+        "description": "An AVA of about 7,296 acres on the inner slope of the Coast Ranges west of Winters, across Solano and Yolo counties, where Putah Creek flows through the Berryessa Gap. At establishment about 134 acres were planted and three wineries worked there, Berryessa Gap Vineyards among them.",
+        "climate": "More growing degree days than the areas around it, with lower humidity and cooler evenings as Pacific air comes through the Berryessa Gap.",
+        "soils": "Fine clay and loamy alfisols and inceptisols, well drained, on gentle to steep slopes: gravelly loam over dark red clay.",
+        "grape_varieties": "Petite Sirah, Tempranillo and Syrah, with Zinfandel, Albariño and Sauvignon Blanc.",
+        "wine_styles": "Dry red wines from Petite Sirah, Tempranillo and Syrah, and dry whites.",
+        "key_facts": [
+          "Established 2023 (27 CFR 9.290)",
+          "About 7,296 acres; about 134 acres planted at establishment (T.D. TTB-189)",
+          "Spans Solano and Yolo counties"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Petite Sirah"
+        },
+        {
+          "name": "Tempranillo"
+        },
+        {
+          "name": "Syrah"
+        },
+        {
+          "name": "Zinfandel",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Albariño",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Sauvignon Blanc",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.290, Winters Highlands (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.290"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), T.D. TTB-189, Winters Highlands (2023)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2023-08-29/html/2023-18588.htm"
+        },
+        {
+          "title": "Wine Industry Advisor, Introducing the newest AVA in California: Winters Highlands",
+          "url": "https://wineindustryadvisor.com/2023/09/01/introducing-the-newest-ava-in-california-winters-highlands"
+        }
+      ]
+    },
     "united-states.california.contra-costa": {
       "article": {
         "description": "An AVA of about 167,146 acres covering the flat and gently rolling north and east of Contra Costa County, around Oakley, Brentwood and Antioch, mostly below 100 feet. At establishment it had at least 60 vineyards on about 1,700 acres and 14 wineries.",
