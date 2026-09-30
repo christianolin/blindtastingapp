@@ -297,6 +297,15 @@
     "documented": true
   },
   {
+    "canonical_key": "united-states.california.central-coast.san-francisco-bay.contra-costa",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
+    "source_feature_id": "contra_costa",
+    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
+    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
+    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
+    "documented": true
+  },
+  {
     "canonical_key": "united-states.california.central-coast.san-francisco-bay.lamorinda",
     "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "lamorinda",
@@ -630,9 +639,9 @@
     "documented": true
   },
   {
-    "canonical_key": "united-states.california.contra-costa",
+    "canonical_key": "united-states.california.comptche",
     "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
-    "source_feature_id": "contra_costa",
+    "source_feature_id": "comptche",
     "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
     "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
     "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
@@ -804,15 +813,6 @@
     "canonical_key": "united-states.california.north-coast.cole-ranch",
     "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "cole_ranch",
-    "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
-    "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
-    "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",
-    "documented": true
-  },
-  {
-    "canonical_key": "united-states.california.north-coast.comptche",
-    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
-    "source_feature_id": "comptche",
     "normalized_checksum_sha256": "CB3F8A08A6FF5E814CC701007C96F13FA8354A0591829D7BD7610446C4BF2E7A",
     "raw_snapshot_uri": "storage://wine-map-sources/UCD_TTB_AVA/355f7da3cd6c4020fff736b7517a4a669fed7730/CA_avas.geojson",
     "raw_checksum_sha256": "3C0327D706ED71AAC6BD820A935110CC9C61778ACC79911E4590A74EC237B578",

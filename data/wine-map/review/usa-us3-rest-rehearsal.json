@@ -1,8 +1,8 @@
 {
   "_generated_by": "scripts/usa-map/rehearse-us3.mjs",
   "batch": "rest",
-  "git_head": "fd8f4251d66a3a863a1218ccfdbe1006f8c551d4",
-  "rehearsed_at": "2026-09-30T08:50:22.508Z",
+  "git_head": "4a640c837ed3f68b77ed9dc82c20be0eefba9413",
+  "rehearsed_at": "2026-09-30T09:42:04.827Z",
   "cache_before": {
     "fresh": true,
     "built_at": "2026-09-30T06:49:21.114Z"
@@ -20,62 +20,62 @@
   ],
   "central_valley": "US-3 rest promote: Central Valley against its members: symmetric difference 0.000230, members outside 0.000003",
   "timings_s": {
-    "catalog": 66.4,
-    "details": 2,
-    "drill_reapply_catalog": 65.4,
-    "drill_reapply_knowledge": 0.3,
-    "drill_remove": 66.1,
-    "drill_restage": 10.4,
-    "drill_unpublish": 74,
-    "drill_unstage": 68.6,
-    "drill_unstage_again": 67.1,
-    "export_preview": 1.1,
+    "catalog": 66.6,
+    "details": 2.2,
+    "drill_reapply_catalog": 65.3,
+    "drill_reapply_knowledge": 0.5,
+    "drill_remove": 65.5,
+    "drill_restage": 9.7,
+    "drill_unpublish": 72.8,
+    "drill_unstage": 65.9,
+    "drill_unstage_again": 66.8,
+    "export_preview": 0.2,
     "knowledge": 0.4,
-    "prepend_core_catalog": 75.9,
-    "prepend_core_knowledge": 0.6,
-    "prepend_core_promote": 68.1,
-    "prepend_core_stage": 16,
-    "promote": 66.8,
-    "shortlists_after": 1.4,
-    "shortlists_before": 1.6,
-    "stage": 11
+    "prepend_core_catalog": 64.7,
+    "prepend_core_knowledge": 0.3,
+    "prepend_core_promote": 80.3,
+    "prepend_core_stage": 20.9,
+    "promote": 66.7,
+    "shortlists_after": 0.7,
+    "shortlists_before": 1,
+    "stage": 11.9
   },
   "refreshes": {
     "catalog": {
       "rows": 15566,
-      "seconds": 66.2
+      "seconds": 66.3
     },
     "drill_reapply_catalog": {
       "rows": 15566,
-      "seconds": 65.2
+      "seconds": 65.1
     },
     "drill_remove": {
       "rows": 15566,
-      "seconds": 65.6
+      "seconds": 65.1
     },
     "drill_unpublish": {
       "rows": 15566,
-      "seconds": 73.8
+      "seconds": 72.5
     },
     "drill_unstage": {
       "rows": 15566,
-      "seconds": 68.5
+      "seconds": 65.7
     },
     "drill_unstage_again": {
       "rows": 15566,
-      "seconds": 66.8
+      "seconds": 66.5
     },
     "prepend_core_catalog": {
       "rows": 15232,
-      "seconds": 75.8
+      "seconds": 64.5
     },
     "prepend_core_promote": {
       "rows": 15566,
-      "seconds": 66.6
+      "seconds": 75.8
     },
     "promote": {
-      "rows": 15710,
-      "seconds": 65.8
+      "rows": 15711,
+      "seconds": 65.7
     }
   },
   "refusals": {
@@ -115,11 +115,15 @@
     "current_validated": 64,
     "draft_boundaries": 0,
     "ca_live": 156,
-    "ca_relationships": 29,
+    "ca_relationships": 27,
     "us_outline": 11,
     "fresh": true
   },
   "parent_inside_lowest": [
+    {
+      "key": "united-states.california.central-coast.san-francisco-bay.contra-costa",
+      "parent_inside": 0.336329
+    },
     {
       "key": "united-states.california.north-coast.suisun-valley",
       "parent_inside": 0.920777
@@ -135,10 +139,6 @@
     {
       "key": "united-states.california.north-coast.mendocino.mcdowell-valley",
       "parent_inside": 0.983698
-    },
-    {
-      "key": "united-states.california.north-coast.solano-county-green-valley",
-      "parent_inside": 0.998355
     }
   ],
   "drift_highest": [
@@ -441,7 +441,7 @@
       "california": {
         "keys": 156,
         "max_zoom": 12,
-        "bytes": 1980477
+        "bytes": 1980496
       },
       "new-york": {
         "keys": 3,
@@ -622,6 +622,24 @@
         36.62496,
         -121.21698,
         36.75275
+      ]
+    },
+    {
+      "key": "united-states.california.central-coast.san-francisco-bay.contra-costa",
+      "role": "ucd",
+      "npoints": 513,
+      "nparts": 1,
+      "km2": 690.148,
+      "raw_km2": 690.176,
+      "drift": 0.00004,
+      "containment": 1,
+      "datum_m": 16.5,
+      "parent_inside": 0.336329,
+      "bbox": [
+        -122.19067,
+        37.81924,
+        -121.57721,
+        38.05798
       ]
     },
     {
@@ -931,21 +949,21 @@
       ]
     },
     {
-      "key": "united-states.california.contra-costa",
+      "key": "united-states.california.comptche",
       "role": "ucd",
-      "npoints": 513,
+      "npoints": 166,
       "nparts": 1,
-      "km2": 690.148,
-      "raw_km2": 690.176,
-      "drift": 0.00004,
+      "km2": 7.063,
+      "raw_km2": 7.053,
+      "drift": 0.00137,
       "containment": 1,
       "datum_m": 16.5,
       "parent_inside": null,
       "bbox": [
-        -122.19067,
-        37.81924,
-        -121.57721,
-        38.05798
+        -123.60417,
+        39.25403,
+        -123.55414,
+        39.29182
       ]
     },
     {
@@ -1198,24 +1216,6 @@
         39.05565,
         -123.21377,
         39.06551
-      ]
-    },
-    {
-      "key": "united-states.california.north-coast.comptche",
-      "role": "ucd",
-      "npoints": 166,
-      "nparts": 1,
-      "km2": 7.063,
-      "raw_km2": 7.053,
-      "drift": 0.00137,
-      "containment": 1,
-      "datum_m": 16.5,
-      "parent_inside": 1,
-      "bbox": [
-        -123.60417,
-        39.25403,
-        -123.55414,
-        39.29182
       ]
     },
     {
@@ -1616,17 +1616,17 @@
     }
   ],
   "notices": [
-    "US-3 core catalog: neighbour refresh 15232 rows in 75.8 s",
-    "US-3 core promote: neighbour refresh 15566 rows in 66.6 s",
-    "US-3 rest catalog: neighbour refresh 15566 rows in 66.2 s",
-    "US-3 rest unstage: neighbour refresh 15566 rows in 68.5 s",
-    "US-3 rest unstage: neighbour refresh 15566 rows in 66.8 s",
-    "US-3 rest remove: neighbour refresh 15566 rows in 65.6 s",
-    "US-3 rest catalog: neighbour refresh 15566 rows in 65.2 s",
+    "US-3 core catalog: neighbour refresh 15232 rows in 64.5 s",
+    "US-3 core promote: neighbour refresh 15566 rows in 75.8 s",
+    "US-3 rest catalog: neighbour refresh 15566 rows in 66.3 s",
+    "US-3 rest unstage: neighbour refresh 15566 rows in 65.7 s",
+    "US-3 rest unstage: neighbour refresh 15566 rows in 66.5 s",
+    "US-3 rest remove: neighbour refresh 15566 rows in 65.1 s",
+    "US-3 rest catalog: neighbour refresh 15566 rows in 65.1 s",
     "US-3 rest promote: Central Valley against its members: symmetric difference 0.000230, members outside 0.000003",
-    "US-3 rest promote: neighbour refresh 15710 rows in 65.8 s",
-    "US-3 rest unpublish: neighbour refresh 15566 rows in 73.8 s"
+    "US-3 rest promote: neighbour refresh 15711 rows in 65.7 s",
+    "US-3 rest unpublish: neighbour refresh 15566 rows in 72.5 s"
   ],
-  "total_s": 668.1,
+  "total_s": 666.2,
   "mode": "pre-sitting"
 }
