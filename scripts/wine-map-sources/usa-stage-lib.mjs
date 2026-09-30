@@ -65,6 +65,11 @@ export function sittingGate(f) {
   return r;
 }
 
+/** The keys whose subtrees may hold no boundary outside this wave and the earlier ones (US-4 spans three states). */
+export function scopesOf(wave) {
+  return wave.scopeKeys ?? [wave.scopeKey ?? "united-states"];
+}
+
 // ---------------------------------------------------------------------------
 // The database half. stageWave runs inside the caller's open transaction and
 // never begins, commits or rolls back: the CLI's dry run and the rehearsal
@@ -238,7 +243,7 @@ export async function stageWave(client, ctx) {
 
   const waveKeys = wave.places.map((p) => p.key);
   const priorKeys = wave.priorKeys ?? [];
-  const scope = wave.scopeKey ?? "united-states";
+  const scopes = scopesOf(wave);
 
   // 1. Nothing staged on this wave's places; every earlier wave live; no other
   //    boundary under the wave's scope (a half-staged neighbour batch).
@@ -257,9 +262,9 @@ export async function stageWave(client, ctx) {
   }
   const stray = await client.query(
     `select count(*)::int n from public.wine_place_boundaries b join public.wine_places p on p.id = b.wine_place_id
-      where (p.canonical_key = $1 or p.canonical_key like $1 || '.%')
-        and not (p.canonical_key = any($2::text[]) or p.canonical_key = any($3::text[]))`, [scope, waveKeys, priorKeys]);
-  if (stray.rows[0].n > 0) throw new Error(`${stray.rows[0].n} boundaries on other places under ${scope}`);
+      where exists (select 1 from unnest($1::text[]) s(k) where p.canonical_key = s.k or p.canonical_key like s.k || '.%')
+        and not (p.canonical_key = any($2::text[]) or p.canonical_key = any($3::text[]))`, [scopes, waveKeys, priorKeys]);
+  if (stray.rows[0].n > 0) throw new Error(`${stray.rows[0].n} boundaries on other places under ${scopes.join(", ")}`);
 
   // 2. Catalog fidelity, for this wave's places.
   const { rows: live } = await client.query(

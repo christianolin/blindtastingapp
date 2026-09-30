@@ -3,8 +3,9 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 import { sha256hex } from "../wine-map-tiles/lib.mjs";
 import {
-  COUNTRY_ARTIFACT, PARENT_SQL, STATE_WINDOWS, datumCheck, insideWindow, rawObjectPath, sittingGate, uploadDecision,
+  COUNTRY_ARTIFACT, PARENT_SQL, STATE_WINDOWS, datumCheck, insideWindow, rawObjectPath, scopesOf, sittingGate, uploadDecision,
 } from "./usa-stage-lib.mjs";
+import { loadWave } from "../usa-map/waves.mjs";
 
 test("D10: 0.0002° is at least five times the 2 m datum shift at every state's northern edge", () => {
   for (const [code, w] of Object.entries(STATE_WINDOWS)) {
@@ -70,4 +71,11 @@ test("parent containment is measured on the normalized source geometry, one row 
   assert.match(PARENT_SQL, /jsonb_array_elements\(\$1::jsonb\)/);
   assert.match(PARENT_SQL, /ST_Area\(extensions\.ST_Intersection\(c, p\)\) \/ nullif\(extensions\.ST_Area\(c\), 0\) inside/);
   assert.doesNotMatch(PARENT_SQL, /Simplify/, "never the simplified shape: the tree measured the normalized one");
+});
+
+test("the stray-boundary scope: one key for US-2 and US-3, the three states for US-4 (plan decision 6)", async () => {
+  assert.deepEqual(scopesOf(await loadWave("us2")), ["united-states"]);
+  assert.deepEqual(scopesOf(await loadWave("us3-core")), ["united-states.california"]);
+  assert.deepEqual(scopesOf(await loadWave("us4")), ["united-states.new-york", "united-states.oregon", "united-states.washington"]);
+  assert.deepEqual(scopesOf({}), ["united-states"]);
 });

@@ -1,7 +1,7 @@
 // Stage a US wave's DRAFT boundaries (spec 2026-09-29 §8.2). Modelled on
 // stage-germany-weinbau.mjs, with one transaction for the whole wave.
 //
-//   node --env-file=.env.local scripts/wine-map-sources/stage-usa-ava.mjs --wave <us2|us3-core|us3-rest>
+//   node --env-file=.env.local scripts/wine-map-sources/stage-usa-ava.mjs --wave <us2|us3-core|us3-rest|us4>
 //     DEFAULT, dry: begin; the wave's catalog and knowledge migrations applied
 //     inside the transaction if they are not recorded live yet; every boundary
 //     built and asserted; rollback. Writes nothing, and never touches Storage.
@@ -134,7 +134,8 @@ try {
   //     are applied inside the transaction if they are not recorded yet.
   if (!STAGE) {
     if (wave.priorPromote && !(await recordedIn(wave.priorPromote))) {
-      throw new Error(`the previous wave's promote ${wave.priorPromote} is not live: rehearse ${wave.name} with scripts/usa-map/rehearse-us3.mjs --batch ${wave.batch} instead`);
+      const rehearse = wave.name === "us4" ? "scripts/usa-map/rehearse-us4.mjs" : `scripts/usa-map/rehearse-us3.mjs --batch ${wave.batch}`;
+      throw new Error(`the previous wave's promote ${wave.priorPromote} is not live: rehearse ${wave.name} with ${rehearse} instead`);
     }
     for (const what of ["catalog", "knowledge"]) {
       if (await recordedIn(wave.versions[what])) continue;
