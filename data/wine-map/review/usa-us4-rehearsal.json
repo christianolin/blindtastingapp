@@ -1,0 +1,1336 @@
+{
+  "_generated_by": "scripts/usa-map/rehearse-us4.mjs",
+  "wave": "us4",
+  "git_head": "9d82938ecdc36035464be5adf9381a909f3c8773",
+  "rehearsed_at": "2026-09-30T11:49:05.895Z",
+  "cache_before": {
+    "fresh": true,
+    "built_at": "2026-09-30T10:33:04.578Z"
+  },
+  "applied_in_transaction": [
+    "supabase/migrations/20260930224747_usa_us4_catalog.sql",
+    "supabase/migrations/20260930234747_usa_us4_knowledge.sql",
+    "supabase/migrations/20261001004747_usa_us4_promote.sql"
+  ],
+  "state_shares": [
+    "US-4 promote: state share united-states.oregon.columbia-gorge in united-states.washington 0.3479, tree 0.348",
+    "US-4 promote: state share united-states.washington.columbia-valley.walla-walla-valley in united-states.oregon 0.3102, tree 0.3101"
+  ],
+  "timings_s": {
+    "catalog": 67.3,
+    "details": 1.5,
+    "drill_reapply_catalog": 66.7,
+    "drill_reapply_knowledge": 0.4,
+    "drill_remove": 73.3,
+    "drill_restage": 26.7,
+    "drill_unpublish": 66.7,
+    "drill_unstage": 68.9,
+    "drill_unstage_again": 70.3,
+    "export_preview": 0.6,
+    "knowledge": 0.2,
+    "promote": 67.5,
+    "shortlists_after": 1.2,
+    "shortlists_before": 0.9,
+    "stage": 23
+  },
+  "refreshes": {
+    "catalog": {
+      "rows": 15711,
+      "seconds": 67.2
+    },
+    "drill_reapply_catalog": {
+      "rows": 15711,
+      "seconds": 66.3
+    },
+    "drill_remove": {
+      "rows": 15711,
+      "seconds": 72.7
+    },
+    "drill_unpublish": {
+      "rows": 15711,
+      "seconds": 66.5
+    },
+    "drill_unstage": {
+      "rows": 15711,
+      "seconds": 68.5
+    },
+    "drill_unstage_again": {
+      "rows": 15711,
+      "seconds": 69.8
+    },
+    "promote": {
+      "rows": 15783,
+      "seconds": 66.1
+    }
+  },
+  "refusals": {
+    "A_promote_before_stage": "US-4 promote: expected exactly one DRAFT, non-current boundary per place (run stage-usa-ava.mjs --wave us4 --stage first): united-states.new-york.champlain-valley-of-new-york, united-states.new-york.finger-lakes.cayuga-lake, united-states.new-york.finger-lakes.seneca-lake, united-states.new-york.hud",
+    "C_stage_twice": "42 united-states boundaries already exist on this wave's places",
+    "D_unpublish_before_promote": "US-4 unpublish: not VERIFIED with one current boundary: united-states.new-york.champlain-valley-of-new-york, united-states.new-york.finger-lakes.cayuga-lake, united-states.new-york.finger-lakes.seneca-lake, united-states.new-york.hudson-river-region, united-states.new-york.long-island.north-fork-of-",
+    "E_remove_after_promote": "US-4 remove: keys are locked (the promote ran): use the unpublish file instead (united-states.new-york.champlain-valley-of-new-york, united-states.new-york.finger-lakes.cayuga-lake, united-states.new-york.finger-lakes.seneca-lake, united-states.new-york.hudson-river-region, united-states.new-york.lo",
+    "G_remove_while_another_place_exists": "US-4 remove: other places under Washington, Oregon or New York exist (remove the later wave first): united-states.new-york.us4-rehearsal-probe",
+    "P_catalog_twice": "US-4 catalog: its places already exist: united-states.new-york.champlain-valley-of-new-york, united-states.new-york.finger-lakes.cayuga-lake, united-states.new-york.finger-lakes.seneca-lake, united-states.new-york.hudson-river-region, united-states.new-york.long-island.north-fork-of-long-island, uni",
+    "U_unstage_after_promote": "US-4 unstage: missing or not DRAFT (after the promote, use the unpublish file): united-states.new-york.champlain-valley-of-new-york, united-states.new-york.finger-lakes.cayuga-lake, united-states.new-york.finger-lakes.seneca-lake, united-states.new-york.hudson-river-region, united-states.new-york.lo"
+  },
+  "rollbacks": {
+    "unstage": {
+      "boundaries": 0,
+      "draft_places": 42,
+      "fresh": true
+    },
+    "unstage_again": {
+      "boundaries": 0,
+      "draft_places": 42,
+      "fresh": true
+    },
+    "remove": {
+      "places": 0,
+      "history_rows": 0,
+      "reapplied_places": 42
+    },
+    "unpublish": {
+      "verified": 0,
+      "current": 0,
+      "locked": 42,
+      "fresh": true
+    }
+  },
+  "facts": {
+    "places": 42,
+    "verified": 42,
+    "locked": 42,
+    "current_validated": 42,
+    "draft_boundaries": 0,
+    "live": {
+      "NY": 11,
+      "OR": 21,
+      "WA": 19
+    },
+    "scope_relationships": 5,
+    "us_outline": 12,
+    "cross_state": {
+      "columbia_gorge": 1,
+      "columbia_valley": 1,
+      "walla_walla_valley": 1
+    },
+    "deferred": 0,
+    "other_states": 0,
+    "fresh": true
+  },
+  "parent_inside_lowest": [
+    {
+      "key": "united-states.washington.columbia-valley.yakima-valley.candy-mountain",
+      "parent_inside": 0.893096
+    },
+    {
+      "key": "united-states.washington.columbia-valley.lake-chelan",
+      "parent_inside": 0.957193
+    },
+    {
+      "key": "united-states.oregon.willamette-valley.mcminnville",
+      "parent_inside": 0.980857
+    },
+    {
+      "key": "united-states.oregon.southern-oregon.umpqua-valley",
+      "parent_inside": 0.982664
+    },
+    {
+      "key": "united-states.oregon.southern-oregon.umpqua-valley.elkton-oregon",
+      "parent_inside": 0.990563
+    }
+  ],
+  "drift_highest": [
+    {
+      "key": "united-states.washington.columbia-valley.yakima-valley.snipes-mountain",
+      "drift": 0.00122
+    },
+    {
+      "key": "united-states.washington.columbia-valley.yakima-valley.goose-gap",
+      "drift": 0.00106
+    },
+    {
+      "key": "united-states.oregon.southern-oregon.umpqua-valley.red-hill-douglas-county-oregon",
+      "drift": 0.00091
+    },
+    {
+      "key": "united-states.oregon.willamette-valley.dundee-hills",
+      "drift": 0.00087
+    },
+    {
+      "key": "united-states.washington.columbia-valley.rocky-reach",
+      "drift": 0.00082
+    }
+  ],
+  "containment_lowest": [
+    {
+      "key": "united-states.new-york.long-island.north-fork-of-long-island",
+      "containment": 0.99965
+    },
+    {
+      "key": "united-states.new-york.champlain-valley-of-new-york",
+      "containment": 1
+    },
+    {
+      "key": "united-states.new-york.finger-lakes.cayuga-lake",
+      "containment": 1
+    },
+    {
+      "key": "united-states.new-york.finger-lakes.seneca-lake",
+      "containment": 1
+    },
+    {
+      "key": "united-states.new-york.hudson-river-region",
+      "containment": 1
+    }
+  ],
+  "clicks": [
+    {
+      "key": "united-states.new-york.finger-lakes.seneca-lake",
+      "resolved": "united-states.new-york.finger-lakes.seneca-lake"
+    },
+    {
+      "key": "united-states.new-york.long-island.north-fork-of-long-island",
+      "resolved": "united-states.new-york.long-island.north-fork-of-long-island"
+    },
+    {
+      "key": "united-states.oregon.the-rocks-district-of-milton-freewater",
+      "resolved": "united-states.oregon.the-rocks-district-of-milton-freewater"
+    },
+    {
+      "key": "united-states.oregon.willamette-valley.chehalem-mountains.ribbon-ridge",
+      "resolved": "united-states.oregon.willamette-valley.chehalem-mountains.ribbon-ridge"
+    },
+    {
+      "key": "united-states.oregon.willamette-valley.dundee-hills",
+      "resolved": "united-states.oregon.willamette-valley.dundee-hills"
+    },
+    {
+      "key": "united-states.washington.columbia-valley.yakima-valley.candy-mountain",
+      "resolved": "united-states.washington.columbia-valley.yakima-valley.candy-mountain"
+    },
+    {
+      "key": "united-states.washington.columbia-valley.yakima-valley.red-mountain",
+      "resolved": "united-states.washington.columbia-valley.yakima-valley.red-mountain"
+    },
+    {
+      "key": "united-states.washington.columbia-valley.yakima-valley.snipes-mountain",
+      "resolved": "united-states.washington.columbia-valley.yakima-valley.snipes-mountain"
+    }
+  ],
+  "nearby": {
+    "united-states.oregon.willamette-valley.dundee-hills": [
+      "united-states.oregon.willamette-valley.yamhill-carlton",
+      "united-states.oregon.willamette-valley.chehalem-mountains",
+      "united-states.oregon.willamette-valley.eola-amity-hills"
+    ],
+    "united-states.oregon.the-rocks-district-of-milton-freewater": [
+      "united-states.washington.columbia-valley",
+      "united-states.washington"
+    ],
+    "united-states.oregon.columbia-gorge": [
+      "united-states.washington",
+      "united-states.washington.columbia-valley"
+    ],
+    "united-states.washington.columbia-valley.walla-walla-valley": [
+      "united-states.oregon",
+      "united-states.oregon.the-rocks-district-of-milton-freewater"
+    ],
+    "united-states.washington.columbia-valley.yakima-valley.red-mountain": [
+      "united-states.washington.columbia-valley.yakima-valley.goose-gap",
+      "united-states.washington.columbia-valley.yakima-valley.candy-mountain",
+      "united-states.washington.columbia-valley.horse-heaven-hills"
+    ],
+    "united-states.washington.columbia-valley.yakima-valley.candy-mountain": [
+      "united-states.washington.columbia-valley.yakima-valley.goose-gap",
+      "united-states.washington.columbia-valley.yakima-valley.red-mountain",
+      "united-states.washington.columbia-valley.horse-heaven-hills"
+    ],
+    "united-states.new-york.finger-lakes.seneca-lake": [
+      "united-states.new-york.finger-lakes.cayuga-lake"
+    ],
+    "united-states.new-york.long-island.north-fork-of-long-island": [
+      "united-states.new-york.long-island.the-hamptons-long-island"
+    ]
+  },
+  "shortlist": {
+    "California": {
+      "before_source": "map",
+      "before": [
+        "Cabernet Sauvignon",
+        "Chardonnay",
+        "Pinot Noir",
+        "Zinfandel",
+        "Syrah",
+        "Merlot",
+        "Sauvignon Blanc",
+        "Petite Sirah",
+        "Riesling",
+        "Tempranillo",
+        "Mourvèdre",
+        "Chenin Blanc",
+        "Grenache",
+        "Aglianico",
+        "Gewürztraminer",
+        "Muscat",
+        "Sangiovese",
+        "Cabernet Franc",
+        "Viognier",
+        "Barbera",
+        "Petit Verdot",
+        "Pinot Gris",
+        "Malbec",
+        "Albariño",
+        "Carignan",
+        "Roussanne",
+        "Semillon",
+        "Vermentino",
+        "Cinsault",
+        "Marsanne",
+        "Nebbiolo",
+        "Palomino",
+        "Pinot Blanc"
+      ],
+      "after_source": "map",
+      "after": [
+        "Cabernet Sauvignon",
+        "Chardonnay",
+        "Pinot Noir",
+        "Zinfandel",
+        "Syrah",
+        "Merlot",
+        "Sauvignon Blanc",
+        "Petite Sirah",
+        "Riesling",
+        "Tempranillo",
+        "Mourvèdre",
+        "Chenin Blanc",
+        "Grenache",
+        "Aglianico",
+        "Gewürztraminer",
+        "Muscat",
+        "Sangiovese",
+        "Cabernet Franc",
+        "Viognier",
+        "Barbera",
+        "Petit Verdot",
+        "Pinot Gris",
+        "Malbec",
+        "Albariño",
+        "Carignan",
+        "Roussanne",
+        "Semillon",
+        "Vermentino",
+        "Cinsault",
+        "Marsanne",
+        "Nebbiolo",
+        "Palomino",
+        "Pinot Blanc"
+      ],
+      "after_place": "California",
+      "colours": {
+        "Aglianico": "RED",
+        "Albariño": "WHITE",
+        "Barbera": "RED",
+        "Cabernet Franc": "RED",
+        "Cabernet Sauvignon": "RED",
+        "Carignan": "RED",
+        "Chardonnay": "WHITE",
+        "Chenin Blanc": "WHITE",
+        "Cinsault": "RED",
+        "Gewürztraminer": "WHITE",
+        "Grenache": "RED",
+        "Malbec": "RED",
+        "Marsanne": "WHITE",
+        "Merlot": "RED",
+        "Mourvèdre": "RED",
+        "Muscat": "WHITE",
+        "Nebbiolo": "RED",
+        "Palomino": "WHITE",
+        "Petit Verdot": "RED",
+        "Petite Sirah": "RED",
+        "Pinot Blanc": "WHITE",
+        "Pinot Gris": "WHITE",
+        "Pinot Noir": "RED",
+        "Riesling": "WHITE",
+        "Roussanne": "WHITE",
+        "Sangiovese": "RED",
+        "Sauvignon Blanc": "WHITE",
+        "Semillon": "WHITE",
+        "Syrah": "RED",
+        "Tempranillo": "RED",
+        "Vermentino": "WHITE",
+        "Viognier": "WHITE",
+        "Zinfandel": "RED"
+      }
+    },
+    "Washington": {
+      "before_source": "map",
+      "before": [
+        "Cabernet Sauvignon",
+        "Merlot",
+        "Chardonnay",
+        "Pinot Noir",
+        "Riesling",
+        "Syrah",
+        "Cabernet Franc",
+        "Müller-Thurgau",
+        "Sauvignon Blanc"
+      ],
+      "after_source": "map",
+      "after": [
+        "Cabernet Sauvignon",
+        "Merlot",
+        "Riesling",
+        "Chardonnay",
+        "Pinot Noir",
+        "Syrah",
+        "Pinot Gris",
+        "Sauvignon Blanc",
+        "Cabernet Franc",
+        "Gewürztraminer",
+        "Müller-Thurgau"
+      ],
+      "after_place": "Washington",
+      "colours": {
+        "Cabernet Franc": "RED",
+        "Cabernet Sauvignon": "RED",
+        "Chardonnay": "WHITE",
+        "Gewürztraminer": "WHITE",
+        "Merlot": "RED",
+        "Müller-Thurgau": "WHITE",
+        "Pinot Gris": "WHITE",
+        "Pinot Noir": "RED",
+        "Riesling": "WHITE",
+        "Sauvignon Blanc": "WHITE",
+        "Syrah": "RED"
+      }
+    },
+    "Oregon": {
+      "before_source": "map",
+      "before": [
+        "Pinot Noir",
+        "Chardonnay",
+        "Pinot Gris",
+        "Syrah",
+        "Cabernet Sauvignon",
+        "Riesling",
+        "Tempranillo",
+        "Merlot",
+        "Pinot Blanc",
+        "Viognier"
+      ],
+      "after_source": "map",
+      "after": [
+        "Pinot Noir",
+        "Syrah",
+        "Chardonnay",
+        "Pinot Gris",
+        "Cabernet Sauvignon",
+        "Merlot",
+        "Riesling",
+        "Pinot Blanc",
+        "Tempranillo",
+        "Gamay",
+        "Gewürztraminer",
+        "Sauvignon Blanc",
+        "Viognier",
+        "Albariño",
+        "Grenache",
+        "Zinfandel"
+      ],
+      "after_place": "Oregon",
+      "colours": {
+        "Albariño": "WHITE",
+        "Cabernet Sauvignon": "RED",
+        "Chardonnay": "WHITE",
+        "Gamay": "RED",
+        "Gewürztraminer": "WHITE",
+        "Grenache": "RED",
+        "Merlot": "RED",
+        "Pinot Blanc": "WHITE",
+        "Pinot Gris": "WHITE",
+        "Pinot Noir": "RED",
+        "Riesling": "WHITE",
+        "Sauvignon Blanc": "WHITE",
+        "Syrah": "RED",
+        "Tempranillo": "RED",
+        "Viognier": "WHITE",
+        "Zinfandel": "RED"
+      }
+    },
+    "New York": {
+      "before_source": "map",
+      "before": [
+        "Riesling",
+        "Cabernet Franc",
+        "Chardonnay",
+        "Merlot",
+        "Blaufränkisch",
+        "Gewürztraminer",
+        "Pinot Noir",
+        "Cabernet Sauvignon",
+        "Sauvignon Blanc"
+      ],
+      "after_source": "map",
+      "after": [
+        "Riesling",
+        "Cabernet Franc",
+        "Chardonnay",
+        "Merlot",
+        "Frontenac",
+        "La Crescent",
+        "Marquette",
+        "Seyval Blanc",
+        "Pinot Noir",
+        "Gewürztraminer",
+        "Blaufränkisch",
+        "Cabernet Sauvignon",
+        "Sauvignon Blanc",
+        "Baco Noir",
+        "Vidal Blanc"
+      ],
+      "after_place": "New York",
+      "colours": {
+        "Baco Noir": "RED",
+        "Blaufränkisch": "RED",
+        "Cabernet Franc": "RED",
+        "Cabernet Sauvignon": "RED",
+        "Chardonnay": "WHITE",
+        "Frontenac": "RED",
+        "Gewürztraminer": "WHITE",
+        "La Crescent": "WHITE",
+        "Marquette": "RED",
+        "Merlot": "RED",
+        "Pinot Noir": "RED",
+        "Riesling": "WHITE",
+        "Sauvignon Blanc": "WHITE",
+        "Seyval Blanc": "WHITE",
+        "Vidal Blanc": "WHITE"
+      }
+    }
+  },
+  "export_preview": {
+    "world": [
+      "united-states",
+      "united-states.california",
+      "united-states.new-york",
+      "united-states.oregon",
+      "united-states.washington"
+    ],
+    "outline": [
+      "united-states.california.central-coast",
+      "united-states.california.central-coast.san-francisco-bay",
+      "united-states.california.central-valley",
+      "united-states.california.north-coast",
+      "united-states.california.sierra-foothills",
+      "united-states.california.south-coast",
+      "united-states.new-york.finger-lakes",
+      "united-states.new-york.hudson-river-region",
+      "united-states.oregon.southern-oregon",
+      "united-states.oregon.willamette-valley",
+      "united-states.washington.columbia-valley",
+      "united-states.washington.puget-sound"
+    ],
+    "shards": {
+      "california": {
+        "keys": 156,
+        "max_zoom": 12,
+        "bytes": 1980496
+      },
+      "new-york": {
+        "keys": 11,
+        "max_zoom": 9,
+        "bytes": 331401
+      },
+      "oregon": {
+        "keys": 21,
+        "max_zoom": 11,
+        "bytes": 925664
+      },
+      "washington": {
+        "keys": 19,
+        "max_zoom": 11,
+        "bytes": 489416
+      }
+    }
+  },
+  "archetypes": {
+    "name": "A typical Willamette Pinot Noir",
+    "home": "united-states.oregon.willamette-valley",
+    "placements": [
+      "united-states.oregon",
+      "united-states.oregon.willamette-valley"
+    ]
+  },
+  "stage_report": [
+    {
+      "key": "united-states.new-york.champlain-valley-of-new-york",
+      "role": "ucd",
+      "npoints": 1216,
+      "nparts": 1,
+      "km2": 1472.255,
+      "raw_km2": 1472.24,
+      "drift": 0.00001,
+      "containment": 1,
+      "datum_m": 15.7,
+      "parent_inside": null,
+      "bbox": [
+        -73.75639,
+        43.8483,
+        -73.32013,
+        45.01072
+      ]
+    },
+    {
+      "key": "united-states.new-york.finger-lakes.cayuga-lake",
+      "role": "ucd",
+      "npoints": 187,
+      "nparts": 1,
+      "km2": 476.479,
+      "raw_km2": 476.585,
+      "drift": 0.00022,
+      "containment": 1,
+      "datum_m": 15.7,
+      "parent_inside": 0.999837,
+      "bbox": [
+        -76.82068,
+        42.43909,
+        -76.49667,
+        42.96322
+      ]
+    },
+    {
+      "key": "united-states.new-york.finger-lakes.seneca-lake",
+      "role": "ucd",
+      "npoints": 288,
+      "nparts": 1,
+      "km2": 795.141,
+      "raw_km2": 795.11,
+      "drift": 0.00004,
+      "containment": 1,
+      "datum_m": 15.7,
+      "parent_inside": 1,
+      "bbox": [
+        -77.10741,
+        42.36092,
+        -76.81925,
+        42.96249
+      ]
+    },
+    {
+      "key": "united-states.new-york.hudson-river-region",
+      "role": "ucd",
+      "npoints": 467,
+      "nparts": 1,
+      "km2": 9750.912,
+      "raw_km2": 9750.796,
+      "drift": 0.00001,
+      "containment": 1,
+      "datum_m": 15.7,
+      "parent_inside": null,
+      "bbox": [
+        -74.69709,
+        41.01523,
+        -73.35301,
+        42.50988
+      ]
+    },
+    {
+      "key": "united-states.new-york.long-island.north-fork-of-long-island",
+      "role": "ucd",
+      "npoints": 1284,
+      "nparts": 6,
+      "km2": 355.154,
+      "raw_km2": 355.125,
+      "drift": 0.00008,
+      "containment": 0.99965,
+      "datum_m": 15.7,
+      "parent_inside": 0.999963,
+      "bbox": [
+        -72.86421,
+        40.87593,
+        -71.92278,
+        41.29233
+      ]
+    },
+    {
+      "key": "united-states.new-york.long-island.the-hamptons-long-island",
+      "role": "ucd",
+      "npoints": 2197,
+      "nparts": 23,
+      "km2": 566.482,
+      "raw_km2": 566.557,
+      "drift": 0.00013,
+      "containment": 1,
+      "datum_m": 15.7,
+      "parent_inside": 0.999974,
+      "bbox": [
+        -72.72869,
+        40.77134,
+        -71.85569,
+        41.12368
+      ]
+    },
+    {
+      "key": "united-states.new-york.niagara-escarpment",
+      "role": "ucd",
+      "npoints": 954,
+      "nparts": 1,
+      "km2": 117.055,
+      "raw_km2": 117.059,
+      "drift": 0.00004,
+      "containment": 1,
+      "datum_m": 15.7,
+      "parent_inside": null,
+      "bbox": [
+        -79.04847,
+        43.15772,
+        -78.5074,
+        43.24417
+      ]
+    },
+    {
+      "key": "united-states.new-york.upper-hudson",
+      "role": "ucd",
+      "npoints": 708,
+      "nparts": 1,
+      "km2": 4206.144,
+      "raw_km2": 4206.243,
+      "drift": 0.00002,
+      "containment": 1,
+      "datum_m": 15.7,
+      "parent_inside": null,
+      "bbox": [
+        -74.372,
+        42.57381,
+        -73.34027,
+        43.31947
+      ]
+    },
+    {
+      "key": "united-states.oregon.columbia-gorge",
+      "role": "ucd",
+      "npoints": 350,
+      "nparts": 1,
+      "km2": 786.253,
+      "raw_km2": 786.101,
+      "drift": 0.00019,
+      "containment": 1,
+      "datum_m": 15.4,
+      "parent_inside": null,
+      "bbox": [
+        -121.67083,
+        45.50453,
+        -121.25281,
+        45.87006
+      ]
+    },
+    {
+      "key": "united-states.oregon.southern-oregon.rogue-valley",
+      "role": "ucd",
+      "npoints": 357,
+      "nparts": 1,
+      "km2": 4638.938,
+      "raw_km2": 4638.817,
+      "drift": 0.00003,
+      "containment": 1,
+      "datum_m": 15.4,
+      "parent_inside": 0.999375,
+      "bbox": [
+        -123.77776,
+        42.0001,
+        -122.52196,
+        42.74073
+      ]
+    },
+    {
+      "key": "united-states.oregon.southern-oregon.rogue-valley.applegate-valley",
+      "role": "ucd",
+      "npoints": 67,
+      "nparts": 1,
+      "km2": 1089.696,
+      "raw_km2": 1089.696,
+      "drift": 0,
+      "containment": 1,
+      "datum_m": 15.4,
+      "parent_inside": 0.999989,
+      "bbox": [
+        -123.58181,
+        42.09858,
+        -122.81819,
+        42.43152
+      ]
+    },
+    {
+      "key": "united-states.oregon.southern-oregon.umpqua-valley",
+      "role": "ucd",
+      "npoints": 8153,
+      "nparts": 1,
+      "km2": 2811.205,
+      "raw_km2": 2811.096,
+      "drift": 0.00004,
+      "containment": 1,
+      "datum_m": 15.4,
+      "parent_inside": 0.982664,
+      "bbox": [
+        -123.82849,
+        42.89539,
+        -122.96789,
+        43.7792
+      ]
+    },
+    {
+      "key": "united-states.oregon.southern-oregon.umpqua-valley.elkton-oregon",
+      "role": "ucd",
+      "npoints": 1304,
+      "nparts": 1,
+      "km2": 298.292,
+      "raw_km2": 298.124,
+      "drift": 0.00056,
+      "containment": 1,
+      "datum_m": 15.4,
+      "parent_inside": 0.990563,
+      "bbox": [
+        -123.70567,
+        43.51902,
+        -123.44933,
+        43.73325
+      ]
+    },
+    {
+      "key": "united-states.oregon.southern-oregon.umpqua-valley.red-hill-douglas-county-oregon",
+      "role": "ucd",
+      "npoints": 306,
+      "nparts": 1,
+      "km2": 22.316,
+      "raw_km2": 22.336,
+      "drift": 0.00091,
+      "containment": 1,
+      "datum_m": 15.4,
+      "parent_inside": 1,
+      "bbox": [
+        -123.31571,
+        43.48687,
+        -123.2247,
+        43.6017
+      ]
+    },
+    {
+      "key": "united-states.oregon.the-rocks-district-of-milton-freewater",
+      "role": "ucd",
+      "npoints": 12,
+      "nparts": 1,
+      "km2": 12.791,
+      "raw_km2": 12.799,
+      "drift": 0.00064,
+      "containment": 1,
+      "datum_m": 15.4,
+      "parent_inside": null,
+      "bbox": [
+        -118.44175,
+        45.93935,
+        -118.37154,
+        45.97298
+      ]
+    },
+    {
+      "key": "united-states.oregon.willamette-valley.chehalem-mountains",
+      "role": "ucd",
+      "npoints": 1383,
+      "nparts": 1,
+      "km2": 252.082,
+      "raw_km2": 252.179,
+      "drift": 0.00038,
+      "containment": 1,
+      "datum_m": 15.4,
+      "parent_inside": 1,
+      "bbox": [
+        -123.12255,
+        45.25884,
+        -122.79975,
+        45.49658
+      ]
+    },
+    {
+      "key": "united-states.oregon.willamette-valley.chehalem-mountains.laurelwood-district",
+      "role": "ucd",
+      "npoints": 984,
+      "nparts": 1,
+      "km2": 135.111,
+      "raw_km2": 135.164,
+      "drift": 0.00039,
+      "containment": 1,
+      "datum_m": 15.4,
+      "parent_inside": 0.993621,
+      "bbox": [
+        -123.09608,
+        45.30172,
+        -122.84639,
+        45.49668
+      ]
+    },
+    {
+      "key": "united-states.oregon.willamette-valley.chehalem-mountains.ribbon-ridge",
+      "role": "ucd",
+      "npoints": 40,
+      "nparts": 1,
+      "km2": 14.166,
+      "raw_km2": 14.156,
+      "drift": 0.00071,
+      "containment": 1,
+      "datum_m": 15.4,
+      "parent_inside": 0.999834,
+      "bbox": [
+        -123.10169,
+        45.33046,
+        -123.05686,
+        45.38169
+      ]
+    },
+    {
+      "key": "united-states.oregon.willamette-valley.dundee-hills",
+      "role": "ucd",
+      "npoints": 321,
+      "nparts": 1,
+      "km2": 50.413,
+      "raw_km2": 50.457,
+      "drift": 0.00087,
+      "containment": 1,
+      "datum_m": 15.4,
+      "parent_inside": 1,
+      "bbox": [
+        -123.11814,
+        45.23645,
+        -123.00076,
+        45.32221
+      ]
+    },
+    {
+      "key": "united-states.oregon.willamette-valley.eola-amity-hills",
+      "role": "ucd",
+      "npoints": 735,
+      "nparts": 1,
+      "km2": 157.884,
+      "raw_km2": 158.004,
+      "drift": 0.00076,
+      "containment": 1,
+      "datum_m": 15.4,
+      "parent_inside": 1,
+      "bbox": [
+        -123.20878,
+        44.93073,
+        -123.07575,
+        45.16457
+      ]
+    },
+    {
+      "key": "united-states.oregon.willamette-valley.lower-long-tom",
+      "role": "ucd",
+      "npoints": 791,
+      "nparts": 1,
+      "km2": 116.654,
+      "raw_km2": 116.627,
+      "drift": 0.00023,
+      "containment": 1,
+      "datum_m": 15.4,
+      "parent_inside": 0.993202,
+      "bbox": [
+        -123.43604,
+        44.14822,
+        -123.28116,
+        44.30679
+      ]
+    },
+    {
+      "key": "united-states.oregon.willamette-valley.mcminnville",
+      "role": "ucd",
+      "npoints": 1049,
+      "nparts": 1,
+      "km2": 148.55,
+      "raw_km2": 148.545,
+      "drift": 0.00003,
+      "containment": 1,
+      "datum_m": 15.4,
+      "parent_inside": 0.980857,
+      "bbox": [
+        -123.46544,
+        45.08944,
+        -123.21982,
+        45.23113
+      ]
+    },
+    {
+      "key": "united-states.oregon.willamette-valley.mount-pisgah-polk-county-oregon",
+      "role": "ucd",
+      "npoints": 221,
+      "nparts": 1,
+      "km2": 22.92,
+      "raw_km2": 22.935,
+      "drift": 0.00066,
+      "containment": 1,
+      "datum_m": 15.4,
+      "parent_inside": 1,
+      "bbox": [
+        -123.32829,
+        44.85195,
+        -123.25329,
+        44.90894
+      ]
+    },
+    {
+      "key": "united-states.oregon.willamette-valley.tualatin-hills",
+      "role": "ucd",
+      "npoints": 2099,
+      "nparts": 1,
+      "km2": 581.116,
+      "raw_km2": 580.982,
+      "drift": 0.00023,
+      "containment": 1,
+      "datum_m": 15.4,
+      "parent_inside": 0.999978,
+      "bbox": [
+        -123.38121,
+        45.43347,
+        -122.86273,
+        45.76716
+      ]
+    },
+    {
+      "key": "united-states.oregon.willamette-valley.van-duzer-corridor",
+      "role": "ucd",
+      "npoints": 236,
+      "nparts": 1,
+      "km2": 227.761,
+      "raw_km2": 227.693,
+      "drift": 0.0003,
+      "containment": 1,
+      "datum_m": 15.4,
+      "parent_inside": 1,
+      "bbox": [
+        -123.41364,
+        44.93294,
+        -123.15914,
+        45.08648
+      ]
+    },
+    {
+      "key": "united-states.oregon.willamette-valley.yamhill-carlton",
+      "role": "ucd",
+      "npoints": 1449,
+      "nparts": 2,
+      "km2": 232.411,
+      "raw_km2": 232.506,
+      "drift": 0.00041,
+      "containment": 1,
+      "datum_m": 15.4,
+      "parent_inside": 0.998592,
+      "bbox": [
+        -123.29298,
+        45.22502,
+        -123.08118,
+        45.43811
+      ]
+    },
+    {
+      "key": "united-states.washington.columbia-valley.ancient-lakes-of-columbia-valley",
+      "role": "ucd",
+      "npoints": 223,
+      "nparts": 1,
+      "km2": 685.853,
+      "raw_km2": 685.923,
+      "drift": 0.0001,
+      "containment": 1,
+      "datum_m": 14.6,
+      "parent_inside": 0.999997,
+      "bbox": [
+        -120.0953,
+        46.97183,
+        -119.74633,
+        47.27877
+      ]
+    },
+    {
+      "key": "united-states.washington.columbia-valley.horse-heaven-hills",
+      "role": "ucd",
+      "npoints": 1623,
+      "nparts": 1,
+      "km2": 2325.784,
+      "raw_km2": 2325.747,
+      "drift": 0.00002,
+      "containment": 1,
+      "datum_m": 14.6,
+      "parent_inside": 1,
+      "bbox": [
+        -120.20014,
+        45.78949,
+        -118.99658,
+        46.25305
+      ]
+    },
+    {
+      "key": "united-states.washington.columbia-valley.lake-chelan",
+      "role": "ucd",
+      "npoints": 350,
+      "nparts": 1,
+      "km2": 130.738,
+      "raw_km2": 130.726,
+      "drift": 0.0001,
+      "containment": 1,
+      "datum_m": 14.6,
+      "parent_inside": 0.957193,
+      "bbox": [
+        -120.23686,
+        47.81525,
+        -119.97253,
+        47.93691
+      ]
+    },
+    {
+      "key": "united-states.washington.columbia-valley.naches-heights",
+      "role": "ucd",
+      "npoints": 203,
+      "nparts": 1,
+      "km2": 52.907,
+      "raw_km2": 52.907,
+      "drift": 0,
+      "containment": 1,
+      "datum_m": 14.6,
+      "parent_inside": 1,
+      "bbox": [
+        -120.77262,
+        46.61789,
+        -120.58249,
+        46.7444
+      ]
+    },
+    {
+      "key": "united-states.washington.columbia-valley.rocky-reach",
+      "role": "ucd",
+      "npoints": 1374,
+      "nparts": 1,
+      "km2": 131.292,
+      "raw_km2": 131.185,
+      "drift": 0.00082,
+      "containment": 1,
+      "datum_m": 14.6,
+      "parent_inside": 1,
+      "bbox": [
+        -120.32486,
+        47.47881,
+        -120.00711,
+        47.79896
+      ]
+    },
+    {
+      "key": "united-states.washington.columbia-valley.royal-slope",
+      "role": "ucd",
+      "npoints": 491,
+      "nparts": 1,
+      "km2": 632.665,
+      "raw_km2": 632.699,
+      "drift": 0.00005,
+      "containment": 1,
+      "datum_m": 14.6,
+      "parent_inside": 1,
+      "bbox": [
+        -119.97989,
+        46.82917,
+        -119.28988,
+        46.99739
+      ]
+    },
+    {
+      "key": "united-states.washington.columbia-valley.the-burn-of-columbia-valley",
+      "role": "ucd",
+      "npoints": 146,
+      "nparts": 1,
+      "km2": 52.928,
+      "raw_km2": 52.912,
+      "drift": 0.0003,
+      "containment": 1,
+      "datum_m": 14.6,
+      "parent_inside": 1,
+      "bbox": [
+        -120.4644,
+        45.70256,
+        -120.28202,
+        45.77315
+      ]
+    },
+    {
+      "key": "united-states.washington.columbia-valley.wahluke-slope",
+      "role": "ucd",
+      "npoints": 601,
+      "nparts": 1,
+      "km2": 326.196,
+      "raw_km2": 326.173,
+      "drift": 0.00007,
+      "containment": 1,
+      "datum_m": 14.6,
+      "parent_inside": 1,
+      "bbox": [
+        -119.96912,
+        46.62763,
+        -119.53774,
+        46.79327
+      ]
+    },
+    {
+      "key": "united-states.washington.columbia-valley.walla-walla-valley",
+      "role": "ucd",
+      "npoints": 1649,
+      "nparts": 2,
+      "km2": 1314.312,
+      "raw_km2": 1314.215,
+      "drift": 0.00007,
+      "containment": 1,
+      "datum_m": 14.6,
+      "parent_inside": 0.999475,
+      "bbox": [
+        -118.75433,
+        45.82806,
+        -118.09797,
+        46.20857
+      ]
+    },
+    {
+      "key": "united-states.washington.columbia-valley.white-bluffs",
+      "role": "ucd",
+      "npoints": 723,
+      "nparts": 1,
+      "km2": 380.636,
+      "raw_km2": 380.648,
+      "drift": 0.00003,
+      "containment": 1,
+      "datum_m": 14.6,
+      "parent_inside": 1,
+      "bbox": [
+        -119.32531,
+        46.36074,
+        -119.05164,
+        46.68756
+      ]
+    },
+    {
+      "key": "united-states.washington.columbia-valley.yakima-valley",
+      "role": "ucd",
+      "npoints": 1813,
+      "nparts": 1,
+      "km2": 2828.309,
+      "raw_km2": 2828.27,
+      "drift": 0.00001,
+      "containment": 1,
+      "datum_m": 14.6,
+      "parent_inside": 0.999705,
+      "bbox": [
+        -120.86185,
+        46.14923,
+        -119.31899,
+        46.53044
+      ]
+    },
+    {
+      "key": "united-states.washington.columbia-valley.yakima-valley.candy-mountain",
+      "role": "ucd",
+      "npoints": 25,
+      "nparts": 1,
+      "km2": 3.655,
+      "raw_km2": 3.654,
+      "drift": 0.00011,
+      "containment": 1,
+      "datum_m": 14.6,
+      "parent_inside": 0.893096,
+      "bbox": [
+        -119.38863,
+        46.24481,
+        -119.34235,
+        46.26563
+      ]
+    },
+    {
+      "key": "united-states.washington.columbia-valley.yakima-valley.goose-gap",
+      "role": "ucd",
+      "npoints": 97,
+      "nparts": 1,
+      "km2": 32.559,
+      "raw_km2": 32.525,
+      "drift": 0.00106,
+      "containment": 1,
+      "datum_m": 14.6,
+      "parent_inside": 0.999694,
+      "bbox": [
+        -119.46585,
+        46.21427,
+        -119.34465,
+        46.2715
+      ]
+    },
+    {
+      "key": "united-states.washington.columbia-valley.yakima-valley.rattlesnake-hills",
+      "role": "ucd",
+      "npoints": 306,
+      "nparts": 1,
+      "km2": 302.459,
+      "raw_km2": 302.471,
+      "drift": 0.00004,
+      "containment": 1,
+      "datum_m": 14.6,
+      "parent_inside": 0.994536,
+      "bbox": [
+        -120.47065,
+        46.36596,
+        -120.00115,
+        46.5252
+      ]
+    },
+    {
+      "key": "united-states.washington.columbia-valley.yakima-valley.red-mountain",
+      "role": "ucd",
+      "npoints": 151,
+      "nparts": 1,
+      "km2": 18.321,
+      "raw_km2": 18.335,
+      "drift": 0.00077,
+      "containment": 1,
+      "datum_m": 14.6,
+      "parent_inside": 0.995035,
+      "bbox": [
+        -119.47196,
+        46.25584,
+        -119.40927,
+        46.31107
+      ]
+    },
+    {
+      "key": "united-states.washington.columbia-valley.yakima-valley.snipes-mountain",
+      "role": "ucd",
+      "npoints": 274,
+      "nparts": 1,
+      "km2": 16.159,
+      "raw_km2": 16.179,
+      "drift": 0.00122,
+      "containment": 1,
+      "datum_m": 14.6,
+      "parent_inside": 1,
+      "bbox": [
+        -120.18587,
+        46.29884,
+        -120.02941,
+        46.34
+      ]
+    }
+  ],
+  "notices": [
+    "US-4 catalog: neighbour refresh 15711 rows in 67.2 s",
+    "US-4 unstage: neighbour refresh 15711 rows in 68.5 s",
+    "US-4 unstage: neighbour refresh 15711 rows in 69.8 s",
+    "US-4 remove: neighbour refresh 15711 rows in 72.7 s",
+    "US-4 catalog: neighbour refresh 15711 rows in 66.3 s",
+    "US-4 promote: state share united-states.oregon.columbia-gorge in united-states.washington 0.3479, tree 0.348",
+    "US-4 promote: state share united-states.washington.columbia-valley.walla-walla-valley in united-states.oregon 0.3102, tree 0.3101",
+    "US-4 promote: neighbour refresh 15783 rows in 66.1 s",
+    "US-4 unpublish: neighbour refresh 15711 rows in 66.5 s"
+  ],
+  "total_s": 543.2,
+  "mode": "pre-sitting"
+}
