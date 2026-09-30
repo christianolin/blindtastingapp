@@ -55,10 +55,11 @@ export function sittingGate(f) {
   const r = [];
   if (!f.catalogRecorded) r.push(`catalog migration ${f.versions.catalog} is not recorded live`);
   if (!f.knowledgeRecorded) r.push(`knowledge migration ${f.versions.knowledge} is not recorded live`);
-  if (!f.ownerApproval) r.push("place-profiles-usa.json carries no owner approval (_provenance.owner_approval)");
+  if (!f.ownerApproval) r.push("the wave's knowledge file carries no owner approval (_provenance.owner_approval)");
   if (!f.treeMatches) r.push("the recomputed tree differs from the committed tree reports");
-  if (f.usBoundaries > 0) r.push(`${f.usBoundaries} united-states boundaries already exist (promote, or run the unstage file, first)`);
-  if (f.otherDraftBoundaries > 0) r.push(`${f.otherDraftBoundaries} DRAFT boundaries outside united-states: someone else is mid-batch`);
+  if (f.priorPromote && !f.priorPromoted) r.push(`the previous wave's promote ${f.priorPromote} is not recorded live`);
+  if (f.waveBoundaries > 0) r.push(`${f.waveBoundaries} boundaries already exist on this wave's places (promote, or run the unstage file, first)`);
+  if (f.otherDraftBoundaries > 0) r.push(`${f.otherDraftBoundaries} DRAFT boundaries outside this wave: someone else is mid-batch`);
   if (f.buildingReleases > 0) r.push(`${f.buildingReleases} release(s) BUILDING in the last hour: a tiles run is in flight`);
   if (f.promoteRecorded) r.push("the promote is already recorded");
   return r;
@@ -103,6 +104,14 @@ select a.key,
   / nullif(extensions.ST_Area(extensions.ST_Intersection(a.g, u.bg)), 0) as share
 from a cross join u order by a.key`;
 
+// $1 jsonb [{key, child, parent}]: the normalized artifact geometries, exactly
+// as the tree report measured them (spec D7, §8.2): never the simplified shape.
+export const PARENT_SQL = `
+with x as (select e->>'key' key, ${GEOM("(e->'child')::text")} c, ${GEOM("(e->'parent')::text")} p
+             from jsonb_array_elements($1::jsonb) e)
+select key, extensions.ST_Area(extensions.ST_Intersection(c, p)) / nullif(extensions.ST_Area(c), 0) inside
+  from x order by key`;
+
 // One place's source + snapshot (reused if identical) + DRAFT boundary.
 export const INSERT_SQL = `
 with source as (
@@ -135,7 +144,6 @@ returning id`;
 
 const UCD_AUTHORITY = "UC Davis Library AVA Digitizing Project (after 27 CFR Part 9)";
 const NE_AUTHORITY = "Natural Earth";
-const US_PLACES = "(p.canonical_key = 'united-states' or p.canonical_key like 'united-states.%')";
 const ARTIFACT_SLUGS = Object.freeze({ CA: "california", WA: "washington", OR: "oregon", NY: "new-york" });
 const artifactForCode = (code) => `data/wine-map/usa-${ARTIFACT_SLUGS[code]}-ava.geojson`;
 const round = (x, d) => Math.round(Number(x) * 10 ** d) / 10 ** d;
@@ -228,18 +236,38 @@ export async function stageWave(client, ctx) {
   const log = ctx.log ?? console.log;
   const label = ctx.label ?? "STAGED-DRY";
 
-  // 1. Nothing staged yet.
-  const existing = await client.query(
-    `select count(*)::int n from public.wine_place_boundaries b join public.wine_places p on p.id = b.wine_place_id where ${US_PLACES}`);
-  if (existing.rows[0].n > 0) throw new Error(`${existing.rows[0].n} united-states boundaries already exist`);
+  const waveKeys = wave.places.map((p) => p.key);
+  const priorKeys = wave.priorKeys ?? [];
+  const scope = wave.scopeKey ?? "united-states";
 
-  // 2. Catalog fidelity.
+  // 1. Nothing staged on this wave's places; every earlier wave live; no other
+  //    boundary under the wave's scope (a half-staged neighbour batch).
+  const existing = await client.query(
+    `select count(*)::int n from public.wine_place_boundaries b join public.wine_places p on p.id = b.wine_place_id
+      where p.canonical_key = any($1::text[])`, [waveKeys]);
+  if (existing.rows[0].n > 0) throw new Error(`${existing.rows[0].n} united-states boundaries already exist on this wave's places`);
+  if (priorKeys.length) {
+    const { rows } = await client.query(
+      `select k.key, p.publication_status::text status,
+              (select count(*)::int from public.wine_place_boundaries b
+                where b.wine_place_id = p.id and b.is_current and b.quality_status = 'VALIDATED') cur
+         from unnest($1::text[]) k(key) left join public.wine_places p on p.canonical_key = k.key`, [priorKeys]);
+    const notLive = rows.filter((r) => r.status !== "VERIFIED" || r.cur !== 1).map((r) => r.key);
+    if (notLive.length) throw new Error(`an earlier wave is not live (VERIFIED with one current boundary): ${notLive.join(", ")}`);
+  }
+  const stray = await client.query(
+    `select count(*)::int n from public.wine_place_boundaries b join public.wine_places p on p.id = b.wine_place_id
+      where (p.canonical_key = $1 or p.canonical_key like $1 || '.%')
+        and not (p.canonical_key = any($2::text[]) or p.canonical_key = any($3::text[]))`, [scope, waveKeys, priorKeys]);
+  if (stray.rows[0].n > 0) throw new Error(`${stray.rows[0].n} boundaries on other places under ${scope}`);
+
+  // 2. Catalog fidelity, for this wave's places.
   const { rows: live } = await client.query(
     `select p.canonical_key key, p.kind::text kind, p.name, p.slug, p.display_tier, p.min_zoom, p.label_min_zoom,
             p.sort_order, p.is_appellation, p.appellation_system, p.appellation_level, p.publication_status::text status,
             pp.canonical_key parent_key
        from public.wine_places p left join public.wine_places pp on pp.id = p.primary_parent_id
-      where ${US_PLACES}`);
+      where p.canonical_key = any($1::text[])`, [waveKeys]);
   const liveByKey = new Map(live.map((r) => [r.key, r]));
   const differ = [];
   for (const p of wave.places) {
@@ -250,7 +278,6 @@ export async function stageWave(client, ctx) {
       || r.appellation_system !== p.appellation_system || r.appellation_level !== p.appellation_level
       || r.parent_key !== p.parent_key || r.status !== "DRAFT") differ.push(p.key);
   }
-  if (live.length !== wave.places.length) differ.push(`(${live.length} united-states places live, ${wave.places.length} in the wave)`);
   if (differ.length) throw new Error(`catalog differs from the wave: ${differ.join(", ")}`);
 
   // 3-5. Build and check each shape.
@@ -293,7 +320,7 @@ export async function stageWave(client, ctx) {
     const bbox = [r.minx, r.miny, r.maxx, r.maxy].map(Number);
     if (!insideWindow(bbox, window)) throw new Error(`${k}: bbox ${bbox.join(",")} escapes its window`);
     const row = { key: k, role, npoints: r.npoints, nparts: r.nparts, km2: round(r.km2, 3), raw_km2: round(r.raw_km2, 3),
-      drift: null, containment: null, datum_m: null, bbox: bbox.map((x) => round(x, 6)), geojson: r.geojson };
+      drift: null, containment: null, datum_m: null, parent_inside: null, bbox: bbox.map((x) => round(x, 6)), geojson: r.geojson };
     if (role === "ucd" || role === "derived") {
       row.drift = round(Math.abs(Number(r.km2) - Number(r.raw_km2)) / Number(r.raw_km2), 5);
       if (!(row.drift < AREA_DRIFT_MAX)) throw new Error(`${k}: simplification moved the area ${(row.drift * 100).toFixed(2)}%`);
@@ -307,6 +334,25 @@ export async function stageWave(client, ctx) {
       if (!(off < AREA_MATCH_MAX)) throw new Error(`${k}: unsimplified area ${round(r.raw_km2, 3)} km² is not the tree report's ${want} km²`);
     }
     built.push(row);
+  }
+
+  // 5b. Parent containment (§8.2, D7), on the normalized source geometry, at
+  //     the spec's thresholds, and equal to the tree report's measurement.
+  const checks = wave.parentChecks ?? [];
+  if (checks.length) {
+    const input = checks.map((c) => {
+      const u = ucdByKey.get(c.key);
+      return { key: c.key, child: avaFeature(u.state, u.ucd_ava_id).geometry, parent: avaFeature(u.state, c.parent_ucd_ava_id).geometry };
+    });
+    const { rows } = await client.query(PARENT_SQL, [JSON.stringify(input)]);
+    if (rows.length !== checks.length) throw new Error(`parent containment measured ${rows.length} of ${checks.length} places`);
+    for (const r of rows) {
+      const c = checks.find((x) => x.key === r.key);
+      const b = built.find((x) => x.key === r.key);
+      b.parent_inside = round(r.inside, 6);
+      if (!(Number(r.inside) >= c.min)) throw new Error(`${r.key}: only ${b.parent_inside} inside its parent ${c.parent_key} (needs ${c.min}, ${c.basis})`);
+      if (Math.abs(Number(r.inside) - c.tree_inside) > 1e-4) throw new Error(`${r.key}: parent share ${b.parent_inside} is not the tree report's ${c.tree_inside}`);
+    }
   }
 
   // 6. Containment, on land and buffered (§8.2).
@@ -334,15 +380,15 @@ export async function stageWave(client, ctx) {
     const ins = await client.query(INSERT_SQL, [
       ...v.source, ...v.snapshot, b.geojson, v.method, JSON.stringify(v.refs), JSON.stringify(v.gp), revision, b.key]);
     if (ins.rows.length !== 1) throw new Error(`${b.key}: expected one staged boundary, got ${ins.rows.length}`);
-    log(`${label} ${b.key} ${b.role} ${b.npoints} pts ${b.nparts} parts ${b.km2} km² drift ${b.drift ?? "-"} share ${b.containment ?? "-"}`);
+    log(`${label} ${b.key} ${b.role} ${b.npoints} pts ${b.nparts} parts ${b.km2} km² drift ${b.drift ?? "-"} share ${b.containment ?? "-"} parent ${b.parent_inside ?? "-"}`);
   }
 
   // 8. Final assert.
   const final = await client.query(
     `select count(*)::int n from public.wine_place_boundaries b join public.wine_places p on p.id = b.wine_place_id
-      where ${US_PLACES} and b.quality_status = 'DRAFT' and not b.is_current`);
+      where p.canonical_key = any($1::text[]) and b.quality_status = 'DRAFT' and not b.is_current`, [waveKeys]);
   if (final.rows[0].n !== wave.places.length) {
-    throw new Error(`expected ${wave.places.length} DRAFT, non-current united-states boundaries, found ${final.rows[0].n}`);
+    throw new Error(`expected ${wave.places.length} DRAFT, non-current boundaries on this wave's places, found ${final.rows[0].n}`);
   }
   return built.map((b) => {
     const { geojson, ...rest } = b;
@@ -352,10 +398,10 @@ export async function stageWave(client, ctx) {
 }
 
 /** Read the live facts sittingGate needs. Reads only; safe inside a read-only transaction. */
-export async function readGateFacts(client, { versions, ownerApproval, treeMatches }) {
+export async function readGateFacts(client, { versions, ownerApproval, treeMatches, waveKeys, priorPromote = null }) {
   const recorded = async (v) => (await client.query(
     "select 1 from supabase_migrations.schema_migrations where version = $1", [v])).rowCount > 0;
-  const n = async (sql) => (await client.query(sql)).rows[0].n;
+  const n = async (sql, params = []) => (await client.query(sql, params)).rows[0].n;
   return {
     versions,
     catalogRecorded: await recorded(versions.catalog),
@@ -363,10 +409,13 @@ export async function readGateFacts(client, { versions, ownerApproval, treeMatch
     promoteRecorded: await recorded(versions.promote),
     ownerApproval,
     treeMatches,
-    usBoundaries: await n(`select count(*)::int n from public.wine_place_boundaries b
-      join public.wine_places p on p.id = b.wine_place_id where ${US_PLACES}`),
+    priorPromote,
+    priorPromoted: priorPromote ? await recorded(priorPromote) : true,
+    waveBoundaries: await n(`select count(*)::int n from public.wine_place_boundaries b
+      join public.wine_places p on p.id = b.wine_place_id where p.canonical_key = any($1::text[])`, [waveKeys]),
     otherDraftBoundaries: await n(`select count(*)::int n from public.wine_place_boundaries b
-      join public.wine_places p on p.id = b.wine_place_id where not ${US_PLACES} and b.quality_status = 'DRAFT'`),
+      join public.wine_places p on p.id = b.wine_place_id
+      where not (p.canonical_key = any($1::text[])) and b.quality_status = 'DRAFT'`, [waveKeys]),
     buildingReleases: await n(`select count(*)::int n from public.wine_map_releases
       where status = 'BUILDING' and created_at > now() - interval '1 hour'`),
   };

@@ -1,18 +1,20 @@
-// Stage the US-2 DRAFT boundaries (spec 2026-09-29 §8.2). Modelled on
+// Stage a US wave's DRAFT boundaries (spec 2026-09-29 §8.2). Modelled on
 // stage-germany-weinbau.mjs, with one transaction for the whole wave.
 //
-//   node --env-file=.env.local scripts/wine-map-sources/stage-usa-ava.mjs --wave us2
-//     DEFAULT, dry: begin; the catalog and knowledge migrations applied inside
-//     the transaction if they are not recorded live yet; every boundary built
-//     and asserted; rollback. Writes nothing, and never touches Storage.
-//   node --env-file=.env.local scripts/wine-map-sources/stage-usa-ava.mjs --wave us2 --check-gate
+//   node --env-file=.env.local scripts/wine-map-sources/stage-usa-ava.mjs --wave <us2|us3-core|us3-rest>
+//     DEFAULT, dry: begin; the wave's catalog and knowledge migrations applied
+//     inside the transaction if they are not recorded live yet; every boundary
+//     built and asserted; rollback. Writes nothing, and never touches Storage.
+//     A wave whose previous wave's promote is not live refuses (rehearse it
+//     with scripts/usa-map/rehearse-us3.mjs instead).
+//   ... --check-gate
 //     Read-only: prints every reason --stage would refuse right now, and exits
 //     1 if there is any. Never uploads, never writes.
-//   node --env-file=.env.local scripts/wine-map-sources/stage-usa-ava.mjs --wave us2 --stage
+//   ... --stage
 //     THE SITTING ONLY (main session): refuses unless sittingGate() is empty;
-//     uploads the four raw UC Davis files (idempotent by sha256); begin;
-//     stageWave; commit; warns that the neighbour cache is stale until the
-//     promote's refresh.
+//     uploads the raw UC Davis files the wave needs (idempotent by sha256);
+//     begin; stageWave; commit; warns that the neighbour cache is stale until
+//     the promote's refresh.
 import { execSync } from "node:child_process";
 import { readFile } from "node:fs/promises";
 import pg from "pg";
@@ -23,12 +25,12 @@ import { buildUsaTree } from "./usa-tree.mjs";
 import {
   loadStageInputs, NE_NAMESPACE, readGateFacts, sittingGate, stageWave, UCD_NAMESPACE, uploadDecision,
 } from "./usa-stage-lib.mjs";
-import { loadTrees, us2Wave, US2_FILES, US2_VERSIONS } from "../usa-map/us2-wave.mjs";
+import { loadWave, WAVES } from "../usa-map/waves.mjs";
 
 const argv = process.argv.slice(2);
-const waveArg = argv[argv.indexOf("--wave") + 1];
-if (!argv.includes("--wave") || waveArg !== "us2") {
-  console.error("usage: stage-usa-ava.mjs --wave us2 [--check-gate | --stage]");
+const waveArg = argv.includes("--wave") ? argv[argv.indexOf("--wave") + 1] : undefined;
+if (!WAVES.includes(waveArg)) {
+  console.error(`usage: stage-usa-ava.mjs --wave <${WAVES.join("|")}> [--check-gate | --stage]`);
   process.exit(2);
 }
 const STAGE = argv.includes("--stage");
@@ -41,7 +43,8 @@ attributionKeyFor(UCD_NAMESPACE);
 attributionKeyFor(NE_NAMESPACE);
 
 // 3. The wave.
-const wave = us2Wave(await loadTrees());
+const wave = await loadWave(waveArg);
+const waveKeys = wave.places.map((p) => p.key);
 
 // 4. Tree equality, offline: the committed reports are what the committed inputs build.
 const inputs = await loadInputs();
@@ -66,7 +69,7 @@ for (const [path, sha] of Object.entries(stageInputs.measurementsInputs)) {
   }
 }
 if (!treeMatches && !STAGE && !CHECK_GATE) throw new Error("the recomputed tree differs from the committed tree reports");
-console.log(`wave us2: ${wave.places.length} places; inputs pinned; raw files ${stageInputs.raw.map((r) => r.file).join(", ")} match their pins`);
+console.log(`wave ${wave.name}: ${wave.places.length} places; inputs pinned; raw files ${stageInputs.raw.map((r) => r.file).join(", ")} match their pins`);
 
 // 7. Connect.
 const env = Object.fromEntries(
@@ -78,11 +81,12 @@ const unquote = (v) => v?.trim().replace(/^["']|["']$/g, "");
 const client = new pg.Client({ connectionString: unquote(env.DATABASE_URL), ssl: { rejectUnauthorized: false } });
 await client.connect();
 
-const ownerApproval = JSON.parse(await readFile("data/wine-map/place-profiles-usa.json", "utf8"))._provenance?.owner_approval ?? null;
+const ownerApproval = JSON.parse(await readFile(wave.knowledgeSource, "utf8"))._provenance?.owner_approval ?? null;
+const recordedIn = async (v) => (await client.query("select 1 from supabase_migrations.schema_migrations where version = $1", [v])).rowCount > 0;
 const gateFacts = async () => {
   await client.query("begin read only");
   try {
-    return await readGateFacts(client, { versions: US2_VERSIONS, ownerApproval, treeMatches });
+    return await readGateFacts(client, { versions: wave.versions, ownerApproval, treeMatches, waveKeys, priorPromote: wave.priorPromote });
   } finally {
     await client.query("rollback");
   }
@@ -126,19 +130,22 @@ try {
   await client.query("begin");
   await client.query("set local statement_timeout = 1800000");
 
-  // 10. Dry: the not-yet-live catalog and knowledge, inside the transaction.
+  // 10. Dry: the previous wave must be live; this wave's catalog and knowledge
+  //     are applied inside the transaction if they are not recorded yet.
   if (!STAGE) {
-    for (const [what, file] of [["catalog", US2_FILES.catalog], ["knowledge", US2_FILES.knowledge]]) {
-      const seen = await client.query("select 1 from supabase_migrations.schema_migrations where version = $1", [US2_VERSIONS[what]]);
-      if (seen.rowCount > 0) continue;
+    if (wave.priorPromote && !(await recordedIn(wave.priorPromote))) {
+      throw new Error(`the previous wave's promote ${wave.priorPromote} is not live: rehearse ${wave.name} with scripts/usa-map/rehearse-us3.mjs --batch ${wave.batch} instead`);
+    }
+    for (const what of ["catalog", "knowledge"]) {
+      if (await recordedIn(wave.versions[what])) continue;
       let sql;
       try {
-        sql = await readFile(file, "utf8");
+        sql = await readFile(wave.files[what], "utf8");
       } catch {
-        throw new Error(`generate the ${what} migration first (plan Task ${what === "catalog" ? 2 : 6})`);
+        throw new Error(`generate the ${what} migration ${wave.files[what]} first`);
       }
       await client.query(sql);
-      console.log(`applied ${file} in-transaction`);
+      console.log(`applied ${wave.files[what]} in-transaction`);
     }
   }
 
@@ -153,11 +160,11 @@ try {
   // 12. Finish.
   if (!STAGE) {
     await client.query("rollback");
-    console.log(`DONE (dry): ${report.length} boundaries built and asserted, persisted nothing.`);
+    console.log(`DONE (dry): ${report.length} boundaries built and asserted for ${wave.name}, persisted nothing.`);
   } else {
     await client.query("commit");
     await warnIfNeighbourCacheStale(client);
-    console.log(`STAGE COMPLETE: ${report.length} DRAFT boundaries committed; apply the promote next`);
+    console.log(`STAGE COMPLETE: ${report.length} DRAFT boundaries committed for ${wave.name}; apply ${wave.files.promote} next`);
   }
 } catch (e) {
   await client.query("rollback").catch(() => {});
