@@ -1284,7 +1284,8 @@ The DRAFT-boundary window is therefore minutes, not days, and never holds an own
   - clicking Oakville selects Oakville, not Napa Valley or North Coast;
   - Cole Ranch (≈0.6 km²) and Oakville are selectable by tap at phone zoom;
   - Russian River Valley shows North Coast › Northern Sonoma in its breadcrumb, and has
-    `ALTERNATE_PARENT` rows to Sonoma Coast (and whatever else the geometry finds);
+    `ALTERNATE_PARENT` rows to Sonoma Coast (and whatever else the geometry finds) (the tree has an
+    `OVERLAPS` edge, 87.95%; see §26);
   - long names wrap cleanly at 375 px: "… › Russian River Valley › Green Valley of Russian River
     Valley", "Antelope Valley of the California High Desert";
   - the §8.7 nearby lists are accepted;
@@ -1697,3 +1698,27 @@ implementation, not by the owner. Each departs from, or sharpens, an earlier sec
   (`built_at` 2026-09-20T13:39Z); §3 said fresh. The catalog migration's refresh fixes that when
   it returns ≥ 0 (the rolled-back dry run and the rehearsal both returned a full cache). If it
   returns -1, US-2 stops.
+
+## 26. US-3 plan decisions (2026-09-30)
+
+Settled by the US-3 plan (`docs/superpowers/plans/2026-09-30-usa-wine-map-us3.md`), not by the owner (the owner waived review on 2026-09-30). Each departs from, or sharpens, an earlier section.
+
+- **Batches.** Core = the §15 US-3 core list (50 named AVAs, with the children of Napa Valley, Paso Robles and Lodi) plus its ancestor closure: **Clear Lake** (parent of Red Hills Lake County), **San Francisco Bay** (of Santa Cruz Mountains and Livermore Valley) and **Gabilan Mountains** (of Chalone and Mt. Harlan). 86 places. Rest = the other 64 California AVAs. Together they are all 150 California APPELLATION rows of the tree.
+- **An edge ships in the batch in which its second endpoint lands.** Core: 24 edges (2 `ALTERNATE_PARENT`, 22 `OVERLAPS`). Rest: 5 `OVERLAPS`, including Wild Horse Valley ↔ Solano County Green Valley (a core place with a rest place).
+- **The tree decides, and it differs from §15's wording in four places** (keys lock at the promote; the tree review file lists each with its ratio):
+   - Russian River Valley's relation to Sonoma Coast is `OVERLAPS` (87.95% inside, under the 90% legal-record arm), not `ALTERNATE_PARENT`. The `ALTERNATE_PARENT` to Sonoma Coast belongs to Green Valley of Russian River Valley.
+   - **El Dorado** is keyed directly under California (`united-states.california.el-dorado`), with `OVERLAPS` to Sierra Foothills (74.87% inside). §15 grouped it under "Sierra Foothills" by name only. Fair Play, keyed under El Dorado, carries `ALTERNATE_PARENT` to Sierra Foothills.
+   - Cole Ranch and High Valley are keyed under North Coast (69.4% inside Mendocino, 75.9% inside Clear Lake).
+   - Changing any of these needs a `parent_overrides` entry in `usa-tree-config.json` and re-committed tree reports **before** the catalog renders; this plan does not do that.
+- **Knowledge lives in one data file per batch** (`data/wine-map/place-profiles-usa-us3-core.json`, `…-rest.json`), not appended to `place-profiles-usa.json` (refines D20): the US validator checks a file against exactly one wave, the stage gate reads the approval from the batch's own file, and the generator emits every entry not yet live.
+- **Ordering between batches is enforced, and scoped to California.** The rest catalog needs the core places to exist; the rest stage and promote need the core promote live. Pre- and post-state checks look only at `united-states.california.*`, so a US-4 wave on the other states can run before, between or after them. Rollbacks refuse on other California places outside the known keys (a core remove while rest places exist; a core unpublish while a rest place is live).
+- **Parent containment is checked twice.** The stage measures each nested AVA on the normalized source geometry at the spec's thresholds (≥ 0.995 measured, ≥ 0.90 legal record) and requires the tree report's figure within 1e-4. The promote re-checks on the stored display geometry with a 0.001 slack (measured maximum difference 0.00081). Measured again in the rehearsals: the stage's lowest measured-basis share is Santa Ynez Valley 0.995092, and its lowest legal-record share Sta. Rita Hills 0.956965; every promote re-check passed.
+- **Edges are re-checked geometrically in the promote:** an `OVERLAPS` edge's display ratio must be within 0.01 of the tree's; an `ALTERNATE_PARENT` source must lie ≥ 0.899 inside its target.
+- **Central Valley's outline is asserted in the rest promote** (§25 "US-3 asserts that the outline equals its promoted members' union"): its member list equals its 11 promoted children, the symmetric difference with their union is < 0.1% of its area, and members outside it < 0.01%. Lodi is a core place but the other ten members are rest, so the core promote cannot. Measured in the rest rehearsal: symmetric difference 0.000230 of its area, members outside 0.000003 (2026-09-30 rest rehearsal).
+- **The generator's `--prelude` may repeat** (the rest knowledge needs the core and rest catalogs first). Default output unchanged; tell the friend (§17.6).
+- **`stageWave` and the gate are generalised,** not copied: earlier waves must be VERIFIED with one current boundary, "already staged" counts only this wave's places, and `sittingGate` gains `priorPromoted`; `usBoundaries` is renamed `waveBoundaries`.
+- **`stage-usa-ava.mjs --wave us3-rest`'s dry run refuses until the core promote is live;** before that, `rehearse-us3.mjs --batch rest` runs the core chain first in its own transaction.
+- **A stricter US-3 knowledge rule:** exactly one key fact "Established YYYY (27 CFR 9.N)" matching TTB's list; descriptions ≤ 700 characters; ≤ 8 grapes with ≤ 3 PRINCIPAL; ≥ 2 sources, one of them the CFR or the Federal Register; no text copied between places.
+- **Comptche's CFR section** comes from TTB's list by name (9.292), because UC Davis carries none; nothing else changes for it.
+- **Placement `sort_order`** stays each archetype's own (88, 89), the US-2 convention (§25).
+- **Knowledge sources, an observation rather than a decision:** where no final rule, CFR text or grower association names a grape, the data files take it from producer, retailer or press pages, listed under each place. lakecountywinegrape.org and lodiwine.com refuse fetchers, so their facts come from their search-indexed pages; mendowine.com AVA pages were offline, likewise. The thinnest cases (Inwood Valley: Merlot only; Seiad Valley and Benmore Valley described as no longer farmed; Squaw Valley-Miramonte and Tracy Hills grapes from a winery listing and a retailer page) are named in the rest knowledge commit.
