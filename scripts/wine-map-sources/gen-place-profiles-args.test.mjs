@@ -11,6 +11,7 @@ test("defaults: repo is the cwd, the old source, no write, not bare, the old ver
     version: "20260915110000",
     name: "place_profiles_iberia",
     prelude: null,
+    preludes: [],
   });
 });
 
@@ -49,4 +50,11 @@ test("--prelude takes a file and defaults to null", () => {
   assert.equal(genArgs([], {}, "C:/r").prelude, null);
   assert.equal(genArgs(["--prelude", "supabase/migrations/x.sql"], {}, "C:/r").prelude, "supabase/migrations/x.sql");
   assert.throws(() => genArgs(["--prelude"], {}, "C:/r"), /--prelude needs a value/);
+});
+
+test("--prelude may repeat; preludes keeps every file in order", () => {
+  const args = genArgs(["--prelude", "a.sql", "--bare", "--prelude", "b.sql"], {}, "C:/r");
+  assert.equal(args.prelude, "a.sql");
+  assert.deepEqual(args.preludes, ["a.sql", "b.sql"]);
+  assert.throws(() => genArgs(["--prelude", "a.sql", "--prelude"], {}, "C:/r"), /--prelude needs a value/);
 });

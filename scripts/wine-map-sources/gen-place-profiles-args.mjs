@@ -9,7 +9,9 @@
 // inside the file would commit a --dry rehearsal partway. The default output is
 // unchanged. --prelude <file> runs that SQL inside a transaction the generator
 // always rolls back, so a knowledge migration can be generated for places a
-// not-yet-applied catalog migration creates. Default unchanged.
+// not-yet-applied catalog migration creates. Default unchanged. --prelude may
+// repeat (US-3's rest knowledge needs the core and the rest catalog first); the
+// files run in order inside the one rolled-back transaction.
 export const DEFAULT_SOURCE = "data/wine-map/place-profiles.json";
 
 export function genArgs(argv, env = process.env, cwd = process.cwd()) {
@@ -20,6 +22,12 @@ export function genArgs(argv, env = process.env, cwd = process.cwd()) {
     if (value === undefined || value.startsWith("--")) throw new Error(`${flag} needs a value`);
     return value;
   };
+  const all = (flag) => argv.flatMap((a, i) => {
+    if (a !== flag) return [];
+    const value = argv[i + 1];
+    if (value === undefined || value.startsWith("--")) throw new Error(`${flag} needs a value`);
+    return [value];
+  });
   return {
     repo: env.BLINDR_REPO ?? cwd,
     source: arg("--source", DEFAULT_SOURCE),
@@ -28,6 +36,7 @@ export function genArgs(argv, env = process.env, cwd = process.cwd()) {
     version: arg("--version", "20260915110000"),
     name: arg("--name", "place_profiles_iberia"),
     prelude: arg("--prelude", null),
+    preludes: all("--prelude"),
   };
 }
 

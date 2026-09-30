@@ -17,7 +17,7 @@
 //        --version <YYYYMMDDHHMMSS> --name <migration_name>
 //        [--source <data file>]   default data/wine-map/place-profiles.json
 //        [--bare]                 no begin;/commit; (every US run passes it)
-//        [--prelude <file>]       run that SQL first, inside a transaction that
+//        [--prelude <file>]...    run that SQL first (repeatable, in order), inside a transaction that
 //                                 is always rolled back (e.g. a catalog migration
 //                                 not applied yet); every check sees its state
 //   The repo is BLINDR_REPO, else the current directory.
@@ -34,7 +34,7 @@ import { articleInsertLines } from "./gen-place-profiles-sql.mjs";
 // or it would try to insert the lot a second time -- and the version/name move
 // with each batch. Both are arguments rather than constants for that reason.
 const {
-  repo: REPO, source: SOURCE, write: WRITE, bare: BARE, version: VERSION, name: NAME, prelude: PRELUDE,
+  repo: REPO, source: SOURCE, write: WRITE, bare: BARE, version: VERSION, name: NAME, preludes: PRELUDES,
 } = genArgs(process.argv.slice(2));
 
 const STYLE_KINDS = new Set(["RED", "WHITE", "ROSE", "SPARKLING", "SWEET", "FORTIFIED"]);
@@ -57,10 +57,12 @@ const client = new pg.Client({
   ssl: { rejectUnauthorized: false },
 });
 await client.connect();
-if (PRELUDE) {
+if (PRELUDES.length) {
   await client.query("begin");
-  await client.query(await readFile(`${REPO}/${PRELUDE}`, "utf8"));
-  console.log(`prelude ${PRELUDE} applied inside a transaction that is rolled back`);
+  for (const file of PRELUDES) {
+    await client.query(await readFile(`${REPO}/${file}`, "utf8"));
+    console.log(`prelude ${file} applied inside a transaction that is rolled back`);
+  }
 }
 
 const problems = [];
@@ -144,7 +146,7 @@ for (const r of existing) {
   }
 }
 
-if (PRELUDE) await client.query("rollback");
+if (PRELUDES.length) await client.query("rollback");
 await client.end();
 
 if (problems.length) {
