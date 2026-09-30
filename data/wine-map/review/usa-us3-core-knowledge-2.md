@@ -415,7 +415,7 @@ Name: **Sloughhouse** · key `united-states.california.central-valley.lodi.sloug
 
 Name: **El Dorado** · key `united-states.california.el-dorado` · AVA
 
-**Description.** An AVA covering the wine-growing part of El Dorado County in the Sierra Nevada foothills, between the North Fork of the American River and the Cosumnes River, east of Sacramento. Its vineyards are among the highest in California, mostly between 2,500 and 3,500 feet, and vines were first planted here during the Gold Rush of the 1850s. It overlaps much of the Sierra Foothills AVA and holds Fair Play.
+**Description.** An AVA covering the wine-growing part of El Dorado County in the Sierra Nevada foothills, between the North Fork of the American River and the Cosumnes River, east of Sacramento. Its vineyards are among the highest in California, mostly between 2,500 and 3,500 feet, and vines were first planted here during the Gold Rush of the 1850s. Most of it lies within the much larger Sierra Foothills AVA, and it holds Fair Play.
 
 **Climate.** Mountain climate: warm, sunny days above the fog, cool nights, winter snow on the vines, high summer UV and later ripening than the valley below.
 

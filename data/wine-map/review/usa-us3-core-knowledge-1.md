@@ -755,7 +755,7 @@ Name: **Templeton Gap District** · key `united-states.california.central-coast.
 
 Name: **San Francisco Bay** · key `united-states.california.central-coast.san-francisco-bay` · AVA
 
-**Description.** A large AVA around San Francisco Bay, mainly in San Francisco, San Mateo, Santa Clara, Alameda and Contra Costa counties and partly in Santa Cruz and San Benito. It groups the bay's wine areas, including Livermore Valley, Santa Clara Valley, Lamorinda and the Santa Cruz Mountains, which overlap it. When it was established, nearly 5,800 acres were planted and over 39 wineries operated.
+**Description.** A large AVA around San Francisco Bay, mainly in San Francisco, San Mateo, Santa Clara, Alameda and Contra Costa counties and partly in Santa Cruz and San Benito. It groups the bay's wine areas, including Livermore Valley, Santa Clara Valley, Lamorinda and the Santa Cruz Mountains, which lie within it; in 2024 it was expanded to take in the Contra Costa AVA. When it was established, nearly 5,800 acres were planted and over 39 wineries operated.
 
 **Climate.** A marine climate shaped by the bay and the Pacific: fog and low cloud come through the Golden Gate and other gaps, cooling summer days and warming winter nights, with heat increasing inland; the South Bay averages about 18 inches of rain a year.
 
@@ -771,6 +771,7 @@ Name: **San Francisco Bay** · key `united-states.california.central-coast.san-f
 - About 2,448 square miles in seven counties (T.D. ATF-407)
 - Nearly 5,800 acres planted at establishment (T.D. ATF-407)
 - The same rule extended the Central Coast AVA to include it (T.D. ATF-407)
+- Expanded in 2024 to take in the Contra Costa AVA (T.D. TTB-191)
 
 **Grapes**, as the details panel lists them (signature grapes first, then the ones it tags "accessory"; each group alphabetically):
 
@@ -786,6 +787,7 @@ Name: **San Francisco Bay** · key `united-states.california.central-coast.san-f
 
 - 27 CFR 9.157, San Francisco Bay (eCFR text via Cornell LII): https://www.law.cornell.edu/cfr/text/27/9.157
 - Federal Register final rule (govinfo), T.D. ATF-407, San Francisco Bay (1999): https://www.govinfo.gov/content/pkg/FR-1999-01-20/html/99-1209.htm
+- Federal Register final rule (govinfo), T.D. TTB-191, Contra Costa and the San Francisco Bay and Central Coast expansions (2024): https://www.govinfo.gov/content/pkg/FR-2024-03-15/html/2024-05476.htm
 - Livermore Valley Winegrowers, History: https://www.lvwine.org/history.php
 
 ## United States › California › Central Coast › San Francisco Bay › Livermore Valley

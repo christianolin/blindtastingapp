@@ -866,7 +866,9 @@ Modelled on `stage-germany-weinbau.mjs`.
     report.
 - Every AVA is ≥ 99.5% inside its primary parent AVA, or ≥ 90% when its `parent_basis` is
   `legal_record` (D7), unless the owner placed it there by `parent_overrides` (`parent_basis`
-  `override`; none today). Nested AVAs are wholly contained in law; the margin absorbs digitizing slivers.
+  `override`; one today, Contra Costa under San Francisco Bay by T.D. TTB-191, checked at its own
+  measured share less one point, §26). Nested AVAs are wholly contained in law; the margin absorbs
+  digitizing slivers. A `legal_exclusions` pair (Comptche/North Coast, §26) is never nested.
 
 **States and the country.**
 
@@ -1476,6 +1478,15 @@ flight on GitHub or live today (§3). Rules:
   Luis Obispo Coast AVA). They change the label reader's input, so they need the owner's explicit
   OK and their own replay cases.
 - `map_status` review of US scoring rows (owner decision; they stay PENDING).
+- Outlines older than the law (§26, US-3 review fixes). The UC Davis North Coast outline still
+  covers Comptche (27 CFR 9.292 excludes it), and the San Francisco Bay (staged in US-3 core) and
+  Central Coast (live since US-2) outlines predate T.D. TTB-191, so they leave out about two thirds
+  of Contra Costa, which the tree keys under them. The keys and breadcrumbs follow the law; the
+  drawn shapes do not yet. A later boundary cycle restages San Francisco Bay and Central Coast as
+  their UC Davis shape unioned with Contra Costa (both together: San Francisco Bay alone would drop
+  to about 91% inside the live Central Coast outline), and needs a North Coast shape with Comptche
+  cut out. Until then a click on eastern Contra Costa resolves to Contra Costa (smallest area) and
+  nothing larger is drawn around it.
 - More US typical wines.
 - Brief B beyond Option 0 (the on-demand likelihood map, training room only, with curated display
   points for the still-unplaced typical wines) is in the next document, not here.
@@ -1704,12 +1715,17 @@ implementation, not by the owner. Each departs from, or sharpens, an earlier sec
 Settled by the US-3 plan (`docs/superpowers/plans/2026-09-30-usa-wine-map-us3.md`), not by the owner (the owner waived review on 2026-09-30). Each departs from, or sharpens, an earlier section.
 
 - **Batches.** Core = the §15 US-3 core list (50 named AVAs, with the children of Napa Valley, Paso Robles and Lodi) plus its ancestor closure: **Clear Lake** (parent of Red Hills Lake County), **San Francisco Bay** (of Santa Cruz Mountains and Livermore Valley) and **Gabilan Mountains** (of Chalone and Mt. Harlan). 86 places. Rest = the other 64 California AVAs. Together they are all 150 California APPELLATION rows of the tree.
-- **An edge ships in the batch in which its second endpoint lands.** Core: 24 edges (2 `ALTERNATE_PARENT`, 22 `OVERLAPS`). Rest: 5 `OVERLAPS`, including Wild Horse Valley ↔ Solano County Green Valley (a core place with a rest place).
+- **An edge ships in the batch in which its second endpoint lands.** Core: 24 edges (2 `ALTERNATE_PARENT`, 22 `OVERLAPS`). Rest: 3 `OVERLAPS`, including Wild Horse Valley ↔ Solano County Green Valley (a core place with a rest place). (5 before the review fixes below: Contra Costa's two `OVERLAPS` to Central Coast and San Francisco Bay became its ancestry.)
 - **The tree decides, and it differs from §15's wording in four places** (keys lock at the promote; the tree review file lists each with its ratio):
    - Russian River Valley's relation to Sonoma Coast is `OVERLAPS` (87.95% inside, under the 90% legal-record arm), not `ALTERNATE_PARENT`. The `ALTERNATE_PARENT` to Sonoma Coast belongs to Green Valley of Russian River Valley.
    - **El Dorado** is keyed directly under California (`united-states.california.el-dorado`), with `OVERLAPS` to Sierra Foothills (74.87% inside). §15 grouped it under "Sierra Foothills" by name only. Fair Play, keyed under El Dorado, carries `ALTERNATE_PARENT` to Sierra Foothills.
    - Cole Ranch and High Valley are keyed under North Coast (69.4% inside Mendocino, 75.9% inside Clear Lake).
    - Changing any of these needs a `parent_overrides` entry in `usa-tree-config.json` and re-committed tree reports **before** the catalog renders; this plan does not do that.
+- **The legal record over the outlines (review fixes, 2026-09-30, before either US-3 catalog was applied).** Two rest places were keyed against the CFR because the UC Davis outlines are older than the rules that placed them. Both are now fixed in `usa-tree-config.json` and the tree reports and every US-3 file were re-rendered; the tree review file lists them under "The legal record over the outlines".
+   - **Comptche** is keyed directly under California (`united-states.california.comptche`), with no edge to North Coast. 27 CFR 9.292 (T.D. TTB-192): "not included within the North Coast viticultural area", although it lies inside North Coast's outline (100% measured; TTB did not redraw North Coast). This is a new config field, `legal_exclusions` ({ inner, outer, rule }): the pair yields no containment, no `ALTERNATE_PARENT` and no `OVERLAPS` edge, and is listed under the tree report's `review.legal_exclusions`. North Coast now has 21 children after the rest promote, not 22.
+   - **Contra Costa** is keyed under San Francisco Bay (`united-states.california.central-coast.san-francisco-bay.contra-costa`) by a `parent_overrides` entry (basis `override`, 33.63% measured inside). T.D. TTB-191 (2024) expanded San Francisco Bay and Central Coast "to entirely encompass the Contra Costa AVA"; the UC Davis outlines of both (valid from 2008 and 2006) predate it. Its two `OVERLAPS` edges became ancestor overlaps (no edge). An override is not held to D7's thresholds: the stage and the promote check it at the tree's own figure less one point (≥ 0.3263), so an outline that changed under it still fails. San Francisco Bay has 5 children after the rest promote.
+   - The drawn outlines still disagree with both (§20): North Coast covers Comptche, and San Francisco Bay and Central Coast leave out about two thirds of Contra Costa.
+   - Knowledge copy corrected in the same pass: San Francisco Bay's description says its sub-AVAs "lie within it" (not "overlap it") and names the 2024 expansion, with T.D. TTB-191 as a key fact and a source; El Dorado's says most of it lies within the much larger Sierra Foothills AVA (it had said it "overlaps much of" it).
 - **Knowledge lives in one data file per batch** (`data/wine-map/place-profiles-usa-us3-core.json`, `…-rest.json`), not appended to `place-profiles-usa.json` (refines D20): the US validator checks a file against exactly one wave, the stage gate reads the approval from the batch's own file, and the generator emits every entry not yet live.
 - **Ordering between batches is enforced, and scoped to California.** The rest catalog needs the core places to exist; the rest stage and promote need the core promote live. Pre- and post-state checks look only at `united-states.california.*`, so a US-4 wave on the other states can run before, between or after them. Rollbacks refuse on other California places outside the known keys (a core remove while rest places exist; a core unpublish while a rest place is live).
 - **Parent containment is checked twice.** The stage measures each nested AVA on the normalized source geometry at the spec's thresholds (≥ 0.995 measured, ≥ 0.90 legal record) and requires the tree report's figure within 1e-4. The promote re-checks on the stored display geometry with a 0.001 slack (measured maximum difference 0.00081). Measured again in the rehearsals: the stage's lowest measured-basis share is Santa Ynez Valley 0.995092, and its lowest legal-record share Sta. Rita Hills 0.956965; every promote re-check passed.

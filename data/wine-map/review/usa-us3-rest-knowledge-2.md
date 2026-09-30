@@ -4,6 +4,38 @@
 
 Places in this part: 32 of 64. Sources are listed under each place; figures appear only where a source publishes them.
 
+## United States › California › Leona Valley
+
+Name: **Leona Valley** · key `united-states.california.leona-valley` · AVA
+
+**Description.** A narrow valley of about 13.4 square miles in northern Los Angeles County, formed along the San Andreas fault below the Angeles National Forest, with a floor from 2,932 to 3,800 feet. It is named after the early rancher Miguel Leonis. Zinfandel and Mission were planted in the early 1900s; about 20 acres were in production at establishment.
+
+**Climate.** About 4,060 degree days (low Region V), 9 to 12 inches of rain, warm days and cool nights, and cold air draining off the slopes that protects against spring frost.
+
+**Soils.** Very deep, well-drained soils of the Hanford-Ramona-Greenfield association on alluvial fans, from loamy sand to loam.
+
+**Grape varieties (text).** Pinot Noir today, after early Zinfandel and Mission plantings.
+
+**Wine styles (text).** Dry red wines from a small area of vines.
+
+**Key facts**
+
+- Established 2008 (27 CFR 9.212)
+- About 13.4 square miles; about 20 acres in production at establishment (T.D. TTB-71)
+- Named after the rancher Miguel Leonis (T.D. TTB-71)
+
+**Grapes**, as the details panel lists them (signature grapes first, then the ones it tags "accessory"; each group alphabetically):
+
+- Pinot Noir
+- Zinfandel · accessory
+
+**Styles:** Red
+
+**Sources**
+
+- 27 CFR 9.212, Leona Valley (eCFR text via Cornell LII): https://www.law.cornell.edu/cfr/text/27/9.212
+- Federal Register final rule (govinfo), T.D. TTB-71, Leona Valley (2008): https://www.govinfo.gov/content/pkg/FR-2008-10-29/html/E8-25747.htm
+
 ## United States › California › Malibu Coast
 
 Name: **Malibu Coast** · key `united-states.california.malibu-coast` · AVA
@@ -324,37 +356,6 @@ Name: **Cole Ranch** · key `united-states.california.north-coast.cole-ranch` ·
 - 27 CFR 9.42, Cole Ranch (eCFR text via Cornell LII): https://www.law.cornell.edu/cfr/text/27/9.42
 - Wine Institute, American Viticultural Areas of California (acreage at establishment, from TTB final rules): https://wineinstitute.org/wp-content/uploads/2024/04/CA-AVAs_FINAL-FOR-WEBSITE_4.18.24.pdf
 - Mendocino Winegrowers, Cole Ranch: https://mendowine.com/ava/cole-ranch/
-
-## United States › California › North Coast › Comptche
-
-Name: **Comptche** · key `united-states.california.north-coast.comptche` · AVA
-
-**Description.** A low valley of about 1,422 acres in coastal Mendocino County, around the hamlet of Comptche, surrounded by forest and short, steep ridges. TTB kept it out of the North Coast AVA because its climate and soils differ. At establishment three vineyards grew over 30 acres, all of it Pinot Noir.
-
-**Climate.** Cool: about 2,259 growing degree days, and vineyards between 220 and 250 feet in a valley from 187 to 400 feet.
-
-**Soils.** Shallow, well-drained, infertile Bearwallow-Wolfey soils over fractured sandstone, and deep, clay-rich Perrygulch loam on the bottomland.
-
-**Grape varieties (text).** Pinot Noir is the only grape grown commercially.
-
-**Wine styles (text).** Dry Pinot Noir from a handful of vineyards.
-
-**Key facts**
-
-- Established 2024 (27 CFR 9.292)
-- About 1,421.8 acres, outside the North Coast AVA (T.D. TTB-192)
-- Three vineyards covering over 30 acres at establishment (T.D. TTB-192)
-
-**Grapes**, as the details panel lists them (signature grapes first, then the ones it tags "accessory"; each group alphabetically):
-
-- Pinot Noir
-
-**Styles:** Red
-
-**Sources**
-
-- 27 CFR 9.292, Comptche (eCFR text via Cornell LII): https://www.law.cornell.edu/cfr/text/27/9.292
-- Federal Register final rule (govinfo), T.D. TTB-192, Comptche (2024): https://www.govinfo.gov/content/pkg/FR-2024-04-08/html/2024-07395.htm
 
 ## United States › California › North Coast › Eagle Peak Mendocino County
 

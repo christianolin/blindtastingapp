@@ -326,6 +326,42 @@ Name: **Paicines** · key `united-states.california.central-coast.san-benito.pai
 - Discover California Wines (Wine Institute), San Benito County wine is a Central Coast hidden gem: https://discovercaliforniawines.com/blog/san-benito-county-wine-is-a-central-coast-hidden-gem/
 - Global AgInvesting, The Wine Group acquires more than 1,300 acres of vineyards in California (Paicines): https://globalaginvesting.com/the-wine-group-acquires-more-than-1300-acres-of-vineyards-in-california/
 
+## United States › California › Central Coast › San Francisco Bay › Contra Costa
+
+Name: **Contra Costa** · key `united-states.california.central-coast.san-francisco-bay.contra-costa` · AVA
+
+**Description.** An AVA of about 167,146 acres covering the flat and gently rolling north and east of Contra Costa County, around Oakley, Brentwood and Antioch, mostly below 100 feet. At establishment it had at least 60 vineyards on about 1,700 acres and 14 wineries.
+
+**Climate.** Warm Mediterranean, about 3,000 to 4,275 growing degree days; cool, heavy marine air settles in the low ground at night, and it is drier than the country to the west.
+
+**Soils.** Soils of flat and gently rolling ground, over 71% of it on slopes under 5%; mucky Delta island soils such as Jersey Island's were left out.
+
+**Grape varieties (text).** Zinfandel, Petite Sirah and Mourvèdre, with Cabernet Sauvignon and Chardonnay.
+
+**Wine styles (text).** Dry red wines from Zinfandel, Mourvèdre and Petite Sirah.
+
+**Key facts**
+
+- Established 2024 (27 CFR 9.291)
+- About 167,146 acres (T.D. TTB-191)
+- At least 60 vineyards on about 1,700 acres at establishment (T.D. TTB-191)
+- The same rule extended San Francisco Bay and Central Coast to take it in (T.D. TTB-191)
+
+**Grapes**, as the details panel lists them (signature grapes first, then the ones it tags "accessory"; each group alphabetically):
+
+- Mourvèdre
+- Petite Sirah
+- Zinfandel
+- Cabernet Sauvignon · accessory
+- Chardonnay · accessory
+
+**Styles:** Red
+
+**Sources**
+
+- 27 CFR 9.291, Contra Costa (eCFR text via Cornell LII): https://www.law.cornell.edu/cfr/text/27/9.291
+- Federal Register final rule (govinfo), T.D. TTB-191, Contra Costa (2024): https://www.govinfo.gov/content/pkg/FR-2024-03-15/html/2024-05476.htm
+
 ## United States › California › Central Coast › San Francisco Bay › Lamorinda
 
 Name: **Lamorinda** · key `united-states.california.central-coast.san-francisco-bay.lamorinda` · AVA
@@ -919,41 +955,36 @@ Name: **Winters Highlands** · key `united-states.california.central-valley.wint
 - Federal Register final rule (govinfo), T.D. TTB-189, Winters Highlands (2023): https://www.govinfo.gov/content/pkg/FR-2023-08-29/html/2023-18588.htm
 - Wine Industry Advisor, Introducing the newest AVA in California: Winters Highlands: https://wineindustryadvisor.com/2023/09/01/introducing-the-newest-ava-in-california-winters-highlands
 
-## United States › California › Contra Costa
+## United States › California › Comptche
 
-Name: **Contra Costa** · key `united-states.california.contra-costa` · AVA
+Name: **Comptche** · key `united-states.california.comptche` · AVA
 
-**Description.** An AVA of about 167,146 acres covering the flat and gently rolling north and east of Contra Costa County, around Oakley, Brentwood and Antioch, mostly below 100 feet. At establishment it had at least 60 vineyards on about 1,700 acres and 14 wineries.
+**Description.** A low valley of about 1,422 acres in coastal Mendocino County, around the hamlet of Comptche, surrounded by forest and short, steep ridges. TTB kept it out of the North Coast AVA because its climate and soils differ. At establishment three vineyards grew over 30 acres, all of it Pinot Noir.
 
-**Climate.** Warm Mediterranean, about 3,000 to 4,275 growing degree days; cool, heavy marine air settles in the low ground at night, and it is drier than the country to the west.
+**Climate.** Cool: about 2,259 growing degree days, and vineyards between 220 and 250 feet in a valley from 187 to 400 feet.
 
-**Soils.** Soils of flat and gently rolling ground, over 71% of it on slopes under 5%; mucky Delta island soils such as Jersey Island's were left out.
+**Soils.** Shallow, well-drained, infertile Bearwallow-Wolfey soils over fractured sandstone, and deep, clay-rich Perrygulch loam on the bottomland.
 
-**Grape varieties (text).** Zinfandel, Petite Sirah and Mourvèdre, with Cabernet Sauvignon and Chardonnay.
+**Grape varieties (text).** Pinot Noir is the only grape grown commercially.
 
-**Wine styles (text).** Dry red wines from Zinfandel, Mourvèdre and Petite Sirah.
+**Wine styles (text).** Dry Pinot Noir from a handful of vineyards.
 
 **Key facts**
 
-- Established 2024 (27 CFR 9.291)
-- About 167,146 acres (T.D. TTB-191)
-- At least 60 vineyards on about 1,700 acres at establishment (T.D. TTB-191)
-- The same rule extended San Francisco Bay and Central Coast to take it in (T.D. TTB-191)
+- Established 2024 (27 CFR 9.292)
+- About 1,421.8 acres, outside the North Coast AVA (T.D. TTB-192)
+- Three vineyards covering over 30 acres at establishment (T.D. TTB-192)
 
 **Grapes**, as the details panel lists them (signature grapes first, then the ones it tags "accessory"; each group alphabetically):
 
-- Mourvèdre
-- Petite Sirah
-- Zinfandel
-- Cabernet Sauvignon · accessory
-- Chardonnay · accessory
+- Pinot Noir
 
 **Styles:** Red
 
 **Sources**
 
-- 27 CFR 9.291, Contra Costa (eCFR text via Cornell LII): https://www.law.cornell.edu/cfr/text/27/9.291
-- Federal Register final rule (govinfo), T.D. TTB-191, Contra Costa (2024): https://www.govinfo.gov/content/pkg/FR-2024-03-15/html/2024-05476.htm
+- 27 CFR 9.292, Comptche (eCFR text via Cornell LII): https://www.law.cornell.edu/cfr/text/27/9.292
+- Federal Register final rule (govinfo), T.D. TTB-192, Comptche (2024): https://www.govinfo.gov/content/pkg/FR-2024-04-08/html/2024-07395.htm
 
 ## United States › California › Covelo
 
@@ -1089,36 +1120,4 @@ Name: **Inwood Valley** · key `united-states.california.inwood-valley` · AVA
 - 27 CFR 9.226, Inwood Valley (eCFR text via Cornell LII): https://www.law.cornell.edu/cfr/text/27/9.226
 - Federal Register final rule (govinfo), Inwood Valley (2012): https://www.govinfo.gov/content/pkg/FR-2012-09-13/html/2012-22595.htm
 - Federal Register final rule (govinfo), Inwood Valley proposed rule (2011): https://www.govinfo.gov/content/pkg/FR-2011-12-05/html/2011-31141.htm
-
-## United States › California › Leona Valley
-
-Name: **Leona Valley** · key `united-states.california.leona-valley` · AVA
-
-**Description.** A narrow valley of about 13.4 square miles in northern Los Angeles County, formed along the San Andreas fault below the Angeles National Forest, with a floor from 2,932 to 3,800 feet. It is named after the early rancher Miguel Leonis. Zinfandel and Mission were planted in the early 1900s; about 20 acres were in production at establishment.
-
-**Climate.** About 4,060 degree days (low Region V), 9 to 12 inches of rain, warm days and cool nights, and cold air draining off the slopes that protects against spring frost.
-
-**Soils.** Very deep, well-drained soils of the Hanford-Ramona-Greenfield association on alluvial fans, from loamy sand to loam.
-
-**Grape varieties (text).** Pinot Noir today, after early Zinfandel and Mission plantings.
-
-**Wine styles (text).** Dry red wines from a small area of vines.
-
-**Key facts**
-
-- Established 2008 (27 CFR 9.212)
-- About 13.4 square miles; about 20 acres in production at establishment (T.D. TTB-71)
-- Named after the rancher Miguel Leonis (T.D. TTB-71)
-
-**Grapes**, as the details panel lists them (signature grapes first, then the ones it tags "accessory"; each group alphabetically):
-
-- Pinot Noir
-- Zinfandel · accessory
-
-**Styles:** Red
-
-**Sources**
-
-- 27 CFR 9.212, Leona Valley (eCFR text via Cornell LII): https://www.law.cornell.edu/cfr/text/27/9.212
-- Federal Register final rule (govinfo), T.D. TTB-71, Leona Valley (2008): https://www.govinfo.gov/content/pkg/FR-2008-10-29/html/E8-25747.htm
 
