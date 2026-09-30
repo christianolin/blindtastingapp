@@ -8,5 +8,723 @@
     "rules": "Plain English, no praise words, figures only where a listed source publishes them, never 'official boundary' (spec §18). Exactly one key fact 'Established YYYY (27 CFR 9.N)', as TTB lists it. Descriptions of 2-4 sentences, at most 700 characters. At most 8 grapes; the 1-3 signature grapes are PRINCIPAL and the rest ACCESSORY. At least two sources per place, one of them the CFR section or the Federal Register final rule. share_pct is left out. New grapes only from the US-4 allow-list (hybrids; never a labrusca), each with a source."
   },
   "new_grapes": [],
-  "places": {}
+  "places": {
+    "united-states.washington.columbia-valley.ancient-lakes-of-columbia-valley": {
+      "article": {
+        "description": "An AVA of 162,762 acres in central Washington around the town of Quincy, in Douglas, Grant and Kittitas counties, with the Columbia River along its western edge. It is named for the lakes that dot its ice-age flood channels. It is one of the few Washington AVAs planted more to white grapes than to red, above all Riesling.",
+        "climate": "One of the more northerly parts of the Columbia Valley, with many vineyards a little higher than the valley around them, so heat builds later in the season and fades sooner. Wide swings between day and night help the grapes keep their acidity, and the Columbia River shields many sites from early and late frost.",
+        "soils": "Soils left by the Missoula Floods, mostly fine sand with silt and sandy loam; some sites, such as Evergreen Vineyard, have deposits of calcium-rich caliche. Most of the area slopes gently, at under 4%, toward its eastern boundary.",
+        "grape_varieties": "Riesling leads the plantings, with Chardonnay and Sauvignon Blanc among the more than 20 varieties grown.",
+        "wine_styles": "Mostly white wines, led by Riesling, Chardonnay and Sauvignon Blanc, with some red wines.",
+        "key_facts": [
+          "Established 2012 (27 CFR 9.227)",
+          "About 162,762 acres, with six commercial vineyards on about 1,399 acres at approval (T.D. TTB-108)",
+          "Douglas, Grant and Kittitas counties",
+          "Part of the Channeled Scablands, carved by the ice-age floods"
+        ]
+      },
+      "styles": [
+        "WHITE",
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Riesling"
+        },
+        {
+          "name": "Chardonnay",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Sauvignon Blanc",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.227, Ancient Lakes of Columbia Valley (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.227"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), T.D. TTB-108, Ancient Lakes of Columbia Valley (2012)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2012-10-18/html/2012-25639.htm"
+        },
+        {
+          "title": "Washington State Wine Commission, AVA profile: Ancient Lakes of Columbia Valley",
+          "url": "https://www.washingtonwine.org/wp-content/uploads/2021/02/AVA-Profiles_Ancient-Lakes-of-Columbia-Valley.pdf"
+        },
+        {
+          "title": "Great Northwest Wine (HeraldNet), Ancient Lakes fascinates as young Washington wine region (2017)",
+          "url": "https://www.heraldnet.com/2017/03/25/ancient-lakes-fascinates-as-young-washington-wine-region/"
+        }
+      ]
+    },
+    "united-states.washington.columbia-valley.horse-heaven-hills": {
+      "article": {
+        "description": "A large AVA in south-central Washington, in Benton, Klickitat and Yakima counties, rising north from the Columbia River. Its name comes from an early pioneer who, seeing its wide prairies, called it horse heaven. About a quarter of Washington's wine-grape acreage is planted here, much of it on south-facing slopes.",
+        "climate": "Warm and windy, with an arid to semi-arid continental climate, so vineyards are irrigated. Steady winds keep canopies small and grape skins thick and discourage mold and rot, and the Columbia River tempers the risk of early and late frost.",
+        "soils": "Three main soil types, all well drained: wind-blown sand and loess, Missoula Flood sediment, and rubble washed down the hill slopes from the Columbia River basalt bedrock.",
+        "grape_varieties": "Cabernet Sauvignon makes up a large share of plantings, with Merlot, Chardonnay and Riesling.",
+        "wine_styles": "Red wines led by Cabernet Sauvignon and Merlot, and white wines from Chardonnay and Riesling.",
+        "key_facts": [
+          "Established 2005 (27 CFR 9.188)",
+          "About 570,000 acres, about 17,082 under vine (Washington State Wine Commission)",
+          "Benton, Klickitat and Yakima counties",
+          "First vinifera planted in 1972, at what is now Champoux Vineyard"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Merlot",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Chardonnay",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Riesling",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.188, Horse Heaven Hills (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.188"
+        },
+        {
+          "title": "Washington State Wine Commission, AVA profile: Horse Heaven Hills",
+          "url": "https://www.washingtonwine.org/wp-content/uploads/2021/01/AVA-Profiles_Horse-Heaven-Hills.pdf"
+        }
+      ]
+    },
+    "united-states.washington.columbia-valley.lake-chelan": {
+      "article": {
+        "description": "An AVA of about 24,040 acres wrapped around the southern end of Lake Chelan in north-central Washington, in Chelan County, within the Columbia Valley AVA. Unlike most of the Columbia Valley it sits on granitic rather than basalt bedrock, and it lies north of the reach of the Missoula Floods. Its first modern vinifera plantings date from 1998.",
+        "climate": "The glacier-carved lake, up to 1,486 feet deep, moderates the climate: summer days are cooler and summer nights warmer than in the land around it. Vineyards lie along the southern and eastern shores at about 1,100 feet, higher than many southern parts of the Columbia Valley.",
+        "soils": "Glacial sediments with a good deal of quartz and mica, mixed with ash and pumice from the volcanoes of the Cascade Range.",
+        "grape_varieties": "Syrah and Pinot Noir lead, with Chardonnay, Pinot Gris, Merlot and Riesling.",
+        "wine_styles": "Red wines from Syrah, Pinot Noir and Merlot, and white wines from Chardonnay, Pinot Gris and Riesling.",
+        "key_facts": [
+          "Established 2009 (27 CFR 9.215)",
+          "About 24,040 acres, about 269 under vine (Washington State Wine Commission)",
+          "Chelan County",
+          "Parts of its boundary follow the 2,000-foot elevation line (27 CFR 9.215)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Syrah"
+        },
+        {
+          "name": "Pinot Noir"
+        },
+        {
+          "name": "Chardonnay",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Pinot Gris",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Merlot",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Riesling",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.215, Lake Chelan (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.215"
+        },
+        {
+          "title": "Washington State Wine Commission, AVA profile: Lake Chelan",
+          "url": "https://www.washingtonwine.org/wp-content/uploads/2021/01/AVA-Profiles_Lake-Chelan.pdf"
+        }
+      ]
+    },
+    "united-states.washington.columbia-valley.naches-heights": {
+      "article": {
+        "description": "An AVA of about 13,254 acres on a plateau northwest of Yakima, between the towns of Naches and Tieton in Yakima County, within the Columbia Valley AVA. It sits on a lava flow about a million years old with andesite bedrock, rather than the basalt found across most of the Columbia Valley. Its first vinifera were planted in 2002.",
+        "climate": "At 1,200 to 2,100 feet and close to the Cascades, it is cooler and wetter than much of the Columbia Valley, with 10 to 13 inches of rain a year. The plateau's gentle grade lets cold air drain to lower ground, lowering the risk of frost.",
+        "soils": "Wholly above the level of the Missoula Floods, so the soils are wind-blown loess, still accumulating, with a good deal of clay that helps hold water.",
+        "grape_varieties": "Pinot Gris and Riesling lead, with Gewürztraminer and Syrah.",
+        "wine_styles": "Mostly white wines from Pinot Gris, Riesling and Gewürztraminer, and red wine from Syrah.",
+        "key_facts": [
+          "Established 2011 (27 CFR 9.222)",
+          "About 13,254 acres (Washington State Wine Commission)",
+          "Yakima County",
+          "Every vineyard is farmed organically, biodynamically or Salmon-Safe, or a mix of these"
+        ]
+      },
+      "styles": [
+        "WHITE",
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Pinot Gris"
+        },
+        {
+          "name": "Riesling"
+        },
+        {
+          "name": "Gewürztraminer",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Syrah",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.222, Naches Heights (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.222"
+        },
+        {
+          "title": "Washington State Wine Commission, AVA profile: Naches Heights",
+          "url": "https://www.washingtonwine.org/wp-content/uploads/2021/01/AVA-Profiles_Naches-Heights.pdf"
+        }
+      ]
+    },
+    "united-states.washington.columbia-valley.rocky-reach": {
+      "article": {
+        "description": "An AVA of about 32,333 acres straddling the Columbia River between Wenatchee and Lake Chelan, in Chelan and Douglas counties, within the Columbia Valley AVA. The river and the Rocky Reach Reservoir cover about a quarter of it. Its name comes from steamboat captains of the late 1800s, who used it for this rocky stretch of rapids.",
+        "climate": "The low terraces in the river canyon are warmer, with a longer growing season, than the mountains and plateaus around them, which lets grapes ripen this far north. About 11 inches of rain falls a year.",
+        "soils": "Wind-blown sand and silt over cobblestones and gravel left by glacial outwash and floods, on crystalline bedrock rich in quartz and mica, which among Columbia Valley AVAs it shares only with Lake Chelan. The stony surface warms quickly and gives off heat to the vines.",
+        "grape_varieties": "Cabernet Sauvignon is the leading grape on its roughly 117 acres of vineyards.",
+        "wine_styles": "Mainly red wines, led by Cabernet Sauvignon.",
+        "key_facts": [
+          "Established 2022 (27 CFR 9.287)",
+          "Chelan and Douglas counties",
+          "7 commercial vineyards on about 117 acres at approval (T.D. TTB-183)",
+          "About 24% of the area is river and reservoir"
+        ]
+      },
+      "styles": [
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Cabernet Sauvignon"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.287, Rocky Reach (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.287"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), T.D. TTB-183, Rocky Reach (2022)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2022-06-03/html/2022-11709.htm"
+        },
+        {
+          "title": "Washington State Wine Commission, AVA profile: Rocky Reach",
+          "url": "https://www.washingtonwine.org/wp-content/uploads/2021/01/AVA-Profiles_Rocky-Reach.pdf"
+        }
+      ]
+    },
+    "united-states.washington.columbia-valley.royal-slope": {
+      "article": {
+        "description": "An AVA of about 156,389 acres in Grant and Adams counties: a broad, mostly south-facing slope around Royal City between the Quincy Basin and the Saddle Mountains, within the Columbia Valley AVA. It lies between the Ancient Lakes AVA to the north and the Wahluke Slope to the south. Wine grapes were first planted here in 1983.",
+        "climate": "Cooler than the Wahluke Slope about 15 miles south and warmer than Ancient Lakes, with 6 to 8 inches of rain a year. Elevations run from 610 feet to 1,756 feet on the Frenchman Hills ridge; higher sites ripen later and keep more acidity, and the slope lets cold air drain away.",
+        "soils": "Fine sand with silt and sandy loam, on a slope that is part of the Yakima Fold Belt.",
+        "grape_varieties": "Cabernet Sauvignon leads, with Syrah and Chardonnay among a wide range of varieties.",
+        "wine_styles": "Red wines led by Cabernet Sauvignon and Syrah, and white wines such as Chardonnay.",
+        "key_facts": [
+          "Established 2020 (27 CFR 9.271)",
+          "Grant and Adams counties",
+          "13 commercial vineyards and one winery (Washington State Wine Commission)",
+          "Much of its boundary follows the 250-meter elevation contour (27 CFR 9.271)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Syrah",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Chardonnay",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.271, Royal Slope (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.271"
+        },
+        {
+          "title": "Washington State Wine Commission, AVA profile: Royal Slope",
+          "url": "https://www.washingtonwine.org/wp-content/uploads/2021/01/AVA-Profiles_Royal-Slope.pdf"
+        }
+      ]
+    },
+    "united-states.washington.columbia-valley.the-burn-of-columbia-valley": {
+      "article": {
+        "description": "An AVA of about 16,870 acres in Klickitat County, on benches above the Columbia River west of the Horse Heaven Hills, within the Columbia Valley AVA. The name has been used for the area for more than 100 years, though its origin is unclear. Almost all of its vineyards have been planted since 2015.",
+        "climate": "It averages about 2,763 growing degree days, a little above the Columbia Valley's norm, but steady winds from the nearby Columbia Gorge slow the vines and keep canopies and berries small, so harvest comes late. It averages 8.76 inches of rain a year, more than much of the valley.",
+        "soils": "Mainly silty loams of the Mollisol order, largely Walla Walla silt loam, which hold more water and organic matter than the soils around them, on southeast-facing benches with an average slope of about 7%.",
+        "grape_varieties": "Cabernet Sauvignon is the main grape, and Syrah the other most planted variety.",
+        "wine_styles": "Red wines, chiefly from Cabernet Sauvignon and Syrah.",
+        "key_facts": [
+          "Established 2021 (27 CFR 9.276)",
+          "Klickitat County",
+          "3 commercial vineyards on about 1,261 acres at approval (T.D. TTB-168)",
+          "Precipitation of about 6.7 to 10.4 inches a year across the area (T.D. TTB-168)"
+        ]
+      },
+      "styles": [
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Syrah",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.276, The Burn of Columbia Valley (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.276"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), T.D. TTB-168, The Burn of Columbia Valley (2021)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2021-06-17/html/2021-12771.htm"
+        },
+        {
+          "title": "Washington State Wine Commission, AVA profile: The Burn of Columbia Valley",
+          "url": "https://www.washingtonwine.org/wp-content/uploads/2021/02/AVA-Profiles_The-Burn-of-Columbia-Valley.pdf"
+        }
+      ]
+    },
+    "united-states.washington.columbia-valley.wahluke-slope": {
+      "article": {
+        "description": "An AVA of about 81,000 acres near Mattawa in Grant County, bounded by the Columbia River, the Saddle Mountains and the Hanford Reach National Monument, within the Columbia Valley AVA. The whole AVA sits on one large ancestral alluvial fan with a steady grade of under 8%. It holds about 15% of Washington's vineyard acreage.",
+        "climate": "Among the warmest and driest parts of the state, with about 6 inches of rain a year. The slope and the nearby Columbia River lower the risk of frost; elevations run from 425 feet at the river to 1,480 feet, though most vineyards lie below 1,000 feet.",
+        "soils": "Deep wind-blown sand, more than 5 feet deep on average, which drains freely and makes vine vigor and ripening unusually even across the area.",
+        "grape_varieties": "Mainly red grapes, above all Cabernet Sauvignon, Merlot and Syrah, with Chardonnay.",
+        "wine_styles": "Red wines from Cabernet Sauvignon, Merlot and Syrah, and some white wine from Chardonnay.",
+        "key_facts": [
+          "Established 2005 (27 CFR 9.192)",
+          "Grant County",
+          "About 8,932 acres under vine (Washington State Wine Commission)",
+          "Its name is a Native American term for 'watering place'"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Merlot"
+        },
+        {
+          "name": "Syrah",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Chardonnay",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.192, Wahluke Slope (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.192"
+        },
+        {
+          "title": "Washington State Wine Commission, AVA profile: Wahluke Slope",
+          "url": "https://www.washingtonwine.org/wp-content/uploads/2021/01/AVA-Profiles_Wahluke-Slope.pdf"
+        }
+      ]
+    },
+    "united-states.washington.columbia-valley.walla-walla-valley": {
+      "article": {
+        "description": "An AVA of about 300,000 acres around the town of Walla Walla that spans Walla Walla County, Washington, and Umatilla County, Oregon; TTB lists both states. It lies within the Columbia Valley AVA and holds The Rocks District of Milton-Freewater, on the Oregon side. It has the highest concentration of wineries in Washington, including some of the state's oldest.",
+        "climate": "Cooler and wetter than many Washington AVAs. Rainfall rises from about 9 inches a year in the west to 22 inches at the eastern edge in the foothills of the Blue Mountains, where a few vineyards can be farmed without irrigation.",
+        "soils": "Mostly well-drained sandy loess over Missoula Flood slackwater deposits and fractured basalt; above 1,200 feet, the floods' high-water mark, the loess lies directly on basalt. In the south an old riverbed of cobblestones defines The Rocks District.",
+        "grape_varieties": "Mostly red grapes, led by Cabernet Sauvignon, Merlot and Syrah.",
+        "wine_styles": "Mainly red wines from Cabernet Sauvignon, Merlot and Syrah.",
+        "key_facts": [
+          "Established 1984 (27 CFR 9.91)",
+          "About 2,933 acres under vine, 1,672 of them in Washington (Washington State Wine Commission)",
+          "More than 120 wineries (Washington State Wine Commission)",
+          "Its name comes from a Native American term meaning 'many waters'"
+        ]
+      },
+      "styles": [
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Merlot"
+        },
+        {
+          "name": "Syrah"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.91, Walla Walla Valley (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.91"
+        },
+        {
+          "title": "Washington State Wine Commission, AVA profile: Walla Walla Valley",
+          "url": "https://www.washingtonwine.org/wp-content/uploads/2021/01/AVA-Profiles_Walla-Walla-Valley.pdf"
+        }
+      ]
+    },
+    "united-states.washington.columbia-valley.white-bluffs": {
+      "article": {
+        "description": "An AVA of about 93,738 acres in Franklin County, on a plateau north of Pasco that rises about 200 feet above the land around it, within the Columbia Valley AVA. It is named for the whitish lake-bed sediments of the Ringold Formation, exposed in bluffs along the Columbia River. Its first vines were planted in 1972.",
+        "climate": "The plateau's height lengthens the growing season by about 45 days on average compared with the surrounding area and helps protect vines from frost and freezes. About 6 inches of rain falls a year.",
+        "soils": "Wind-deposited silt and fine sand over ice-age flood sediment, on the clay-rich lake-bed sediments of the Ringold Formation and a thick layer of caliche, so vine roots never reach basalt.",
+        "grape_varieties": "Cabernet Sauvignon and Merlot lead, with Syrah, Riesling and Sauvignon Blanc.",
+        "wine_styles": "Red wines from Cabernet Sauvignon, Merlot and Syrah, and white wines from Riesling and Sauvignon Blanc.",
+        "key_facts": [
+          "Established 2021 (27 CFR 9.275)",
+          "Franklin County",
+          "9 commercial vineyards on about 1,127 acres, and one winery (T.D. TTB-167)",
+          "Elevations of about 700 to 1,200 feet (T.D. TTB-167)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Merlot"
+        },
+        {
+          "name": "Syrah",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Riesling",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Sauvignon Blanc",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.275, White Bluffs (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.275"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), T.D. TTB-167, White Bluffs (2021)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2021-06-17/html/2021-12769.htm"
+        },
+        {
+          "title": "Washington State Wine Commission, AVA profile: White Bluffs",
+          "url": "https://www.washingtonwine.org/wp-content/uploads/2021/01/AVA-Profiles_White-Bluffs.pdf"
+        }
+      ]
+    },
+    "united-states.washington.columbia-valley.yakima-valley": {
+      "article": {
+        "description": "Washington's first AVA, established in 1983 in Benton and Yakima counties within the Columbia Valley AVA, and the first in the Pacific Northwest. The Yakima River runs through it, and it holds nearly a third of the state's planted vinifera acreage. It contains the Red Mountain, Rattlesnake Hills, Snipes Mountain, Goose Gap and Candy Mountain AVAs.",
+        "climate": "Cooler toward the Cascade foothills in the west and hot toward the center of the Columbia Basin, with about 8 inches of rain a year; the Yakima River and local aquifers supply water for irrigation.",
+        "soils": "Moderate to deep silt loam laid down by the Missoula Floods, over gravel or directly on basalt bedrock, well drained for irrigated vines.",
+        "grape_varieties": "One of the few Washington AVAs planted more to white grapes than red, led by Chardonnay and Riesling; its warmer sites grow Merlot, Cabernet Sauvignon and Syrah.",
+        "wine_styles": "White wines from Chardonnay and Riesling, and red wines from Merlot, Cabernet Sauvignon and Syrah.",
+        "key_facts": [
+          "Established 1983 (27 CFR 9.69)",
+          "About 18,924 acres under vine (Washington State Wine Commission)",
+          "Benton and Yakima counties",
+          "Boundary extended by about 72 acres in 2020 to take in Candy Mountain (T.D. TTB-163)"
+        ]
+      },
+      "styles": [
+        "WHITE",
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Chardonnay"
+        },
+        {
+          "name": "Riesling"
+        },
+        {
+          "name": "Merlot"
+        },
+        {
+          "name": "Cabernet Sauvignon",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Syrah",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.69, Yakima Valley (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.69"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), T.D. TTB-163, Candy Mountain and the Yakima Valley modification (2020)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2020-09-25/html/2020-18741.htm"
+        },
+        {
+          "title": "Washington State Wine Commission, AVA profile: Yakima Valley",
+          "url": "https://www.washingtonwine.org/wp-content/uploads/2021/01/AVA-Profiles_Yakima-Valley.pdf"
+        }
+      ]
+    },
+    "united-states.washington.columbia-valley.yakima-valley.candy-mountain": {
+      "article": {
+        "description": "An AVA of about 815 acres on the southwest-facing slope of Candy Mountain in Benton County, four miles southeast of Red Mountain. It lies within the Yakima Valley and Columbia Valley AVAs: T.D. TTB-163 extended Yakima Valley by about 72 acres to take it in whole. It is one of Washington's smallest AVAs.",
+        "climate": "Warm and dry, with about 5 inches of rain a year, and windier than the land around it, much like Red Mountain nearby.",
+        "soils": "Thin soils of wind-deposited silt and fine sand over ice-age flood sediment and basalt bedrock; they hold little water, so growers can stress the vines as they choose.",
+        "grape_varieties": "Cabernet Sauvignon is the leading grape.",
+        "wine_styles": "Red wines, mainly from Cabernet Sauvignon.",
+        "key_facts": [
+          "Established 2020 (27 CFR 9.272)",
+          "Benton County",
+          "Elevations of 640 to 1,320 feet, on slopes of 2 to 20 degrees (T.D. TTB-163)",
+          "About 110 acres under vine (Washington State Wine Commission)"
+        ]
+      },
+      "styles": [
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Cabernet Sauvignon"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.272, Candy Mountain (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.272"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), T.D. TTB-163, Candy Mountain (2020)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2020-09-25/html/2020-18741.htm"
+        },
+        {
+          "title": "Washington State Wine Commission, AVA profile: Candy Mountain",
+          "url": "https://www.washingtonwine.org/wp-content/uploads/2021/01/AVA-Profiles_Candy-Mountain.pdf"
+        }
+      ]
+    },
+    "united-states.washington.columbia-valley.yakima-valley.goose-gap": {
+      "article": {
+        "description": "An AVA of about 8,129 acres in Benton County, taking in Goose Mountain and the gap between it and Badger and Candy mountains, within the Yakima Valley and Columbia Valley AVAs. Goose Mountain's ridge runs east to west, unlike the northwest-trending ridges of Red Mountain, Candy Mountain and Rattlesnake Mountain, so most vines face north-northeast. The gap is named for the migratory waterfowl that pass through it.",
+        "climate": "On north-facing slopes the grapes receive less sun than on the south- and southwest-facing sites nearby and usually ripen later than the same varieties on Red Mountain. About 6 inches of rain falls a year.",
+        "soils": "Almost two thirds Warden series soils, wind-blown silt and fine sand over Missoula Flood sediment, with Kiona, Shano, Hezel and Prosser series; elevations run from 577 to 1,339 feet.",
+        "grape_varieties": "Cabernet Sauvignon leads, with Merlot, Syrah and Chardonnay among the 16 varieties planted.",
+        "wine_styles": "Red wines led by Cabernet Sauvignon, Merlot and Syrah, and white wine from Chardonnay.",
+        "key_facts": [
+          "Established 2021 (27 CFR 9.277)",
+          "Benton County",
+          "Two vineyards on more than 1,800 acres, and one winery (T.D. TTB-170)",
+          "First vines planted in 1998 by Arvid Monson"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Merlot",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Syrah",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Chardonnay",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.277, Goose Gap (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.277"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), T.D. TTB-170, Goose Gap (2021)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2021-07-01/html/2021-14047.htm"
+        },
+        {
+          "title": "Washington State Wine Commission, AVA profile: Goose Gap",
+          "url": "https://www.washingtonwine.org/wp-content/uploads/2021/01/AVA-Profiles_Goose-Gap.pdf"
+        }
+      ]
+    },
+    "united-states.washington.columbia-valley.yakima-valley.rattlesnake-hills": {
+      "article": {
+        "description": "An AVA of about 68,500 acres on the south slope of the Rattlesnake Hills around Zillah in Yakima County, within the Yakima Valley AVA. The hills are an east-west fold of the Yakima Fold Belt and take their name from nearby Rattlesnake Mountain. The earliest vines here were planted in 1968.",
+        "climate": "Generally higher than the Yakima Valley as a whole, from 850 to 3,085 feet, with vineyards on the lower ground; the height lessens the risk of spring and fall frost, and winters are milder than in the land around it. Rainfall is 6 to 12 inches a year.",
+        "soils": "Mostly silt loam and loam. About half the AVA is underlain by Ellensburg Formation sediments eroded from the Cascade volcanoes, and the higher vineyards lie above the reach of the Missoula Floods.",
+        "grape_varieties": "Fairly evenly split between red and white grapes, reds slightly ahead: Merlot, Cabernet Sauvignon, Syrah and Riesling lead.",
+        "wine_styles": "Red wines from Merlot, Cabernet Sauvignon and Syrah, and white wine from Riesling.",
+        "key_facts": [
+          "Established 2006 (27 CFR 9.193)",
+          "Yakima County",
+          "About 1,807 acres under vine (Washington State Wine Commission)",
+          "Its boundary crosses Elephant Mountain, Zillah Peak and High Top Mountain (27 CFR 9.193)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Merlot"
+        },
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Syrah",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Riesling",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.193, Rattlesnake Hills (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.193"
+        },
+        {
+          "title": "Washington State Wine Commission, AVA profile: Rattlesnake Hills",
+          "url": "https://www.washingtonwine.org/wp-content/uploads/2021/01/AVA-Profiles_Rattlesnake-Hills.pdf"
+        }
+      ]
+    },
+    "united-states.washington.columbia-valley.yakima-valley.red-mountain": {
+      "article": {
+        "description": "An AVA of about 4,040 acres near Benton City in Benton County, within the Yakima Valley AVA. Despite its name it is neither red nor a mountain but a fold of the Yakima Fold Belt with broad southwest-facing slopes; in spring its cheatgrass turns a reddish hue. Cabernet Sauvignon makes up about 60% of its plantings.",
+        "climate": "One of Washington's warmest and driest AVAs, with about 5 inches of rain a year. The nearby Yakima River keeps the air moving and guards against frost, and nights can be as much as 40 °F cooler than days.",
+        "soils": "Sandy loam and gravel, alkaline and rich in calcium carbonate; the lean, high-pH soils limit vine vigor and keep berries small.",
+        "grape_varieties": "Cabernet Sauvignon dominates, with Merlot and Syrah.",
+        "wine_styles": "Red wines, mainly Cabernet Sauvignon, Merlot and Syrah, often firmly tannic.",
+        "key_facts": [
+          "Established 2001 (27 CFR 9.167)",
+          "About 2,382 acres under vine (Washington State Wine Commission)",
+          "Elevations of about 500 to 1,500 feet",
+          "More than 15 wineries (Washington State Wine Commission)"
+        ]
+      },
+      "styles": [
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Merlot",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Syrah",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.167, Red Mountain (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.167"
+        },
+        {
+          "title": "Washington State Wine Commission, AVA profile: Red Mountain",
+          "url": "https://www.washingtonwine.org/wp-content/uploads/2021/01/AVA-Profiles_Red-Mountain.pdf"
+        }
+      ]
+    },
+    "united-states.washington.columbia-valley.yakima-valley.snipes-mountain": {
+      "article": {
+        "description": "An AVA of about 4,145 acres on Snipes Mountain, a fold of the Yakima Fold Belt between Sunnyside and Granger in Yakima County, within the Yakima Valley AVA. It is named after cattle rancher Ben Snipes, who built a home at its base in the 1800s. Vineyards were first planted here in 1914, and Harrison Hill holds Cabernet Sauvignon vines from 1963.",
+        "climate": "Steep north- and south-facing slopes let cold air drain downhill, helping to prevent the frost damage that sometimes hits nearby areas. About 7 inches of rain falls a year.",
+        "soils": "Loess over Missoula Flood sediment and, in many places, fist- to melon-sized cobbles and gravel laid down by an ancestral course of the Columbia River; only the top 90 feet of the mountain rise above the floods.",
+        "grape_varieties": "Chardonnay, Cabernet Sauvignon and Merlot lead the plantings.",
+        "wine_styles": "Red wines from Cabernet Sauvignon and Merlot, and white wine from Chardonnay.",
+        "key_facts": [
+          "Established 2009 (27 CFR 9.213)",
+          "Yakima County",
+          "About 859 acres under vine (Washington State Wine Commission)",
+          "Its boundary follows the 750-foot and 820-foot elevation contours (27 CFR 9.213)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Chardonnay"
+        },
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Merlot",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.213, Snipes Mountain (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.213"
+        },
+        {
+          "title": "Washington State Wine Commission, AVA profile: Snipes Mountain",
+          "url": "https://www.washingtonwine.org/wp-content/uploads/2021/01/AVA-Profiles_Snipes-Mountain.pdf"
+        }
+      ]
+    }
+  }
 }
