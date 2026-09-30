@@ -9,6 +9,897 @@
   },
   "new_grapes": [],
   "places": {
+    "united-states.oregon.columbia-gorge": {
+      "article": {
+        "description": "An AVA about 60 miles east of Portland that lies on both banks of the Columbia River, in Oregon and Washington: Hood River and Wasco counties, Oregon, and Skamania and Klickitat counties, Washington. The river cuts the only sea-level passage through the Cascade Range, and over a short distance the climate shifts from wet and marine-influenced in the west to dry high desert in the east.",
+        "climate": "Rainfall drops from about 36 inches a year near the Cascades to about 10 inches in the east, and winds funnelled through the gorge, often 10 to 20 mph or more, cool and dry the vineyards. Vineyards range from near sea level to about 2,000 feet.",
+        "soils": "Volcanic soils, lahar deposits, loess, silt and sand; the final rule names silty loams of the Chemawa, Underwood and McGowen series, on benchlands left by ancient lava flows.",
+        "grape_varieties": "Many varieties: Pinot Noir, Chardonnay, Gewürztraminer and Riesling in the cooler, wetter west, and Zinfandel and Cabernet Sauvignon in the drier east.",
+        "wine_styles": "White wines from Chardonnay, Gewürztraminer and Riesling, and red wines from Pinot Noir in the west and from Zinfandel and Cabernet Sauvignon in the east.",
+        "key_facts": [
+          "Established 2004 (27 CFR 9.178)",
+          "Hood River and Wasco counties (Oregon); Skamania and Klickitat counties (Washington)",
+          "About 186,610 acres, 120,010 of them in Oregon (Oregon Wine Board)",
+          "About 925 acres planted (Oregon Wine Board)"
+        ]
+      },
+      "styles": [
+        "WHITE",
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Pinot Noir"
+        },
+        {
+          "name": "Chardonnay"
+        },
+        {
+          "name": "Gewürztraminer",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Riesling",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Zinfandel",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Cabernet Sauvignon",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.178, Columbia Gorge (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.178"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), T.D. TTB-11, Columbia Gorge (2004)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2004-05-10/html/04-10513.htm"
+        },
+        {
+          "title": "Oregon Wine Board, Columbia Gorge AVA",
+          "url": "https://www.oregonwine.org/discover-oregon-wine/place/columbia-gorge/"
+        },
+        {
+          "title": "Great Northwest Wine (Kitsap Daily News), on the Columbia Gorge (2014)",
+          "url": "https://www.kitsapdailynews.com/?p=41347"
+        }
+      ]
+    },
+    "united-states.oregon.southern-oregon.rogue-valley": {
+      "article": {
+        "description": "A large AVA in Jackson and Josephine counties, within the Southern Oregon AVA, made up of three distinct valleys with progressively warmer climates along the Rogue River and its tributaries. It lies about 75 miles from the coast, framed by the Cascade, Siskiyou and Coast ranges. Peter Britt began growing grapes here around 1852 and in 1873 founded Valley View, Oregon's first official winery.",
+        "climate": "Warm, dry summers, with nights much cooler than the days, which keeps acidity in the grapes and lengthens the ripening season.",
+        "soils": "Mainly stream sediments laid down by the Rogue River and its tributaries, varying from one of its three valleys to the next.",
+        "grape_varieties": "Cabernet Sauvignon, Syrah and Viognier lead, with Pinot Noir, Chardonnay and Pinot Gris.",
+        "wine_styles": "Red wines from Cabernet Sauvignon, Syrah and Pinot Noir, and white wines from Viognier, Chardonnay and Pinot Gris.",
+        "key_facts": [
+          "Established 1991 (27 CFR 9.132)",
+          "Jackson and Josephine counties",
+          "About 5,635 acres planted (Oregon Wine Board)",
+          "Contains the Applegate Valley AVA"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Syrah"
+        },
+        {
+          "name": "Viognier",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Pinot Noir",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Chardonnay",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Pinot Gris",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.132, Rogue Valley (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.132"
+        },
+        {
+          "title": "Oregon Wine Board, Rogue Valley AVA",
+          "url": "https://www.oregonwine.org/discover-oregon-wine/place/rogue-valley/"
+        }
+      ]
+    },
+    "united-states.oregon.southern-oregon.rogue-valley.applegate-valley": {
+      "article": {
+        "description": "An AVA in the Siskiyou Mountains of Jackson and Josephine counties, entirely within the Rogue Valley AVA, running about 50 miles north from the California border to the Rogue River near Grants Pass. The surrounding ranges shelter it from cool Pacific winds. Most vineyards lie on stream terraces and alluvial fans shaped by the Applegate River.",
+        "climate": "Hot days and cool nights, with vineyards at up to about 2,000 feet, sheltered from marine air by the mountains around it.",
+        "soils": "Deep, well-drained stream sediments on terraces and alluvial fans laid down by the Applegate River.",
+        "grape_varieties": "Merlot, Cabernet Sauvignon and Syrah lead, with Chardonnay, Tempranillo and Pinot Noir.",
+        "wine_styles": "Full-bodied red wines in Bordeaux and Rhône styles from Merlot, Cabernet Sauvignon and Syrah, and white wine from Chardonnay.",
+        "key_facts": [
+          "Established 2000 (27 CFR 9.165)",
+          "Jackson and Josephine counties",
+          "About 278,190 acres, about 750 planted (Oregon Wine Board)",
+          "Modern winemaking here resumed in the 1970s"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Merlot"
+        },
+        {
+          "name": "Cabernet Sauvignon"
+        },
+        {
+          "name": "Syrah"
+        },
+        {
+          "name": "Chardonnay",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Tempranillo",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Pinot Noir",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.165, Applegate Valley (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.165"
+        },
+        {
+          "title": "Oregon Wine Board, Applegate Valley AVA",
+          "url": "https://www.oregonwine.org/discover-oregon-wine/place/applegate-valley/"
+        }
+      ]
+    },
+    "united-states.oregon.southern-oregon.umpqua-valley": {
+      "article": {
+        "description": "An AVA entirely within Douglas County in southwest Oregon, within the Southern Oregon AVA, known for the 'hundred valleys' formed where three mountain ranges meet. German immigrants grew grapes here from the 1880s, and in 1961 Richard Sommer founded HillCrest Vineyard, where he planted Oregon's first Pinot Noir vines. It contains the Elkton Oregon and Red Hill Douglas County, Oregon AVAs.",
+        "climate": "Three broad zones: the cool, marine-influenced north around Elkton, with about 50 inches of rain a year; a central zone near Roseburg that suits both cool- and warm-climate grapes; and a warmer, drier south.",
+        "soils": "Stream sediments, marine sedimentary bedrock and volcanic soils, changing from one small valley to the next.",
+        "grape_varieties": "Pinot Noir and Pinot Gris lead, with Syrah, Tempranillo, Merlot and Albariño.",
+        "wine_styles": "Red wines from Pinot Noir, Syrah, Tempranillo and Merlot, and white wines from Pinot Gris and Albariño.",
+        "key_facts": [
+          "Established 1984 (27 CFR 9.89)",
+          "Douglas County",
+          "About 3,605 acres planted (Oregon Wine Board)",
+          "HillCrest Vineyard, founded by Richard Sommer in 1961"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Pinot Noir"
+        },
+        {
+          "name": "Pinot Gris"
+        },
+        {
+          "name": "Syrah",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Tempranillo",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Merlot",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Albariño",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.89, Umpqua Valley (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.89"
+        },
+        {
+          "title": "Oregon Wine Board, Umpqua Valley AVA",
+          "url": "https://www.oregonwine.org/discover-oregon-wine/place/umpqua-valley/"
+        }
+      ]
+    },
+    "united-states.oregon.southern-oregon.umpqua-valley.elkton-oregon": {
+      "article": {
+        "description": "An AVA of about 74,900 acres in Douglas County, 33 miles inland from the Pacific along the Umpqua River, within the larger Umpqua Valley AVA. It is the coolest and wettest part of the Umpqua Valley, planted to cool-climate grapes.",
+        "climate": "Marine-influenced, with about 50 inches of rain a year, and cooling breezes along the Umpqua River through the growing season.",
+        "soils": "Residual clay, silt loam, alluvial deposits and river terraces, which hold moisture well and reduce the need to irrigate.",
+        "grape_varieties": "Pinot Noir leads, with Pinot Gris, Gewürztraminer and Riesling.",
+        "wine_styles": "Red wine from Pinot Noir and white wines from Pinot Gris, Gewürztraminer and Riesling.",
+        "key_facts": [
+          "Established 2013 (27 CFR 9.229)",
+          "Douglas County",
+          "About 305 acres planted (Oregon Wine Board)",
+          "'Elkton Oregon' and 'Elkton OR' are both terms of viticultural significance"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Pinot Noir"
+        },
+        {
+          "name": "Pinot Gris",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Gewürztraminer",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Riesling",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.229, Elkton Oregon (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.229"
+        },
+        {
+          "title": "Oregon Wine Board, Elkton Oregon AVA",
+          "url": "https://www.oregonwine.org/discover-oregon-wine/place/elkton-oregon/"
+        }
+      ]
+    },
+    "united-states.oregon.southern-oregon.umpqua-valley.red-hill-douglas-county-oregon": {
+      "article": {
+        "description": "A small AVA of about 5,600 acres around a single hill east of Interstate 5 near Rice Hill, between Yoncalla and Oakland in Douglas County, within the Umpqua Valley AVA. The Applegate and Scott pioneer families settled at its base in the mid-1800s, and Jesse Applegate planted Douglas County's first vineyard nearby, in Yoncalla, in 1876.",
+        "climate": "Vineyards at 800 to 1,200 feet, without the shelter of the Coast Range, grow cooler than most of Southern Oregon.",
+        "soils": "Iron-rich, red volcanic Jory soils formed from uplifted ancient basalt.",
+        "grape_varieties": "Pinot Noir and Pinot Gris are the predominant grapes.",
+        "wine_styles": "Red wine from Pinot Noir, leaner and more structured than elsewhere in Southern Oregon, and white wine from Pinot Gris.",
+        "key_facts": [
+          "Established 2005 (27 CFR 9.190)",
+          "Douglas County",
+          "About 460 acres planted (Oregon Wine Board)",
+          "Its boundary follows the 800-foot contour line (27 CFR 9.190)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Pinot Noir"
+        },
+        {
+          "name": "Pinot Gris",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.190, Red Hill Douglas County, Oregon (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.190"
+        },
+        {
+          "title": "Oregon Wine Board, Red Hill Douglas County AVA",
+          "url": "https://www.oregonwine.org/discover-oregon-wine/place/red-hill-douglas-county/"
+        }
+      ]
+    },
+    "united-states.oregon.the-rocks-district-of-milton-freewater": {
+      "article": {
+        "description": "An AVA of about 3,770 acres near Milton-Freewater in Umatilla County, wholly in Oregon. It lies within the Walla Walla Valley AVA, which in turn lies within the Columbia Valley AVA, on a gently sloping alluvial fan of the Walla Walla River covered in basalt cobbles. Italian immigrants grew grapes here from the 1860s, and modern planting began in the 1990s.",
+        "climate": "Sunny summers with wide swings between day and night and occasional days over 100 °F, at elevations of about 800 to 1,000 feet.",
+        "soils": "About 96% Freewater series soils, very cobbly loam and gravelly silt loam full of loose basalt gravel, cobbles and boulders; the stones encourage deep roots and radiate heat to the grapes.",
+        "grape_varieties": "Syrah leads, with Cabernet Sauvignon and Grenache.",
+        "wine_styles": "Red wines, chiefly Syrah, with Cabernet Sauvignon and Grenache.",
+        "key_facts": [
+          "Established 2015 (27 CFR 9.249)",
+          "Umatilla County, Oregon",
+          "About 640 acres planted (Oregon Wine Board)",
+          "'The Rocks of Milton-Freewater' is also a term of viticultural significance"
+        ]
+      },
+      "styles": [
+        "RED"
+      ],
+      "grapes": [
+        {
+          "name": "Syrah"
+        },
+        {
+          "name": "Cabernet Sauvignon",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Grenache",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.249, The Rocks District of Milton-Freewater (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.249"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), T.D. TTB-127, The Rocks District of Milton-Freewater (2015)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2015-02-09/html/2015-02553.htm"
+        },
+        {
+          "title": "Oregon Wine Board, The Rocks District of Milton-Freewater AVA",
+          "url": "https://www.oregonwine.org/discover-oregon-wine/place/the-rocks-district-of-milton-freewater/"
+        }
+      ]
+    },
+    "united-states.oregon.willamette-valley.chehalem-mountains": {
+      "article": {
+        "description": "An AVA of about 62,500 acres 19 miles southwest of Portland, in Clackamas, Washington and Yamhill counties, within the Willamette Valley AVA. The Chehalem Mountains are a single landmass of hilltops, ridges and spurs rising to 1,633 feet at Bald Peak. Dick Erath planted its first vineyard in 1968; it contains the Ribbon Ridge and Laurelwood District AVAs.",
+        "climate": "Cool, with the mountains sheltering many vineyards from Columbia Gorge winds; most vineyards lie between 200 and 1,000 feet.",
+        "soils": "Three main soil types: volcanic basalt, marine sediment, and wind-blown loess of the Laurelwood series.",
+        "grape_varieties": "Pinot Noir leads, with Chardonnay, Pinot Gris, Riesling, Pinot Blanc and Gamay.",
+        "wine_styles": "Red wines from Pinot Noir and Gamay, and white wines from Chardonnay, Pinot Gris, Riesling and Pinot Blanc.",
+        "key_facts": [
+          "Established 2006 (27 CFR 9.205)",
+          "Clackamas, Washington and Yamhill counties",
+          "About 2,720 acres planted (Oregon Wine Board)",
+          "More than 50 wineries (Oregon Wine Board)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Pinot Noir"
+        },
+        {
+          "name": "Chardonnay",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Pinot Gris",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Riesling",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Pinot Blanc",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Gamay",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.205, Chehalem Mountains (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.205"
+        },
+        {
+          "title": "Oregon Wine Board, Chehalem Mountains AVA",
+          "url": "https://www.oregonwine.org/discover-oregon-wine/place/chehalem-mountains/"
+        }
+      ]
+    },
+    "united-states.oregon.willamette-valley.chehalem-mountains.laurelwood-district": {
+      "article": {
+        "description": "An AVA of about 33,600 acres on the north- and east-facing slopes of the Chehalem Mountains, in Washington and Yamhill counties, entirely within the Chehalem Mountains and Willamette Valley AVAs. It is defined by the near-uniform presence of Laurelwood soil, and it includes the highest point in the Willamette Valley, 1,633 feet.",
+        "climate": "Much like the rest of the northern Willamette Valley, with vineyards between 200 and 1,000 feet on hilly to mountainous ground.",
+        "soils": "Laurelwood soil throughout: a base of basalt about 15 million years old topped by wind-blown silt (loess) laid down over the last 200,000 years, up to about 4 feet deep depending on elevation.",
+        "grape_varieties": "Pinot Noir leads, with Pinot Gris and Chardonnay.",
+        "wine_styles": "Red wine from Pinot Noir and white wines from Pinot Gris and Chardonnay.",
+        "key_facts": [
+          "Established 2020 (27 CFR 9.269)",
+          "Washington and Yamhill counties",
+          "About 70 vineyards on about 975 acres, and 25 wineries (T.D. TTB-160)",
+          "Its boundary follows the 200-, 240- and 250-foot elevation contours in places (27 CFR 9.269)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Pinot Noir"
+        },
+        {
+          "name": "Pinot Gris",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Chardonnay",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.269, Laurelwood District (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.269"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), T.D. TTB-160, Tualatin Hills and Laurelwood District (2020)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2020-06-03/html/2020-10919.htm"
+        },
+        {
+          "title": "Willamette Valley Wineries Association, Laurelwood District AVA overview",
+          "url": "https://www.willamettewines.com/about-the-valley/ava-overviews/laurelwood-district/"
+        }
+      ]
+    },
+    "united-states.oregon.willamette-valley.chehalem-mountains.ribbon-ridge": {
+      "article": {
+        "description": "An AVA of about 3,500 acres on a ridge in northern Yamhill County, northwest of Dundee, within the Chehalem Mountains AVA. The ridge stands above the Chehalem Valley floor like an island. Harry Peterson-Nedry planted Ridgecrest Vineyards here in 1980.",
+        "climate": "The ridge's island-like position shelters it from weather extremes: it warms earlier in the day, cools less at night and escapes the sharpest midsummer heat, giving a long, cool growing season.",
+        "soils": "Marine sediments of the Willakenzie series, younger, finer and more uniform than the sedimentary and volcanic soils around the ridge; well drained and moderately deep.",
+        "grape_varieties": "Pinot Noir leads, with Chardonnay, Pinot Gris, Riesling and Gamay.",
+        "wine_styles": "Red wines from Pinot Noir and Gamay, and white wines from Chardonnay, Pinot Gris and Riesling.",
+        "key_facts": [
+          "Established 2005 (27 CFR 9.182)",
+          "Yamhill County",
+          "About 620 acres planted (Oregon Wine Board)",
+          "Commercial grape growing began in 1982 and winemaking in 1985"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Pinot Noir"
+        },
+        {
+          "name": "Chardonnay",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Pinot Gris",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Riesling",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Gamay",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.182, Ribbon Ridge (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.182"
+        },
+        {
+          "title": "Oregon Wine Board, Ribbon Ridge AVA",
+          "url": "https://www.oregonwine.org/discover-oregon-wine/place/ribbon-ridge/"
+        }
+      ]
+    },
+    "united-states.oregon.willamette-valley.dundee-hills": {
+      "article": {
+        "description": "An AVA of hills near Newberg in Yamhill County, entirely within the Willamette Valley AVA; its boundary follows the 200-foot contour line where the hills rise from the flat valley floor. Oregon's wine pioneers planted here from 1965, among them David Lett, Dick Erath, the Knudsens and the Sokol Blossers.",
+        "climate": "Warmer nights and less low-lying fog and frost than the valleys beside it, sheltered by the Chehalem Mountains to the north and the Coast Range to the west. Peaks pass 700 feet and reach 1,067 feet.",
+        "soils": "About 80% Jory series soils: reddish silt, clay and loam weathered from Columbia River basalt, moderately fertile and well drained.",
+        "grape_varieties": "Pinot Noir leads, with Chardonnay, Pinot Gris and Pinot Blanc.",
+        "wine_styles": "Red wine from Pinot Noir, white wines from Chardonnay, Pinot Gris and Pinot Blanc, and sparkling wines.",
+        "key_facts": [
+          "Established 2004 (27 CFR 9.180)",
+          "Yamhill County",
+          "About 2,225 acres planted (Oregon Wine Board)",
+          "Proposed as 'Red Hills', then renamed to avoid confusion with other areas (T.D. TTB-18)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE",
+        "SPARKLING"
+      ],
+      "grapes": [
+        {
+          "name": "Pinot Noir"
+        },
+        {
+          "name": "Chardonnay",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Pinot Gris",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Pinot Blanc",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.180, Dundee Hills (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.180"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), T.D. TTB-18, Dundee Hills (2004)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2004-11-30/html/04-26330.htm"
+        },
+        {
+          "title": "Oregon Wine Board, Dundee Hills AVA",
+          "url": "https://www.oregonwine.org/discover-oregon-wine/place/dundee-hills/"
+        }
+      ]
+    },
+    "united-states.oregon.willamette-valley.eola-amity-hills": {
+      "article": {
+        "description": "An AVA northwest of Salem in Polk and Yamhill counties, entirely within the Willamette Valley AVA. Its main ridge, the Eola Hills, runs north to south with lateral ridges running east to west. It lies directly east of the Van Duzer Corridor, a break in the Coast Range that lets cool Pacific air through.",
+        "climate": "Cool ocean air through the Van Duzer Corridor lowers late-summer afternoon temperatures sharply, helping grapes keep their acidity; vineyards lie mostly between 250 and 700 feet.",
+        "soils": "Volcanic basalt from ancient lava flows, with marine sedimentary rocks or alluvial deposits, giving shallow, rocky, well-drained soils.",
+        "grape_varieties": "Pinot Noir leads by far, with Chardonnay, Pinot Gris, Riesling and Gamay.",
+        "wine_styles": "Red wines from Pinot Noir and Gamay, and white wines from Chardonnay, Pinot Gris and Riesling.",
+        "key_facts": [
+          "Established 2006 (27 CFR 9.202)",
+          "Polk and Yamhill counties",
+          "About 39,200 acres, about 3,040 planted (Oregon Wine Board)",
+          "Pinot Noir is about 80% of plantings (Willamette Valley Wineries Association)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Pinot Noir"
+        },
+        {
+          "name": "Chardonnay",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Pinot Gris",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Riesling",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Gamay",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.202, Eola-Amity Hills (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.202"
+        },
+        {
+          "title": "Oregon Wine Board, Eola-Amity Hills AVA",
+          "url": "https://www.oregonwine.org/discover-oregon-wine/place/eola-amity-hills/"
+        },
+        {
+          "title": "Willamette Valley Wineries Association, Eola-Amity Hills AVA overview",
+          "url": "https://www.willamettewines.com/about-the-valley/ava-overviews/eola-amity-hills/"
+        }
+      ]
+    },
+    "united-states.oregon.willamette-valley.lower-long-tom": {
+      "article": {
+        "description": "An AVA of about 25,000 acres between Corvallis and Eugene in Benton and Lane counties, on the west side of the Lower Long Tom River watershed, within the Willamette Valley AVA. Its vineyards sit on stream-cut ridges running east to west.",
+        "climate": "A rain shadow cast by the Coast Range to the west reduces rainfall, and together with the prevailing winds keeps disease pressure low through the growing season.",
+        "soils": "Shallow Bellpine clay loams formed from uplifted ancient marine sediments, mainly sandstone, which vine roots must penetrate to reach water and nutrients.",
+        "grape_varieties": "Pinot Noir predominates, with Chardonnay, Riesling, Pinot Gris and Sauvignon Blanc.",
+        "wine_styles": "Red wine from Pinot Noir and white wines from Chardonnay, Riesling, Pinot Gris and Sauvignon Blanc.",
+        "key_facts": [
+          "Established 2021 (27 CFR 9.281)",
+          "Benton and Lane counties",
+          "About 575 acres planted, 24 vineyards and 12 wineries (Willamette Valley Wineries Association)",
+          "Its boundary uses the 360-, 800- and 1,000-foot elevation contours (27 CFR 9.281)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Pinot Noir"
+        },
+        {
+          "name": "Chardonnay",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Riesling",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Pinot Gris",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Sauvignon Blanc",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.281, Lower Long Tom (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.281"
+        },
+        {
+          "title": "Willamette Valley Wineries Association, Lower Long Tom AVA overview",
+          "url": "https://www.willamettewines.com/about-the-valley/ava-overviews/lower-long-tom/"
+        }
+      ]
+    },
+    "united-states.oregon.willamette-valley.mcminnville": {
+      "article": {
+        "description": "An AVA of about 39,045 acres due west of the town of McMinnville in Yamhill County, entirely within the Willamette Valley AVA, on the east and southeast slopes of the Coast Range foothills. It extends about 20 miles south-southwest toward the Van Duzer Corridor.",
+        "climate": "In the weather shadow of the Coast Range, with less rain than sites further east, and drying winds through the Van Duzer Corridor.",
+        "soils": "Uplifted marine sedimentary loams and silts with alluvial overlays on a basalt base, shallow for grape growing.",
+        "grape_varieties": "Pinot Noir makes up about 84% of plantings, with Chardonnay and Pinot Blanc.",
+        "wine_styles": "Mostly red wine from Pinot Noir, with white wines from Chardonnay and Pinot Blanc.",
+        "key_facts": [
+          "Established 2005 (27 CFR 9.181)",
+          "Yamhill County",
+          "Vineyards between 200 and 1,000 feet (Willamette Valley Wineries Association)",
+          "About 750 acres planted in 16 vineyards (Willamette Valley Wineries Association)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Pinot Noir"
+        },
+        {
+          "name": "Chardonnay",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Pinot Blanc",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.181, McMinnville (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.181"
+        },
+        {
+          "title": "Willamette Valley Wineries Association, McMinnville AVA overview",
+          "url": "https://www.willamettewines.com/about-the-valley/ava-overviews/mcminnville/"
+        }
+      ]
+    },
+    "united-states.oregon.willamette-valley.mount-pisgah-polk-county-oregon": {
+      "article": {
+        "description": "An AVA of about 5,850 acres around a single mountain in Polk County, within the Willamette Valley AVA, rising from 260 feet at its base to 835 feet at the peak. 'Polk County, Oregon' is part of the name because at least three other places in Oregon are called Mount Pisgah.",
+        "climate": "Cooler than the land nearby, averaging about 2,543 growing degree days against 2,903 at Salem, and much less windy, at an average of 2.3 mph against 6.1 mph at Salem.",
+        "soils": "Ancient sedimentary soils rather than the younger alluvium around the mountain: silty clay loams of the Bellpine, Jory, Nekia, Rickreall and Willakenzie series cover about 92% of the area.",
+        "grape_varieties": "Pinot Noir, Pinot Gris and Chardonnay are the most commonly grown grapes.",
+        "wine_styles": "Red wine from Pinot Noir and white wines from Pinot Gris and Chardonnay.",
+        "key_facts": [
+          "Established 2022 (27 CFR 9.284)",
+          "Polk County",
+          "10 commercial vineyards on about 531 acres, and 2 wineries (T.D. TTB-180)",
+          "'Mt. Pisgah, Polk County, Oregon' is also a term of viticultural significance"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Pinot Noir"
+        },
+        {
+          "name": "Pinot Gris",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Chardonnay",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.284, Mount Pisgah, Polk County, Oregon (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.284"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), T.D. TTB-180, Mount Pisgah, Polk County, Oregon (2022)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2022-06-03/html/2022-11715.htm"
+        }
+      ]
+    },
+    "united-states.oregon.willamette-valley.tualatin-hills": {
+      "article": {
+        "description": "An AVA of about 144,000 acres in the northwest corner of the Willamette Valley, in Multnomah and Washington counties, entirely within the Willamette Valley AVA, named for and largely defined by the watershed of the Tualatin River. It is sheltered by the Coast Range to the west and the Chehalem Mountains to the south.",
+        "climate": "A rain shadow gives cooler springs and drier autumns at harvest, with wider day-night swings than the areas around it; vineyards lie between 200 and 1,000 feet.",
+        "soils": "The largest concentration in Oregon of Laurelwood soil, fine, stone-free silt of wind-blown loess and weathered basalt, with the related Kinton and Cornelius series.",
+        "grape_varieties": "Pinot Noir leads, with Pinot Gris, Chardonnay and Gewürztraminer.",
+        "wine_styles": "Red wine from Pinot Noir and white wines from Pinot Gris, Chardonnay and Gewürztraminer.",
+        "key_facts": [
+          "Established 2020 (27 CFR 9.268)",
+          "Multnomah and Washington counties",
+          "About 1,009 acres planted in 41 vineyards (Willamette Valley Wineries Association)",
+          "Average annual rainfall of about 43.7 inches (T.D. TTB-160)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Pinot Noir"
+        },
+        {
+          "name": "Pinot Gris",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Chardonnay",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Gewürztraminer",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.268, Tualatin Hills (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.268"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), T.D. TTB-160, Tualatin Hills and Laurelwood District (2020)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2020-06-03/html/2020-10919.htm"
+        },
+        {
+          "title": "Willamette Valley Wineries Association, Tualatin Hills AVA overview",
+          "url": "https://www.willamettewines.com/about-the-valley/ava-overviews/tualatin-hills/"
+        }
+      ]
+    },
+    "united-states.oregon.willamette-valley.van-duzer-corridor": {
+      "article": {
+        "description": "An AVA of about 59,850 acres in Polk and Yamhill counties, within the Willamette Valley AVA, at the eastern end of a low wind gap in the Coast Range through which Pacific air flows into the valley. Its low, gently rolling hills widen from the narrow western gap toward the east.",
+        "climate": "Steady, strong winds from the ocean, arriving as early as 2 p.m., cool the vineyards; the wind thickens grape skins and reduces fungal pressure, and heat accumulation stays low.",
+        "soils": "Shallow, well-drained uplifted marine sedimentary loams and silts with alluvial overlay and some uplifted basalt, high in silt and clay, unlike the volcanic and loess soils around it.",
+        "grape_varieties": "Pinot Noir leads, with Chardonnay, Pinot Gris, Riesling, Pinot Blanc and Sauvignon Blanc.",
+        "wine_styles": "Red wine from Pinot Noir and white wines from Chardonnay, Pinot Gris, Riesling, Pinot Blanc and Sauvignon Blanc.",
+        "key_facts": [
+          "Established 2018 (27 CFR 9.265)",
+          "Polk and Yamhill counties",
+          "17 commercial vineyards on about 1,000 acres, and 6 wineries (T.D. TTB-155)",
+          "The Van Duzer Corridor is Oregon's lowest pass through the Coast Range"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Pinot Noir"
+        },
+        {
+          "name": "Chardonnay",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Pinot Gris",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Riesling",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Pinot Blanc",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Sauvignon Blanc",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.265, Van Duzer Corridor (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.265"
+        },
+        {
+          "title": "Federal Register final rule (govinfo), T.D. TTB-155, Van Duzer Corridor (2018)",
+          "url": "https://www.govinfo.gov/content/pkg/FR-2018-12-14/html/2018-27017.htm"
+        },
+        {
+          "title": "Willamette Valley Wineries Association, Van Duzer Corridor AVA overview",
+          "url": "https://www.willamettewines.com/about-the-valley/ava-overviews/van-duzer-corridor/"
+        },
+        {
+          "title": "Willamette Valley Wineries Association, McMinnville AVA overview",
+          "url": "https://www.willamettewines.com/about-the-valley/ava-overviews/mcminnville/"
+        }
+      ]
+    },
+    "united-states.oregon.willamette-valley.yamhill-carlton": {
+      "article": {
+        "description": "An AVA of about 59,000 acres around the hamlets of Carlton and Yamhill in Yamhill and Washington counties, entirely within the Willamette Valley AVA, limited by law to land between 200 and 1,000 feet. Low ridges ring the two towns in a horseshoe, with the North Yamhill River running through. It was named Yamhill-Carlton District until 2010.",
+        "climate": "Sheltered on three sides: the Coast Range to the west, nearly 3,500 feet high, casts a rain shadow, and the Chehalem Mountains to the north and the Dundee Hills to the east add further protection.",
+        "soils": "Coarse-grained ancient marine sediments, among the oldest soils in the valley, which drain quickly and leave the vines short of water.",
+        "grape_varieties": "Pinot Noir makes up about 80% of plantings, with Chardonnay and Pinot Gris.",
+        "wine_styles": "Mostly red wine from Pinot Noir, with white wines from Chardonnay and Pinot Gris.",
+        "key_facts": [
+          "Established 2004 (27 CFR 9.183)",
+          "Yamhill and Washington counties",
+          "Limited to land between 200 and 1,000 feet (27 CFR 9.183)",
+          "About 2,844 acres planted in 127 vineyards (Willamette Valley Wineries Association)"
+        ]
+      },
+      "styles": [
+        "RED",
+        "WHITE"
+      ],
+      "grapes": [
+        {
+          "name": "Pinot Noir"
+        },
+        {
+          "name": "Chardonnay",
+          "role": "ACCESSORY"
+        },
+        {
+          "name": "Pinot Gris",
+          "role": "ACCESSORY"
+        }
+      ],
+      "sources": [
+        {
+          "title": "27 CFR 9.183, Yamhill-Carlton (eCFR text via Cornell LII)",
+          "url": "https://www.law.cornell.edu/cfr/text/27/9.183"
+        },
+        {
+          "title": "Willamette Valley Wineries Association, Yamhill-Carlton AVA overview",
+          "url": "https://www.willamettewines.com/about-the-valley/ava-overviews/yamhill-carlton/"
+        }
+      ]
+    },
     "united-states.washington.columbia-valley.ancient-lakes-of-columbia-valley": {
       "article": {
         "description": "An AVA of 162,762 acres in central Washington around the town of Quincy, in Douglas, Grant and Kittitas counties, with the Columbia River along its western edge. It is named for the lakes that dot its ice-age flood channels. It is one of the few Washington AVAs planted more to white grapes than to red, above all Riesling.",
