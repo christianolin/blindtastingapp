@@ -322,6 +322,8 @@ Measured in the rolled-back rehearsal of 2026-09-30, as a signed-in reader. "Bef
 
 Against New York's own list (its first three: Riesling, Chardonnay, Cabernet Franc): none moves down or drops.
 
+Corrected after this rehearsal, on Long Island: Chardonnay, ACCESSORY → PRINCIPAL (2026-09-30, `supabase/migrations/20261001014747_usa_long_island_chardonnay.sql`). The place's grape source, the New York Wine & Grape Foundation Long Island sheet, ranks Merlot (658 acres), Chardonnay (440), Cabernet Franc (215) and Cabernet Sauvignon (143), so a PRINCIPAL Cabernet Franc passed over Chardonnay (spec §27's role rule); the signature grapes are now that list's first three. With US-4 live, New York's shortlist counts Chardonnay as a signature grape on 4 places against Riesling's 5, so Riesling still leads alone.
+
 ## Nearby chips (spec §8.7)
 
 The details panel's five nearby chips for these places, as a signed-in reader, after the promote. Containers and overlapping AVAs score distance 0; the main session accepts or defers (§20).

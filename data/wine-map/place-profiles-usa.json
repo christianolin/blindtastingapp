@@ -1,6 +1,6 @@
 {
   "_provenance": {
-    "what": "Details-panel knowledge for the United States wine map, wave US-2: the country, California, New York, Oregon and Washington, their umbrella AVAs and the Central Valley grouping (spec docs/superpowers/specs/2026-09-29-usa-wine-map-design.md §10). Turned into supabase/migrations/20260930094747_usa_us2_knowledge.sql by scripts/wine-map-sources/gen-place-profiles-migration.mjs --source data/wine-map/place-profiles-usa.json --bare.",
+    "what": "Details-panel knowledge for the United States wine map, wave US-2: the country, California, New York, Oregon and Washington, their umbrella AVAs and the Central Valley grouping (spec docs/superpowers/specs/2026-09-29-usa-wine-map-design.md §10). Turned into supabase/migrations/20260930094747_usa_us2_knowledge.sql by scripts/wine-map-sources/gen-place-profiles-migration.mjs --source data/wine-map/place-profiles-usa.json --bare. That migration is applied and never regenerated: a later correction to this file ships as its own migration and is listed in US2_CORRECTIONS (scripts/usa-map/usa-knowledge.mjs).",
     "wave": "us2",
     "status": "APPROVED",
     "owner_approval": { "answer": "Owner waived the copy review on 2026-09-30 (\"ignore my friends changes and just go ahead. no need for my review\"). The five questions were answered by the main session: New York keeps Concord and the hybrids in the text only; Puget Sound keeps Madeleine Angevine and Siegerrebe in the text only; Central Valley keeps its Sweet and Fortified styles; the signature-grape split stands as drafted; the three US typical wines are linked at the sitting.", "date": "2026-09-30" },
@@ -333,8 +333,8 @@
       "styles": ["RED", "WHITE", "ROSE", "SPARKLING"],
       "grapes": [
         { "name": "Merlot" },
+        { "name": "Chardonnay" },
         { "name": "Cabernet Franc" },
-        { "name": "Chardonnay", "role": "ACCESSORY" },
         { "name": "Sauvignon Blanc", "role": "ACCESSORY" },
         { "name": "Cabernet Sauvignon", "role": "ACCESSORY" }
       ],

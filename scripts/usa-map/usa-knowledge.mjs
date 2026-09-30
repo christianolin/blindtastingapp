@@ -109,6 +109,52 @@ export function migrationIsCurrent(source, sql) {
 }
 
 /**
+ * Corrections to the US-2 knowledge made after its migration
+ * (20260930094747_usa_us2_knowledge.sql) was applied live. That migration is
+ * never edited or regenerated: each correction ships as its own migration, and
+ * the data file carries the corrected value. The data-vs-migration check runs
+ * on releasedSource(), which puts back exactly these values and nothing else,
+ * so any other drift between the data file and the release still fails. Only
+ * a grape's role is corrected this way so far.
+ */
+export const US2_CORRECTIONS = Object.freeze([
+  Object.freeze({
+    key: "united-states.new-york.long-island",
+    place: "Long Island",
+    grape: "Chardonnay",
+    from: "ACCESSORY",
+    to: "PRINCIPAL",
+    date: "2026-09-30",
+    migration: "supabase/migrations/20261001014747_usa_long_island_chardonnay.sql",
+    why: "The place's grape source, the New York Wine & Grape Foundation Long Island sheet, ranks Merlot (658 acres), Chardonnay (440), Cabernet Franc (215) and Cabernet Sauvignon (143), so a PRINCIPAL Cabernet Franc passed over Chardonnay (spec §27's role rule); the signature grapes are now that list's first three.",
+    effect: "With US-4 live, New York's shortlist counts Chardonnay as a signature grape on 4 places against Riesling's 5, so Riesling still leads alone.",
+  }),
+]);
+
+const ROLES = ["PRINCIPAL", "ACCESSORY"];
+
+/**
+ * The data file as its release migration wrote it: a copy with each listed
+ * correction put back. Throws when a correction is malformed or the data file
+ * no longer carries it, so the list can never go stale silently.
+ */
+export function releasedSource(source, corrections) {
+  const out = structuredClone(source);
+  for (const c of corrections) {
+    if (!ROLES.includes(c.from) || !ROLES.includes(c.to) || c.from === c.to) {
+      throw new Error(`correction ${c.key} ${c.grape}: from and to must be two different roles`);
+    }
+    const g = (out.places?.[c.key]?.grapes ?? []).find((x) => x.name === c.grape);
+    if (!g) throw new Error(`correction ${c.key} ${c.grape}: the data file lists no such grape`);
+    const now = g.role ?? "PRINCIPAL";
+    if (now !== c.to) throw new Error(`correction ${c.key} ${c.grape}: the data file has ${now}, not the corrected ${c.to}`);
+    if (c.from === "PRINCIPAL") delete g.role;
+    else g.role = c.from;
+  }
+  return out;
+}
+
+/**
  * A place's grapes as the details panel lists them: get_wine_place_context
  * orders by role (PRINCIPAL first), then share_pct descending, then name. The
  * data file's own order is not kept (wine_place_grapes has no order column).
@@ -189,12 +235,33 @@ export function shortlistDemotions(stateGrapes, list, rankOf) {
   return out;
 }
 
-export function reviewMarkdown({ source, wave, rehearsal }) {
+/**
+ * One line per post-release correction (US2_CORRECTIONS) for a review file.
+ * `effect` is the correction's own measured sentence, not recomputed here: a
+ * review file sees only its own wave's data.
+ */
+export function correctionLine(c, where) {
+  return `${where}: ${c.grape}, ${c.from} → ${c.to} (${c.date}, \`${c.migration}\`). ${c.why} ${c.effect}`;
+}
+
+export function reviewMarkdown({ source, wave, rehearsal, corrections = [] }) {
+  // The place sections show the data file as it is now; the shortlist table is
+  // rehearsal evidence, so it is labelled from the data the rehearsal measured.
+  const measured = releasedSource(source, corrections);
   const L = [];
   L.push("# United States, wave US-2: knowledge for the owner's review", "");
   L.push("**Status: DRAFT, provisional copy.** Nothing here is live. The places are DRAFT until the US-2 promote, and this text applies only after your OK (spec D19).", "");
   L.push("Reply **OK**, or quote a section heading and give the line-level correction. Corrections go into `data/wine-map/place-profiles-usa.json`, and the knowledge migration is regenerated from it.", "");
   L.push(`Places: ${wave.places.length}. Sources are listed under each place; figures appear only where a source publishes them.`, "");
+  if (corrections.length) {
+    L.push("## Corrected after release", "");
+    L.push("The knowledge migration (`supabase/migrations/20260930094747_usa_us2_knowledge.sql`) is applied and is never edited. Each correction below is its own migration. The place sections show the corrected data; the grape shortlist table at the end was measured in the rehearsal, before these corrections.", "");
+    for (const c of corrections) {
+      const where = wave.places.find((p) => p.key === c.key)?.breadcrumb ?? c.key;
+      L.push(`- ${correctionLine(c, `**${where}**`)}`);
+    }
+    L.push("");
+  }
   if ((source._owner_questions ?? []).length) {
     L.push("## Questions for you", "");
     for (const q of source._owner_questions) L.push(`- ${q}`);
@@ -236,7 +303,7 @@ export function reviewMarkdown({ source, wave, rehearsal }) {
     const keyOf = new Map(wave.states.map((st) => [st.name, st.key]));
     for (const [state, s] of Object.entries(rehearsal.shortlist)) {
       const key = keyOf.get(state);
-      const ranks = shortlistRanks(source, key);
+      const ranks = shortlistRanks(measured, key);
       const rankOf = (g) => ranks.get(g);
       const colours = s.colours ?? {};
       const label = (g) => {
@@ -256,7 +323,7 @@ export function reviewMarkdown({ source, wave, rehearsal }) {
       const lead = rankOf(s.after[0]);
       const top = s.after.filter((g) => lead && rankOf(g) && rankOf(g).bucket === lead.bucket && rankOf(g).count === lead.count);
       L.push(top.length > 1 ? `Tied at the top (the app may lead with any of these): ${top.join(", ")}.` : `Leads with ${s.after[0]}.`, "");
-      const own = source.places[key].grapes;
+      const own = measured.places[key].grapes;
       const demotions = shortlistDemotions(own, s.after, rankOf);
       L.push(`Against ${state}'s own list (its first three: ${own.slice(0, 3).map((g) => g.name).join(", ")}): ${demotions.length ? `${demotions.join("; ")}.` : "none moves down or drops."}`, "");
     }

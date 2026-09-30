@@ -4,8 +4,11 @@ import test from "node:test";
 import { topLevelTransactionStatements } from "../migration-preflight.mjs";
 import { loadTrees, us2Wave } from "./us2-wave.mjs";
 import {
-  migrationIsCurrent, panelGrapes, reviewMarkdown, shortlistDemotions, shortlistSurfaces, validateUsaProfiles,
+  migrationIsCurrent, panelGrapes, releasedSource, reviewMarkdown, shortlistDemotions, shortlistRanks, shortlistSurfaces,
+  US2_CORRECTIONS, validateUsaProfiles,
 } from "./usa-knowledge.mjs";
+import { mergeSources } from "./usa-us3-knowledge.mjs";
+import { signatureLeadProblems } from "./usa-us4-knowledge.mjs";
 
 const wave = us2Wave(await loadTrees());
 const long = (s) => `${s} — a plain factual sentence long enough to pass the floor.`;
@@ -93,15 +96,75 @@ test("the committed US knowledge file meets the US rule", async () => {
 test("the knowledge migration is current with the data file (Review Focus 3)", async () => {
   const source = JSON.parse(await readFile("data/wine-map/place-profiles-usa.json", "utf8"));
   const sql = await readFile("supabase/migrations/20260930094747_usa_us2_knowledge.sql", "utf8");
-  assert.deepEqual(migrationIsCurrent(source, sql.replace(/\r\n/g, "\n")), []);
+  // The applied release is never edited: the data file differs from it by the
+  // recorded post-release corrections and nothing else.
+  assert.deepEqual(migrationIsCurrent(releasedSource(source, US2_CORRECTIONS), sql.replace(/\r\n/g, "\n")), []);
+  assert.deepEqual(migrationIsCurrent(source, sql.replace(/\r\n/g, "\n")),
+    US2_CORRECTIONS.map((c) => `${c.key}: grape ${c.grape} (${c.to}) not in the migration`));
   assert.deepEqual(topLevelTransactionStatements(sql), []);
+});
+
+test("post-release corrections: each is listed once, carried by the data file, and put back exactly", async () => {
+  const source = JSON.parse(await readFile("data/wine-map/place-profiles-usa.json", "utf8"));
+  assert.deepEqual(US2_CORRECTIONS.map((c) => [c.key, c.grape, c.from, c.to]),
+    [["united-states.new-york.long-island", "Chardonnay", "ACCESSORY", "PRINCIPAL"]]);
+  assert.equal(new Set(US2_CORRECTIONS.map((c) => `${c.key}|${c.grape}`)).size, US2_CORRECTIONS.length);
+  const released = releasedSource(source, US2_CORRECTIONS);
+  const li = (s) => s.places["united-states.new-york.long-island"].grapes;
+  assert.deepEqual(li(released).find((g) => g.name === "Chardonnay"), { name: "Chardonnay", role: "ACCESSORY" });
+  assert.deepEqual(li(source).find((g) => g.name === "Chardonnay"), { name: "Chardonnay" }, "the data file carries the correction");
+  assert.deepEqual(li(source).filter((g) => (g.role ?? "PRINCIPAL") === "PRINCIPAL").map((g) => g.name),
+    ["Merlot", "Chardonnay", "Cabernet Franc"], "the Long Island sheet's first three, in its order");
+  // Only the listed value moves: everything else in the copy equals the data file.
+  const back = structuredClone(released);
+  delete li(back).find((g) => g.name === "Chardonnay").role;
+  assert.deepEqual(back, source);
+  assert.notEqual(released, source, "a copy, never the caller's object");
+  // A stale or malformed entry fails loudly instead of silencing the check.
+  const stale = structuredClone(source);
+  li(stale).find((g) => g.name === "Chardonnay").role = "ACCESSORY";
+  assert.throws(() => releasedSource(stale, US2_CORRECTIONS), /has ACCESSORY, not the corrected PRINCIPAL/);
+  assert.throws(() => releasedSource(source, [{ ...US2_CORRECTIONS[0], grape: "Riesling" }]), /lists no such grape/);
+  assert.throws(() => releasedSource(source, [{ ...US2_CORRECTIONS[0], from: "PRINCIPAL" }]), /two different roles/);
+});
+
+test("post-release corrections: each is its own migration, after the release, changing exactly that row", async () => {
+  for (const c of US2_CORRECTIONS) {
+    const sql = (await readFile(c.migration, "utf8")).replace(/\r\n/g, "\n");
+    const version = c.migration.match(/^supabase\/migrations\/(\d{14})_[a-z0-9_]+\.sql$/)?.[1];
+    assert.ok(version && version > "20260930094747", `${c.migration}: a migration after the US-2 knowledge`);
+    assert.deepEqual(topLevelTransactionStatements(sql), [], c.migration);
+    assert.ok(sql.includes(`canonical_key = '${c.key}'`), `${c.migration}: resolves the place by key`);
+    assert.ok(sql.includes(`where name = '${c.grape}'`), `${c.migration}: resolves the grape by exact name`);
+    assert.equal((sql.match(/\bupdate public\.wine_place_grapes\b/g) ?? []).length, 1, `${c.migration}: one update`);
+    assert.match(sql, new RegExp(`set role = '${c.to}'\\n\\s+where id = v_link and role = '${c.from}';`), `${c.migration}: ${c.from} -> ${c.to}`);
+    assert.match(sql, new RegExp(`if v_role <> '${c.from}' then`), `${c.migration}: refuses unless ${c.from} before`);
+    assert.match(sql, /if v_rows <> 1 then/, `${c.migration}: exactly one row changed`);
+    assert.ok(!/\b(insert into|delete from)\b/i.test(sql), `${c.migration}: no insert or delete`);
+    assert.ok(!/\bupdate public\.(?!wine_place_grapes\b)/.test(sql), `${c.migration}: no other table updated`);
+    assert.ok(!/refresh_wine_place_neighbours/.test(sql), `${c.migration}: no catalogue write, so no refresh`);
+  }
+});
+
+test("post-release corrections keep each state's signature lead (Riesling alone in New York)", async () => {
+  const us2 = JSON.parse(await readFile("data/wine-map/place-profiles-usa.json", "utf8"));
+  const us4 = JSON.parse(await readFile("data/wine-map/place-profiles-usa-us4.json", "utf8"));
+  const NY = "united-states.new-york";
+  const now = shortlistRanks(mergeSources(us2, us4), NY);
+  const before = shortlistRanks(mergeSources(releasedSource(us2, US2_CORRECTIONS), us4), NY);
+  assert.deepEqual(now.get("Riesling"), { bucket: "principal", count: 5 });
+  assert.deepEqual(now.get("Chardonnay"), { bucket: "principal", count: 4 });
+  assert.deepEqual(before.get("Chardonnay"), { bucket: "principal", count: 3 });
+  assert.deepEqual(signatureLeadProblems(mergeSources(us2, us4)), []);
 });
 
 test("the committed review file is the render of the data file and the rehearsal", async () => {
   const source = JSON.parse(await readFile("data/wine-map/place-profiles-usa.json", "utf8"));
   const rehearsal = JSON.parse(await readFile("data/wine-map/review/usa-us2-rehearsal.json", "utf8"));
   const md = (await readFile("data/wine-map/review/usa-us2-knowledge.md", "utf8")).replace(/\r\n/g, "\n");
-  assert.equal(md, reviewMarkdown({ source, wave, rehearsal }));
+  assert.equal(md, reviewMarkdown({ source, wave, rehearsal, corrections: US2_CORRECTIONS }));
+  assert.match(md, /## Corrected after release\n[\s\S]*\*\*United States › New York › Long Island\*\*: Chardonnay, ACCESSORY → PRINCIPAL/);
+  assert.ok(md.indexOf("## Corrected after release") < md.indexOf("## United States"), "the corrections come before the places");
   assert.match(md, /## Grape shortlist change/);
   assert.ok(md.indexOf("## Questions for you") < md.indexOf("## United States"), "the questions come first");
   assert.ok(md.indexOf("## Grape shortlist change") > md.lastIndexOf("## United States"), "the shortlist table comes last");
@@ -120,7 +183,7 @@ test("roles: PRINCIPAL or ACCESSORY, and at least one signature grape per place"
 });
 
 test("migrationIsCurrent catches a swapped style, a changed role and a non-re-appliable new grape", async () => {
-  const source = JSON.parse(await readFile("data/wine-map/place-profiles-usa.json", "utf8"));
+  const source = releasedSource(JSON.parse(await readFile("data/wine-map/place-profiles-usa.json", "utf8")), US2_CORRECTIONS);
   const sql = (await readFile("supabase/migrations/20260930094747_usa_us2_knowledge.sql", "utf8")).replace(/\r\n/g, "\n");
   assert.deepEqual(migrationIsCurrent(source, sql), []);
   const swapped = structuredClone(source);

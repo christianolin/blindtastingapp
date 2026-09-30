@@ -6,6 +6,12 @@ Reply **OK**, or quote a section heading and give the line-level correction. Cor
 
 Places: 16. Sources are listed under each place; figures appear only where a source publishes them.
 
+## Corrected after release
+
+The knowledge migration (`supabase/migrations/20260930094747_usa_us2_knowledge.sql`) is applied and is never edited. Each correction below is its own migration. The place sections show the corrected data; the grape shortlist table at the end was measured in the rehearsal, before these corrections.
+
+- **United States › New York › Long Island**: Chardonnay, ACCESSORY → PRINCIPAL (2026-09-30, `supabase/migrations/20261001014747_usa_long_island_chardonnay.sql`). The place's grape source, the New York Wine & Grape Foundation Long Island sheet, ranks Merlot (658 acres), Chardonnay (440), Cabernet Franc (215) and Cabernet Sauvignon (143), so a PRINCIPAL Cabernet Franc passed over Chardonnay (spec §27's role rule); the signature grapes are now that list's first three. With US-4 live, New York's shortlist counts Chardonnay as a signature grape on 4 places against Riesling's 5, so Riesling still leads alone.
+
 ## Questions for you
 
 - New York: list Concord (and other native or hybrid grapes such as Niagara and Seyval Blanc) as grapes? They dominate New York's acreage but mostly go to juice. Today the articles mention them in text only, and no catalog row is added (spec §10.1: Concord only if you want it).
@@ -409,9 +415,9 @@ Name: **Long Island** · key `united-states.new-york.long-island` · AVA
 **Grapes**, as the details panel lists them: the signature grapes first, then the others, which the panel tags "accessory"; each group alphabetically.
 
 - Cabernet Franc
+- Chardonnay
 - Merlot
 - Cabernet Sauvignon · accessory
-- Chardonnay · accessory
 - Sauvignon Blanc · accessory
 
 **Styles:** Red, White, Rosé, Sparkling

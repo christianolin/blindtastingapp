@@ -3,7 +3,7 @@
 // (§10.3, decision 9), and one review file per state (each well under §18's 40
 // places).
 import {
-  BY_HAND_CHIPS, panelGrapes, shortlistDemotions, shortlistRanks, shortlistSurfaces, STYLE_LABELS,
+  BY_HAND_CHIPS, correctionLine, panelGrapes, shortlistDemotions, shortlistRanks, shortlistSurfaces, STYLE_LABELS,
 } from "./usa-knowledge.mjs";
 import { validateUs3Profiles } from "./usa-us3-knowledge.mjs";
 
@@ -50,7 +50,10 @@ export function signatureLeadProblems(source) {
   return out;
 }
 
-export function us4ReviewMarkdown({ source, wave, state, allSource, rehearsal }) {
+// allSource labels the rehearsal's shortlist table, so pass the data the
+// rehearsal measured (US-2 through releasedSource); `corrections` are the
+// post-release ones, noted under the state's table.
+export function us4ReviewMarkdown({ source, wave, state, allSource, rehearsal, corrections = [] }) {
   const places = wave.places.filter((p) => p.key.startsWith(`${state.key}.`));
   const approved = source._provenance?.status === "APPROVED";
   const L = [`# United States, US-4, ${state.name}: knowledge`, ""];
@@ -100,6 +103,9 @@ export function us4ReviewMarkdown({ source, wave, state, allSource, rehearsal })
     const own = allSource.places[state.key].grapes;
     const d = shortlistDemotions(own, s.after, rankOf);
     L.push(`Against ${state.name}'s own list (its first three: ${own.slice(0, 3).map((g) => g.name).join(", ")}): ${d.length ? `${d.join("; ")}.` : "none moves down or drops."}`, "");
+    for (const c of corrections.filter((x) => x.key.startsWith(`${state.key}.`))) {
+      L.push(correctionLine(c, `Corrected after this rehearsal, on ${c.place}`), "");
+    }
   }
   const near = Object.entries(rehearsal?.nearby ?? {}).filter(([k]) => k.startsWith(`${state.key}.`));
   if (near.length) {
