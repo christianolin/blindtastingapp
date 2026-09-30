@@ -94,3 +94,14 @@ test("the knowledge migration is current with the data file (Review Focus 3)", a
   assert.deepEqual(migrationIsCurrent(source, sql.replace(/\r\n/g, "\n")), []);
   assert.deepEqual(topLevelTransactionStatements(sql), []);
 });
+
+test("the committed review file is the render of the data file and the rehearsal", async () => {
+  const source = JSON.parse(await readFile("data/wine-map/place-profiles-usa.json", "utf8"));
+  const rehearsal = JSON.parse(await readFile("data/wine-map/review/usa-us2-rehearsal.json", "utf8"));
+  const md = (await readFile("data/wine-map/review/usa-us2-knowledge.md", "utf8")).replace(/\r\n/g, "\n");
+  assert.equal(md, reviewMarkdown({ source, wave, rehearsal }));
+  assert.match(md, /## Grape shortlist change/);
+  assert.ok(md.indexOf("## Questions for you") < md.indexOf("## United States"), "the questions come first");
+  assert.ok(md.indexOf("## Grape shortlist change") > md.lastIndexOf("## United States"), "the shortlist table comes last");
+  assert.ok(wave.places.length <= 40, "§18: at most 40 places per review file");
+});

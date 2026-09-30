@@ -122,12 +122,20 @@ export function reviewMarkdown({ source, wave, rehearsal }) {
   }
   if (rehearsal?.shortlist) {
     L.push("## Grape shortlist change (spec §10.3)", "");
-    L.push(`The guess ladder and the answer-key form both call \`shortlistGrapesForRegion\`. From the promote on, a state's list comes from the map (the state plus every place beneath it, most-linked first) instead of \`region_grapes\`. Measured in the rolled-back rehearsal of ${rehearsal.rehearsed_at.slice(0, 10)}, as a signed-in reader. Ties keep the database's row order in the app, and are shown alphabetically here.`, "");
+    L.push(`The guess ladder and the answer-key form both call \`shortlistGrapesForRegion\`. From the promote on, a state's list comes from the map (the state plus every place beneath it, most-linked first) instead of \`region_grapes\`. Measured in the rolled-back rehearsal of ${rehearsal.rehearsed_at.slice(0, 10)}, as a signed-in reader. The number after a grape is how many of the state's places (the state and the areas beneath it) list it. Grapes with the same number tie: the app keeps the database's row order for them, and they are shown alphabetically here, so the app may put any of them first.`, "");
     L.push("| State | Before (`region_grapes`) | After (the map) |", "|---|---|---|");
+    const keyOf = new Map(wave.states.map((st) => [st.name, st.key]));
+    const ties = [];
     for (const [state, s] of Object.entries(rehearsal.shortlist)) {
-      L.push(`| ${state} | ${s.before.join(", ")} | ${s.after.join(", ")} |`);
+      const key = keyOf.get(state);
+      const count = (g) => Object.entries(source.places)
+        .filter(([k, p]) => (k === key || k.startsWith(`${key}.`)) && p.grapes.some((x) => x.name === g)).length;
+      L.push(`| ${state} | ${s.before.join(", ")} | ${s.after.map((g) => `${g} (${count(g)})`).join(", ")} |`);
+      const top = s.after.filter((g) => count(g) === count(s.after[0]));
+      if (top.length > 1) ties.push(`${state}: ${top.join(", ")} (${count(s.after[0])} each)`);
     }
     L.push("");
+    if (ties.length) L.push(`**Tied at the top** (the app may lead with any of these): ${ties.join("; ")}.`, "");
   }
   return `${L.join("\n")}\n`;
 }
