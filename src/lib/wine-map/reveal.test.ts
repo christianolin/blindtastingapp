@@ -17,6 +17,8 @@ import { bundledStyleEngine } from "../testing/bundled-style-engine";
 import {
   bboxZoomForPx,
   currentRevealPx,
+  CUE_MAX_SELECTION_SPAN,
+  cueInScope,
   descendantsInView,
   placeRevealPx,
   REVEAL_CAP_ZOOM,
@@ -129,11 +131,11 @@ const propsOf = (p: Place): Props => ({
 const THRESHOLDS = [16, 24, 32] as const;
 
 describe("reveal: the owner's knob", () => {
-  it("is 24 px (WCAG 2.2's minimum target size), with a z16 net and rule version 1", () => {
+  it("is 24 px (WCAG 2.2's minimum target size), with a z16 net and rule version 2", () => {
     expect(REVEAL_MIN_PX).toBe(24);
     expect(REVEAL_CAP_ZOOM).toBe(16);
     expect(REVEAL_PX_MAX).toBe(64);
-    expect(REVEAL_RULE_VERSION).toBe(1);
+    expect(REVEAL_RULE_VERSION).toBe(2);
   });
 
   it("reads ?revealPx= for one visit, clamped, falling back to the knob", () => {
@@ -159,16 +161,19 @@ describe("reveal: the owner's knob", () => {
 // then the tiles release that switches the rule on. A shard applies the rule
 // only when its manifest entry says its tiles carry it.
 describe("shardRevealPx / placeRevealPx: the manifest switches the rule on, shard by shard", () => {
-  const on = { reveal_rule: 1 };
+  const on = { reveal_rule: 2 };
   const off = {};
-  it("a shard applies the visit's threshold only with reveal_rule 1", () => {
+  it("a shard applies the visit's threshold only with reveal_rule 2", () => {
     expect(shardRevealPx(on, 24)).toBe(24);
     expect(shardRevealPx(on, 16)).toBe(16);
     expect(shardRevealPx(on, 0)).toBe(0); // the kill switch wins
     expect(shardRevealPx(off, 24)).toBe(0); // today's releases
     expect(shardRevealPx(undefined, 24)).toBe(0);
-    expect(shardRevealPx({ reveal_rule: 2 }, 24)).toBe(0); // a rule this app does not know
-    expect(shardRevealPx({ reveal_rule: "1" }, 24)).toBe(0);
+    expect(shardRevealPx({ reveal_rule: 3 }, 24)).toBe(0); // a rule this app does not know
+    expect(shardRevealPx({ reveal_rule: "2" }, 24)).toBe(0);
+    // Rule 1 is the first review round's export (draft 20260930T190326Z, never
+    // accepted): promoted under this app, it keeps the map from before the rule.
+    expect(shardRevealPx({ reveal_rule: 1 }, 24)).toBe(0);
   });
 
   it("a place takes its shard's; a country, the visit's once any shard carries the rule", () => {
@@ -465,5 +470,38 @@ describe("descendantsInView (the selection cue's probe)", () => {
 
   it("counts a feature whose geometry it cannot read as in view (it errs towards the cue)", () => {
     expect(probe([{ properties: hermitage.properties }], [], 8)).toEqual({ drawn: 0, hidden: 1 });
+  });
+});
+
+// Review 2026-10-01: with Burgundy selected and the view deep in
+// Vosne-Romanée (z13-z15), the phone's pill kept naming Burgundy over the map.
+describe("cueInScope: the cue keeps to views of the selected place", () => {
+  const BOURGOGNE: Bbox = [3.6088, 46.2431, 5.0045, 47.8851];
+  // A view centred on a point, w x h CSS px at a zoom (512 px tiles).
+  const viewAt = (lon: number, lat: number, zoom: number, w: number, h: number): Bbox => {
+    const scale = 512 * 2 ** zoom;
+    const my = (l: number) => {
+      const s = Math.sin((l * Math.PI) / 180);
+      return 0.5 - Math.log((1 + s) / (1 - s)) / (4 * Math.PI);
+    };
+    const latOf = (m: number) => (Math.atan(Math.sinh(Math.PI * (1 - 2 * m))) * 180) / Math.PI;
+    const cy = my(lat);
+    return [lon - ((w / scale) * 360) / 2, latOf(cy + h / 2 / scale), lon + ((w / scale) * 360) / 2, latOf(cy - h / 2 / scale)];
+  };
+  it("is four times the view, about two zooms past a landing", () => {
+    expect(CUE_MAX_SELECTION_SPAN).toBe(4);
+  });
+  it("speaks at Burgundy's landing and two zooms in, not at Vosne-Romanée's z13", () => {
+    expect(cueInScope(BOURGOGNE, viewAt(4.307, 47.08, 7.346, 769, 654))).toBe(true);
+    expect(cueInScope(BOURGOGNE, viewAt(4.307, 47.08, 9.2, 769, 654))).toBe(true);
+    expect(cueInScope(BOURGOGNE, viewAt(4.955, 47.163, 13, 390, 600))).toBe(false);
+    expect(cueInScope(BOURGOGNE, viewAt(4.955, 47.163, 14.5, 390, 600))).toBe(false);
+  });
+  it("compares the larger span, either way, and a degenerate view says nothing new", () => {
+    expect(cueInScope([0, 0, 4, 0.5], [0, 0, 1, 1])).toBe(true);
+    expect(cueInScope([0, 0, 4.01, 0.5], [0, 0, 1, 1])).toBe(false);
+    expect(cueInScope([0, 0, 0.5, 4.2], [0, 0, 1, 1])).toBe(false);
+    expect(cueInScope(BOURGOGNE, [1, 1, 1, 2])).toBe(true);
+    expect(cueInScope(BOURGOGNE, [Number.NaN, 0, 1, 1])).toBe(true);
   });
 });

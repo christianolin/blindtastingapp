@@ -2200,8 +2200,8 @@ a raw subquery, regardless of which two tables look involved at a glance.
   - **When a place appears** (2026-09-30, owner: "you need to zoom further
     in before smaller places appear"; design
     `docs/superpowers/specs/2026-09-30-wine-map-reveal-by-size.md`, §11 is
-    the rule as built and §12 the fix round of 2026-10-01, which wins where
-    they differ). Owner decisions the same day: **24 px**; **keep
+    the rule as built, §12 the fix round of 2026-10-01 and §13 its second
+    review's fixes; the later section wins where they differ). Owner decisions the same day: **24 px**; **keep
     ribbons visible** (long thin places such as Burgundy's districts appear
     with their region, only compact specks wait); the cue copy below; and
     "ship when it passes" in two steps, the app first, then a tiles release.
@@ -2233,10 +2233,13 @@ a raw subquery, regardless of which two tables look involved at a glance.
       at least half their median sibling come in with it
       (`SUBREGION_FAMILY_RATIO` 2: Burgundy's compact Grand Auxerrois comes
       in with its ribbons); every part is its own feature, the anchor part
-      with its place, the others once their own square is N
-      (`PIECE_PX_RATIO` 1, was 3 until 2026-10-01: 10-20 px pieces cut off
-      from their place, the Central Valley's in the owner's North Coast view,
-      read like the specks the rule hides); a label carries its
+      with its place, the others once their own size is N, by the same
+      per-part measure (`partSize`: a compact piece's square, a ribbon
+      piece's length rule; `PIECE_PX_RATIO` 1, was 3 until 2026-10-01: 10-20
+      px compact pieces cut off from their place, the Central Valley's in the
+      owner's North Coast view, read like the specks the rule hides; never
+      measure a piece by its square alone: that held back 440 Mosel and Nahe
+      river-bank strips 1-2 zooms, against "keep ribbons visible"); a label carries its
       place's value, and so does the part its point lies in (a name is never
       drawn over a piece of its place still waiting; export.mjs asserts it). Everything is a ratio of N, so `?revealPx=` keeps its
       meaning. The table of ~50 named places is in the spec, §11 and §12.
@@ -2252,15 +2255,29 @@ a raw subquery, regardless of which two tables look involved at a glance.
     - **Fail open, and the manifest switches it on.** A feature without a
       numeric `reveal_area` is never delayed (`area` is never read), and a
       shard applies the rule only when its manifest entry carries
-      `reveal_rule: 1` (`REVEAL_RULE`/`REVEAL_RULE_VERSION`;
-      `shardRevealPx`, `placeRevealPx`). export.mjs flags every shard,
+      `reveal_rule: 2` (`REVEAL_RULE` in lib.mjs and `REVEAL_RULE_VERSION`
+      in reveal.ts, held equal by lib.test.mjs; `shardRevealPx`,
+      `placeRevealPx`). Rule 1 is the first review round's export (draft
+      `20260930T190326Z`, never accepted), which this app reads as a rule it
+      does not know, the map from before the rule. Bump both whenever the
+      export changes what `reveal_area` means or how a shard is ordered.
+      export.mjs flags every shard,
       publish.mjs keeps the flag in `tile_checksums`, promote.mjs
       (`manifestForRelease`) copies it into the manifest. Without it the
       shard's filters, the selection camera and the status probes are the
       map from before the rule, so the app deploys first with no visible
       change, and promoting an older release switches the rule off.
       validate.mjs refuses a flagged shard whose subregions lack
-      `reveal_area` (`checkTileFeature`).
+      `reveal_area` (`checkTileFeature`). **promote.mjs refuses a release
+      that would switch a rule on** (its shards carry a `reveal_rule` the
+      ACTIVE release does not; `revealRulePromoteRefusal`) unless it is named
+      and `--reveal-rule <REVEAL_RULE>` says its draft was checked (sizes,
+      landings, paint order): `node scripts/wine-map-tiles/promote.mjs
+      <version> --reveal-rule 2`. So a routine Wine Map Tiles run from master
+      with promote=true fails at its promote step, its release left
+      VALIDATED, instead of shipping an unchecked rule; once a rule-2 release
+      is ACTIVE, routine runs promote as ever. A release flagged with any
+      other rule (an older export's) is refused outright.
     - **Parts.** A tier >= 2 place is split into one feature per polygon,
       each with the place's properties (`area` still the whole footprint, so
       smallest-wins clicks are unchanged), same `key`/`id` (promoteId `key`:
@@ -2313,13 +2330,19 @@ a raw subquery, regardless of which two tables look involved at a glance.
       (owner, 2026-10-01: "I'll round the zoom so no sub-area pops in a hair
       later"): below a country, with the rule on, a pick lands on the next
       whole zoom when that is within 0.25 of its fit and the place's box still
-      fits the map with 12 px to every edge (`landingZoom`,
+      fits the map with 12 px to every edge (`selectionLanding`,
       `LANDING_ROUND_WITHIN`, `LANDING_ROUND_MARGIN_PX`; never past the cap,
-      never under the phone pill, the sheet kept clear): Napa Valley z8.97 →
+      the sheet kept clear, and on a phone the box's top kept below the
+      zoom-in pill's strip, one line or two, `topClear`/`cuePillClearPx`,
+      moving the box down when there is room: North Coast z5.90 → z6 on a
+      phone): Napa Valley z8.97 →
       z9 (15/15 AVAs drawn, where z8.97 drew 10 and no names), Northern Rhône
       z8.84 → z9 (Côte-Rôtie and Condrieu drawn and named). The filters see
       whole zooms only, so a fit just under one draws what the zoom below
-      draws. A parent that fits the screen
+      draws. A pick whose place is already well framed leaves the camera
+      alone only if the view's whole zoom is at least its landing's
+      (`viewAlreadyFrames`): otherwise Napa Valley picked from North Coast's
+      z7.52 stayed there, 0 of 15 AVAs drawn. A parent that fits the screen
       can still hold places under N px; the status line then says "Zoom in
       to see the subregions of {place}." (or "Zoom in to see all the
       subregions of {place}." when some are drawn; owner-approved), from the
@@ -2327,7 +2350,10 @@ a raw subquery, regardless of which two tables look involved at a glance.
       every DESCENDANT in view (`descendantKeys` from the tree, queried with
       `keySetExpression`; the children by `parent_id` without the tree), not
       only the children: Bordeaux's landing hid Pomerol, a grandchild, with
-      no cue. In All countries
+      no cue. It speaks only while the view still shows the selected place
+      (`cueInScope`: its box at most `CUE_MAX_SELECTION_SPAN` 4 times the
+      view, about two zooms past the landing), never deep inside it
+      (Burgundy's cue over Vosne-Romanée at z13). In All countries
       it follows the All warning; on a phone, whose status line is in the
       closed Map options sheet, the same text shows over the map while that
       sheet is closed (one `role="status"` region at a time). That pill is

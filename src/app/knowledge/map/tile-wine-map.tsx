@@ -26,6 +26,7 @@ import {
   NEIGHBOUR_MIN_ZOOM,
 } from "@/lib/wine-map/mount-policy";
 import {
+  cueInScope,
   descendantsInView,
   REVEAL_MIN_PX,
   revealK,
@@ -49,8 +50,9 @@ import {
 import {
   chipFlightNeeded,
   chipLandingZoom,
-  landingZoom,
   selectionFit,
+  selectionLanding,
+  viewAlreadyFrames,
   type CameraRequest,
   type SheetPadding,
 } from "@/lib/wine-map/camera-fit";
@@ -117,6 +119,9 @@ function ensurePmtilesProtocol() {
 
 export type CameraTarget = {
   bbox: [number, number, number, number];
+  /** The canonical key of the place `bbox` frames: the selection cue keeps to
+      views of it (reveal.ts cueInScope). */
+  placeKey?: string;
   /** Never end below this — a small feature's reveal zoom, so it renders. */
   minZoom: number;
   maxZoom: number;
@@ -979,6 +984,14 @@ export function TileWineMap({
   useEffect(() => {
     selectedKeyRef.current = selectedKey;
   }, [selectedKey]);
+  // The selected place's box (its camera target's), so the cue keeps to views
+  // of the place itself (reveal.ts cueInScope); read by the scan like the key.
+  const selectionBoxRef = useRef<{ key: string; bbox: Bbox } | null>(null);
+  useEffect(() => {
+    if (cameraTarget?.placeKey) {
+      selectionBoxRef.current = { key: cameraTarget.placeKey, bbox: cameraTarget.bbox };
+    }
+  }, [cameraTarget]);
   // The place tree, for the probe's descendants (selection-state.ts
   // descendantKeys); read by the scan like the selected key.
   const treeRef = useRef(tree);
@@ -1155,15 +1168,23 @@ export function TileWineMap({
     // only the size rule holds back, asked of the tiles for the descendants
     // alone (keySetExpression), so the probe's cost follows them, not the
     // shard. Without the tree (loading, or failed) it falls back to the
-    // children, by the tiles' parent_id.
+    // children, by the tiles' parent_id. It speaks only while the view still
+    // shows the place as a place (cueInScope: its box at most four times the
+    // view), not deep inside it (review 2026-10-01: Burgundy's cue over
+    // Vosne-Romanée at z13-z15).
     let family: DetailReport["selectionFamily"] = null;
     const selKey = selectedKeyRef.current;
     const selShard = selKey ? (selKey.split(".")[1] ?? null) : null;
     const selReveal = selShard !== null ? revealOf(selShard) : { px: 0, k: 0 };
+    const selBox = selectionBoxRef.current;
+    const viewNow = map.getBounds();
     if (
       selKey !== null &&
       selShard !== null &&
       selReveal.px > 0 &&
+      (selBox === null ||
+        selBox.key !== selKey ||
+        cueInScope(selBox.bbox, [viewNow.getWest(), viewNow.getSouth(), viewNow.getEast(), viewNow.getNorth()])) &&
       mountedShards.includes(selShard) &&
       (detail === "all" || countryOfShard(shardCountries, selShard) === focusNow)
     ) {
@@ -1405,27 +1426,34 @@ export function TileWineMap({
     // Fit the footprint, but never end below the selection's reveal zoom: a
     // bbox fit alone can land under a small feature's min_zoom, so it (and its
     // gold ring) wouldn't render until the user zoomed in by hand.
-    const apply = () => {
+    const landing = () => {
       const cam = inner?.cameraForBounds(bounds, {
         padding: fit.padding,
         maxZoom: cameraTarget.maxZoom,
       });
-      if (inner && cam) {
-        const fitted = Math.max(cam.zoom ?? 0, cameraTarget.minZoom);
-        // A fit a hair under a whole zoom lands on it, where the place still
-        // fits (landingZoom): the filters see whole zooms, and z8.97 drew
-        // what z8 draws, names and all (owner, 2026-10-01).
-        const zoom = cameraTarget.wholeZoom
-          ? landingZoom({
-              zoom: fitted,
-              maxZoom: cameraTarget.maxZoom,
-              bbox: cameraTarget.bbox,
-              width: inner.getCanvas().clientWidth,
-              height: inner.getCanvas().clientHeight,
-              fit,
-            })
-          : fitted;
-        if (fit.offset[0] !== 0 || fit.offset[1] !== 0) {
+      if (!inner || !cam) return null;
+      const fitted = Math.max(cam.zoom ?? 0, cameraTarget.minZoom);
+      // A fit a hair under a whole zoom lands on it, where the place still
+      // fits (selectionLanding): the filters see whole zooms, and z8.97 drew
+      // what z8 draws, names and all (owner, 2026-10-01). Under a phone's
+      // zoom-in pill the box may move down to stay clear of it.
+      const landed = cameraTarget.wholeZoom
+        ? selectionLanding({
+            zoom: fitted,
+            maxZoom: cameraTarget.maxZoom,
+            bbox: cameraTarget.bbox,
+            width: inner.getCanvas().clientWidth,
+            height: inner.getCanvas().clientHeight,
+            fit,
+            topClear: cameraTarget.padding?.topClear,
+          })
+        : { zoom: fitted, offset: fit.offset };
+      return { cam, ...landed };
+    };
+    const apply = (planned = landing()) => {
+      if (inner && planned) {
+        const { cam, zoom, offset } = planned;
+        if (offset[0] !== 0 || offset[1] !== 0) {
           // The place's own centre, eased to the visible part's centre by
           // `offset` (the sheet below, the zoom-in pill above), which easeTo
           // applies in pixels at the final zoom. cam.center is already
@@ -1434,7 +1462,7 @@ export function TileWineMap({
           inner.easeTo({
             center: mercatorMidpoint(bounds),
             zoom,
-            offset: fit.offset,
+            offset: [offset[0], offset[1]],
             duration: 900,
           });
         } else {
@@ -1475,10 +1503,21 @@ export function TileWineMap({
       cy > b.getSouth() &&
       cy < b.getNorth();
     const spanFrac = Math.max((maxX - minX) / viewW, (maxY - minY) / viewH);
-    const zoomedEnough = inner.getZoom() >= cameraTarget.minZoom - 0.01;
-    if (centreVisible && zoomedEnough && spanFrac >= 0.18 && spanFrac <= 1.3)
+    // With a whole-zoom landing the view must also draw what the landing
+    // draws (viewAlreadyFrames): a child picked from its parent's landing
+    // (Napa Valley from North Coast's z7.52) flies to its own z9.
+    const planned = landing();
+    if (
+      viewAlreadyFrames({
+        centreVisible,
+        spanFrac,
+        zoom: inner.getZoom(),
+        minZoom: cameraTarget.minZoom,
+        landing: cameraTarget.wholeZoom && planned ? planned.zoom : undefined,
+      })
+    )
       return;
-    apply();
+    apply(planned);
   }, []);
 
   useEffect(() => {

@@ -83,6 +83,7 @@ import {
   CHIP_FIT_ALL_SHARDS,
   chipMinZoom,
   countryCameraBox,
+  cuePillClearPx,
   cuePillTextWidth,
   cueTopReservePx,
   selectionZooms,
@@ -213,16 +214,16 @@ function sheetCameraPadding(snap: SheetSnap): SheetPadding | undefined {
 // show is measured: "all the", in the local and the English name, in the
 // pill's own font (12 px, its 237 px line on a 375 px phone), wrapped as the
 // browser wraps it (camera-fit.ts wrappedLineCount). Read imperatively, like
-// sheetCameraPadding, inside the camera target's memo; 0 off a phone.
+// sheetCameraPadding, inside the camera target's memo; 0 lines off a phone.
 let cueMeasure: CanvasRenderingContext2D | null | undefined;
-function phoneCueReserve(names: readonly string[]): number {
+function phoneCueLines(names: readonly string[]): number {
   if (typeof window === "undefined" || typeof window.matchMedia !== "function") return 0;
   if (!window.matchMedia(PHONE_QUERY).matches) return 0;
   try {
     if (cueMeasure === undefined) cueMeasure = document.createElement("canvas").getContext("2d");
     const context = cueMeasure;
     // No 2D canvas to measure with: assume the usual two lines.
-    if (!context) return cueTopReservePx(2);
+    if (!context) return 2;
     const style = window.getComputedStyle(document.body);
     context.font = `${style.fontWeight} 12px ${style.fontFamily}`;
     const space = context.measureText(" ").width;
@@ -235,9 +236,9 @@ function phoneCueReserve(names: readonly string[]): number {
         wrappedLineCount(words.map((word) => context.measureText(word).width), space, width),
       );
     }
-    return cueTopReservePx(lines);
+    return lines;
   } catch {
-    return cueTopReservePx(2);
+    return 2;
   }
 }
 
@@ -819,9 +820,12 @@ export function TileWineMapExplorer({
   // the map's filters do; elsewhere, and before the manifest is here (the map
   // is not mounted then), the camera is the one from before the rule.
   // Below country level, with the rule on, a fit a hair under a whole zoom
-  // lands on it (owner, 2026-10-01; camera-fit.ts landingZoom), and on a
+  // lands on it (owner, 2026-10-01; camera-fit.ts selectionLanding), and on a
   // phone a place with subregions keeps the zoom-in pill's strip free above
-  // it (phoneCueReserve).
+  // it (phoneCueLines): the fit's frame grows by what a two-line pill needs
+  // (reserveTop), and a rounded landing's box stays below the pill whatever
+  // its lines (topClear; review 2026-10-01: a one-line pill reserved nothing,
+  // and Abruzzo's rounded box rose under it).
   const cameraTarget = useMemo<CameraTarget | null>(() => {
     if (!context?.boundary) return null;
     const px = manifest ? placeRevealPx(manifest.shards, context.place.key, revealPx) : 0;
@@ -836,16 +840,25 @@ export function TileWineMapExplorer({
     // Phones with the sheet at half (ruling R1): the fit leaves the sheet's
     // height free at the bottom, so the place lands in the visible half.
     const sheet = sheetCameraPadding(selectSnapRef.current);
-    const reserveTop =
+    const cueLines =
       belowCountry && context.children.length > 0
-        ? phoneCueReserve([context.place.name, englishName(context.place.name)])
+        ? phoneCueLines([context.place.name, englishName(context.place.name)])
         : 0;
+    const reserveTop = cueTopReservePx(cueLines);
     return {
       bbox: context.boundary.bbox,
+      placeKey: context.place.key,
       minZoom,
       maxZoom,
       source: selectSourceRef.current,
-      padding: reserveTop > 0 ? { bottom: sheet?.bottom ?? 0, reserveTop } : sheet,
+      padding:
+        cueLines > 0
+          ? {
+              bottom: sheet?.bottom ?? 0,
+              ...(reserveTop > 0 ? { reserveTop } : {}),
+              topClear: cuePillClearPx(cueLines),
+            }
+          : sheet,
       wholeZoom: belowCountry,
     };
   }, [context, revealPx, manifest]);
@@ -1512,7 +1525,7 @@ export function TileWineMapExplorer({
               // always-there layer over the canvas changed how the whole
               // page composited on a phone, so phone screenshots stopped
               // matching production even with the rule off. A pick that may
-              // show it keeps its strip free (phoneCueReserve; camera-fit.ts
+              // show it keeps its strip free (phoneCueLines; camera-fit.ts
               // CUE_PILL mirrors these classes).
               <div
                 role="status"

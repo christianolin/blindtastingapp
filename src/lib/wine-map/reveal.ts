@@ -54,8 +54,16 @@ import type { Bbox } from "./shard-specs";
 export const REVEAL_MIN_PX = 24;
 /** The rule version a shard's manifest entry names when its tiles carry
     reveal_area (scripts/wine-map-tiles/lib.mjs REVEAL_RULE). Any other value,
-    or none, and the shard keeps the map from before the rule. */
-export const REVEAL_RULE_VERSION = 1;
+    or none, and the shard keeps the map from before the rule. 2 since the
+    second review round (2026-10-01): the only release flagged 1,
+    20260930T190326Z, was built from the first round's export (ribbons at
+    N/8, pieces at N/3, tippecanoe's own paint order), which the owner never
+    accepted; an app that read 1 as "on" would switch that release's tiles on
+    under the new landings if it were ever promoted. This app reads it as a
+    rule it does not know: the map from before the rule. Bump both numbers
+    together whenever the export changes what reveal_area means or how the
+    tiles are ordered. */
+export const REVEAL_RULE_VERSION = 2;
 /** ?revealPx= is clamped to 0..REVEAL_PX_MAX. */
 export const REVEAL_PX_MAX = 64;
 /** From this zoom on, everything is drawn whatever its size — a net for a
@@ -237,6 +245,31 @@ export function sizeHiddenInView(input: {
     if (!b || (b[0] <= view[2] && b[2] >= view[0] && b[1] <= view[3] && b[3] >= view[1])) return true;
   }
   return false;
+}
+
+/** The selection cue speaks only while the view still shows the selected place
+    as a place: its box at most this many times the view across or down
+    (about two zooms past its landing, which frames it at up to 1.3). */
+export const CUE_MAX_SELECTION_SPAN = 4;
+
+/** Whether the selection cue may speak in this view (review 2026-10-01: with
+    Burgundy selected and the view deep in Vosne-Romanée at z13-z15, the
+    phone's pill kept saying "Zoom in to see all the subregions of Burgundy."
+    over the map, for three grands crus a few hundred metres across). Past
+    CUE_MAX_SELECTION_SPAN the viewer is exploring inside the place, not
+    looking at it, and the cue goes quiet; picking a smaller place there
+    brings it back. Spans are compared in Web Mercator, as the screen does.
+    A degenerate view says nothing new: in scope. */
+export function cueInScope(selection: Bbox, view: Bbox): boolean {
+  const y = (lat: number) => {
+    const s = Math.sin((Math.max(-85.05, Math.min(85.05, lat)) * Math.PI) / 180);
+    return 0.5 - Math.log((1 + s) / (1 - s)) / (4 * Math.PI);
+  };
+  const viewW = view[2] - view[0];
+  const viewH = y(view[1]) - y(view[3]);
+  if (!(viewW > 0) || !(viewH > 0)) return true;
+  const span = Math.max((selection[2] - selection[0]) / viewW, (y(selection[1]) - y(selection[3])) / viewH);
+  return !(span > CUE_MAX_SELECTION_SPAN);
 }
 
 /** The selection cue's probe (review 2026-09-30: a drill-down landed where its

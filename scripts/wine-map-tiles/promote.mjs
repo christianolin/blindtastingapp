@@ -2,17 +2,26 @@
 // rollback, RETIRED) release, then flip statuses in one transaction. The
 // manifest is written BEFORE the DB flip; if the flip fails, re-running
 // promote converges. Rollback = promote an earlier version explicitly.
+//
+//   node scripts/wine-map-tiles/promote.mjs [<version>] [--reveal-rule N]
+//
+// A release that would switch the size rule on (its shards carry a
+// reveal_rule the ACTIVE release does not) is refused unless its version is
+// named and `--reveal-rule N` says its draft was checked
+// (lib.mjs revealRulePromoteRefusal).
 import assert from "node:assert/strict";
 import pg from "pg";
 import {
   manifestForRelease,
+  parsePromoteArgs,
   pgConfig,
+  revealRulePromoteRefusal,
   sha256hex,
   storagePublicUrl,
   uploadObject,
 } from "./lib.mjs";
 
-const requestedVersion = process.argv[2] ?? null;
+const { version: requestedVersion, revealRule: approvedRule } = parsePromoteArgs(process.argv.slice(2));
 const client = new pg.Client(pgConfig());
 await client.connect();
 try {
@@ -31,6 +40,19 @@ try {
     ["VALIDATED", "RETIRED", "ACTIVE"].includes(row.status),
     `release ${row.version} is ${row.status}; cannot promote a FAILED/BUILDING release`,
   );
+  // Before anything is written: a release that would switch the size rule on
+  // needs its draft checked first (review 2026-10-01).
+  const active = await client.query(
+    `select tile_checksums from wine_map_releases where status = 'ACTIVE' and id <> $1`,
+    [row.id],
+  );
+  const refusal = revealRulePromoteRefusal({
+    version: row.version,
+    target: row.tile_checksums,
+    active: active.rows[0]?.tile_checksums ?? (row.status === "ACTIVE" ? row.tile_checksums : null),
+    approvedRule,
+  });
+  assert.equal(refusal, null, refusal ?? undefined);
 
   // lib.mjs manifestForRelease: every archive at its public URL, plus each
   // shard's reveal_rule when the release carries one (none before 2026-09-30,

@@ -18,11 +18,14 @@ import {
   CAMERA_MAX_ZOOM,
   CAMERA_MAX_ZOOM_RULE_OFF,
   CUE_PILL,
+  cuePillClearPx,
   cuePillTextWidth,
   cueTopReservePx,
   LANDING_ROUND_MARGIN_PX,
   LANDING_ROUND_WITHIN,
   landingZoom,
+  selectionLanding,
+  viewAlreadyFrames,
   wrappedLineCount,
 } from "./camera-fit";
 import { SHARD_MIN_ZOOM } from "./mount-policy";
@@ -474,6 +477,11 @@ describe("the phone's zoom-in pill: lines and the frame it takes", () => {
     expect(cueTopReservePx(2)).toBe(11);
     expect(cueTopReservePx(3)).toBe(27.5);
     expect(cueTopReservePx(Number.NaN)).toBe(0);
+    // The line a rounded landing stays below, whatever the lines (review 2026-10-01).
+    expect(cuePillClearPx(0)).toBe(0);
+    expect(cuePillClearPx(1)).toBe(42.5);
+    expect(cuePillClearPx(2)).toBe(59);
+    expect(cuePillClearPx(2) - FIT_PADDING_PX).toBe(cueTopReservePx(2));
   });
 });
 
@@ -571,16 +579,109 @@ describe("landingZoom", () => {
       expect(landingZoom({ zoom, maxZoom: 17, bbox: AHR, ...phone, fit })).toBe(10);
     }
     // A height-limited place a hair under a whole zoom (z8.97) rounds with the
-    // sheet alone, but not under the pill: its top would go beneath the pill.
+    // sheet alone. Under the pill it rounds too (review 2026-10-01), but its box
+    // moves down, so its top stays below the pill's strip, still clear of the sheet.
     const yOf = (lat: number) =>
       ((180 - (180 / Math.PI) * Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI) / 360))) / 360) * 512;
     const latOf = (y: number) => (360 / Math.PI) * Math.atan(Math.exp(((180 - (y / 512) * 360) * Math.PI) / 180)) - 90;
-    const tall = (band: number): Bbox => [7.5, 49.5, 7.52, latOf(yOf(49.5) - band / 2 ** 8.97)];
+    const tall = (band: number, zoom = 8.97): Bbox => [7.5, 49.5, 7.52, latOf(yOf(49.5) - band / 2 ** zoom)];
     const underPill = tall(640 - 351 - 96 - 11);
     expect(fitOf(underPill, withPill)).toBeCloseTo(8.97, 6);
-    expect(landingZoom({ zoom: fitOf(underPill, withPill), maxZoom: 17, bbox: underPill, ...phone, fit: withPill })).toBeCloseTo(8.97, 6);
+    const landed = selectionLanding({
+      zoom: fitOf(underPill, withPill),
+      maxZoom: 17,
+      bbox: underPill,
+      ...phone,
+      fit: withPill,
+      topClear: cuePillClearPx(2),
+    });
+    expect(landed.zoom).toBe(9);
+    const h = (yOf(underPill[1]) - yOf(underPill[3])) * 2 ** 9;
+    const cy = phone.height / 2 + landed.offset[1];
+    expect(cy - h / 2).toBeGreaterThanOrEqual(cuePillClearPx(2) - 1e-9);
+    expect(cy + h / 2).toBeLessThanOrEqual(phone.height - 351 - LANDING_ROUND_MARGIN_PX + 1e-9);
+    expect(landed.offset[0]).toBe(withPill.offset[0]);
     const underSheet = tall(640 - 351 - 96);
     expect(fitOf(underSheet, sheetOnly)).toBeCloseTo(8.97, 6);
     expect(landingZoom({ zoom: fitOf(underSheet, sheetOnly), maxZoom: 17, bbox: underSheet, ...phone, fit: sheetOnly })).toBe(9);
+    expect(selectionLanding({ zoom: fitOf(underSheet, sheetOnly), maxZoom: 17, bbox: underSheet, ...phone, fit: sheetOnly }).offset).toEqual(
+      sheetOnly.offset,
+    );
+    // Where moving down cannot clear the pill, it stays at its fit: a 0.24
+    // rounding that would need the whole 2-line strip and more.
+    const noRoom = { width: 375, height: 640 };
+    const pillOnly = selectionFit({ bottom: 0, reserveTop: 11 }, noRoom.height);
+    const huge = tall(640 - 96 - 11, 8.76);
+    const hugeFit = fitOf(huge, pillOnly);
+    expect(hugeFit).toBeCloseTo(8.76, 6);
+    expect(
+      selectionLanding({ zoom: hugeFit, maxZoom: 17, bbox: huge, ...noRoom, fit: pillOnly, topClear: cuePillClearPx(2) }),
+    ).toEqual({ zoom: hugeFit, offset: pillOnly.offset });
+  });
+
+  // Review 2026-10-01: a one-line pill reserves no frame (the 48 px frame
+  // clears it), and a rounded box could then rise under it (Abruzzo z6.76 to
+  // z7 on a 430 x 932 phone, its top at 25 px under a pill ending at 34.5).
+  it("keeps a rounded box below a one-line pill too, moving it down, or not rounding", () => {
+    const phone = { width: 430, height: 815 };
+    const sheet = selectionFit({ bottom: 466 }, phone.height);
+    const ABRUZZO: Bbox = [13.01849, 41.68236, 14.77955, 42.89443];
+    const zoom = fittedZoom(ABRUZZO, phone.width, phone.height - 466);
+    expect(zoom).toBeCloseTo(6.76, 2);
+    // Without the pill's line it rounds and its top rises to ~25 px...
+    expect(landingZoom({ zoom, maxZoom: 17, bbox: ABRUZZO, ...phone, fit: sheet })).toBe(7);
+    // ...with it, z7 no longer fits between the pill and the sheet: the fit.
+    expect(cuePillClearPx(1)).toBe(42.5);
+    expect(
+      selectionLanding({ zoom, maxZoom: 17, bbox: ABRUZZO, ...phone, fit: sheet, topClear: cuePillClearPx(1) }),
+    ).toEqual({ zoom, offset: sheet.offset });
+  });
+
+  // Review 2026-10-01: the two-line reserve held North Coast at z5.90 on a
+  // phone (canvas 373 x 695, sheet 406), and a 0.1 pinch popped six AVAs in.
+  it("rounds North Coast to z6 under a two-line pill, its top below the pill", () => {
+    const NORTH_COAST: Bbox = [-123.82851, 37.92745, -122.04629, 39.59608];
+    const phone = { width: 373, height: 695 };
+    const fit = selectionFit({ bottom: 406, reserveTop: cueTopReservePx(2) }, phone.height);
+    const p = fit.padding as { top: number; right: number; bottom: number; left: number };
+    const x = (lon: number) => ((lon + 180) / 360) * 512;
+    const y = (lat: number) =>
+      ((180 - (180 / Math.PI) * Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI) / 360))) / 360) * 512;
+    const zoom = Math.log2(
+      Math.min(
+        (phone.width - p.left - p.right) / (x(NORTH_COAST[2]) - x(NORTH_COAST[0])),
+        (phone.height - p.top - p.bottom) / (y(NORTH_COAST[1]) - y(NORTH_COAST[3])),
+      ),
+    );
+    expect(zoom).toBeCloseTo(5.902, 3);
+    expect(landingZoom({ zoom, maxZoom: 17, bbox: NORTH_COAST, ...phone, fit })).toBe(6);
+    const landed = selectionLanding({ zoom, maxZoom: 17, bbox: NORTH_COAST, ...phone, fit, topClear: cuePillClearPx(2) });
+    expect(landed.zoom).toBe(6);
+    const h = (y(NORTH_COAST[1]) - y(NORTH_COAST[3])) * 2 ** 6;
+    expect(phone.height / 2 + landed.offset[1] - h / 2).toBeGreaterThanOrEqual(cuePillClearPx(2) - 1e-9);
+    expect(landed.offset[1]).toBeGreaterThan(fit.offset[1]);
+  });
+});
+
+// Review 2026-10-01: picking Napa Valley from North Coast's z7.52 laptop
+// landing left the camera there (its centre on screen, span 0.31, past its
+// minZoom 6), 0 of its 15 AVAs drawn, where its own landing is z9.
+describe("viewAlreadyFrames", () => {
+  const framed = { centreVisible: true, spanFrac: 0.31, zoom: 7.518, minZoom: 6 };
+  it("keeps the old test where no whole-zoom landing applies (the kill switch)", () => {
+    expect(viewAlreadyFrames(framed)).toBe(true);
+    expect(viewAlreadyFrames({ ...framed, centreVisible: false })).toBe(false);
+    expect(viewAlreadyFrames({ ...framed, spanFrac: 0.17 })).toBe(false);
+    expect(viewAlreadyFrames({ ...framed, spanFrac: 1.31 })).toBe(false);
+    expect(viewAlreadyFrames({ ...framed, minZoom: 7.6 })).toBe(false);
+    expect(viewAlreadyFrames({ ...framed, minZoom: 7.528 })).toBe(true); // within 0.01
+  });
+  it("with one, stays only where the view already draws what the landing draws", () => {
+    expect(viewAlreadyFrames({ ...framed, landing: 9 })).toBe(false); // Napa from North Coast
+    expect(viewAlreadyFrames({ ...framed, landing: 7.9 })).toBe(true); // both draw z7
+    expect(viewAlreadyFrames({ ...framed, landing: 8 })).toBe(false);
+    expect(viewAlreadyFrames({ ...framed, zoom: 9.4, landing: 9 })).toBe(true); // already deeper
+    expect(viewAlreadyFrames({ ...framed, zoom: 8.9999999, landing: 9 })).toBe(true); // a hair is that zoom
+    expect(viewAlreadyFrames({ ...framed, centreVisible: false, landing: 7 })).toBe(false);
   });
 });

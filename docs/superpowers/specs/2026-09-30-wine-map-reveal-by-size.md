@@ -991,7 +991,9 @@ is its z0 length × 2^z). N = the threshold (24). Computed by the tile export (`
 2. **Draft tiles release** (Wine Map Tiles, promote=false, from this branch): archives land in
    `tiles/releases/<version>/`, a VALIDATED `wine_map_releases` row records them; no manifest is written. A local build
    loads it through `NEXT_PUBLIC_WINE_MAP_MANIFEST_URL` (steps in `reveal/build/draft-test.md`).
-3. **Promote** that release: the manifest's `reveal_rule` switches the rule on, shard by shard.
+3. **Promote** that release, by name: `node scripts/wine-map-tiles/promote.mjs <version> --reveal-rule 2` (§13.5).
+   The manifest's `reveal_rule` switches the rule on, shard by shard. Never `20260930T190326Z`: it is the first
+   review round's export (rule 1), which today's app ignores and promote.mjs refuses.
 
 ### 11.8 Review fixes (2026-09-30, fourth commit on `map-reveal`)
 
@@ -1234,3 +1236,92 @@ and then the smaller paints on top.
 - **Left for the next draft run** (tippecanoe is CI-only): `--preserve-input-order` is exercised for the first time
   there. `validate.mjs local` checks the paint order of every probed tile; compare the archive sizes with
   `fix2/sizes-table.md` and repeat the landing checks above on the draft before promoting.
+
+## 13. Fix round 3 (2026-10-01): the second review's fixes
+
+**Where this section and anything above it disagree, this section wins.** It answers the review of `b61c693`
+(§12). Evidence is in the session scratchpad, `reveal/fix2/land2/` and `reveal/fix2/dry3/` (a read-only export dry run
+of this commit).
+
+### 13.1 Ribbon pieces come with their place (`lib.mjs` `revealPlan`)
+
+A non-anchor part was judged by its equal-area square alone (`min(side, PIECE_PX_RATIO · sqrt(A_q))`), so a thin
+river-bank strip that is a ribbon on its own waited for its square: 440 pieces in 268 places, mostly Mosel, Nahe and
+Mittelrhein (Kanzem-Konz Altenberg's 64 × 2.2 px strip at z12 held to z14; Ensch Mühlenberg's 49 × 2.3 px to z14;
+Klotten-Pommern Rosenberg's 96 × 3.6 px to z13), against "Keep ribbons visible". A piece is now measured like a place:
+`min(place side, PIECE_PX_RATIO · size(q))`, with `size` the per-part measure (`partSize`). A compact piece is
+unchanged (its size is its square). On the dry run: 0 ribbon pieces held back (was 440); those three pieces come at
+z12 with their places; no place's first zoom moves; drawn parts under 24 px by their square at their place's first
+zoom are 140 ribbons, 137 anchors, 162 label parts and 0 others; the owner's North Coast views still draw no part under
+24 px; GeoJSON +220 B over all shards, world and label files byte-identical (`reveal-report4.txt`).
+
+### 13.2 A child picked from its parent's view flies to its own landing (`camera-fit.ts` `viewAlreadyFrames`)
+
+A tree, breadcrumb or chip pick left the camera alone when the place's centre was on screen, its span 0.18-1.3 of the
+view and the view past its minZoom. That skipped the fit and the whole-zoom landing on the most natural drill-down:
+picking Napa Valley from North Coast's z7.52 laptop landing stayed at z7.52 with 0 of 15 AVAs drawn, where its own
+landing is z9 (Bordeaux → Médoc / Graves / Entre-Deux-Mers, Graves → Sauternes, Libournais → Saint-Émilion,
+Aloxe-Corton → Corton the same). With a whole-zoom landing (rule on, tier ≥ 1) the camera now stays only when the
+view's whole zoom is at least the landing's, since the filters see whole zooms only. Laptop, every parent → child pick
+with children (`land2/skip.txt`): 141 of 276 stayed before, 33 stay now, and none of those 33 would draw more at its
+landing. With the rule off the test is the old one.
+
+### 13.3 The phone pill and whole-zoom landings (`camera-fit.ts` `selectionLanding`, `cuePillClearPx`)
+
+Two findings pulled against each other. A one-line pill reserves no frame (the 48 px frame clears it), so a rounded
+box could rise to 12 px from the top, under the pill (Abruzzo z6.76 → z7 on a 430 × 932 phone, its top at 25 px under
+a pill ending at 34.5). A two-line pill reserves 11 px and bounded the rounded box's top at the reserved frame, so a
+height-limited pick could never round (North Coast held at z5.90 on a phone, where z6 draws six AVAs). Both are fixed
+by one rule:
+
+- A phone pick that may show the pill passes `topClear`, the line its strip ends at plus the 8 px gap
+  (`cuePillClearPx`: 42.5 px for one line, 59 for two). A rounded box's top stays below it, for any line count.
+- The box keeps the fit's centre across. Down, where the bounds are uneven (the pill above, the sheet below), it moves
+  down just enough to clear the pill, as long as it still fits 12 px above the sheet (`selectionLanding` returns the
+  offset easeTo uses).
+
+Results (real functions over the dry run's 333 parent picks, `land2/sim.txt`): no rounded landing puts a place's top
+under the pill at any tested size (before, with one-line pills: 14 picks at 373 × 695, 24 at 388 × 727, 33 at 430 × 815 with the sheet at half); with a two-line pill on the
+373 × 695 phone, 76 picks round instead of 24, North Coast z5.90 → **z6**, Côte de Nuits z8.81 → z9, Haut-Médoc z7.79 →
+z8. Not rounded, because z7 would not fit between the pill and the sheet: Mosel (z6.67, Δ 0.33) and Vosne-Romanée
+(z11.69, Δ 0.31) under a two-line pill, Abruzzo (z6.76) under a one-line pill on a 430 px phone. Rounding those would put
+the pill over the place's top (Mosel by ~21 px), the defect §12.7 fixed; **the owner may prefer the overlap**. Without a
+pill (laptop, tablet, a leaf pick) every landing is identical to §12's (0 differences in 333 picks at three sizes).
+
+### 13.4 The cue keeps to views of the selected place (`reveal.ts` `cueInScope`)
+
+`descendantsInView` counts every descendant at any depth, so with Burgundy still selected and the view deep in
+Vosne-Romanée, three grands crus a few hundred metres across kept the phone pill "Zoom in to see all the subregions of
+Burgundy." over the map from about z13 to z14, and again past z14.5 for Les Gaudichots. The cue now speaks only while
+the selected place's box is at most `CUE_MAX_SELECTION_SPAN` (4) times the view, across or down: about two zooms past
+its landing. Deeper, the viewer is exploring inside the place and the cue is quiet; picking a smaller place there
+brings it back for that place. Applies to the laptop status line and the phone pill alike. **For the owner:** the cue's
+text was true there (zooming in does reveal those grands crus); this trades that for not naming a far-off region over
+a deep view.
+
+### 13.5 Rule version 2, and promote needs a checked draft (`REVEAL_RULE`, `revealRulePromoteRefusal`)
+
+- **Rule 2.** The only release flagged 1, `20260930T190326Z`, is VALIDATED and the newest, and was built from
+  9f44917's export (ribbons at N/8, pieces at N/3, tippecanoe's own order), which the owner never accepted. With rule
+  1 still meaning "on", promoting it (by name, as round-1 review L2 advised, or by promote.mjs's no-version default)
+  would have switched those tiles on under the new landings and cue. `REVEAL_RULE` (lib.mjs) and
+  `REVEAL_RULE_VERSION` (reveal.ts) are now 2, held equal by `lib.test.mjs`; the app reads 1 as a rule it does not
+  know (the map from before the rule).
+- **promote.mjs refuses an unchecked rule switch.** Merging this branch arms its export for every later Wine Map
+  Tiles run from master, and promote=true runs are routine (five on 2026-09-30). A release whose shards carry a
+  `reveal_rule` the ACTIVE release does not is now refused unless it is named and `--reveal-rule 2` says its draft
+  was checked; a rule other than this code's is refused outright. So a routine run after the merge fails at its promote
+  step with its release VALIDATED, and the rule ships only through the checked draft. Once a rule-2 release is ACTIVE,
+  routine runs promote as before; a rollback to a release without the rule promotes as before.
+- **Still open, for the main session:** `--preserve-input-order` has never run in real tippecanoe, and if its output
+  ever tripped `checkPaintOrder`, every later tiles run from master would fail `validate.mjs local` before publish.
+  Dispatch this branch's draft (promote=false) and check it **before** merging, and hold other tiles runs until it is
+  promoted.
+
+### 13.6 Deploy order (replaces §11.6)
+
+1. Dispatch Wine Map Tiles from this branch with promote=false. Check the draft: `validate.mjs local` (paint order),
+   sizes against `fix2/sizes-table.md` (this round adds ~220 B of GeoJSON), the landings and the cue on a local build
+   with the draft manifest.
+2. Deploy the app (merge). Production tiles carry no `reveal_rule` 2, so nothing changes.
+3. `node scripts/wine-map-tiles/promote.mjs <draft version> --reveal-rule 2`.

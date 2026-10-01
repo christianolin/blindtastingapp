@@ -493,9 +493,14 @@ export function placeFeature(row) {
 //   else is pulled by a family: a broader family rule brought Cole Ranch,
 //   Benmore Valley and Oakville in a zoom early (spec §11.3).
 // Per part: the anchor (the part with the largest size) takes the place's
-// side; every other part min(place side, PIECE_PX_RATIO * sqrt(A_q)), so a
-// small piece of a scattered place waits until its own square is
-// N / PIECE_PX_RATIO across and never comes before its place (no confetti).
+// side; every other part min(place side, PIECE_PX_RATIO * size(q)), so a
+// small piece of a scattered place waits until its own size is
+// N / PIECE_PX_RATIO and never comes before its place (no confetti). size(q)
+// is the same per-part measure a place gets (partSize): a compact piece's
+// square, a ribbon piece's length rule, so a river-bank strip that is a
+// ribbon on its own comes with its place, as the owner's "Keep ribbons
+// visible" asks (review 2026-10-01: measured by its square alone, 440 ribbon
+// pieces in 268 places, Kanzem's 64 x 2 px strip among them, waited 1-2 zooms).
 // PIECE_PX_RATIO is 1 (spec §12, 2026-10-01; was 3): a piece waits for the
 // full threshold like any place, because pieces of 10-20 px, cut off from the
 // rest of their place and unnamed, read exactly like the specks the rule hides
@@ -520,7 +525,13 @@ export function placeFeature(row) {
 // stays the whole footprint on every part (click resolution picks the
 // smallest place by it). Countries and regions (tier <= 1) are exempt and
 // never split, so the world archive is byte-identical.
-export const REVEAL_RULE = 1;
+// REVEAL_RULE is 2 since the second review round (2026-10-01): rule 1 is the
+// first round's export (draft 20260930T190326Z: ribbons at N/8, pieces at N/3,
+// tippecanoe's own paint order), which the app (reveal.ts REVEAL_RULE_VERSION)
+// now reads as a rule it does not know, so that draft can never switch the
+// rule on. Bump both together whenever the export changes what reveal_area
+// means or how a shard is ordered.
+export const REVEAL_RULE = 2;
 export const REVEAL_LENGTH_RATIO = 2;
 export const REVEAL_THICKNESS_RATIO = 12;
 export const RIBBON_MIN_ASPECT = 8;
@@ -728,7 +739,7 @@ export function revealPlan(rows, latitudeOf) {
     const side = placeSide.get(row.id);
     const parts = m.parts.map((part, i) => {
       const carries = i === m.anchor || i === m.labelPart;
-      const partSide = carries ? side : Math.min(side, PIECE_PX_RATIO * Math.sqrt(part.area));
+      const partSide = carries ? side : Math.min(side, PIECE_PX_RATIO * partSize(part));
       return { side: partSide, revealArea: revealAreaFromSide(partSide, latitude) };
     });
     const entry = {
@@ -985,6 +996,76 @@ export function manifestForRelease({ version, tileChecksums, generatedAt }) {
     shards,
     attribution: attributionDisplayMap(),
   });
+}
+
+/** promote.mjs's arguments: an optional release version, and
+    `--reveal-rule N` (or `--reveal-rule=N`), the rule version the person
+    promoting has verified on that release's draft (revealRulePromoteRefusal).
+    The flag needs an explicit version: it vouches for one checked release,
+    never for "the newest VALIDATED", which may be someone else's. */
+export function parsePromoteArgs(argv) {
+  let version = null;
+  let revealRule = null;
+  for (let i = 0; i < argv.length; i += 1) {
+    const arg = argv[i];
+    let value;
+    if (arg === "--reveal-rule") {
+      value = argv[i + 1];
+      i += 1;
+    } else if (arg.startsWith("--reveal-rule=")) {
+      value = arg.slice("--reveal-rule=".length);
+    } else if (arg.startsWith("--")) {
+      throw new Error(`unknown option ${arg}`);
+    } else if (version === null) {
+      version = arg;
+      continue;
+    } else {
+      throw new Error(`unexpected argument ${arg}`);
+    }
+    if (!/^[1-9]\d*$/.test(value ?? "")) throw new Error("--reveal-rule needs a rule version, e.g. --reveal-rule 2");
+    revealRule = Number(value);
+  }
+  if (revealRule !== null && version === null) {
+    throw new Error("--reveal-rule vouches for one verified release: name its version too");
+  }
+  return { version, revealRule };
+}
+
+function revealRulesOf(tileChecksums) {
+  const rules = new Set();
+  for (const [key, entry] of Object.entries(tileChecksums ?? {})) {
+    if (key !== "world" && entry?.reveal_rule !== undefined) rules.add(entry.reveal_rule);
+  }
+  return rules;
+}
+
+/** Why promote.mjs must not promote a release (null: it may). A release whose
+    shards carry a reveal_rule the ACTIVE release does not carry would switch
+    the size rule on, or change it, for every viewer, so it is promoted only
+    by someone who verified its draft (sizes, landings, paint order) and says
+    so with `--reveal-rule <REVEAL_RULE>` (`approvedRule`): a routine tiles run
+    dispatched from master with promote=true is refused instead of shipping an
+    unchecked rule change (review 2026-10-01; the run's release stays
+    VALIDATED, to be promoted once checked). A rule other than this code's
+    REVEAL_RULE is a release from an older export and is refused outright:
+    the first review round's draft, 20260930T190326Z (rule 1), among them.
+    A release with no rule (a rollback to the map from before it) and a
+    release whose rule is already live promote as ever. */
+export function revealRulePromoteRefusal({ version, target, active, approvedRule, currentRule = REVEAL_RULE }) {
+  const live = revealRulesOf(active);
+  const fresh = [...revealRulesOf(target)].filter((rule) => !live.has(rule));
+  if (fresh.length === 0) return null;
+  const stale = fresh.filter((rule) => rule !== currentRule);
+  if (stale.length > 0) {
+    return `release ${version} carries reveal_rule ${stale.join(", ")}, but this export writes ${currentRule}: ` +
+      "it was built by an older export and must not switch the size rule on; build a new draft";
+  }
+  if (approvedRule !== currentRule) {
+    return `release ${version} would switch reveal rule ${currentRule} on (the ACTIVE release does not carry it). ` +
+      "Check its draft first (sizes, landings, paint order), then promote it explicitly: " +
+      `node scripts/wine-map-tiles/promote.mjs ${version} --reveal-rule ${currentRule}`;
+  }
+  return null;
 }
 
 // Secrets pasted through dashboard/CI UIs can arrive wrapped in quotes or

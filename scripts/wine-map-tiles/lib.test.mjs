@@ -44,6 +44,8 @@ import {
   labelOrdered,
   manifestForRelease,
   paintOrdered,
+  parsePromoteArgs,
+  revealRulePromoteRefusal,
   tippecanoePointIndex,
   mercatorPx,
   minAreaRectangle,
@@ -555,8 +557,9 @@ const close = (actual, expected, tolerance = 1e-6) =>
 const appK = (px, latitude) => ((px * 360) / 512) ** 2 * Math.cos((latitude * Math.PI) / 180);
 const appPasses = (revealArea, z, px, latitude) => revealArea * 4 ** z >= appK(px, latitude);
 
-test("reveal constants: rule 1; ribbons 2N long and N/12 thick; subregions at half their median; pieces at N", () => {
-  assert.equal(REVEAL_RULE, 1);
+test("reveal constants: rule 2; ribbons 2N long and N/12 thick; subregions at half their median; pieces at N", () => {
+  // 2026-10-01: 2, so the first round's draft (rule 1) never turns the rule on.
+  assert.equal(REVEAL_RULE, 2);
   assert.equal(REVEAL_LENGTH_RATIO, 2);
   // 2026-10-01: N/12 = 2 px (was N/8 = 3 px), so Condrieu, 59 x 2.3 px at z8,
   // comes with its length; Fiefs Vendéens Vix, a 1.4 px hairline, still waits.
@@ -700,6 +703,23 @@ test("revealPlan: the part that makes a place long is its anchor", () => {
   close(plan.parts[0].side / PX_PER_DEG, 0.1, 1e-3); // min(0.144, 0.1)
 });
 
+test("revealPlan: a ribbon piece is measured as a ribbon, a compact piece by its square", () => {
+  // A 0.3 blob (the anchor), a 0.4 x 0.01 river-bank strip (aspect 40) and a
+  // 0.05 speck. The strip's square is sqrt(0.004) = 0.063, but as a ribbon it
+  // is min(0.4 / 2, 12 x 0.01) = 0.12: it comes with its length, as a place
+  // of that shape would (review 2026-10-01: Kanzem's 64 x 2 px strip waited
+  // two zooms for its square). The speck still waits for its own square.
+  const polygons = [rect(0, 0, 0.3, 0.3), rect(0.5, 0, 0.4, 0.01), rect(1, 1, 0.05, 0.05)];
+  const plan = revealPlan([placeRow("strip", polygons)], () => 0).get("strip");
+  assert.equal(plan.anchor, 0);
+  close(plan.parts[1].side / PX_PER_DEG, 0.12, 1e-3);
+  assert.ok(plan.parts[1].side > Math.sqrt(0.4 * 0.01) * PX_PER_DEG * 1.5);
+  close(plan.parts[2].side / PX_PER_DEG, 0.05, 1e-3);
+  // Never before its place: a strip longer than its place is capped there.
+  const long = revealPlan([placeRow("long", [rect(0, 0, 0.1, 0.1), rect(0.5, 0, 0.09, 0.009), rect(1, 0, 3, 0.002)])], () => 0).get("long");
+  for (const part of long.parts) assert.ok(part.side <= long.side + 1e-12);
+});
+
 test("revealPlan fails closed on a value that is not a finite number", () => {
   assert.throws(() => revealPlan([placeRow("x", [rect(0, 0, 1, 1)])], () => Number.NaN), /reveal_area/);
 });
@@ -768,6 +788,47 @@ test("manifestForRelease builds promote's manifest, passing reveal_rule through 
   assert.equal("reveal_rule" in flagged.world, false);
 });
 
+test("parsePromoteArgs: a version, and --reveal-rule only with one", () => {
+  assert.deepEqual(parsePromoteArgs([]), { version: null, revealRule: null });
+  assert.deepEqual(parsePromoteArgs(["V1"]), { version: "V1", revealRule: null });
+  assert.deepEqual(parsePromoteArgs(["V1", "--reveal-rule", "2"]), { version: "V1", revealRule: 2 });
+  assert.deepEqual(parsePromoteArgs(["--reveal-rule=2", "V1"]), { version: "V1", revealRule: 2 });
+  assert.throws(() => parsePromoteArgs(["--reveal-rule", "2"]), /name its version/);
+  assert.throws(() => parsePromoteArgs(["V1", "--reveal-rule"]), /rule version/);
+  assert.throws(() => parsePromoteArgs(["V1", "--reveal-rule", "two"]), /rule version/);
+  assert.throws(() => parsePromoteArgs(["V1", "--force"]), /unknown option/);
+  assert.throws(() => parsePromoteArgs(["V1", "V2"]), /unexpected argument/);
+});
+
+test("revealRulePromoteRefusal: switching the rule on needs a checked draft; an older export's rule never", () => {
+  const shard = (extra = {}) => ({ path: "p", bytes: 1, checksum_sha256: "c", ...extra });
+  const off = { world: shard(), bourgogne: shard(), napa: shard() };
+  const on = (rule) => ({ world: shard(), bourgogne: shard({ reveal_rule: rule }), napa: shard({ reveal_rule: rule }) });
+  // A routine run from master (promote=true, no flag) that would switch the rule on.
+  const routine = revealRulePromoteRefusal({ version: "R", target: on(REVEAL_RULE), active: off, approvedRule: null });
+  assert.match(routine, new RegExp(`promote\\.mjs R --reveal-rule ${REVEAL_RULE}`));
+  // The checked draft, promoted by name.
+  assert.equal(revealRulePromoteRefusal({ version: "R", target: on(REVEAL_RULE), active: off, approvedRule: REVEAL_RULE }), null);
+  // The first review round's draft (rule 1), even with a flag naming it.
+  for (const approvedRule of [null, 1, REVEAL_RULE]) {
+    assert.match(
+      revealRulePromoteRefusal({ version: "20260930T190326Z", target: on(1), active: off, approvedRule }),
+      /older export/,
+    );
+  }
+  // Once the rule is live, routine runs promote as ever; so does a rollback.
+  assert.equal(revealRulePromoteRefusal({ version: "S", target: on(REVEAL_RULE), active: on(REVEAL_RULE), approvedRule: null }), null);
+  assert.equal(revealRulePromoteRefusal({ version: "B", target: off, active: on(REVEAL_RULE), approvedRule: null }), null);
+  assert.equal(revealRulePromoteRefusal({ version: "B", target: off, active: null, approvedRule: null }), null);
+  // No ACTIVE release at all still needs the check.
+  assert.notEqual(revealRulePromoteRefusal({ version: "R", target: on(REVEAL_RULE), active: null, approvedRule: null }), null);
+  // The world entry never carries the rule.
+  assert.equal(
+    revealRulePromoteRefusal({ version: "W", target: { ...off, world: shard({ reveal_rule: 9 }) }, active: off, approvedRule: null }),
+    null,
+  );
+});
+
 test("validate: a place split into parts passes the per-feature gates, and its id counts once", async () => {
   const { checkTileFeature } = await import("./validate.mjs");
   const polygons = [rect(0.5, 0.5, 0.05, 0.05), rect(1, 1, 2, 2)];
@@ -800,6 +861,8 @@ test("reveal check constants follow the app (reveal.ts); a ribbon is at least 8 
   const app = readFileSync(new URL("../../src/lib/wine-map/reveal.ts", import.meta.url), "utf8");
   assert.equal(Number(/export const REVEAL_MIN_PX = (\d+);/.exec(app)?.[1]), REVEAL_CHECK_PX);
   assert.equal(Number(/export const REVEAL_CAP_ZOOM = (\d+);/.exec(app)?.[1]), REVEAL_CAP_ZOOM);
+  // The export's rule version is the one the app switches the rule on for.
+  assert.equal(Number(/export const REVEAL_RULE_VERSION = (\d+);/.exec(app)?.[1]), REVEAL_RULE);
   assert.equal(RIBBON_MIN_ASPECT, 8);
   assert.deepEqual(REVEAL_FAMILY_PINS, ["france.bourgogne"]);
   assert.equal(FAMILY_MARGIN_REPORT, 1.2);

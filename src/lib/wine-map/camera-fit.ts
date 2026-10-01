@@ -88,8 +88,11 @@ export const FIT_PADDING_PX = 48;
     2026-09-25 phone plan, ruling R1): its height in CSS px. `reserveTop` is
     frame a pick keeps free at the TOP beyond FIT_PADDING_PX, for the zoom-in
     pill a phone shows over the map (cueTopReservePx; fix round 2026-10-01:
-    the pill covered the top of Northern Rhône). */
-export type SheetPadding = { bottom: number; reserveTop?: number };
+    the pill covered the top of Northern Rhône). `topClear` is the line, in
+    CSS px from the map's top, that pill's strip ends at (cuePillClearPx: its
+    bottom plus the gap, for one line or two), which a whole-zoom landing's
+    box must stay below (landingZoom); selectionFit ignores it. */
+export type SheetPadding = { bottom: number; reserveTop?: number; topClear?: number };
 
 /** The least height, in CSS px, a sheet-padded fit must leave the place: the
     canvas minus the sheet minus the frame above and below it. A landscape
@@ -170,26 +173,38 @@ export const LANDING_ROUND_WITHIN = 0.25;
     which is what draws Côte-Rôtie (39 px long at z8) at its landing. */
 export const LANDING_ROUND_MARGIN_PX = 12;
 
-/** Where a selection lands: `zoom` (its fit, raised to the target's minZoom),
-    or the next whole zoom when that is within LANDING_ROUND_WITHIN, no deeper
-    than `maxZoom`, and the place's box (north-up Web Mercator) still fits the
-    `width` x `height` map with LANDING_ROUND_MARGIN_PX to every edge, round
-    the centre `fit` (selectionFit) puts it at. Beside a phone's sheet the box
-    stays the margin clear of the sheet; under a phone's zoom-in pill
-    (`fit.reserveTop`) its top stays below the pill's strip, so there it may
-    grow only sideways. The caller asks only where the size rule applies, so
-    the kill switch and tiles from before the rule keep the old camera. */
-export function landingZoom(input: {
+type LandingInput = {
   zoom: number;
   maxZoom: number;
   bbox: Bbox;
   width: number;
   height: number;
   fit: { offset: readonly [number, number]; sheet?: SheetPadding; reserveTop?: number };
-}): number {
+  /** A phone's zoom-in pill: the line its strip ends at (SheetPadding.topClear). */
+  topClear?: number;
+};
+
+/** Where a selection lands, and the offset easeTo places it with: `zoom` (its
+    fit, raised to the target's minZoom) at `fit.offset`, or the next whole
+    zoom when that is within LANDING_ROUND_WITHIN, no deeper than `maxZoom`,
+    and the place's box (north-up Web Mercator) still fits the `width` x
+    `height` map with LANDING_ROUND_MARGIN_PX to every edge. Beside a phone's
+    sheet the box stays the margin clear of the sheet; under a phone's zoom-in
+    pill its top stays below the pill's strip (`topClear`, and with a
+    `fit.reserveTop` the frame's top as well), for one line or two (review
+    2026-10-01: a one-line pill reserves no frame, and a rounded box rose
+    under it). Across, the box keeps the fit's centre. Down, it keeps it too
+    unless the bounds above and below are uneven (a pill above, a sheet
+    below): the box then moves down just enough to clear the pill, as long
+    as it still fits above the sheet, so a phone pick under the pill still
+    rounds (North Coast z5.90 to z6: six AVAs at the landing, not a 0.1 pinch
+    later). The caller asks only where the size rule applies, so the kill
+    switch and tiles from before the rule keep the old camera. */
+export function selectionLanding(input: LandingInput): { zoom: number; offset: [number, number] } {
   const { zoom, maxZoom, bbox, width, height, fit } = input;
+  const stay = { zoom, offset: [fit.offset[0], fit.offset[1]] as [number, number] };
   const up = Math.ceil(zoom);
-  if (!(up > zoom) || up - zoom > LANDING_ROUND_WITHIN || up > maxZoom) return zoom;
+  if (!(up > zoom) || up - zoom > LANDING_ROUND_WITHIN || up > maxZoom) return stay;
   const mercY = (lat: number) => {
     const s = Math.sin((lat * Math.PI) / 180);
     return 0.5 - Math.log((1 + s) / (1 - s)) / (4 * Math.PI);
@@ -201,11 +216,46 @@ export function landingZoom(input: {
   const cy = height / 2 + fit.offset[1];
   const m = LANDING_ROUND_MARGIN_PX;
   const reserve = fit.reserveTop ?? 0;
-  const top = reserve > 0 ? FIT_PADDING_PX + reserve : m;
+  const clear = input.topClear !== undefined && input.topClear > 0 ? input.topClear : 0;
+  const top = Math.max(m, reserve > 0 ? FIT_PADDING_PX + reserve : 0, clear);
   const bottom = height - (fit.sheet?.bottom ?? 0) - m;
   const fitsAcross = cx - w / 2 >= m && cx + w / 2 <= width - m;
-  const fitsDown = cy - h / 2 >= top && cy + h / 2 <= bottom;
-  return fitsAcross && fitsDown ? up : zoom;
+  // Written as a negated >= so a NaN (an unmeasured map) never rounds.
+  if (!fitsAcross || !(bottom - top >= h)) return stay;
+  // The fit's centre, moved only as far as the box needs to clear the top
+  // bound (it fits, so it then still clears the bottom one), or the bottom.
+  const shift = Math.max(0, top - (cy - h / 2)) - Math.max(0, cy + h / 2 - bottom);
+  return { zoom: up, offset: [fit.offset[0], fit.offset[1] + shift] };
+}
+
+/** The zoom selectionLanding lands at. */
+export function landingZoom(input: LandingInput): number {
+  return selectionLanding(input).zoom;
+}
+
+/** Whether a tree, breadcrumb or chip pick may leave the camera where it is
+    (tile-wine-map.tsx applyCameraTarget): the place's centre is on screen, it
+    spans 0.18-1.3 of the view, and the view is past the pick's minZoom. With
+    a whole-zoom landing (`landing`: the zoom the pick would land at, given
+    only where the size rule applies) the view must also draw what that
+    landing draws: the filters see whole zooms, so the view's whole zoom must
+    be at least the landing's (review 2026-10-01: picking Napa Valley from
+    North Coast's z7.52 landing stayed there, 0 of its 15 AVAs drawn, where
+    its own landing is z9; Bordeaux to Graves and Graves to Sauternes the
+    same). Without one, the test from before the rule, so the kill switch
+    keeps the old camera. */
+export function viewAlreadyFrames(input: {
+  centreVisible: boolean;
+  spanFrac: number;
+  zoom: number;
+  minZoom: number;
+  landing?: number;
+}): boolean {
+  const { centreVisible, spanFrac, zoom, minZoom, landing } = input;
+  if (!(centreVisible && zoom >= minZoom - 0.01 && spanFrac >= 0.18 && spanFrac <= 1.3)) return false;
+  if (landing === undefined) return true;
+  const eps = 1e-6;
+  return Math.floor(zoom + eps) >= Math.floor(landing + eps);
 }
 
 /** The phone's zoom-in pill over the map (tile-wine-map-explorer.tsx, its
@@ -243,13 +293,20 @@ export function wrappedLineCount(
   return lines;
 }
 
+/** Where a pill of `lines` lines ends, plus CUE_PILL's gap: the line, from
+    the map's top, a landing's box stays below (SheetPadding.topClear). 0 for
+    no lines. */
+export function cuePillClearPx(lines: number): number {
+  if (!(lines > 0)) return 0;
+  return CUE_PILL.top + CUE_PILL.chrome + lines * CUE_PILL.line + CUE_PILL.gap;
+}
+
 /** The frame, beyond FIT_PADDING_PX, a pick keeps free at the top of a
     phone's map for a pill of `lines` lines: the pill's bottom plus CUE_PILL's
-    gap. None for one line, which the 48 px frame already clears. */
+    gap. None for one line, which the 48 px frame already clears (a rounded
+    landing still keeps below it: cuePillClearPx). */
 export function cueTopReservePx(lines: number): number {
-  if (!(lines > 0)) return 0;
-  const pillBottom = CUE_PILL.top + CUE_PILL.chrome + lines * CUE_PILL.line;
-  return Math.max(0, pillBottom + CUE_PILL.gap - FIT_PADDING_PX);
+  return Math.max(0, cuePillClearPx(lines) - FIT_PADDING_PX);
 }
 
 /** A camera move a chip asks for. `nonce` makes a repeat tap fly again (the
