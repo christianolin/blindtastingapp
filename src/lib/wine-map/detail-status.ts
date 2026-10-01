@@ -11,9 +11,11 @@ export const DETAIL_WARNING = "Uses more resources and can cause lag.";
 
 export type DetailStatus = { text: string; retry: boolean };
 
-/** The selected place, when some of its own children in view are hidden only
-    by the size rule (reveal.ts): a drill-down landed before they are big
-    enough to draw (review 2026-09-30, Northern Rhône at z7.5). */
+/** The selected place, when some of its descendants in view (its children,
+    theirs, and so on) are hidden only by the size rule (reveal.ts): a
+    drill-down landed before they are big enough to draw (review 2026-09-30,
+    Northern Rhône at z7.5; fix round 2026-10-01, Bordeaux's Pomerol, a
+    grandchild). `drawn` counts its descendants drawn in view. */
 export type SelectionCue = { name: string; drawn: number; hidden: number };
 
 /** The zoom-in cue for a selection, or null when nothing of it waits.

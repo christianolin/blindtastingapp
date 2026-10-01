@@ -9,7 +9,11 @@ import Map, {
   type MapRef,
 } from "react-map-gl/maplibre";
 import { ChevronUp, Maximize2, Minimize2 } from "lucide-react";
-import maplibregl, { type LayerSpecification, type StyleSpecification } from "maplibre-gl";
+import maplibregl, {
+  type FilterSpecification,
+  type LayerSpecification,
+  type StyleSpecification,
+} from "maplibre-gl";
 import { Protocol } from "pmtiles";
 import "maplibre-gl/dist/maplibre-gl.css";
 // Dark-theme dressing for MapLibre's own controls; must follow maplibre-gl.css.
@@ -22,13 +26,14 @@ import {
   NEIGHBOUR_MIN_ZOOM,
 } from "@/lib/wine-map/mount-policy";
 import {
-  familyInView,
+  descendantsInView,
   REVEAL_MIN_PX,
   revealK,
   revealLatitude,
   shardRevealPx,
   sizeHiddenInView,
 } from "@/lib/wine-map/reveal";
+import { keySetExpression } from "@/lib/wine-map/key-gate";
 import { allModeHealthy } from "@/lib/wine-map/detail-mode";
 import {
   CENTRE_PROBE_DIRECTIONS,
@@ -44,6 +49,7 @@ import {
 import {
   chipFlightNeeded,
   chipLandingZoom,
+  landingZoom,
   selectionFit,
   type CameraRequest,
   type SheetPadding,
@@ -81,7 +87,7 @@ import {
 import { desiredGlobalState, grapeGateExpression } from "@/lib/wine-map/map-state";
 import { MapStateSync } from "@/lib/wine-map/map-state-sync";
 import { bboxInView, handoffWrites, latchReady } from "@/lib/wine-map/handoff";
-import { selectionFeatureStates } from "@/lib/wine-map/selection-state";
+import { descendantKeys, selectionFeatureStates } from "@/lib/wine-map/selection-state";
 import type { WinePlaceTreeNode } from "@/lib/wine-map/tree";
 import { installHoverCursor } from "@/lib/wine-map/hover-cursor";
 import { ShardController, type ShardDesired } from "@/lib/wine-map/shard-controller";
@@ -124,8 +130,14 @@ export type CameraTarget = {
       canvas free at the bottom, so the place lands in the part the sheet does
       not cover. Absent (desktop, tablets, a closed or full sheet): today's
       fit of the whole canvas — and so is a sheet on a canvas too short to
-      leave MIN_FIT_BAND_PX of map above it (selectionFit drops it). */
+      leave MIN_FIT_BAND_PX of map above it (selectionFit drops it). Its
+      `reserveTop` keeps the phone's zoom-in pill clear of the place's top. */
   padding?: SheetPadding;
+  /** Land on the next whole zoom when the fit is a hair under it
+      (camera-fit.ts landingZoom; owner, 2026-10-01). Set only where the size
+      rule applies to the place, so the kill switch and tiles from before the
+      rule keep the old camera exactly. */
+  wholeZoom?: boolean;
 };
 
 // The mercator midpoint of a bbox: the point cameraForBounds centres on when
@@ -955,10 +967,11 @@ export function TileWineMap({
   // that only the size rule (reveal.ts) hides: more zoom will draw it, so the
   // status line keeps "Zoom in" instead of "No subregions mapped here".
   const [depthHidden, setDepthHidden] = useState(false);
-  // The selection cue (review 2026-09-30): at the last scan, how many of the
-  // selected place's own children in view were drawn, and how many did only
-  // the size rule hide. A drill-down can land where its children are too
-  // small yet (Northern Rhône at z7.5), and the status line then says so.
+  // The selection cue (review 2026-09-30; fix round 2026-10-01): at the last
+  // scan, how many of the selected place's descendants in view were drawn,
+  // and how many did only the size rule hide. A drill-down can land where
+  // some of them are too small yet (Northern Rhône at z7.5; Bordeaux's
+  // Pomerol, a grandchild), and the status line then says so.
   const [selectionFamily, setSelectionFamily] = useState<DetailReport["selectionFamily"]>(null);
   // Read by the idle scan, so a new selection does not re-bind it; the scan
   // after the selection's flight lands sees the new key.
@@ -966,6 +979,19 @@ export function TileWineMap({
   useEffect(() => {
     selectedKeyRef.current = selectedKey;
   }, [selectedKey]);
+  // The place tree, for the probe's descendants (selection-state.ts
+  // descendantKeys); read by the scan like the selected key.
+  const treeRef = useRef(tree);
+  useEffect(() => {
+    treeRef.current = tree;
+  }, [tree]);
+  // The probe's querySourceFeatures filter for the last selection's
+  // descendants, kept while the selection and the tree stay the same.
+  const descendantFilterRef = useRef<{
+    tree: readonly WinePlaceTreeNode[];
+    key: string;
+    filter: unknown[];
+  } | null>(null);
   // The grape filter's keys as a set, for that probe (null: no filter).
   const visibleKeySet = useMemo(
     () => (visibleKeys ? new Set(visibleKeys) : null),
@@ -1025,6 +1051,10 @@ export function TileWineMap({
     const levelsByRegion = new globalThis.Map<string, Set<string>>();
     // Countries with subregion depth drawn in this frame.
     const depth = new Set<string>();
+    // Every subregion drawn in this frame, by key, with its parent's id: the
+    // selection cue's probe below counts the selected place's descendants
+    // among them.
+    const drawnDeep = new globalThis.Map<string, unknown>();
     for (const feature of map.queryRenderedFeatures({ layers })) {
       const p = (feature.properties ?? {}) as Record<string, unknown>;
       const region = typeof p.region === "string" ? p.region : null;
@@ -1032,6 +1062,7 @@ export function TileWineMap({
       if (region && typeof p.tier === "number" && p.tier >= 2) {
         const country = countryOfShard(shardCountries, region);
         if (country) depth.add(country);
+        if (typeof p.key === "string") drawnDeep.set(p.key, p.parent_id);
       }
       // Legend rows appear only for classes actually in view: Burgundy shows
       // village/premier/grand, Champagne its rated villages, Alsace its
@@ -1115,9 +1146,16 @@ export function TileWineMap({
       }
     }
     setDepthHidden(hidden);
-    // The selection cue's probe: the selected place's children, in its own
-    // shard (a place and its children share the region segment), when that
-    // shard draws subregions at all (the focus country, or All countries).
+    // The selection cue's probe: the selected place's descendants (fix round
+    // 2026-10-01: not only its children, or Bordeaux's landing hid Pomerol
+    // with nothing on screen to say so), in its own shard (a place and its
+    // descendants share the region segment), when that shard draws subregions
+    // at all (the focus country, or All countries). Drawn: those in this
+    // frame's rendered features. Hidden: those whose loaded features in view
+    // only the size rule holds back, asked of the tiles for the descendants
+    // alone (keySetExpression), so the probe's cost follows them, not the
+    // shard. Without the tree (loading, or failed) it falls back to the
+    // children, by the tiles' parent_id.
     let family: DetailReport["selectionFamily"] = null;
     const selKey = selectedKeyRef.current;
     const selShard = selKey ? (selKey.split(".")[1] ?? null) : null;
@@ -1132,18 +1170,40 @@ export function TileWineMap({
       try {
         const source = shardSourceId(selShard);
         if (map.getSource(source)) {
-          const own = map.querySourceFeatures(source, {
-            sourceLayer: "places",
-            filter: ["==", ["get", "key"], selKey],
-          });
-          const id = own.map((f) => f.properties?.id).find((v): v is string => typeof v === "string");
-          if (id) {
+          const roots = treeRef.current;
+          const descendants = roots ? descendantKeys(roots, selKey) : null;
+          let filter: FilterSpecification | null = null;
+          let mine: ((key: string, parentId: unknown) => boolean) | null = null;
+          if (roots && descendants) {
+            if (descendants.size === 0) {
+              family = { key: selKey, drawn: 0, hidden: 0 };
+            } else {
+              let cached = descendantFilterRef.current;
+              if (!cached || cached.tree !== roots || cached.key !== selKey) {
+                cached = { tree: roots, key: selKey, filter: keySetExpression(descendants) as unknown[] };
+                descendantFilterRef.current = cached;
+              }
+              filter = cached.filter as FilterSpecification;
+              mine = (key) => descendants.has(key);
+            }
+          } else {
+            const own = map.querySourceFeatures(source, {
+              sourceLayer: "places",
+              filter: ["==", ["get", "key"], selKey],
+            });
+            const id = own.map((f) => f.properties?.id).find((v): v is string => typeof v === "string");
+            if (id) {
+              filter = ["==", ["get", "parent_id"], id];
+              mine = (_key, parentId) => parentId === id;
+            }
+          }
+          if (filter && mine) {
+            const drawnKeys = new Set<string>();
+            for (const [key, parentId] of drawnDeep) if (mine(key, parentId)) drawnKeys.add(key);
             const b = map.getBounds();
-            const counts = familyInView({
-              features: map.querySourceFeatures(source, {
-                sourceLayer: "places",
-                filter: ["==", ["get", "parent_id"], id],
-              }),
+            const counts = descendantsInView({
+              drawnKeys,
+              features: map.querySourceFeatures(source, { sourceLayer: "places", filter }),
               view: [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()],
               tileZoom: Math.floor(zoomNow),
               k: selReveal.k,
@@ -1351,12 +1411,26 @@ export function TileWineMap({
         maxZoom: cameraTarget.maxZoom,
       });
       if (inner && cam) {
-        const zoom = Math.max(cam.zoom ?? 0, cameraTarget.minZoom);
-        if (fit.sheet) {
+        const fitted = Math.max(cam.zoom ?? 0, cameraTarget.minZoom);
+        // A fit a hair under a whole zoom lands on it, where the place still
+        // fits (landingZoom): the filters see whole zooms, and z8.97 drew
+        // what z8 draws, names and all (owner, 2026-10-01).
+        const zoom = cameraTarget.wholeZoom
+          ? landingZoom({
+              zoom: fitted,
+              maxZoom: cameraTarget.maxZoom,
+              bbox: cameraTarget.bbox,
+              width: inner.getCanvas().clientWidth,
+              height: inner.getCanvas().clientHeight,
+              fit,
+            })
+          : fitted;
+        if (fit.offset[0] !== 0 || fit.offset[1] !== 0) {
           // The place's own centre, eased to the visible part's centre by
-          // `offset`, which easeTo applies in pixels at the final zoom.
-          // cam.center is already shifted for cam.zoom and would over-shift
-          // whenever the reveal floor raises the zoom above it.
+          // `offset` (the sheet below, the zoom-in pill above), which easeTo
+          // applies in pixels at the final zoom. cam.center is already
+          // shifted for cam.zoom and would over-shift whenever the reveal
+          // floor or the rounding raises the zoom above it.
           inner.easeTo({
             center: mercatorMidpoint(bounds),
             zoom,

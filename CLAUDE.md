@@ -2200,10 +2200,15 @@ a raw subquery, regardless of which two tables look involved at a glance.
   - **When a place appears** (2026-09-30, owner: "you need to zoom further
     in before smaller places appear"; design
     `docs/superpowers/specs/2026-09-30-wine-map-reveal-by-size.md`, §11 is
-    the rule as built). Owner decisions the same day: **24 px**; **keep
+    the rule as built and §12 the fix round of 2026-10-01, which wins where
+    they differ). Owner decisions the same day: **24 px**; **keep
     ribbons visible** (long thin places such as Burgundy's districts appear
     with their region, only compact specks wait); the cue copy below; and
     "ship when it passes" in two steps, the app first, then a tiles release.
+    2026-10-01: **"Zoom to fit the place"** (a pick fills the map, its
+    landing rounded to a whole zoom, below) and **"Leave regions alone"**
+    (every region stays visible from the country view; only places below
+    region level wait).
     - **The rule.** A subregion (tier >= 2) is drawn from the first whole
       zoom at which it is `REVEAL_MIN_PX` (24) CSS px across
       (`src/lib/wine-map/reveal.ts`; 0 = off). The size is worked out by the
@@ -2212,10 +2217,12 @@ a raw subquery, regardless of which two tables look involved at a glance.
       `reveal_area` (planar deg² at the shard's manifest-bbox mid-latitude, so
       the app's `reveal_area * 4^z >= K` is exact). The export's rule, per
       polygon part, in z0 Web-Mercator px: `size = max(sqrt(A), min(L / 2,
-      8 * A / L))` with L the long side of the part's minimum-area rectangle
+      12 * A / L))` with L the long side of the part's minimum-area rectangle
       and A / L its mean thickness: a part counts once its equal-area square
-      is N px, or, if it is a ribbon, once it is 2N long and N/8 thick
-      (`REVEAL_LENGTH_RATIO` 2, `REVEAL_THICKNESS_RATIO` 8). A ribbon is a
+      is N px, or, if it is a ribbon, once it is 2N long and N/12 (2 px) thick
+      (`REVEAL_LENGTH_RATIO` 2, `REVEAL_THICKNESS_RATIO` 12, was 8 until
+      2026-10-01: every floor from Condrieu's 2.3 px down to a 1.4 px hairline
+      moves the same six thin ribbons, so 2 px sits in that gap). A ribbon is a
       part at least 8 times as long as it is thick (`L² / A >= 8`,
       `RIBBON_MIN_ASPECT`); every other part gets exactly the square rule, so
       compact specks keep the 24 px table (Cole Ranch z11, Benmore Valley
@@ -2226,11 +2233,13 @@ a raw subquery, regardless of which two tables look involved at a glance.
       at least half their median sibling come in with it
       (`SUBREGION_FAMILY_RATIO` 2: Burgundy's compact Grand Auxerrois comes
       in with its ribbons); every part is its own feature, the anchor part
-      with its place, the others once their own square is N/3
-      (`PIECE_PX_RATIO` 3: no Mendocino Ridge confetti); a label carries its
+      with its place, the others once their own square is N
+      (`PIECE_PX_RATIO` 1, was 3 until 2026-10-01: 10-20 px pieces cut off
+      from their place, the Central Valley's in the owner's North Coast view,
+      read like the specks the rule hides); a label carries its
       place's value, and so does the part its point lies in (a name is never
       drawn over a piece of its place still waiting; export.mjs asserts it). Everything is a ratio of N, so `?revealPx=` keeps its
-      meaning. The table of ~50 named places is in the spec, §11.
+      meaning. The table of ~50 named places is in the spec, §11 and §12.
     - **Do not bring back a general family rule.** A "comes in with its
       family's median member" rule for every family (review round, never
       shipped) pulled Cole Ranch, Benmore Valley, Oakville and Stags Leap a
@@ -2257,9 +2266,24 @@ a raw subquery, regardless of which two tables look involved at a glance.
       smallest-wins clicks are unchanged), same `key`/`id` (promoteId `key`:
       feature-state, the ring, the grape gate and the legend scan all work by
       place). Labels are not split. Under the kill switch the parts together
-      are the place. Byte cost: +4.6 % California, +7.7 % over all shards
-      (estimate from the production archives); the world archive is
-      byte-identical.
+      are the place. Byte cost: the draft release `20260930T190326Z` came out
+      +4.0 % California, +6.9 % over all archives; fix round 2 adds about
+      0.4 % (estimate); the world archive is byte-identical.
+    - **Paint order, at export.** MapLibre paints a layer's features in tile
+      order, later on top, and tippecanoe orders a tile by one index point per
+      feature, so overlap was an accident (and splitting places reshuffled it:
+      the Bourgogne region painted over the Chablis appellation). A shard's
+      places are written in paint order (`paintOrdered`: shallower tiers
+      first, then larger `area` first, then key; a place's parts together),
+      so the deeper and then the smaller lies on top, and shard archives are
+      built with `--preserve-input-order` (`tippecanoeArgs`). That flag holds
+      for labels too, whose order breaks collision ties within a tier, so
+      labels are written in tippecanoe's former order (`labelOrdered`, by
+      `tippecanoePointIndex`: checked identical to every tile of release
+      `20260930T132635Z`), and the same names win. The world archive keeps
+      tippecanoe's order and its bytes. validate.mjs refuses a flagged shard
+      whose probed tiles are out of paint order (`checkPaintOrder`). Never
+      sort the labels by tier or area: that changes which names show.
     - **Never earlier than `floor(min_zoom)`.** So `min_zoom` now means
       "never before"; read reveal zooms through `reveal.ts` (`revealZoom`).
       A reveal zoom above a shard's `max_zoom` is fine: MapLibre overzooms
@@ -2285,14 +2309,35 @@ a raw subquery, regardless of which two tables look involved at a glance.
       further only when even its bbox is under N px; below a country, its fit
       to its bbox decides the landing (capped at z17 only): the old cap,
       children's min_zoom + 0.5, landed Napa Valley at z7.5 with none of its
-      AVAs drawn. A country keeps the old cap. A parent that fits the screen
-      can still hold children under N px; the status line then says "Zoom in
+      AVAs drawn. A country keeps the old cap. **Whole-zoom landings**
+      (owner, 2026-10-01: "I'll round the zoom so no sub-area pops in a hair
+      later"): below a country, with the rule on, a pick lands on the next
+      whole zoom when that is within 0.25 of its fit and the place's box still
+      fits the map with 12 px to every edge (`landingZoom`,
+      `LANDING_ROUND_WITHIN`, `LANDING_ROUND_MARGIN_PX`; never past the cap,
+      never under the phone pill, the sheet kept clear): Napa Valley z8.97 →
+      z9 (15/15 AVAs drawn, where z8.97 drew 10 and no names), Northern Rhône
+      z8.84 → z9 (Côte-Rôtie and Condrieu drawn and named). The filters see
+      whole zooms only, so a fit just under one draws what the zoom below
+      draws. A parent that fits the screen
+      can still hold places under N px; the status line then says "Zoom in
       to see the subregions of {place}." (or "Zoom in to see all the
       subregions of {place}." when some are drawn; owner-approved), from the
-      idle scan's `familyInView` probe (`selectionCueText`). In All countries
+      idle scan's `descendantsInView` probe (`selectionCueText`), which counts
+      every DESCENDANT in view (`descendantKeys` from the tree, queried with
+      `keySetExpression`; the children by `parent_id` without the tree), not
+      only the children: Bordeaux's landing hid Pomerol, a grandchild, with
+      no cue. In All countries
       it follows the All warning; on a phone, whose status line is in the
       closed Map options sheet, the same text shows over the map while that
-      sheet is closed (one `role="status"` region at a time).
+      sheet is closed (one `role="status"` region at a time). That pill is
+      mounted only while there is a cue (an always-mounted empty layer over
+      the canvas changed the whole phone page's compositing, so phone
+      screenshots stopped matching production), and a phone pick of a place
+      with subregions keeps the pill's strip free above it (`reserveTop`,
+      `cueTopReservePx`, measured from the longest cue it could show;
+      `CUE_PILL` mirrors the pill's classes, pinned in
+      `desktop-layout.test.ts`).
     - **Status line.** The "No subregions mapped here" line checks with
       `querySourceFeatures` (`sizeHiddenInView`) that nothing in view is only
       size-hidden.
@@ -2302,7 +2347,8 @@ a raw subquery, regardless of which two tables look involved at a glance.
       hands the same value to the map (`revealPx` prop) and its camera.
     - **Kill switch / rollback.** `REVEAL_MIN_PX = 0` (or `?revealPx=0`) is
       the map from before the rule: filters, the parent floor 0 and the z16
-      camera cap (`CAMERA_MAX_ZOOM_RULE_OFF`); no selection cue. Promoting
+      camera cap (`CAMERA_MAX_ZOOM_RULE_OFF`), no rounding and no pill
+      reserve; no selection cue. Promoting
       the previous tiles release does the same from the data side.
     - **Checking a draft tiles release locally.** A Wine Map Tiles run with
       promote=false uploads `tiles/releases/<version>/*.pmtiles` and a

@@ -48,6 +48,26 @@ export function checkTileFeature(properties, { name, layer, allExpectedIds, reve
   }
 }
 
+/** A shard tile's places, in tile order, must be in the export's paint order
+    (lib.mjs paintOrdered: tier ascending, then larger `area` first, then key),
+    which holds only if tippecanoe kept the input order (tippecanoeArgs'
+    --preserve-input-order). MapLibre paints later features on top, so this is
+    what keeps a deeper or smaller place over the one it sits in. Pure: the
+    decoded properties of one tile's places layer. */
+export function checkPaintOrder(placesProperties, { name, tile }) {
+  for (let i = 1; i < placesProperties.length; i += 1) {
+    const a = placesProperties[i - 1];
+    const b = placesProperties[i];
+    const inOrder =
+      a.tier < b.tier ||
+      (a.tier === b.tier && (a.area > b.area || (a.area === b.area && String(a.key) <= String(b.key))));
+    assert.ok(
+      inOrder,
+      `${name} tile ${tile}: ${b.key} (tier ${b.tier}) paints over ${a.key} (tier ${a.tier})`,
+    );
+  }
+}
+
 export async function validateArchives(sources, release) {
   const idSets = expectedIdSets(release);
   const allExpectedIds = new Set([
@@ -104,6 +124,8 @@ export async function validateArchives(sources, release) {
           checkTileFeature(properties, { name, layer, allExpectedIds, revealRule });
         }
       }
+      // A shard built by this export (reveal_rule) paints in its order.
+      if (revealRule) checkPaintOrder(layers.places ?? [], { name, tile: `${z}/${x}/${y}` });
     }
     for (const layer of ["places", "labels"]) {
       const missing = [...expectedIds].filter((id) => !seen[layer].has(id));
@@ -111,7 +133,10 @@ export async function validateArchives(sources, release) {
     }
     featureCounts[name] = { places: seen.places.size, labels: seen.labels.size };
     gates.push(`${name}: all ${expectedIds.size} ids present in places+labels`);
-    if (revealRule) gates.push(`${name}: every subregion decoded carries reveal_area`);
+    if (revealRule) {
+      gates.push(`${name}: every subregion decoded carries reveal_area`);
+      gates.push(`${name}: places in paint order in every probed tile`);
+    }
   }
   return { gates, featureCounts };
 }

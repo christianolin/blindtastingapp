@@ -88,3 +88,12 @@ export function keyGateExpression(
     ["==", ["get", ["string", ["get", "key"], ""], ["literal", keyLookupMap(keys)]], true],
   ];
 }
+
+/** The features whose key is in `keys`, and nothing else: the gate's O(1)
+    object lookup and its guards (the `string` assertion, `== true`), without
+    the gate's free pass for country outlines. The selection cue's probe hands
+    it to querySourceFeatures, so the probe touches only the selected place's
+    descendants. */
+export function keySetExpression(keys: Iterable<string>): KeyGateExpression {
+  return ["==", ["get", ["string", ["get", "key"], ""], ["literal", keyLookupMap([...keys])]], true];
+}

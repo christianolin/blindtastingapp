@@ -41,7 +41,10 @@ import {
   REVEAL_THICKNESS_RATIO,
   SUBREGION_FAMILY_RATIO,
   convexHull,
+  labelOrdered,
   manifestForRelease,
+  paintOrdered,
+  tippecanoePointIndex,
   mercatorPx,
   minAreaRectangle,
   partMeasure,
@@ -402,11 +405,14 @@ test("tippecanoeArgs honours per-archive zoom and zoom-dependent detail", async 
     "--no-progress-indicator",
     "-L", "places:world-places.geojson", "-L", "labels:world-labels.geojson",
   ]);
+  // A shard keeps the export's feature order (paintOrdered, labelOrdered);
+  // the world archive keeps tippecanoe's own, so its bytes stay as they were.
   assert.deepEqual(tippecanoeArgs("bourgogne", SHARD_TARGET), [
     "-o", "bourgogne.pmtiles", "--force", "-Z4", "-z16", "-r1",
     `--simplification=${SIMPLIFICATION}`,
     "--no-tiny-polygon-reduction",
     "--no-progress-indicator",
+    "--preserve-input-order",
     "-L", "places:bourgogne-places.geojson", "-L", "labels:bourgogne-labels.geojson",
   ]);
   // The whole point: geometry gets simpler as you zoom out. A value of 1 would
@@ -549,12 +555,15 @@ const close = (actual, expected, tolerance = 1e-6) =>
 const appK = (px, latitude) => ((px * 360) / 512) ** 2 * Math.cos((latitude * Math.PI) / 180);
 const appPasses = (revealArea, z, px, latitude) => revealArea * 4 ** z >= appK(px, latitude);
 
-test("reveal constants: rule 1; ribbons 2N long and N/8 thick; subregions at half their median; pieces at N/3", () => {
+test("reveal constants: rule 1; ribbons 2N long and N/12 thick; subregions at half their median; pieces at N", () => {
   assert.equal(REVEAL_RULE, 1);
   assert.equal(REVEAL_LENGTH_RATIO, 2);
-  assert.equal(REVEAL_THICKNESS_RATIO, 8);
+  // 2026-10-01: N/12 = 2 px (was N/8 = 3 px), so Condrieu, 59 x 2.3 px at z8,
+  // comes with its length; Fiefs Vendéens Vix, a 1.4 px hairline, still waits.
+  assert.equal(REVEAL_THICKNESS_RATIO, 12);
   assert.equal(SUBREGION_FAMILY_RATIO, 2);
-  assert.equal(PIECE_PX_RATIO, 3);
+  // 2026-10-01: a piece waits for the full threshold, as any place does (was N/3).
+  assert.equal(PIECE_PX_RATIO, 1);
 });
 
 test("mercatorPx maps lon/lat onto the 512 px z0 world", () => {
@@ -597,9 +606,14 @@ test("partMeasure: z0 Mercator area (holes out) and the long side, at any latitu
 test("partSize: compact shapes get the plain rule; ribbons their length, capped by their thickness", () => {
   assert.equal(partSize({ area: 100, long: 10 }), 10); // a square
   assert.equal(partSize({ area: 100, long: 20 }), 10); // twice as long as its square: still plain
-  assert.equal(partSize({ area: 180, long: 60 }), 24); // 60 x 3: min(60/2, 8 x 3)
+  assert.equal(partSize({ area: 120, long: 60 }), 24); // 60 x 2: min(60/2, 12 x 2)
+  assert.equal(partSize({ area: 180, long: 60 }), 30); // 60 x 3: its length decides
   assert.equal(partSize({ area: 400, long: 60 }), 30); // 60 x 6.7: its length decides
-  assert.equal(partSize({ area: 100, long: 100 }), 10); // 100 x 1: too thin, the plain rule
+  assert.equal(partSize({ area: 50, long: 100 }), Math.sqrt(50)); // 100 x 0.5: too thin, the plain rule
+  // 2026-10-01, at z8 in z8 px: Condrieu (59.2 x 2.3, aspect 25.7) is in by its
+  // length (24 px needed); Fiefs Vendéens Vix (56.7 x 1.38) is a hairline and waits.
+  assert.ok(partSize({ area: 59.2 * 2.3, long: 59.2 }) >= 24);
+  assert.ok(partSize({ area: 56.7 * 1.38, long: 56.7 }) < 24);
   // Review 2026-09-30: an aspect over 4 alone is not a ribbon. Hermitage is
   // 51 x 10 px (aspect 5.0) and must wait like any compact hill.
   close(partSize({ area: 51 * 10.2, long: 51 }), Math.sqrt(51 * 10.2));
@@ -630,9 +644,9 @@ test("revealPlan: a region's subregions at least half its median subregion come 
     REGION,
     sub("chablis", [rect(0.1, 0.1, 0.3, 0.3)]), // 0.3 (in degrees; x PX_PER_DEG for px)
     sub("auxerrois", [rect(0.5, 0.1, 0.18, 0.18)]), // 0.18: compact, but at least half the median
-    sub("nuits", [rect(0.1, 0.5, 0.8, 0.03)]), // a ribbon: min(0.8/2, 8 x 0.03) = 0.24
-    sub("beaune", [rect(1, 0.1, 0.9, 0.05)]), // min(0.45, 0.4) = 0.4
-    sub("chalonnaise", [rect(1, 0.3, 0.8, 0.045)]), // min(0.4, 0.36) = 0.36
+    sub("nuits", [rect(0.1, 0.5, 0.8, 0.02)]), // a ribbon: min(0.8/2, 12 x 0.02) = 0.24
+    sub("beaune", [rect(1, 0.1, 0.9, 0.0333333)]), // min(0.45, 0.4) = 0.4
+    sub("chalonnaise", [rect(1, 0.3, 0.8, 0.03)]), // min(0.4, 0.36) = 0.36
     sub("maconnais", [rect(2, 0.1, 0.7, 0.7)]), // 0.7
     sub("speck", [rect(3, 0.1, 0.05, 0.05)]), // 0.05: under half the median, on its own
     placeRow("appellation", [rect(3.2, 0.1, 0.1, 0.1)]), // an APPELLATION of the region: no family
@@ -654,7 +668,7 @@ test("revealPlan: a region's subregions at least half its median subregion come 
   for (const [, entry] of plan) assert.equal(entry.revealArea, revealAreaFromSide(entry.side, 0));
 });
 
-test("revealPlan: the anchor part carries its place, small pieces wait for a third of the threshold", () => {
+test("revealPlan: the anchor part carries its place, small pieces wait for the threshold itself", () => {
   // Geometry order: a sliver, the big part, a middling part.
   const polygons = [rect(0.05, 0.05, 0.005, 0.005), rect(0.1, 0.1, 0.2, 0.2), rect(0.4, 0.4, 0.05, 0.05)];
   const plan = revealPlan([placeRow("ridge", polygons)], () => 0).get("ridge");
@@ -662,20 +676,28 @@ test("revealPlan: the anchor part carries its place, small pieces wait for a thi
   const total = Math.sqrt(0.005 ** 2 + 0.2 ** 2 + 0.05 ** 2) * PX_PER_DEG;
   close(plan.side, total, 1e-3);
   close(plan.parts[1].side, total, 1e-3);
-  close(plan.parts[0].side, 3 * 0.005 * PX_PER_DEG, 1e-3);
-  close(plan.parts[2].side, 3 * 0.05 * PX_PER_DEG, 1e-3);
-  // A piece never comes before its place.
+  // 2026-10-01: a piece's own square must reach the threshold (no 10-20 px
+  // fragments, e.g. the Central Valley's specks in the owner's North Coast view).
+  close(plan.parts[0].side, 0.005 * PX_PER_DEG, 1e-3);
+  close(plan.parts[2].side, 0.05 * PX_PER_DEG, 1e-3);
+  // A piece never comes before its place, and waits for its own square: two
+  // equal halves come in one after the other, the second once it is N itself.
   const even = revealPlan([placeRow("even", [rect(0, 0, 0.1, 0.1), rect(0.3, 0.3, 0.1, 0.1)])], () => 0).get("even");
-  close(even.parts[0].side, even.side, 1e-9);
-  close(even.parts[1].side, even.side, 1e-9);
+  close(even.parts[even.anchor].side, even.side, 1e-9);
+  close(even.parts[1 - even.anchor].side, 0.1 * PX_PER_DEG, 1e-2);
+  const big = revealPlan([placeRow("big", [rect(0, 0, 0.1, 0.1), rect(0.3, 0.3, 0.4, 0.4)])], () => 0).get("big");
+  close(big.parts[0].side, 0.1 * PX_PER_DEG, 1e-3);
+  close(big.parts[1].side, big.side, 1e-9);
+  assert.ok(big.parts.every((part) => part.side <= big.side));
 });
 
 test("revealPlan: the part that makes a place long is its anchor", () => {
-  // A 0.1 blob and a 0.6 x 0.02 ribbon: min(0.6/2, 8 x 0.02) = 0.16 beats the blob's 0.1.
-  const plan = revealPlan([placeRow("mixed", [rect(0, 0, 0.1, 0.1), rect(0.3, 0, 0.6, 0.02)])], () => 0).get("mixed");
+  // A 0.1 blob and a 0.6 x 0.012 ribbon: min(0.6/2, 12 x 0.012) = 0.144 beats
+  // the blob's 0.1 and the whole footprint's sqrt(0.0172) = 0.131.
+  const plan = revealPlan([placeRow("mixed", [rect(0, 0, 0.1, 0.1), rect(0.3, 0, 0.6, 0.012)])], () => 0).get("mixed");
   assert.equal(plan.anchor, 1);
-  close(plan.side / PX_PER_DEG, 0.16, 1e-3);
-  close(plan.parts[0].side / PX_PER_DEG, 0.16, 1e-3); // min(0.16, 3 x 0.1)
+  close(plan.side / PX_PER_DEG, 0.144, 1e-3);
+  close(plan.parts[0].side / PX_PER_DEG, 0.1, 1e-3); // min(0.144, 0.1)
 });
 
 test("revealPlan fails closed on a value that is not a finite number", () => {
@@ -808,7 +830,7 @@ test("revealPlan: the part under the label comes with the name", () => {
   assert.equal(plan.labelPart, 1);
   assert.equal(plan.parts[1].side, plan.side);
   assert.equal(plan.parts[1].revealArea, plan.revealArea);
-  close(plan.parts[2].side, 3 * 0.01 * PX_PER_DEG, 1e-3); // the other piece still waits
+  close(plan.parts[2].side, 0.01 * PX_PER_DEG, 1e-3); // the other piece still waits
   // A label on the anchor, or outside every part: only the anchor carries the place.
   for (const point of [label(0.1, 0.1), label(9, 9)]) {
     const other = revealPlan([placeRow("scatter", polygons, { label_point: point })], () => 47).get("scatter");
@@ -836,9 +858,9 @@ test("revealFamilyReport: members near the cut, and a pinned region whose subreg
   const districts = [
     sub("chablis", [rect(0.1, 0.1, 0.3, 0.3)]),
     sub("auxerrois", [rect(0.5, 0.1, 0.17, 0.17)]), // 0.17 of a 0.3 median: pulled, near the cut
-    sub("nuits", [rect(0.1, 0.5, 0.8, 0.03)]),
-    sub("beaune", [rect(1, 0.1, 0.9, 0.05)]),
-    sub("chalonnaise", [rect(1, 0.3, 0.8, 0.045)]),
+    sub("nuits", [rect(0.1, 0.5, 0.8, 0.02)]),
+    sub("beaune", [rect(1, 0.1, 0.9, 0.0333333)]),
+    sub("chalonnaise", [rect(1, 0.3, 0.8, 0.03)]),
     sub("maconnais", [rect(2, 0.1, 0.32, 0.32)]),
   ];
   const rows = [REGION, ...districts];
@@ -857,4 +879,86 @@ test("revealFamilyReport: members near the cut, and a pinned region whose subreg
   const other = { ...REGION, id: "loire", canonical_key: "france.loire" };
   const moved = grown.map((row) => (row.primary_parent_id === "bourgogne" ? { ...row, primary_parent_id: "loire" } : row));
   assert.deepEqual(revealFamilyReport([other, ...moved], revealPlan([other, ...moved], () => 0)).pinFailures, []);
+});
+
+// 2026-10-01 (spec §12): where places overlap, the deeper tier paints above the
+// shallower and, within a tier, the smaller above the larger. MapLibre paints a
+// tile's features in order, later on top; the export writes them in that order
+// and tippecanoe keeps it (--preserve-input-order, shards only).
+test("paintOrdered: shallower tiers first, larger first within a tier, a place's parts together in geometry order", () => {
+  const f = (key, tier, area, part = 0) => ({ properties: { key, tier, area }, part });
+  const input = [
+    f("france.bourgogne.chablis.chablis.premier-cru", 4, 0.001),
+    f("france.bourgogne.chablis.chablis", 3, 0.02, 0),
+    f("france.bourgogne", 1, 1),
+    f("france.bourgogne.chablis.petit-chablis", 3, 0.03),
+    f("france.bourgogne.chablis", 2, 0.1),
+    f("france.bourgogne.chablis.chablis", 3, 0.02, 1),
+    f("france.bourgogne.chablis.chablis-grand-cru", 3, 0.001),
+  ];
+  const out = paintOrdered(input);
+  assert.deepEqual(out.map((x) => `${x.properties.key.split(".").slice(-1)[0]}#${x.part}`), [
+    "bourgogne#0",
+    "chablis#0",
+    "petit-chablis#0",
+    "chablis#0",
+    "chablis#1",
+    "chablis-grand-cru#0",
+    "premier-cru#0",
+  ]);
+  assert.deepEqual(out.map((x) => x.properties.tier), [1, 2, 3, 3, 3, 3, 4]);
+  assert.notEqual(out, input); // a new array; the input is left alone
+  assert.equal(input[0].properties.tier, 4);
+  // Equal tier and area: by key, so the order never depends on the input's.
+  const tie = [f("b", 3, 0.5), f("a", 3, 0.5)];
+  assert.deepEqual(paintOrdered(tie).map((x) => x.properties.key), ["a", "b"]);
+  assert.deepEqual(paintOrdered([...tie].reverse()).map((x) => x.properties.key), ["a", "b"]);
+});
+
+test("tippecanoePointIndex: tippecanoe 2.79's quadkey of the point, its lowest bit dropped", () => {
+  // projection.cpp lonlat2tile at z32 (std::round), then serial.cpp's
+  // (bbox[0] / 2 + bbox[2] / 2) for a point, then encode_quadkey (x bit first).
+  const quadkey = (x, y) => {
+    let out = 0n;
+    for (let i = 31n; i >= 0n; i -= 1n) out = (out << 2n) | (((BigInt(x) >> i) & 1n) << 1n) | ((BigInt(y) >> i) & 1n);
+    return out;
+  };
+  assert.equal(tippecanoePointIndex([0, 0]), quadkey(2 ** 31, 2 ** 31));
+  // x = round(2^32 * 180.000001 / 360) = 2147483660 (even); y the same at the equator.
+  assert.equal(tippecanoePointIndex([0.000001, 0]), quadkey(2147483660, 2 ** 31));
+  // x = round(2^32 * 180.0000005 / 360) = 2147483654: even, kept; 2147483655 would drop to ...54.
+  assert.equal(tippecanoePointIndex([0.0000005, 0]), quadkey(2147483654, 2 ** 31));
+  assert.equal(tippecanoePointIndex([0.00000058, 0]), quadkey(2147483654, 2 ** 31));
+  // North is a smaller y; the x bit outranks the y bit at each level.
+  assert.ok(tippecanoePointIndex([-1, 1]) < tippecanoePointIndex([-1, -1]));
+  assert.ok(tippecanoePointIndex([-1, -50]) < tippecanoePointIndex([1, 50]));
+  assert.equal(typeof tippecanoePointIndex([7.1, 50.5]), "bigint");
+});
+
+test("labelOrdered: by tippecanoe's point index, ties in input order", () => {
+  const p = (key, lon, lat) => ({ properties: { key }, geometry: { type: "Point", coordinates: [lon, lat] } });
+  const input = [p("east", 1, 0), p("west-a", -1, 0), p("west-b", -1, 0), p("north-west", -1, 10)];
+  const out = labelOrdered(input);
+  assert.deepEqual(out.map((x) => x.properties.key), ["north-west", "west-a", "west-b", "east"]);
+  assert.deepEqual(labelOrdered([input[2], input[1]]).map((x) => x.properties.key), ["west-b", "west-a"]);
+  assert.notEqual(out, input);
+});
+
+test("validate: a shard tile's places must be in paint order (tippecanoe kept the export's order)", async () => {
+  const { checkPaintOrder } = await import("./validate.mjs");
+  const p = (key, tier, area) => ({ key, tier, area });
+  const opts = { name: "bourgogne", tile: "12/2100/1450" };
+  checkPaintOrder([], opts);
+  checkPaintOrder([p("r", 1, 9), p("d", 2, 1), p("a", 3, 0.5), p("b", 3, 0.5), p("b", 3, 0.5), p("c", 3, 0.2), p("v", 4, 0.3)], opts);
+  assert.throws(
+    () => checkPaintOrder([p("d", 2, 1), p("r", 1, 9)], opts),
+    /bourgogne tile 12\/2100\/1450: r \(tier 1\) paints over d \(tier 2\)/,
+  );
+  assert.throws(() => checkPaintOrder([p("small", 3, 0.1), p("big", 3, 0.5)], opts), /big \(tier 3\) paints over small/);
+  assert.throws(() => checkPaintOrder([p("b", 3, 0.5), p("a", 3, 0.5)], opts), /a \(tier 3\) paints over b/);
+  // The gate and the export's sort agree.
+  const sorted = paintOrdered([
+    { properties: p("c", 3, 0.2) }, { properties: p("r", 1, 9) }, { properties: p("a", 3, 0.5) }, { properties: p("v", 4, 0.3) },
+  ]);
+  checkPaintOrder(sorted.map((f) => f.properties), opts);
 });

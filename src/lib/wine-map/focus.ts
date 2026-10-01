@@ -260,10 +260,11 @@ export function scanPastDepthZoom(input: {
     and the status line and the chips are built from it. `depthCountries` are
     the countries whose tier >= 2 features the idle scan actually saw on
     screen. `pastDepthZoom` is scanPastDepthZoom for the current focus.
-    `selectionFamily` is the idle scan's count of the selected place's own
-    children in view: how many the map draws, and how many only the size rule
-    (reveal.ts) still hides; null when there is no selection or its shard
-    draws no subregions. */
+    `selectionFamily` is the idle scan's count of the selected place's
+    descendants in view (its children, theirs, and so on; fix round
+    2026-10-01): how many the map draws, and how many only the size rule
+    (reveal.ts descendantsInView) still hides; null when there is no
+    selection or its shard draws no subregions. */
 export type DetailReport = {
   focusCountry: string | null;
   depthCountries: string[];

@@ -17,6 +17,13 @@ import {
   selectionZooms,
   CAMERA_MAX_ZOOM,
   CAMERA_MAX_ZOOM_RULE_OFF,
+  CUE_PILL,
+  cuePillTextWidth,
+  cueTopReservePx,
+  LANDING_ROUND_MARGIN_PX,
+  LANDING_ROUND_WITHIN,
+  landingZoom,
+  wrappedLineCount,
 } from "./camera-fit";
 import { SHARD_MIN_ZOOM } from "./mount-policy";
 import type { Bbox } from "./shard-specs";
@@ -393,5 +400,187 @@ describe("selectionZooms", () => {
         }
       }
     }
+  });
+});
+
+// The phone's zoom-in pill sits over the top of the map (owner-approved cue
+// copy). A pick that may show it keeps the pill's strip free above the place
+// (fix round 2026-10-01, review V7: the pill covered Northern Rhône's top).
+describe("selectionFit with a reserve at the top", () => {
+  const PLAIN = { padding: 48, offset: [0, 0] };
+
+  it("adds the reserve to the top of the frame and moves the place down by half of it", () => {
+    expect(selectionFit({ bottom: 0, reserveTop: 11 }, 654)).toEqual({
+      padding: { top: 59, right: 48, bottom: 48, left: 48 },
+      offset: [0, 5.5],
+      reserveTop: 11,
+    });
+  });
+
+  it("combines with the sheet: the place sits between the pill's strip and the sheet", () => {
+    expect(selectionFit({ bottom: 406, reserveTop: 11 }, 844)).toEqual({
+      padding: { top: 59, right: 48, bottom: 454, left: 48 },
+      offset: [0, -197.5],
+      sheet: { bottom: 406 },
+      reserveTop: 11,
+    });
+  });
+
+  it("gives up the reserve before the sheet when the band would be under the floor", () => {
+    // 607 - 380 - 96 - 11 = 120: both kept; one pixel less drops the reserve only.
+    expect(selectionFit({ bottom: 380, reserveTop: 11 }, 607).reserveTop).toBe(11);
+    expect(selectionFit({ bottom: 380, reserveTop: 11 }, 606)).toEqual({
+      padding: { top: 48, right: 48, bottom: 428, left: 48 },
+      offset: [0, -190],
+      sheet: { bottom: 380 },
+    });
+  });
+
+  it("keeps the reserve on a landscape phone whose sheet it must drop", () => {
+    // 260 - 235 - 96 < 120: no sheet; 260 - 96 - 11 = 153: the reserve still fits.
+    expect(selectionFit({ bottom: 235, reserveTop: 11 }, 260)).toEqual({
+      padding: { top: 59, right: 48, bottom: 48, left: 48 },
+      offset: [0, 5.5],
+      reserveTop: 11,
+    });
+    expect(selectionFit({ bottom: 235, reserveTop: 11 }, 0)).toEqual(PLAIN);
+  });
+
+  it("treats no reserve, or a nonsense one, as none: the fit of before", () => {
+    expect(selectionFit({ bottom: 406, reserveTop: 0 }, 844)).toEqual(selectionFit({ bottom: 406 }, 844));
+    expect(selectionFit({ bottom: 406, reserveTop: -5 }, 844)).toEqual(selectionFit({ bottom: 406 }, 844));
+    expect(selectionFit({ bottom: 0, reserveTop: Number.NaN }, 844)).toEqual(PLAIN);
+  });
+});
+
+describe("the phone's zoom-in pill: lines and the frame it takes", () => {
+  it("wraps words greedily, a word too long for a line on a line of its own", () => {
+    expect(wrappedLineCount([], 3, 100)).toBe(0);
+    expect(wrappedLineCount([40], 3, 100)).toBe(1);
+    expect(wrappedLineCount([10, 10], 2, 22)).toBe(1);
+    expect(wrappedLineCount([10, 10, 10], 2, 22)).toBe(2);
+    expect(wrappedLineCount([5, 50, 5], 1, 20)).toBe(3);
+  });
+
+  it("holds the text in what inset-x-14, px-3 and the border leave of the map's width", () => {
+    expect(CUE_PILL).toEqual({ top: 8, line: 16.5, chrome: 10, inset: 56, padX: 13, gap: 8 });
+    expect(cuePillTextWidth(375)).toBe(237);
+  });
+
+  it("reserves nothing for one line (the 48 px frame clears it) and the pill's bottom plus a gap beyond", () => {
+    expect(cueTopReservePx(0)).toBe(0);
+    expect(cueTopReservePx(1)).toBe(0);
+    // 8 + 10 + 2 x 16.5 = 51 px to the pill's bottom, + 8 px gap = 59: 11 more than the frame.
+    expect(cueTopReservePx(2)).toBe(11);
+    expect(cueTopReservePx(3)).toBe(27.5);
+    expect(cueTopReservePx(Number.NaN)).toBe(0);
+  });
+});
+
+// Owner, 2026-10-01 ("Zoom to fit the place"): "I'll round the zoom so no
+// sub-area pops in a hair later." The filters see whole zooms only, so a fit
+// a hair under one (Napa Valley at z8.968 on a laptop) drew what the zoom
+// below draws, with every AVA name missing, and 0.03 more zoom popped five
+// AVAs and twelve names in. Laptop map 769 x 654; bboxes are the catalogue's.
+describe("landingZoom", () => {
+  const NAPA: Bbox = [-122.64675, 38.15506, -122.0614, 38.76833];
+  const RHONE_NORD: Bbox = [4.7075, 44.916, 4.95, 45.5213];
+  const AHR: Bbox = [6.9791, 50.50258, 7.20678, 50.56153];
+  const NAHE: Bbox = [7.52961, 49.66629, 7.95861, 49.97164];
+  const DOURO: Bbox = [-7.9136, 40.92284, -6.7494, 41.55728];
+  const BORDEAUX: Bbox = [-1.0604, 44.3834, 0.3132, 45.4567];
+  const BOURGOGNE: Bbox = [3.6088, 46.2431, 5.0045, 47.8851];
+  const PIEMONTE: Bbox = [6.62686, 44.06012, 9.21355, 46.4641];
+  const COLE_RANCH: Bbox = [-123.23493, 39.05565, -123.21377, 39.06551];
+  const LAPTOP = { width: 769, height: 654 };
+  const plainFit = selectionFit(undefined, LAPTOP.height);
+  const laptop = (bbox: Bbox, maxZoom = CAMERA_MAX_ZOOM) => {
+    const zoom = fittedZoom(bbox, LAPTOP.width, LAPTOP.height);
+    return { fit: zoom, landed: landingZoom({ zoom, maxZoom, bbox, ...LAPTOP, fit: plainFit }) };
+  };
+
+  it("rounds within a quarter zoom, keeping 12 px of map round the place", () => {
+    expect(LANDING_ROUND_WITHIN).toBe(0.25);
+    expect(LANDING_ROUND_MARGIN_PX).toBe(12);
+  });
+
+  it("lands Napa Valley on z9 and Northern Rhône on z9 on a laptop", () => {
+    const napa = laptop(NAPA);
+    expect(napa.fit).toBeCloseTo(8.968, 3);
+    expect(napa.landed).toBe(9);
+    // Northern Rhône's box is 626 px tall at z9 in a 654 px map: 14 px to spare.
+    const rhone = laptop(RHONE_NORD);
+    expect(rhone.fit).toBeCloseTo(8.835, 3);
+    expect(rhone.landed).toBe(9);
+    expect(laptop(PIEMONTE).landed).toBe(7);
+  });
+
+  it("leaves a fit further than a quarter zoom from the next whole one where it is", () => {
+    const cases: [string, Bbox, number][] = [
+      ["Nahe", NAHE, 9.695],
+      ["Douro", DOURO, 8.667],
+      ["Bordeaux", BORDEAUX, 8.016],
+      ["Bourgogne", BOURGOGNE, 7.346],
+      ["Ahr", AHR, 11.021],
+    ];
+    for (const [name, bbox, fit] of cases) {
+      const { fit: fitted, landed } = laptop(bbox);
+      expect(fitted, name).toBeCloseTo(fit, 3);
+      expect(landed, name).toBe(fitted);
+    }
+  });
+
+  it("does not round when the place would no longer fit, nor past the cap, nor a whole zoom", () => {
+    // 0.2 under z9 on the laptop: the box would grow to 641 px, 6.5 px from the edges.
+    const yOf = (lat: number) =>
+      ((180 - (180 / Math.PI) * Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI) / 360))) / 360) * 512;
+    const latOf = (y: number) => (360 / Math.PI) * Math.atan(Math.exp(((180 - (y / 512) * 360) * Math.PI) / 180)) - 90;
+    const tall: Bbox = [4.7075, 44.916, 4.95, latOf(yOf(44.916) - (LAPTOP.height - 96) / 2 ** 8.8)];
+    const zoom = fittedZoom(tall, LAPTOP.width, LAPTOP.height);
+    expect(zoom).toBeCloseTo(8.8, 6);
+    expect(landingZoom({ zoom, maxZoom: CAMERA_MAX_ZOOM, bbox: tall, ...LAPTOP, fit: plainFit })).toBe(zoom);
+    // Cole Ranch lands at its cap, z12.5: never past it.
+    expect(landingZoom({ zoom: 12.5, maxZoom: 12.5, bbox: COLE_RANCH, ...LAPTOP, fit: plainFit })).toBe(12.5);
+    expect(landingZoom({ zoom: 12.9, maxZoom: 12.95, bbox: COLE_RANCH, ...LAPTOP, fit: plainFit })).toBe(12.9);
+    expect(landingZoom({ zoom: 9, maxZoom: 17, bbox: NAPA, ...LAPTOP, fit: plainFit })).toBe(9);
+    // A hair under a whole zoom is that whole zoom.
+    expect(landingZoom({ zoom: 8.9999999, maxZoom: 17, bbox: NAPA, ...LAPTOP, fit: plainFit })).toBe(9);
+  });
+
+  it("on a phone, rounds a width-limited fit, and never puts the place's top under the pill", () => {
+    const phone = { width: 375, height: 640 };
+    // The sheet leaves 640 - 351 - 96 = 193 px of band (Napa's phone fit, z7.44).
+    const sheetOnly = selectionFit({ bottom: 351 }, phone.height);
+    const withPill = selectionFit({ bottom: 351, reserveTop: 11 }, phone.height);
+    const fitOf = (bbox: Bbox, fit: ReturnType<typeof selectionFit>) => {
+      const p = fit.padding as { top: number; right: number; bottom: number; left: number };
+      const x = (lon: number) => ((lon + 180) / 360) * 512;
+      const y = (lat: number) =>
+        ((180 - (180 / Math.PI) * Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI) / 360))) / 360) * 512;
+      return Math.log2(
+        Math.min(
+          (phone.width - p.left - p.right) / (x(bbox[2]) - x(bbox[0])),
+          (phone.height - p.top - p.bottom) / (y(bbox[1]) - y(bbox[3])),
+        ),
+      );
+    };
+    // Ahr is limited by the width (z9.75): z10 leaves 22 px each side.
+    for (const fit of [sheetOnly, withPill]) {
+      const zoom = fitOf(AHR, fit);
+      expect(zoom).toBeCloseTo(9.751, 3);
+      expect(landingZoom({ zoom, maxZoom: 17, bbox: AHR, ...phone, fit })).toBe(10);
+    }
+    // A height-limited place a hair under a whole zoom (z8.97) rounds with the
+    // sheet alone, but not under the pill: its top would go beneath the pill.
+    const yOf = (lat: number) =>
+      ((180 - (180 / Math.PI) * Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI) / 360))) / 360) * 512;
+    const latOf = (y: number) => (360 / Math.PI) * Math.atan(Math.exp(((180 - (y / 512) * 360) * Math.PI) / 180)) - 90;
+    const tall = (band: number): Bbox => [7.5, 49.5, 7.52, latOf(yOf(49.5) - band / 2 ** 8.97)];
+    const underPill = tall(640 - 351 - 96 - 11);
+    expect(fitOf(underPill, withPill)).toBeCloseTo(8.97, 6);
+    expect(landingZoom({ zoom: fitOf(underPill, withPill), maxZoom: 17, bbox: underPill, ...phone, fit: withPill })).toBeCloseTo(8.97, 6);
+    const underSheet = tall(640 - 351 - 96);
+    expect(fitOf(underSheet, sheetOnly)).toBeCloseTo(8.97, 6);
+    expect(landingZoom({ zoom: fitOf(underSheet, sheetOnly), maxZoom: 17, bbox: underSheet, ...phone, fit: sheetOnly })).toBe(9);
   });
 });

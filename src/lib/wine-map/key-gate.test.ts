@@ -23,7 +23,7 @@
 //     fail against a `to-boolean` gate; that is the point of them.
 import { describe, expect, it, vi } from "vitest";
 import { featureFilter, validateStyleMin, type StyleSpecification } from "@maplibre/maplibre-gl-style-spec";
-import { keyGateExpression, keyLookupMap } from "./key-gate";
+import { keyGateExpression, keyLookupMap, keySetExpression } from "./key-gate";
 
 // A realistic key set: the tree walk's output for one grape, scattered through
 // a larger catalogue rather than a contiguous block.
@@ -288,5 +288,31 @@ describe("keyGateExpression", () => {
     const b = keyLookupMap(KEYS);
     expect(a).toEqual(b);
     expect(a).not.toBe(b);
+  });
+});
+
+// The selection cue's probe asks the tiles for the selected place's
+// descendants only (querySourceFeatures with this filter), so the probe's cost
+// follows the descendants loaded, not everything in the shard.
+describe("keySetExpression", () => {
+  it("lets exactly the keys of the set through, with the gate's guards", () => {
+    const gate = keySetExpression(["a.b", "constructor"]);
+    expect(evaluate(gate, { key: "a.b" })).toBe(true);
+    expect(evaluate(gate, { key: "a.c" })).toBe(false);
+    expect(evaluate(gate, { key: "constructor" })).toBe(true);
+    expect(evaluate(gate, { key: "toString" })).toBe(false);
+    expect(evaluate(gate, { key: "__proto__" })).toBe(false);
+    expect(evaluate(gate, { key: null })).toBe(false);
+    expect(evaluate(gate, { key: 5 })).toBe(false);
+    expect(evaluate(gate, {})).toBe(false);
+  });
+
+  it("gives a country outline no free pass, and an empty set lets nothing through", () => {
+    expect(evaluate(keySetExpression(["a"]), { key: "b", tier: 0 })).toBe(false);
+    expect(evaluate(keySetExpression([]), { key: "a", tier: 3 })).toBe(false);
+  });
+
+  it("takes any iterable of keys", () => {
+    expect(evaluate(keySetExpression(new Set(["x"])), { key: "x" })).toBe(true);
   });
 });

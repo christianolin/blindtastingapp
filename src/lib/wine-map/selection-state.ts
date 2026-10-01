@@ -119,3 +119,33 @@ export function fallbackFromContext(
     parentKey: context.ancestors.at(-1)?.key ?? null,
   };
 }
+
+// One set per tree and key, so the map's idle scan, which asks on every scan
+// while a place stays selected, walks the subtree once.
+const descendantSets = new WeakMap<readonly WinePlaceTreeNode[], Map<string, ReadonlySet<string>>>();
+
+/** Every place below `key` in the tree (its children, theirs, and so on;
+    never `key` itself), or null when the tree does not hold `key`. The
+    selection cue (reveal.ts descendantsInView) counts these, not only the
+    children: a region's landing can hide a grandchild (Bordeaux's Pomerol
+    under Libournais) with nothing on screen to say so. */
+export function descendantKeys(
+  roots: readonly WinePlaceTreeNode[],
+  key: string,
+): ReadonlySet<string> | null {
+  let byKey = descendantSets.get(roots);
+  if (!byKey) descendantSets.set(roots, (byKey = new Map()));
+  const cached = byKey.get(key);
+  if (cached) return cached;
+  const located = indexTree(roots).get(key);
+  if (!located) return null;
+  const keys = new Set<string>();
+  const stack = [...located.node.children];
+  while (stack.length > 0) {
+    const node = stack.pop()!;
+    keys.add(node.key);
+    stack.push(...node.children);
+  }
+  byKey.set(key, keys);
+  return keys;
+}

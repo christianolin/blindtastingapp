@@ -7,7 +7,7 @@
 // region slug), shard ids are the canonical key.
 import { describe, expect, it } from "vitest";
 import { FIXTURE_TREE } from "./__fixtures__/place-tree";
-import { selectionFeatureStates, type SelectionStates } from "./selection-state";
+import { descendantKeys, selectionFeatureStates, type SelectionStates } from "./selection-state";
 
 const BOURGOGNE = "wine-shard-bourgogne";
 const BORDEAUX = "wine-shard-bordeaux";
@@ -164,5 +164,38 @@ describe("selectionFeatureStates without the tree", () => {
   it("with neither tree nor context: the selection alone", () => {
     const states = selectionFeatureStates({ roots: null, selectedKey: "france", fallback: null });
     expect(plain(states)).toEqual({ [WORLD]: { france: { sel: true } } });
+  });
+});
+
+// The selection cue counts every place below the selection, not only its
+// children (fix round 2026-10-01): Bordeaux's landing hid Pomerol, a
+// grandchild, with nothing on screen to say so.
+describe("descendantKeys", () => {
+  it("is every place below the key, at any depth, never the key itself", () => {
+    expect([...descendantKeys(FIXTURE_TREE, "france.bourgogne")!].sort()).toEqual([
+      "france.bourgogne.cote-de-beaune",
+      "france.bourgogne.cote-de-beaune.meursault",
+      "france.bourgogne.cote-de-beaune.meursault.les-perrieres",
+      "france.bourgogne.cote-de-nuits",
+      "france.bourgogne.cote-de-nuits.gevrey-chambertin",
+      "france.bourgogne.cote-de-nuits.vosne-romanee",
+      "france.bourgogne.cote-de-nuits.vosne-romanee.la-tache",
+      "france.bourgogne.cote-de-nuits.vosne-romanee.les-suchots",
+    ]);
+    expect([...descendantKeys(FIXTURE_TREE, VOSNE)!].sort()).toEqual([
+      `${VOSNE}.la-tache`,
+      `${VOSNE}.les-suchots`,
+    ]);
+    expect(descendantKeys(FIXTURE_TREE, `${VOSNE}.la-tache`)!.size).toBe(0);
+    expect(descendantKeys(FIXTURE_TREE, "italy")!.has("italy.toscana.chianti")).toBe(true);
+  });
+
+  it("is null for a key the tree does not hold", () => {
+    expect(descendantKeys(FIXTURE_TREE, "france.loire")).toBeNull();
+    expect(descendantKeys([], "france")).toBeNull();
+  });
+
+  it("is built once per tree and key", () => {
+    expect(descendantKeys(FIXTURE_TREE, "france.bourgogne")).toBe(descendantKeys(FIXTURE_TREE, "france.bourgogne"));
   });
 });

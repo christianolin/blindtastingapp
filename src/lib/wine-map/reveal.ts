@@ -14,16 +14,18 @@
 // (planar deg²) at the shard's mid-latitude, so the app's whole test is
 // `reveal_area * 4^z >= K` (revealK). The export's rule, in CSS px:
 //   - a part is big enough once the square of its area is N px across, or,
-//     if it is a ribbon, once it is 2N px long and N/8 px thick (Côte de
-//     Nuits at the Burgundy view: 54 px long, 3.7 px thick); every compact
-//     shape gets exactly the square rule;
+//     if it is a ribbon (8 times as long as thick), once it is 2N px long and
+//     N/12 px thick (Côte de Nuits at the Burgundy view: 54 px long, 3.7 px
+//     thick; Condrieu at z8: 59 px long, 2.3 px thick); every compact shape
+//     gets exactly the square rule;
 //   - a region's SUBREGIONS come in with their median sibling when they are
 //     at least half its size (Burgundy's six districts at the Burgundy view);
 //   - a place's parts are separate features: the anchor part comes with its
-//     place, the others once their own square is N/3 (no confetti);
+//     place, the others once their own square is N (no 10-20 px fragments);
 //   - a label carries its place's value, so a name comes with its shape.
 // Everything is a ratio of N, so REVEAL_MIN_PX and ?revealPx= keep their
-// meaning.
+// meaning. Where places overlap, the deeper and then the smaller paints on top:
+// the export writes each shard in that order and tippecanoe keeps it.
 //
 // FAIL OPEN: a feature without a numeric reveal_area is not delayed at all
 // (every release before the rule; `area` is never used instead), and a shard
@@ -238,13 +240,19 @@ export function sizeHiddenInView(input: {
 }
 
 /** The selection cue's probe (review 2026-09-30: a drill-down landed where its
-    children are all size-hidden, with nothing on screen to say so). Given the
-    loaded tile features of the selected place's direct children (one place can
-    arrive as several features: tile edges, and its pieces once the tiles carry
-    reveal_area), how many of them in view does the map draw at this tile zoom,
-    and how many does ONLY the size rule hide? Places the grape filter drops
-    count as neither. Counted per key; a key drawn in any feature is drawn. */
-export function familyInView(input: {
+    children are all size-hidden, with nothing on screen to say so; fix round
+    2026-10-01: every DESCENDANT counts, not only the children, since a
+    region's landing can hide its grandchildren the same way: Bordeaux's
+    Pomerol and Fronsac, the Rhône Valley's Côte-Rôtie and Hermitage).
+    `drawnKeys` are the selected place's descendants the map drew in view at
+    this scan (its rendered features); `features` the loaded tile features of
+    its descendants (querySourceFeatures; one place can arrive as several
+    features: tile edges and its parts). `hidden` counts, per key, those in
+    view that ONLY the size rule hides at this tile zoom and that the map drew
+    in none of their features. Places the grape filter drops count as
+    neither; with the rule off (px 0) nothing is hidden. */
+export function descendantsInView(input: {
+  drawnKeys: ReadonlySet<string>;
   features: readonly { properties?: Readonly<Record<string, unknown>> | null; geometry?: unknown }[];
   view: Bbox;
   tileZoom: number;
@@ -252,18 +260,18 @@ export function familyInView(input: {
   px: number;
   visibleKeys: ReadonlySet<string> | null;
 }): { drawn: number; hidden: number } {
-  const { view, tileZoom, k, px, visibleKeys } = input;
-  const drawn = new Set<string>();
+  const { drawnKeys, view, tileZoom, k, px, visibleKeys } = input;
   const hidden = new Set<string>();
-  for (const feature of input.features) {
-    const p = feature.properties ?? {};
-    if (typeof p.key !== "string") continue;
-    if (visibleKeys && !visibleKeys.has(p.key)) continue;
-    const b = geometryBbox(feature.geometry);
-    if (b && !(b[0] <= view[2] && b[2] >= view[0] && b[1] <= view[3] && b[3] >= view[1])) continue;
-    if (revealPasses(p, tileZoom, k, px)) drawn.add(p.key);
-    else hidden.add(p.key);
+  if (px > 0) {
+    for (const feature of input.features) {
+      const p = feature.properties ?? {};
+      if (typeof p.key !== "string" || drawnKeys.has(p.key) || hidden.has(p.key)) continue;
+      if (visibleKeys && !visibleKeys.has(p.key)) continue;
+      if (revealPasses(p, tileZoom, k, px)) continue;
+      const b = geometryBbox(feature.geometry);
+      if (b && !(b[0] <= view[2] && b[2] >= view[0] && b[1] <= view[3] && b[3] >= view[1])) continue;
+      hidden.add(p.key);
+    }
   }
-  for (const key of drawn) hidden.delete(key);
-  return { drawn: drawn.size, hidden: hidden.size };
+  return { drawn: drawnKeys.size, hidden: hidden.size };
 }

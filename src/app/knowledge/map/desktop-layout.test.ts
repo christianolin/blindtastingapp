@@ -151,6 +151,11 @@ const PHONE_EXACT_STRINGS: readonly [string, string][] = [
   [`${MAP}/tile-wine-map-explorer.tsx`, "pt-4 max-md:flex max-md:min-h-0 max-md:flex-1 max-md:flex-col max-md:px-0 max-md:pt-0 md:flex md:min-h-0 md:flex-1 md:flex-col md:px-0 md:pt-0"],
   [`${MAP}/tile-wine-map-explorer.tsx`, "mb-2 flex flex-wrap items-center gap-2 max-md:mb-0 max-md:shrink-0 max-md:flex-nowrap max-md:px-3 max-md:py-1.5 md:h-8 md:shrink-0 md:flex-nowrap"],
   [`${MAP}/tile-wine-map-explorer.tsx`, "relative max-md:h-auto max-md:min-h-0 max-md:flex-1 md:min-h-0 md:flex-1"],
+  // The phone's zoom-in pill: camera-fit.ts CUE_PILL mirrors these classes
+  // (top-2, inset-x-14, px-3 py-1 border, text-xs leading-snug) to keep the
+  // pill's strip free above a landing; change both together.
+  [`${MAP}/tile-wine-map-explorer.tsx`, "pointer-events-none absolute inset-x-14 top-2 z-10 flex justify-center"],
+  [`${MAP}/tile-wine-map-explorer.tsx`, "rounded-full border border-border bg-background/90 px-3 py-1 text-center text-xs leading-snug text-foreground shadow-sm backdrop-blur-sm"],
   [`${MAP}/map-bottom-sheet.tsx`, "absolute inset-x-0 bottom-0 z-30 flex flex-col overflow-hidden rounded-t-2xl border-t border-border bg-card text-card-foreground shadow-[0_-8px_24px_rgba(0,0,0,0.10)] transition-[height] duration-200 ease-out motion-reduce:transition-none md:hidden"],
   [`${MAP}/map-options-sheet.tsx`, "inset-x-0 top-auto bottom-0 flex max-w-none translate-x-0 translate-y-0 flex-col gap-3 rounded-t-2xl rounded-b-none p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:max-w-none"],
   [`${MAP}/map-detail-controls.tsx`, "min-h-11 rounded px-2 py-1 outline-none focus-visible:outline-solid transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring md:min-h-0"],

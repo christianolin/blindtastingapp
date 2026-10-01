@@ -17,7 +17,7 @@ import { bundledStyleEngine } from "../testing/bundled-style-engine";
 import {
   bboxZoomForPx,
   currentRevealPx,
-  familyInView,
+  descendantsInView,
   placeRevealPx,
   REVEAL_CAP_ZOOM,
   REVEAL_MIN_PX,
@@ -423,29 +423,47 @@ describe("parts of one place", () => {
   }
 });
 
-describe("familyInView (the selection cue's probe)", () => {
+describe("descendantsInView (the selection cue's probe)", () => {
+  // Fix round 2026-10-01: every descendant in view counts, not only the
+  // children, and "drawn" is what the map drew in view (its rendered features).
   const k = revealK(24, 44.595);
   const view: Bbox = [4.5, 44.8, 5.2, 45.6];
   const square = (x: number, y: number) => ({ type: "Polygon", coordinates: [[[x, y], [x + 0.02, y], [x + 0.02, y + 0.02], [x, y]]] });
   const hermitage = { properties: { key: "hermitage", tier: 3, reveal_area: 0.000218128 }, geometry: square(4.83, 45.07) };
+  const coteRotie = { properties: { key: "cote-rotie", tier: 3, reveal_area: 0.000218128 }, geometry: square(4.78, 45.48) };
   const crozes = { properties: { key: "crozes", tier: 3, reveal_area: 0.02 }, geometry: square(4.85, 45.1) };
   const far = { properties: { key: "far", tier: 3, reveal_area: 0.000218128 }, geometry: square(3, 43) };
+  const probe = (features: unknown[], drawnKeys: string[], tileZoom: number, px = 24, visibleKeys: ReadonlySet<string> | null = null) =>
+    descendantsInView({ features: features as never, drawnKeys: new Set(drawnKeys), view, tileZoom, k, px, visibleKeys });
 
-  it("counts drawn and size-hidden children in view, per key", () => {
-    expect(familyInView({ features: [hermitage, crozes, far], view, tileZoom: 8, k, px: 24, visibleKeys: null })).toEqual({ drawn: 1, hidden: 1 });
-    expect(familyInView({ features: [hermitage, far], view, tileZoom: 7, k, px: 24, visibleKeys: null })).toEqual({ drawn: 0, hidden: 1 });
-    expect(familyInView({ features: [hermitage, crozes], view, tileZoom: 10, k, px: 24, visibleKeys: null })).toEqual({ drawn: 2, hidden: 0 });
+  it("counts the descendants the map drew in view, and those in view only the size rule hides, per key", () => {
+    expect(probe([hermitage, coteRotie, crozes, far], ["crozes"], 8)).toEqual({ drawn: 1, hidden: 2 });
+    expect(probe([hermitage, far], [], 7)).toEqual({ drawn: 0, hidden: 1 });
+    expect(probe([hermitage, coteRotie, crozes], ["hermitage", "cote-rotie", "crozes"], 11)).toEqual({ drawn: 3, hidden: 0 });
+    // Two features of one hidden place (tile edges, pieces) count once.
+    expect(probe([hermitage, hermitage], [], 8)).toEqual({ drawn: 0, hidden: 1 });
   });
 
-  it("a place drawn in one of its features is drawn (pieces, tile edges)", () => {
+  it("a place the map drew is not hidden, whichever of its features waits (pieces, tile edges)", () => {
     const smallPiece = { ...crozes, properties: { ...crozes.properties, reveal_area: 1e-9 } };
-    expect(familyInView({ features: [smallPiece, crozes], view, tileZoom: 8, k, px: 24, visibleKeys: null })).toEqual({ drawn: 1, hidden: 0 });
+    expect(probe([smallPiece, crozes], ["crozes"], 8)).toEqual({ drawn: 1, hidden: 0 });
   });
 
-  it("ignores grape-filtered children, and says nothing with the rule off or on tiles without it", () => {
-    expect(familyInView({ features: [hermitage], view, tileZoom: 8, k, px: 24, visibleKeys: new Set(["crozes"]) })).toEqual({ drawn: 0, hidden: 0 });
-    expect(familyInView({ features: [hermitage], view, tileZoom: 8, k, px: 0, visibleKeys: null })).toEqual({ drawn: 1, hidden: 0 });
+  it("ignores what is out of view, what the rule draws and grape-filtered places", () => {
+    expect(probe([far], [], 8)).toEqual({ drawn: 0, hidden: 0 });
+    // Passes the rule at z12 but was not in the rendered set (an off-screen
+    // part): neither drawn here nor size-hidden.
+    expect(probe([crozes], [], 12)).toEqual({ drawn: 0, hidden: 0 });
+    expect(probe([hermitage], [], 8, 24, new Set(["crozes"]))).toEqual({ drawn: 0, hidden: 0 });
+  });
+
+  it("says nothing hidden with the rule off, or on tiles from before it", () => {
+    expect(probe([hermitage], ["crozes"], 8, 0)).toEqual({ drawn: 1, hidden: 0 });
     const before = { ...hermitage, properties: { key: "hermitage", tier: 3, area: 0.00017304 } };
-    expect(familyInView({ features: [before], view, tileZoom: 7, k, px: 24, visibleKeys: null })).toEqual({ drawn: 1, hidden: 0 });
+    expect(probe([before], [], 7)).toEqual({ drawn: 0, hidden: 0 });
+  });
+
+  it("counts a feature whose geometry it cannot read as in view (it errs towards the cue)", () => {
+    expect(probe([{ properties: hermitage.properties }], [], 8)).toEqual({ drawn: 0, hidden: 1 });
   });
 });

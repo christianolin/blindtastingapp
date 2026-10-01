@@ -83,7 +83,10 @@ import {
   CHIP_FIT_ALL_SHARDS,
   chipMinZoom,
   countryCameraBox,
+  cuePillTextWidth,
+  cueTopReservePx,
   selectionZooms,
+  wrappedLineCount,
   type CameraRequest,
   type SheetPadding,
 } from "@/lib/wine-map/camera-fit";
@@ -200,6 +203,42 @@ function sheetCameraPadding(snap: SheetSnap): SheetPadding | undefined {
   if (typeof window.matchMedia !== "function") return undefined;
   if (!window.matchMedia(PHONE_QUERY).matches) return undefined;
   return { bottom: halfSnapHeightPx(window.innerHeight) };
+}
+
+// The frame a phone's pick keeps free at the top for the zoom-in pill over the
+// map (below), so the pill never covers the place it lands on (fix round
+// 2026-10-01, review V7: it covered the top of Northern Rhône). Which text
+// the pill will show is known only after the landing ("the" or "all the"
+// subregions), and the language can change, so the longest text it could
+// show is measured: "all the", in the local and the English name, in the
+// pill's own font (12 px, its 237 px line on a 375 px phone), wrapped as the
+// browser wraps it (camera-fit.ts wrappedLineCount). Read imperatively, like
+// sheetCameraPadding, inside the camera target's memo; 0 off a phone.
+let cueMeasure: CanvasRenderingContext2D | null | undefined;
+function phoneCueReserve(names: readonly string[]): number {
+  if (typeof window === "undefined" || typeof window.matchMedia !== "function") return 0;
+  if (!window.matchMedia(PHONE_QUERY).matches) return 0;
+  try {
+    if (cueMeasure === undefined) cueMeasure = document.createElement("canvas").getContext("2d");
+    const context = cueMeasure;
+    // No 2D canvas to measure with: assume the usual two lines.
+    if (!context) return cueTopReservePx(2);
+    const style = window.getComputedStyle(document.body);
+    context.font = `${style.fontWeight} 12px ${style.fontFamily}`;
+    const space = context.measureText(" ").width;
+    const width = cuePillTextWidth(window.innerWidth);
+    let lines = 0;
+    for (const name of names) {
+      const words = (selectionCueText({ name, drawn: 1, hidden: 1 }) ?? "").split(" ").filter(Boolean);
+      lines = Math.max(
+        lines,
+        wrappedLineCount(words.map((word) => context.measureText(word).width), space, width),
+      );
+    }
+    return cueTopReservePx(lines);
+  } catch {
+    return cueTopReservePx(2);
+  }
 }
 
 export function TileWineMapExplorer({
@@ -779,23 +818,35 @@ export function TileWineMapExplorer({
   // manifest says the place's shard carries it (placeRevealPx), exactly as
   // the map's filters do; elsewhere, and before the manifest is here (the map
   // is not mounted then), the camera is the one from before the rule.
+  // Below country level, with the rule on, a fit a hair under a whole zoom
+  // lands on it (owner, 2026-10-01; camera-fit.ts landingZoom), and on a
+  // phone a place with subregions keeps the zoom-in pill's strip free above
+  // it (phoneCueReserve).
   const cameraTarget = useMemo<CameraTarget | null>(() => {
     if (!context?.boundary) return null;
+    const px = manifest ? placeRevealPx(manifest.shards, context.place.key, revealPx) : 0;
     const { minZoom, maxZoom } = selectionZooms({
       tier: context.place.tier,
       minZoom: context.place.min_zoom,
       childMinZooms: context.children.map((c) => c.min_zoom),
       bbox: context.boundary.bbox,
-      revealPx: manifest ? placeRevealPx(manifest.shards, context.place.key, revealPx) : 0,
+      revealPx: px,
     });
+    const belowCountry = px > 0 && context.place.tier >= 1;
+    // Phones with the sheet at half (ruling R1): the fit leaves the sheet's
+    // height free at the bottom, so the place lands in the visible half.
+    const sheet = sheetCameraPadding(selectSnapRef.current);
+    const reserveTop =
+      belowCountry && context.children.length > 0
+        ? phoneCueReserve([context.place.name, englishName(context.place.name)])
+        : 0;
     return {
       bbox: context.boundary.bbox,
       minZoom,
       maxZoom,
       source: selectSourceRef.current,
-      // Phones with the sheet at half (ruling R1): the fit leaves the sheet's
-      // height free at the bottom, so the place lands in the visible half.
-      padding: sheetCameraPadding(selectSnapRef.current),
+      padding: reserveTop > 0 ? { bottom: sheet?.bottom ?? 0, reserveTop } : sheet,
+      wholeZoom: belowCountry,
     };
   }, [context, revealPx, manifest]);
 
@@ -838,7 +889,7 @@ export function TileWineMapExplorer({
     [detail, manifest, report.countriesInView, shardCountries],
   );
   // The selection cue: the selected place, when the map's last scan found
-  // children of it in view that only the size rule still hides.
+  // descendants of it in view that only the size rule still hides.
   const selectionCue = useMemo(() => {
     const family = report.selectionFamily;
     if (!family || family.hidden === 0 || family.key !== selectedKey) return null;
@@ -1454,18 +1505,22 @@ export function TileWineMapExplorer({
                 percentage of an indefinite parent (the "map collapsed to
                 zero" trap) and never a calc. */}
             <div className="relative max-md:h-auto max-md:min-h-0 max-md:flex-1 md:min-h-0 md:flex-1">
-            {isPhone && !optionsOpen ? (
+            {phoneCue ? (
               // Between the zoom buttons (top left) and the expand button
-              // (top right); never takes a tap from the map.
+              // (top right); never takes a tap from the map. Mounted only
+              // while there is a cue (fix round 2026-10-01): an empty
+              // always-there layer over the canvas changed how the whole
+              // page composited on a phone, so phone screenshots stopped
+              // matching production even with the rule off. A pick that may
+              // show it keeps its strip free (phoneCueReserve; camera-fit.ts
+              // CUE_PILL mirrors these classes).
               <div
                 role="status"
                 className="pointer-events-none absolute inset-x-14 top-2 z-10 flex justify-center"
               >
-                {phoneCue ? (
-                  <span className="rounded-full border border-border bg-background/90 px-3 py-1 text-center text-xs leading-snug text-foreground shadow-sm backdrop-blur-sm">
-                    {phoneCue}
-                  </span>
-                ) : null}
+                <span className="rounded-full border border-border bg-background/90 px-3 py-1 text-center text-xs leading-snug text-foreground shadow-sm backdrop-blur-sm">
+                  {phoneCue}
+                </span>
               </div>
             ) : null}
             {manifest ? (

@@ -474,7 +474,12 @@ export function placeFeature(row) {
 // ribbons are measured by their length (evidence: docs/superpowers/specs/
 // 2026-09-30-wine-map-reveal-by-size.md §11: Côte de Nuits is 54 px long and
 // 3.7 px thick at the Burgundy view; Rockpile, 40 px and 6.5 px at z7, must
-// still wait for z8).
+// still wait for z8). The thickness floor is N/12 = 2 px (spec §12, 2026-10-01;
+// was N/8): since the aspect test, it guards no compact place, only how thin a
+// ribbon may be. Condrieu, 59 x 2.3 px at z8, comes with its length; the
+// catalogue's next thinner ribbon is a 1.4 px hairline (Fiefs Vendéens Vix),
+// which still waits. Every floor from 2.3 down to 1.4 px moves the same six
+// places, so 2 px sits inside that gap.
 // Per place p:
 //     own(p) = max( sqrt(sum of its parts' A), max over its parts of size(q) )
 //   The whole footprint still counts as one (a cluster of vineyard parcels),
@@ -491,6 +496,11 @@ export function placeFeature(row) {
 // side; every other part min(place side, PIECE_PX_RATIO * sqrt(A_q)), so a
 // small piece of a scattered place waits until its own square is
 // N / PIECE_PX_RATIO across and never comes before its place (no confetti).
+// PIECE_PX_RATIO is 1 (spec §12, 2026-10-01; was 3): a piece waits for the
+// full threshold like any place, because pieces of 10-20 px, cut off from the
+// rest of their place and unnamed, read exactly like the specks the rule hides
+// (the Central Valley's outline pieces in the owner's North Coast view,
+// Mendocino Ridge, Bergerac, Southern Oregon, Bernkastel).
 // A label takes the place's side, so a name comes with its shape, and so does
 // the part its point lies in (the label part): the name is drawn over its own
 // ground, never over a piece of it still waiting (review 2026-09-30: in ten
@@ -512,10 +522,10 @@ export function placeFeature(row) {
 // never split, so the world archive is byte-identical.
 export const REVEAL_RULE = 1;
 export const REVEAL_LENGTH_RATIO = 2;
-export const REVEAL_THICKNESS_RATIO = 8;
+export const REVEAL_THICKNESS_RATIO = 12;
 export const RIBBON_MIN_ASPECT = 8;
 export const SUBREGION_FAMILY_RATIO = 2;
-export const PIECE_PX_RATIO = 3;
+export const PIECE_PX_RATIO = 1;
 
 /** A lon/lat position in Web-Mercator CSS px at z0 (the world is 512 px). */
 export function mercatorPx(lon, lat) {
@@ -820,6 +830,70 @@ export function placeFeatures(row, planEntry) {
   }));
 }
 
+// ---------------------------------------------------------------------------
+// Paint order (spec 2026-09-30-wine-map-reveal-by-size.md §12, 2026-10-01).
+// MapLibre paints a layer's features in the order of the tile, later on top.
+// tippecanoe, unless told to keep the input order, orders each tile
+// geographically, by one index point per feature (serial.cpp), so which of
+// two overlapping places lay on top was an accident of where their index
+// points fell, and splitting a place into its parts reshuffled it (review
+// 2026-09-30: the Chablis district came to paint over the Chablis
+// appellation). A shard's places are now written in the order they are meant
+// to paint, and tippecanoeArgs keeps it (--preserve-input-order): shallower
+// tiers first, then within a tier larger footprints first, so a deeper or
+// smaller place always lies on top of what it sits in; the parts of one place
+// stay together in geometry order.
+//
+// --preserve-input-order holds for the labels layer too, whose order decides
+// collisions between labels of one tier (their symbol-sort-key is the tier).
+// So the labels are written in exactly the order tippecanoe gave them before:
+// by its own point index, then input order. That held for every one of the
+// 9,337 adjacent label pairs in the tiles of release 20260930T132635Z (the
+// input order alone broke 4,649), so the names drawn do not change.
+
+/** Place features (placeFeature/placeFeatures) in paint order, as a new array:
+    tier ascending, then `area` descending, then key; a stable sort, so the
+    parts of one place keep their geometry order. */
+export function paintOrdered(features) {
+  const tier = (f) => Number(f.properties?.tier ?? 0);
+  const area = (f) => Number(f.properties?.area ?? 0);
+  const key = (f) => String(f.properties?.key ?? "");
+  return [...features].sort(
+    (a, b) =>
+      tier(a) - tier(b) ||
+      area(b) - area(a) ||
+      (key(a) < key(b) ? -1 : key(a) > key(b) ? 1 : 0),
+  );
+}
+
+/** tippecanoe 2.79's ordering index of a point (lon, lat): projection.cpp's
+    lonlat2tile at zoom 32 (std::round), the lowest bit dropped as serial.cpp
+    does for a point ("(bbox[0] / 2 + bbox[2] / 2)"), then encode_quadkey,
+    which interleaves the bits, x before y. A BigInt. */
+export function tippecanoePointIndex([lon, lat]) {
+  const n = 2 ** 32;
+  const latRad = (Math.max(-89.9, Math.min(89.9, lat)) * Math.PI) / 180;
+  const x = BigInt(Math.round(n * ((Math.max(-360, Math.min(360, lon)) + 180) / 360)));
+  const y = BigInt(Math.round((n * (1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI)) / 2));
+  const mask = 0xffffffffn;
+  const wx = ((x / 2n) * 2n) & mask;
+  const wy = ((y / 2n) * 2n) & mask;
+  let index = 0n;
+  for (let bit = 31n; bit >= 0n; bit -= 1n) {
+    index = (index << 2n) | (((wx >> bit) & 1n) << 1n) | ((wy >> bit) & 1n);
+  }
+  return index;
+}
+
+/** Label features in the order tippecanoe placed them before
+    --preserve-input-order: by tippecanoePointIndex, ties in input order. */
+export function labelOrdered(features) {
+  return features
+    .map((feature, seq) => ({ feature, seq, index: tippecanoePointIndex(feature.geometry.coordinates) }))
+    .sort((a, b) => (a.index < b.index ? -1 : a.index > b.index ? 1 : a.seq - b.seq))
+    .map(({ feature }) => feature);
+}
+
 // Ranked per-island labels (owner brief: one label per region at everyday
 // zooms). Components arrive largest-first ([lon, lat, area] from the export
 // SQL); rank 1 — in practice the region's best-known heartland (Côte d'Or
@@ -998,6 +1072,11 @@ export function tippecanoeArgs(name, spec) {
     // nothing at low zoom — a vineyard that vanishes is worse than a coarse one.
     "--no-tiny-polygon-reduction",
     "--no-progress-indicator",
+    // A shard keeps the export's order: its places in paint order
+    // (paintOrdered), its labels in tippecanoe's own former order
+    // (labelOrdered). The world archive (countries and regions) keeps
+    // tippecanoe's order, so its bytes stay exactly as they were.
+    ...(name === "world" ? [] : ["--preserve-input-order"]),
     "-L", `places:${name}-places.geojson`,
     "-L", `labels:${name}-labels.geojson`,
   ];

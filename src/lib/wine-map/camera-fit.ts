@@ -85,8 +85,11 @@ export function selectionZooms(input: {
 export const FIT_PADDING_PX = 48;
 
 /** A phone's bottom sheet open at half over the canvas's lower edge (the
-    2026-09-25 phone plan, ruling R1): its height in CSS px. */
-export type SheetPadding = { bottom: number };
+    2026-09-25 phone plan, ruling R1): its height in CSS px. `reserveTop` is
+    frame a pick keeps free at the TOP beyond FIT_PADDING_PX, for the zoom-in
+    pill a phone shows over the map (cueTopReservePx; fix round 2026-10-01:
+    the pill covered the top of Northern Rhône). */
+export type SheetPadding = { bottom: number; reserveTop?: number };
 
 /** The least height, in CSS px, a sheet-padded fit must leave the place: the
     canvas minus the sheet minus the frame above and below it. A landscape
@@ -113,7 +116,13 @@ export const MIN_FIT_BAND_PX = 120;
     or undefined when there is none or when the band it leaves (the canvas
     minus the sheet minus the frame above and below) is under MIN_FIT_BAND_PX,
     in which case the fit is the plain one of the whole canvas. A place partly
-    under the sheet beats a flight MapLibre refuses. */
+    under the sheet beats a flight MapLibre refuses.
+
+    A `reserveTop` (the phone's zoom-in pill) adds to the frame at the top the
+    same way and moves the place down by half of it. It is given up before the
+    sheet when the two together leave under MIN_FIT_BAND_PX (the pill may then
+    cover a little of a place that barely fits anyway), and kept on its own
+    when the sheet is dropped. `reserveTop` in the result is the one kept. */
 export function selectionFit(
   sheet: SheetPadding | undefined,
   canvasHeight: number,
@@ -121,23 +130,126 @@ export function selectionFit(
   padding: number | { top: number; right: number; bottom: number; left: number };
   offset: [number, number];
   sheet?: SheetPadding;
+  reserveTop?: number;
 } {
-  // A sheet of no height (or a nonsense one) covers nothing: the plain fit.
-  if (!sheet || !(sheet.bottom > 0)) return { padding: FIT_PADDING_PX, offset: [0, 0] };
-  // Too little canvas above the sheet to fit into (or a canvas not measured
-  // yet): the plain fit. Written as a negated >= so a NaN height drops too.
-  const band = canvasHeight - sheet.bottom - 2 * FIT_PADDING_PX;
-  if (!(band >= MIN_FIT_BAND_PX)) return { padding: FIT_PADDING_PX, offset: [0, 0] };
-  return {
+  // A sheet or a reserve of no height (or a nonsense one) is none.
+  const bottom = sheet && sheet.bottom > 0 ? sheet.bottom : 0;
+  const top = sheet?.reserveTop !== undefined && sheet.reserveTop > 0 ? sheet.reserveTop : 0;
+  // Whether a frame leaves the place a band of at least MIN_FIT_BAND_PX to fit
+  // into. Written as a negated >= so a NaN or unmeasured canvas fails it.
+  const fits = (b: number, t: number) =>
+    canvasHeight - b - t - 2 * FIT_PADDING_PX >= MIN_FIT_BAND_PX;
+  const framed = (b: number, t: number) => ({
     padding: {
-      top: FIT_PADDING_PX,
+      top: FIT_PADDING_PX + t,
       right: FIT_PADDING_PX,
-      bottom: FIT_PADDING_PX + sheet.bottom,
+      bottom: FIT_PADDING_PX + b,
       left: FIT_PADDING_PX,
     },
-    offset: [0, -sheet.bottom / 2],
-    sheet,
+    offset: [0, (t - b) / 2] as [number, number],
+    ...(b > 0 ? { sheet: { bottom: b } } : {}),
+    ...(t > 0 ? { reserveTop: t } : {}),
+  });
+  if (bottom > 0 && top > 0 && fits(bottom, top)) return framed(bottom, top);
+  if (bottom > 0 && fits(bottom, 0)) return framed(bottom, 0);
+  if (top > 0 && fits(0, top)) return framed(0, top);
+  return { padding: FIT_PADDING_PX, offset: [0, 0] };
+}
+
+/** A pick lands on the next whole zoom when its fit is at most this far under
+    it (owner, 2026-10-01, "Zoom to fit the place": "I'll round the zoom so no
+    sub-area pops in a hair later"). The filters see whole zooms only
+    (reveal.ts), so a landing at z8.97 draws what z8 draws, and 0.03 more zoom
+    pops in everything z9 adds: Napa Valley's laptop fit landed exactly there,
+    five of its fifteen AVAs and every AVA name missing. */
+export const LANDING_ROUND_WITHIN = 0.25;
+/** ...as long as the place's box at that whole zoom keeps this much map to
+    every edge: it may grow into its 48 px frame, never off the map. On the
+    769 x 654 laptop map that allows up to 12.9% of growth in the limiting
+    direction; Northern Rhône needs 12.1% (z8.835 to z9, 14 px to spare),
+    which is what draws Côte-Rôtie (39 px long at z8) at its landing. */
+export const LANDING_ROUND_MARGIN_PX = 12;
+
+/** Where a selection lands: `zoom` (its fit, raised to the target's minZoom),
+    or the next whole zoom when that is within LANDING_ROUND_WITHIN, no deeper
+    than `maxZoom`, and the place's box (north-up Web Mercator) still fits the
+    `width` x `height` map with LANDING_ROUND_MARGIN_PX to every edge, round
+    the centre `fit` (selectionFit) puts it at. Beside a phone's sheet the box
+    stays the margin clear of the sheet; under a phone's zoom-in pill
+    (`fit.reserveTop`) its top stays below the pill's strip, so there it may
+    grow only sideways. The caller asks only where the size rule applies, so
+    the kill switch and tiles from before the rule keep the old camera. */
+export function landingZoom(input: {
+  zoom: number;
+  maxZoom: number;
+  bbox: Bbox;
+  width: number;
+  height: number;
+  fit: { offset: readonly [number, number]; sheet?: SheetPadding; reserveTop?: number };
+}): number {
+  const { zoom, maxZoom, bbox, width, height, fit } = input;
+  const up = Math.ceil(zoom);
+  if (!(up > zoom) || up - zoom > LANDING_ROUND_WITHIN || up > maxZoom) return zoom;
+  const mercY = (lat: number) => {
+    const s = Math.sin((lat * Math.PI) / 180);
+    return 0.5 - Math.log((1 + s) / (1 - s)) / (4 * Math.PI);
   };
+  const scale = 512 * 2 ** up;
+  const w = ((bbox[2] - bbox[0]) / 360) * scale;
+  const h = (mercY(bbox[1]) - mercY(bbox[3])) * scale;
+  const cx = width / 2 + fit.offset[0];
+  const cy = height / 2 + fit.offset[1];
+  const m = LANDING_ROUND_MARGIN_PX;
+  const reserve = fit.reserveTop ?? 0;
+  const top = reserve > 0 ? FIT_PADDING_PX + reserve : m;
+  const bottom = height - (fit.sheet?.bottom ?? 0) - m;
+  const fitsAcross = cx - w / 2 >= m && cx + w / 2 <= width - m;
+  const fitsDown = cy - h / 2 >= top && cy + h / 2 <= bottom;
+  return fitsAcross && fitsDown ? up : zoom;
+}
+
+/** The phone's zoom-in pill over the map (tile-wine-map-explorer.tsx, its
+    classes pinned in desktop-layout.test.ts): its top 8 px below the map's
+    (top-2); 12 px text on a 16.5 px line (text-xs leading-snug); 4 px of
+    padding above and below and a 1 px border (py-1 border: `chrome`); 56 px
+    clear of each side of the map (inset-x-14), with 12 px of padding and a
+    1 px border inside that (px-3 border: `padX`); and `gap` more kept free
+    below it by a pick. */
+export const CUE_PILL = { top: 8, line: 16.5, chrome: 10, inset: 56, padX: 13, gap: 8 } as const;
+
+/** The width one line of the pill's text has on a map `canvasWidth` wide. */
+export function cuePillTextWidth(canvasWidth: number): number {
+  return canvasWidth - 2 * CUE_PILL.inset - 2 * CUE_PILL.padX;
+}
+
+/** How many lines greedy word wrapping makes of words this wide, a space
+    between them, in lines `maxWidth` wide (a word wider than a line takes a
+    line of its own, as the browser's does). 0 for no words. */
+export function wrappedLineCount(
+  wordWidths: readonly number[],
+  spaceWidth: number,
+  maxWidth: number,
+): number {
+  let lines = 0;
+  let used = 0;
+  for (const width of wordWidths) {
+    if (lines > 0 && used + spaceWidth + width <= maxWidth) {
+      used += spaceWidth + width;
+    } else {
+      lines += 1;
+      used = width;
+    }
+  }
+  return lines;
+}
+
+/** The frame, beyond FIT_PADDING_PX, a pick keeps free at the top of a
+    phone's map for a pill of `lines` lines: the pill's bottom plus CUE_PILL's
+    gap. None for one line, which the 48 px frame already clears. */
+export function cueTopReservePx(lines: number): number {
+  if (!(lines > 0)) return 0;
+  const pillBottom = CUE_PILL.top + CUE_PILL.chrome + lines * CUE_PILL.line;
+  return Math.max(0, pillBottom + CUE_PILL.gap - FIT_PADDING_PX);
 }
 
 /** A camera move a chip asks for. `nonce` makes a repeat tap fly again (the

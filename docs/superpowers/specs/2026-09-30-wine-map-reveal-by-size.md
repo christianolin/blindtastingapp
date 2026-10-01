@@ -7,6 +7,10 @@
 >
 > **Built the same evening with the owner's decisions: see §11 at the end** (24 px; ribbons measured by their
 > length; the tiles release switches the rule on). Where §11 disagrees with anything above it, §11 wins.
+>
+> **Fix round 2, 2026-10-01: see §12 at the end** (the owner's landing and region decisions; whole-zoom landings;
+> the ribbon floor N/12; the cue counts every descendant; pieces wait for N; paint order at export; the phone pill).
+> Where §12 disagrees with anything above it, §12 wins.
 
 Owner, 2026-09-30, with a photo of the North Coast (Napa Valley selected, the Napa fit, about z7.5):
 
@@ -1084,3 +1088,149 @@ in (not delayed = drawn at its tile zoom).
 | Barolo | t3 · 1 | z7 | z8 | **z8** | 38.7 · 53.3 × 28.1 | 1.9 | by its area |
 | Barbaresco | t3 · 1 | z7 | z8 | **z8** | 29.1 · 44.0 × 19.2 | 2.3 | by its area |
 | Lugana | t2 · 1 | z6 | z9 | **z9** | 25.3 · 37.1 × 17.2 | 2.2 | by its area |
+
+---
+
+## 12. Fix round 2 (2026-10-01): the owner's landing decisions and the final rule
+
+**Where this section and anything above it disagree, this section wins.** It answers the draft tiles release
+`20260930T190326Z` (built from 9f44917) and its two reviews. Evidence is in the session scratchpad, `reveal/fix2/`.
+
+### 12.1 Owner decisions (2026-10-01, after seeing today's Napa landing next to a fitted one)
+
+- **Landing: "Zoom to fit the place (Recommended)"**: "The place fills the map and its sub-areas show, like the second
+  screenshot. I'll round the zoom so no sub-area pops in a hair later. Tiny places like Cole Ranch zoom in close."
+- **Regions: "Leave regions alone (Recommended)"**: "Every region stays visible from the country view, so you can always
+  see and tap where Ahr or Jura is. Only places below region level wait." Regions (tier ≤ 1) stay exempt, unchanged.
+- Standing from 2026-09-30: 24 px; "Keep ribbons visible"; the cue copy "Zoom in to see the subregions of {place}." /
+  "Zoom in to see all the subregions of {place}."; ship when it passes.
+
+### 12.2 Whole-zoom landings (`camera-fit.ts` `landingZoom`)
+
+A pick below country level fits its outline (9f44917's fit, kept). The filters see whole zooms only, so a fit just under
+one draws what the zoom below draws: Napa Valley's laptop fit, z8.968, drew 10 of its 15 AVAs and no AVA name (their
+labels start at z9), and 0.03 more zoom popped five AVAs and twelve names in.
+
+**The rule.** A selection lands on the next whole zoom when that is at most **0.25** above its fit
+(`LANDING_ROUND_WITHIN`), no deeper than the target's cap, and the place's box at that zoom still fits the map with
+**12 px** to every edge (`LANDING_ROUND_MARGIN_PX`): it may grow into its 48 px frame, never off the map. Beside a phone's
+sheet it stays 12 px clear of the sheet; under the phone's zoom-in pill its top stays below the pill's strip, so there
+it may grow only sideways. Otherwise it lands at its fit. In overflow terms: on the 769 × 654 laptop map the box may
+exceed the padded frame by up to 12.9 % in its limiting direction; on a 375 px phone by up to 19 % (the 0.25 bound).
+Only where the rule applies to the place (`wholeZoom`: rule on, tier ≥ 1), so `?revealPx=0` and tiles without
+`reveal_rule` keep the old camera exactly.
+
+**Why 0.25 and 12 px.** The fits' fractional parts decide nothing alone: a fit always fills its padded frame in one
+direction, so rounding up always overflows it by 2^Δ − 1, and the margin is the binding condition. Northern Rhône needs
+Δ = 0.165 (12.1 %, 14 px left top and bottom) to land on z9, which is the only way Côte-Rôtie (39 px long at z8,
+under the 48 px a ribbon needs) is drawn at its landing; 12 px admits it with 2 px to spare. Nahe (Δ 0.305, its box
+would be 689 px in a 654 px map) and Douro (Δ 0.333, 848 px in 769) could not round at any margin.
+
+**Landings** (rule on; live, local `next start` on the export's tiles; `fix2/out-land-*.txt`):
+
+| pick | laptop (769 × 654 map) | phone (375 × 812) |
+|---|---|---|
+| Napa Valley | z8.968 → **z9**: 15/15 AVAs drawn, 11 named (4 lose label collisions; 11 with the rule off at the same camera, 13 at most at any zoom) | z7.437 → z7.352 (pill reserve): 0/15 (their first zoom is 8 or 9), cue pill clear of the place (pill bottom y 166, Napa's top y 175) |
+| Northern Rhône | z8.835 → **z9**: Côte-Rôtie, Condrieu, Saint-Joseph, Crozes-Hermitage, Saint-Péray drawn and named; Château-Grillet z13, Hermitage z11, Cornas z10 wait; cue "all the subregions" | z7.303 → z7.218: Saint-Joseph drawn; Côte-Rôtie and Condrieu wait (20-30 px long); cue pill clear of the ribbon |
+| Ahr | z11.02 (Δ 0.98) | z9.74 (Δ 0.26: not rounded) |
+| Nahe | z9.695 | z8.164 |
+| Douro | z8.667: its five children drawn, 3 named | z7.330 |
+| Bordeaux | z8.016: six districts drawn; **cue now shows** (12 descendants hidden: Pomerol, Fronsac, ...) | z6.400 (6.484 without the reserve) |
+| Burgundy | z7.346: six districts drawn, 5 named (Mâconnais loses to "BURGUNDY", as in production) | z5.730 (5.815): no district is in the tiles before z7, as today |
+| Cole Ranch | z12.5 (its cap; never rounded past it) | z12.5 |
+| Rhône Valley | z7.236: **cue now shows** (38 descendants hidden: Côte-Rôtie, Hermitage, Châteauneuf, Gigondas, ...) | z5.620 |
+
+`?revealPx=0` lands every one of these exactly where production does (laptop and phone).
+
+### 12.3 Ribbons: the thickness floor N/12 (`REVEAL_THICKNESS_RATIO` 12, was 8)
+
+Since §11.8's aspect test, the thickness floor guards no compact place (a part under aspect 8 never uses the length
+clause), only how thin a ribbon may be. Map-wide (`fix2/sim-rules.mjs`), lowering it moves very few places, and every
+floor from Condrieu's 2.30 px (at z8) down to 1.38 px moves exactly the same six, each one zoom earlier: Côtes du
+Forez, Menetou-Salon, Condrieu, Ayze, Gedeonseck, Niagara Escarpment (all 49-83 px long, 2.3-3.0 px thick). Below
+1.38 px the next is Fiefs Vendéens Vix, a 1.4 px hairline. **2 px (N/12) sits in that gap**, 13 % under Condrieu and
+45 % over Vix. Cole Ranch z11, Benmore Valley z10, Rockpile z8, Oakville z9 and Hermitage z11 do not move, and
+Burgundy's six districts still share z7 (the `REVEAL_FAMILY_PINS` gate passes; Diois, now 0.507 of the Rhône's
+median, is logged near its cut).
+
+Northern Rhône: on a laptop the landing is z9 (§12.2), where Côte-Rôtie is drawn by its area and Condrieu (in by its
+length from z8) too. On a phone (tile z7) both are 20-30 px long and 1-2 px thick, under any floor worth the name, so
+they wait and the cue shows.
+
+### 12.4 The cue counts every descendant (`reveal.ts` `descendantsInView`)
+
+The cue counted the selected place's direct children only, so Bordeaux's landing hid Pomerol, Fronsac and the
+Saint-Émilion satellites (grandchildren, under Libournais) and the Rhône Valley's hid Côte-Rôtie, Hermitage,
+Châteauneuf and Gigondas (under the two subregions) with nothing on screen to say so. The idle scan now counts every
+descendant (`selection-state.ts` `descendantKeys`, from the place tree): drawn = descendants in the frame's rendered
+features; hidden = descendants whose loaded features in view only the size rule holds back, asked of the tiles with a
+key-set filter (`key-gate.ts` `keySetExpression`), so the probe touches the descendants only. Without the tree it falls
+back to the children (`parent_id`). The copy is unchanged: "the subregions" when none of them in view is drawn, "all the
+subregions" when some are. **Cost** (CPU 4×, `fix2/out-cost*.txt`): 1.4-3.9 ms median per scan (max 6.9 ms, North Coast
+at z8.5 with 178 loaded features), against 2.7-8.8 ms for 9f44917's two-query probe.
+
+### 12.5 Pieces wait for the full threshold (`PIECE_PX_RATIO` 1, was 3)
+
+A non-anchor part now waits until its own square is N (24 px), not N/3: pieces of 10-20 px cut off from their place
+read exactly like the specks the rule hides (the Central Valley's outline pieces round Capay Valley, Clarksburg and
+Tracy Hills in the owner's North Coast view, Mendocino Ridge, Bergerac, Southern Oregon, Bernkastel). The anchor part
+and the label part still carry the place. **The owner's North Coast views** (export simulation, `reveal-report3.txt`;
+laptop and phone, centred on North Coast and on Napa Valley, z6-z8.5): **no part under 24 px is drawn** (9f44917:
+Central Valley pieces at 17-18 px, a 14 px Mendocino Ridge piece). Live, the only sub-24 px pieces on screen were
+tile-clipped halves of larger AVAs (vertices on a z7 tile edge). Map-wide, drawn parts under 24 px at their place's
+first zoom go from 2,426 to 387: 88 ribbons drawn by their length, 137 anchors of parcel clusters whose whole is 24 px,
+162 label parts. No place's first zoom moves; 1,216 of 1,339 multi-part places now first draw with some pieces still
+waiting.
+
+### 12.6 Paint order, at export (`lib.mjs` `paintOrdered`, `labelOrdered`; `tippecanoeArgs`)
+
+MapLibre paints a layer's features in tile order, later on top. tippecanoe ordered each tile by one index point per
+feature (`serial.cpp`), so overlap was an accident, and splitting places into parts reshuffled it (review L1: the
+Chablis district over the Chablis appellation; the Bourgogne region over everything at Chablis 1er Cru). A shard's
+places are now written **shallower tiers first, then larger footprints first, then key** (a place's parts together, in
+geometry order): deeper above shallower, among equals smaller above larger. Shard archives are built with
+`--preserve-input-order`. That flag holds for labels too, whose order breaks collision ties within a tier, so the labels
+are written in the order tippecanoe gave them before: its point index (`tippecanoePointIndex`: `encode_quadkey` of the
+point at z32, lowest bit dropped) then input order. Checked against every tile of production's `20260930T132635Z`:
+9,337 adjacent label pairs, 0 out of that order (the input order alone breaks 4,649), and the new export's label files
+reproduce production's order in all 3,689 tiles. The world archive keeps tippecanoe's order and its exact bytes.
+`validate.mjs` (`checkPaintOrder`) refuses a flagged shard whose probed tiles are not in paint order (all 71 local
+shards pass; a reversed one is refused). App and phase 1 are untouched: the order lives in the tiles. Live on the
+export's tiles, Chablis 1er Cru paints, top first: Chablis (t3), Petit Chablis (t3, larger), the Chablis district (t2),
+Bourgogne (t1).
+
+### 12.7 The phone pill (`tile-wine-map-explorer.tsx`; `camera-fit.ts` `cueTopReservePx`)
+
+- **Mounted only while there is a cue.** The always-mounted empty `absolute z-10` wrapper changed the page's
+  compositing on phones (review L3: 1.4-2.9 % of pixels off production in every phone shot, rule off). Now 30/30 phone
+  shots match production (28 at once; the two Douro shots differed only in which Spanish shards were still mounted and
+  are identical when run fresh), and desktop matches as master did (22/30 identical, the rest ≤ 0.047 % with no delta
+  over 60 in summed RGB, the same noise local master shows).
+- **Its strip is kept free.** A phone pick of a place with subregions (rule on) measures the longest cue it could show
+  ("all the subregions", local and English name) in the pill's font, wraps it at the pill's width
+  (`wrappedLineCount`), and adds the pill's bottom plus 8 px, beyond the 48 px frame, to the top of the fit (`reserveTop`,
+  `selectionFit`): 11 px for a two-line pill, nothing for one line. It is dropped before the sheet when both no longer
+  leave MIN_FIT_BAND_PX. `CUE_PILL` mirrors the pill's classes, pinned in `desktop-layout.test.ts`.
+
+### 12.8 The final rule, in one place
+
+A subregion (tier ≥ 2) is drawn from the first whole zoom at which it is 24 CSS px across: per polygon part,
+`size = sqrt(A)`, or for a ribbon (`L² / A ≥ 8`) `max(sqrt(A), min(L / 2, 12 A / L))` (2N long and N/12 thick); a place
+is `max(sqrt(ΣA), its best part)`, and a region's SUBREGION children at least half their median sibling come in with
+it; the anchor part and the label part come with the place, every other part once its own square is N; a name comes
+with its shape; never before `floor(min_zoom)`; everything by z16; countries and regions are never delayed. Picks below
+country level fit the place and land on the next whole zoom when that is within 0.25 and the place still fits with
+12 px to spare (never under the phone pill). The cue counts every descendant in view. Where places overlap, the deeper
+and then the smaller paints on top.
+
+### 12.9 Sizes, checks, and what is left
+
+- **Bytes** (`fix2/sizes-table.md`): the estimator that predicted the draft within 0.5 % puts this round at +0.4 % over
+  the draft's real archives (all shards 16,987,196 → ~17,048,915 B; the paint order alone, measured on the draft's
+  real tiles, +0.10 %; the per-piece values the rest). California ~2.67 MB (≤ 3 MB), Washington, Oregon and New York
+  ≤ 1.5 MB, world unchanged.
+- **Gates**: full vitest, `node --test scripts/wine-map-tiles/*.test.mjs`, tsc, eslint on the changed files, and a
+  `next build` without the manifest override.
+- **Left for the next draft run** (tippecanoe is CI-only): `--preserve-input-order` is exercised for the first time
+  there. `validate.mjs local` checks the paint order of every probed tile; compare the archive sizes with
+  `fix2/sizes-table.md` and repeat the landing checks above on the draft before promoting.

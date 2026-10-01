@@ -13,6 +13,8 @@ import {
   SHARD_TARGET,
   featureCollection,
   labelFeatures,
+  labelOrdered,
+  paintOrdered,
   pgConfig,
   placeFeature,
   placeFeatures,
@@ -264,24 +266,30 @@ const outputs = [
   ["world-labels.geojson", featureCollection(world.rows.flatMap(labelFeatures))],
 ];
 for (const [key, bucket] of Object.entries(shards)) {
+  // tippecanoe keeps a shard's feature order (--preserve-input-order,
+  // lib.mjs tippecanoeArgs): places in paint order, deeper and smaller on top
+  // (paintOrdered); labels in tippecanoe's former order, so the same names
+  // win their collisions (labelOrdered).
   outputs.push([
     `${key}-places.geojson`,
-    featureCollection(bucket.rows.flatMap((row) => placeFeatures(row, plan.get(row.id)))),
+    featureCollection(paintOrdered(bucket.rows.flatMap((row) => placeFeatures(row, plan.get(row.id))))),
   ]);
   outputs.push([
     `${key}-labels.geojson`,
     featureCollection(
-      bucket.rows.flatMap((row) =>
-        // Ranked per-island labels only for countries/regions (tier <= 1):
-        // rank 1 = the dominant island at everyday zooms, deeper ranks
-        // reveal when zoomed into that island (see labelFeatures). A
-        // district or appellation gets exactly one canonical label point,
-        // with its place's reveal_area, so a name comes with its shape.
-        row.display_tier <= 1
-          ? labelFeatures(row)
-          : labelFeatures({ ...row, component_labels: null }).map((feature) =>
-              withRevealArea(feature, plan.get(row.id).revealArea),
-            ),
+      labelOrdered(
+        bucket.rows.flatMap((row) =>
+          // Ranked per-island labels only for countries/regions (tier <= 1):
+          // rank 1 = the dominant island at everyday zooms, deeper ranks
+          // reveal when zoomed into that island (see labelFeatures). A
+          // district or appellation gets exactly one canonical label point,
+          // with its place's reveal_area, so a name comes with its shape.
+          row.display_tier <= 1
+            ? labelFeatures(row)
+            : labelFeatures({ ...row, component_labels: null }).map((feature) =>
+                withRevealArea(feature, plan.get(row.id).revealArea),
+              ),
+        ),
       ),
     ),
   ]);
