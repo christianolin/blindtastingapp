@@ -162,7 +162,8 @@ describe("draftWithProducer", () => {
 });
 
 describe("the SQL the near-match step reads (20261003100000)", () => {
-  const sql = readFileSync(path.join(process.cwd(), "supabase/migrations/20261003100000_catalog_near_matches.sql"), "utf8");
+  // A Windows checkout may hold the file with CRLF endings (core.autocrlf).
+  const sql = readFileSync(path.join(process.cwd(), "supabase/migrations/20261003100000_catalog_near_matches.sql"), "utf8").replace(/\r\n/g, "\n");
   it("never lists a hidden or merged wine, and runs as the caller", () => {
     const body = sql.slice(sql.indexOf("create function public.catalog_wine_near_matches"), sql.indexOf("create function public.similar_producers"));
     expect(body).toContain("security invoker");
