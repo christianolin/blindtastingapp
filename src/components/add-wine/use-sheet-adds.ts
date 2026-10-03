@@ -74,11 +74,19 @@ import { increaseCellarLotQuantity } from "@/app/cellar/new/actions";
 import type { LabelPhotoRead } from "@/app/scan/actions";
 import { emptyDraft, missingWineFields } from "@/lib/wine-identity/complete";
 import { readDisplay } from "@/lib/wine-identity/describe";
+import {
+  draftForCandidateVintage,
+  draftWithProducer,
+  shouldAskNearMatch,
+  type NearMatchRow,
+  type ProducerSuggestion,
+} from "@/lib/wine-identity/near-match";
 import type { WineFieldKey, WineIdentityDraft } from "@/lib/wine-identity/types";
 import {
   addToCatalog,
   addToCellar,
   addToFlight,
+  checkNearMatches,
   loadCatalogWineDraft,
   loadFlightGlassForEdit,
   saveFlightGlass,
@@ -93,11 +101,13 @@ import {
   currentDestination,
   lotRowKey,
   reduceSheet,
+  replyIsCurrent,
   routeAdd,
   ticketFor,
   unaddedItem,
   wineRowKey,
   type ByHandSession,
+  type NearMatchPrompt,
   type ReplyTicket,
   type ScanItem,
   type SheetAction,
@@ -189,6 +199,16 @@ export type SheetAdds = {
   requestClose: () => void;
   /** The close-ask's Discard: drops the unfinished rows and closes, handing on the note pick a `notePicked` ask holds. Keep going is `send({ type: "cancelClose" })`. */
   discardAndClose: () => void;
+  /** "Already in the catalog?" (catalog dedupe): use this catalog wine instead of creating one. */
+  nearMatchUse: (row: NearMatchRow) => void;
+  /** The same wine in the bottle's own vintage: its producer, name and place, the draft's vintage. */
+  nearMatchVintage: (row: NearMatchRow) => void;
+  /** "Did you mean …?": the existing producer instead of a new one, then the check runs again. */
+  nearMatchProducer: (producer: ProducerSuggestion) => void;
+  /** "Add as a new wine": the paused add goes on, deliberately. */
+  nearMatchNew: () => void;
+  /** Back to the view the add was started from; nothing is written. */
+  nearMatchBack: () => void;
 };
 
 type AddedResult = Extract<AddResult, { ok: true }>;
@@ -215,7 +235,8 @@ type AddContext = {
   imagePath: string | null;
 };
 
-type AddExtra = { title?: string; byHand?: boolean; scanNext?: boolean };
+/** `reviewed`: the near-match prompt already answered for this add (catalog dedupe). */
+type AddExtra = { title?: string; byHand?: boolean; scanNext?: boolean; reviewed?: boolean };
 
 export function useSheetAdds({
   stateRef,
@@ -361,7 +382,14 @@ export function useSheetAdds({
   async function runAdd(source: AddSource, extra: AddExtra = {}): Promise<void> {
     const s = stateRef.current;
     const ctx = contextFor(s, source, extra);
-    switch (routeAdd(s, source).next) {
+    const route = routeAdd(s, source).next;
+    // Catalog dedupe (owner, 2026-10-03): an add that would create a new catalog
+    // wine asks "Already in the catalog?" first. Asked where the write would
+    // happen — never before the chooser, which asks again once picked.
+    if (route !== "choose" && route !== "lot" && source.kind === "identity" && shouldAskNearMatch(source, extra.reviewed === true)) {
+      if (await askNearMatch(ctx, source, extra)) return;
+    }
+    switch (route) {
       case "choose":
         send({ type: "choose", source, itemId: ctx.itemId, title: extra.title ?? titleFor(s, source), missing: gapsOf(source) });
         return;
@@ -378,6 +406,77 @@ export function useSheetAdds({
         await write(ctx, currentDestination(s));
         return;
     }
+  }
+
+  /** Runs the near-match check for an identity add. True when the add stops here:
+      the prompt went up, another call was running, or the person moved on while
+      the check ran (a stale reply never acts, and nothing is written). False when
+      there is nothing to ask, or the check failed: it is advice, so it never
+      blocks an add. */
+  async function askNearMatch(
+    ctx: AddContext,
+    source: Extract<AddSource, { kind: "identity" }>,
+    extra: AddExtra,
+  ): Promise<boolean> {
+    const found = await call(async () => ({ matches: await checkNearMatches(source.draft) }), ADD_FAILED);
+    if (found === null) return true;
+    if (!replyIsCurrent(stateRef.current, ctx.ticket)) return true;
+    if ("error" in found || found.matches === null) return false;
+    const prompt: NearMatchPrompt = {
+      source,
+      title: extra.title,
+      byHand: ctx.byHand,
+      scanNext: ctx.scanNext,
+      matches: found.matches,
+    };
+    send({ type: "nearMatchFound", prompt, ticket: ctx.ticket });
+    return true;
+  }
+
+  /** The prompt on screen, closed, for a choice to run from; null while busy or with none up. */
+  function takePrompt(): NearMatchPrompt | null {
+    const prompt = stateRef.current.nearMatch;
+    if (busyRef.current || prompt === null) return null;
+    send({ type: "nearMatchClosed" });
+    return prompt;
+  }
+
+  function promptExtra(prompt: NearMatchPrompt, reviewed: boolean, title?: string): AddExtra {
+    return { title: title ?? prompt.title, byHand: prompt.byHand, scanNext: prompt.scanNext, reviewed };
+  }
+
+  function nearMatchUse(row: NearMatchRow): void {
+    const prompt = takePrompt();
+    if (prompt === null) return;
+    const via = prompt.source.via === "scan" ? "scan" : "search";
+    void runAdd({ kind: "catalog", catalogWineId: row.candidate.id, via }, promptExtra(prompt, true, row.title));
+  }
+
+  function nearMatchVintage(row: NearMatchRow): void {
+    const prompt = takePrompt();
+    if (prompt === null) return;
+    const draft = draftForCandidateVintage(prompt.source.draft, row.candidate);
+    if (prompt.byHand && stateRef.current.byHand !== null) send({ type: "byHandChange", draft });
+    void runAdd({ ...prompt.source, draft }, promptExtra(prompt, true));
+  }
+
+  function nearMatchProducer(producer: ProducerSuggestion): void {
+    const prompt = takePrompt();
+    if (prompt === null) return;
+    const draft = draftWithProducer(prompt.source.draft, producer);
+    if (prompt.byHand && stateRef.current.byHand !== null) send({ type: "byHandChange", draft });
+    // Not reviewed: with the right producer, its wines may now be the match.
+    void runAdd({ ...prompt.source, draft }, promptExtra(prompt, false));
+  }
+
+  function nearMatchNew(): void {
+    const prompt = takePrompt();
+    if (prompt === null) return;
+    void runAdd(prompt.source, promptExtra(prompt, true));
+  }
+
+  function nearMatchBack(): void {
+    if (stateRef.current.nearMatch !== null) send({ type: "nearMatchClosed" });
   }
 
   /** BT-L3 (S4c): the swap start view's add re-points the glass `swap` names
@@ -738,6 +837,11 @@ export function useSheetAdds({
     openEdit,
     requestClose,
     discardAndClose,
+    nearMatchUse,
+    nearMatchVintage,
+    nearMatchProducer,
+    nearMatchNew,
+    nearMatchBack,
   };
 }
 

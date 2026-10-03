@@ -59,6 +59,7 @@ import { emptyDraft, missingWineFields } from "@/lib/wine-identity/complete";
 import { describeMissing, readDisplay } from "@/lib/wine-identity/describe";
 import type { WineFieldKey, WineIdentityDraft } from "@/lib/wine-identity/types";
 import { searchAddWine } from "./actions";
+import { NearMatchView } from "./near-match-view";
 import { loadByHandReferences, loadUnidentifiedWineDraft, type ByHandReferences } from "./by-hand-actions";
 import { ByHandForm } from "./by-hand-form";
 import { CameraView } from "./camera-view";
@@ -871,196 +872,213 @@ export function AddWineSheet({
         ) : null}
 
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
-          {view === "resolving" ? (
-            <Centered>
-              <WineGlassLoader className="text-primary" />
-            </Centered>
-          ) : (
-            <>
-              {/* Mounted from the first paint and hidden until current (rule 9),
-                  so the input exists before the tap that opens it. */}
-              <div className={view === "search" ? "contents" : "hidden"}>
-                <SearchView
-                  matrix={matrix}
-                  query={state.search.query}
-                  onQuery={(text) => adds.send({ type: "searchQuery", query: text })}
-                  inputRef={searchInputRef}
-                  groups={canScan ? shownGroups : null}
-                  loading={canScan && loading}
-                  consume={state.desktop.consume}
-                  onConsume={(consume) => adds.send({ type: "consume", surface: "desktop", consume })}
-                  onRow={searchRow}
-                  onByHand={() => openNewByHand(true)}
-                  busy={adds.busy}
-                  error={state.error}
-                />
-              </div>
-              <div className={view === "byhand" && !editLoading ? "contents" : "hidden"}>
-                <ByHandForm
-                  session={state.byHand}
-                  matrix={formMatrix}
-                  destination={dest}
-                  references={references}
-                  finishing={finishing}
-                  busy={adds.busy}
-                  error={state.error}
-                  userId={userId}
-                  onChange={(draft) => adds.send({ type: "byHandChange", draft })}
-                  onUnidentified={(on) => adds.send({ type: "byHandUnidentified", on })}
-                  onSave={() => openFormInTap(() => adds.saveByHand())}
-                  onLeaveForLater={offersLeaveForLater(state, finishing, matrix) ? () => adds.leaveForLater() : null}
-                  onSearchInstead={() => openSearch()}
-                  fieldRefs={fieldRefs}
-                  editGlass={editGlass}
-                />
-              </div>
-              {view === "byhand" && editLoading ? (
-                <Centered>
-                  <WineGlassLoader className="text-primary" />
-                </Centered>
-              ) : null}
+          {/* Catalog dedupe: "Already in the catalog?" sits over the view its add
+              started from; that view stays mounted underneath (rule 9). */}
+          {state.nearMatch !== null ? (
+            <NearMatchView
+              matches={state.nearMatch.matches}
+              matrix={matrix}
+              dark={dark}
+              busy={adds.busy}
+              onUse={(row) => adds.nearMatchUse(row)}
+              onAddAsVintage={(row) => adds.nearMatchVintage(row)}
+              onProducer={(producer) => adds.nearMatchProducer(producer)}
+              onNew={() => adds.nearMatchNew()}
+              onBack={() => adds.nearMatchBack()}
+            />
+          ) : null}
+          <div className={state.nearMatch !== null ? "hidden" : "contents"}>
+            {view === "resolving" ? (
+              <Centered>
+                <WineGlassLoader className="text-primary" />
+              </Centered>
+            ) : (
+              <>
+                {/* Mounted from the first paint and hidden until current (rule 9),
+                    so the input exists before the tap that opens it. */}
+                <div className={view === "search" ? "contents" : "hidden"}>
+                  <SearchView
+                    matrix={matrix}
+                    query={state.search.query}
+                    onQuery={(text) => adds.send({ type: "searchQuery", query: text })}
+                    inputRef={searchInputRef}
+                    groups={canScan ? shownGroups : null}
+                    loading={canScan && loading}
+                    consume={state.desktop.consume}
+                    onConsume={(consume) => adds.send({ type: "consume", surface: "desktop", consume })}
+                    onRow={searchRow}
+                    onByHand={() => openNewByHand(true)}
+                    busy={adds.busy}
+                    error={state.error}
+                  />
+                </div>
+                <div className={view === "byhand" && !editLoading ? "contents" : "hidden"}>
+                  <ByHandForm
+                    session={state.byHand}
+                    matrix={formMatrix}
+                    destination={dest}
+                    references={references}
+                    finishing={finishing}
+                    busy={adds.busy}
+                    error={state.error}
+                    userId={userId}
+                    onChange={(draft) => adds.send({ type: "byHandChange", draft })}
+                    onUnidentified={(on) => adds.send({ type: "byHandUnidentified", on })}
+                    onSave={() => openFormInTap(() => adds.saveByHand())}
+                    onLeaveForLater={offersLeaveForLater(state, finishing, matrix) ? () => adds.leaveForLater() : null}
+                    onSearchInstead={() => openSearch()}
+                    fieldRefs={fieldRefs}
+                    editGlass={editGlass}
+                  />
+                </div>
+                {view === "byhand" && editLoading ? (
+                  <Centered>
+                    <WineGlassLoader className="text-primary" />
+                  </Centered>
+                ) : null}
 
-              {view === "camera" ? (
-                <CameraView
-                  matrix={matrix}
-                  destination={dest}
-                  multi={state.multi}
-                  items={state.items}
-                  addedCount={addedCount}
-                  onCapture={(blob) => enqueuePhotos([blob])}
-                  onLibrary={(files) => enqueuePhotos(files)}
-                  onOpenSearch={() => openSearch()}
-                  onChip={(chip) => (chip === "cellar" ? adds.send({ type: "go", view: "cellar" }) : openNewByHand(true))}
-                  onMany={() => adds.send({ type: "setMulti", multi: true })}
-                  onDone={close}
-                  onItemAction={itemAction}
-                />
-              ) : null}
+                {view === "camera" ? (
+                  <CameraView
+                    matrix={matrix}
+                    destination={dest}
+                    multi={state.multi}
+                    items={state.items}
+                    addedCount={addedCount}
+                    onCapture={(blob) => enqueuePhotos([blob])}
+                    onLibrary={(files) => enqueuePhotos(files)}
+                    onOpenSearch={() => openSearch()}
+                    onChip={(chip) => (chip === "cellar" ? adds.send({ type: "go", view: "cellar" }) : openNewByHand(true))}
+                    onMany={() => adds.send({ type: "setMulti", multi: true })}
+                    onDone={close}
+                    onItemAction={itemAction}
+                  />
+                ) : null}
 
-              {view === "reading" ? <ReadingView imageUrl={activeItem?.photoUrl ?? null} /> : null}
+                {view === "reading" ? <ReadingView imageUrl={activeItem?.photoUrl ?? null} /> : null}
 
-              {view === "confirm" && activeItem ? (
-                <ReadConfirm
-                  key={activeItem.id}
-                  item={activeItem}
-                  matrix={matrix}
-                  destination={dest}
-                  canScan={canScan}
-                  flightHint={flightHint}
-                  cellarHint={cellarHint}
-                  sourceIsLot={false}
-                  busy={adds.busy}
-                  error={state.error}
-                  onPrimary={() => openFormInTap(() => adds.primaryFromConfirm(activeItem))}
-                  onScanNext={() => openFormInTap(() => adds.primaryFromConfirm(activeItem, { scanNext: true }))}
-                  onFix={() => openFormInTap(() => adds.fixItem(activeItem.id))}
-                  onByHand={() => openFormInTap(() => adds.byHandFromConfirm(activeItem))}
-                  onSearch={(text) => openSearch(text)}
-                  onRescan={() => adds.send({ type: "itemRemove", id: activeItem.id })}
-                  onRetry={() => retryItem(activeItem.id)}
-                  onRemove={() => adds.send({ type: "itemRemove", id: activeItem.id })}
-                  onChoose={chooseInTap}
-                />
-              ) : null}
+                {view === "confirm" && activeItem ? (
+                  <ReadConfirm
+                    key={activeItem.id}
+                    item={activeItem}
+                    matrix={matrix}
+                    destination={dest}
+                    canScan={canScan}
+                    flightHint={flightHint}
+                    cellarHint={cellarHint}
+                    sourceIsLot={false}
+                    busy={adds.busy}
+                    error={state.error}
+                    onPrimary={() => openFormInTap(() => adds.primaryFromConfirm(activeItem))}
+                    onScanNext={() => openFormInTap(() => adds.primaryFromConfirm(activeItem, { scanNext: true }))}
+                    onFix={() => openFormInTap(() => adds.fixItem(activeItem.id))}
+                    onByHand={() => openFormInTap(() => adds.byHandFromConfirm(activeItem))}
+                    onSearch={(text) => openSearch(text)}
+                    onRescan={() => adds.send({ type: "itemRemove", id: activeItem.id })}
+                    onRetry={() => retryItem(activeItem.id)}
+                    onRemove={() => adds.send({ type: "itemRemove", id: activeItem.id })}
+                    onChoose={chooseInTap}
+                  />
+                ) : null}
 
-              {view === "choose" ? (
-                <ChooseBody
-                  title={state.chooseFor?.title ?? chooserItem?.read?.display.title ?? ""}
-                  missing={state.chooseFor?.missing ?? []}
-                  error={state.error}
-                >
-                  {/* Amendment 22: with no chooser wine left, the rows are for the bottle in hand. */}
-                  {state.chooseFor !== null || chooserItem?.read ? (
-                    <Chooser
-                      flightHint={flightHint}
-                      cellarHint={cellarHint}
-                      sourceIsLot={state.chooseFor?.source?.kind === "lot"}
-                      busy={adds.busy}
-                      onChoose={chooseInTap}
-                    />
-                  ) : null}
-                </ChooseBody>
-              ) : null}
+                {view === "choose" ? (
+                  <ChooseBody
+                    title={state.chooseFor?.title ?? chooserItem?.read?.display.title ?? ""}
+                    missing={state.chooseFor?.missing ?? []}
+                    error={state.error}
+                  >
+                    {/* Amendment 22: with no chooser wine left, the rows are for the bottle in hand. */}
+                    {state.chooseFor !== null || chooserItem?.read ? (
+                      <Chooser
+                        flightHint={flightHint}
+                        cellarHint={cellarHint}
+                        sourceIsLot={state.chooseFor?.source?.kind === "lot"}
+                        busy={adds.busy}
+                        onChoose={chooseInTap}
+                      />
+                    ) : null}
+                  </ChooseBody>
+                ) : null}
 
-              {view === "cellar" ? (
-                <CellarView
-                  matrix={matrix}
-                  sheet={cellar.sheet}
-                  filter={state.cellar.filter}
-                  onFilter={(filter) => adds.send({ type: "cellarFilter", filter })}
-                  selectedLotId={state.cellar.selectedLotId}
-                  onSelect={(lotId) => adds.send({ type: "cellarSelect", lotId })}
-                  consume={state.cellar.consume}
-                  onConsume={(consume) => adds.send({ type: "consume", surface: "cellar", consume })}
-                  onAdd={addSelectedLot}
-                  onScanOrSearch={() => adds.send({ type: "go", view: homeViewFor(canScan) })}
-                  loadFailed={cellar.failed}
-                  busy={adds.busy}
-                  error={state.error}
-                />
-              ) : null}
+                {view === "cellar" ? (
+                  <CellarView
+                    matrix={matrix}
+                    sheet={cellar.sheet}
+                    filter={state.cellar.filter}
+                    onFilter={(filter) => adds.send({ type: "cellarFilter", filter })}
+                    selectedLotId={state.cellar.selectedLotId}
+                    onSelect={(lotId) => adds.send({ type: "cellarSelect", lotId })}
+                    consume={state.cellar.consume}
+                    onConsume={(consume) => adds.send({ type: "consume", surface: "cellar", consume })}
+                    onAdd={addSelectedLot}
+                    onScanOrSearch={() => adds.send({ type: "go", view: homeViewFor(canScan) })}
+                    loadFailed={cellar.failed}
+                    busy={adds.busy}
+                    error={state.error}
+                  />
+                ) : null}
 
-              {view === "lot" && lot && lotSource ? (
-                <CellarLotStep
-                  key={lotSource.catalogWineId}
-                  matrix={matrix}
-                  catalogWineId={lotSource.catalogWineId}
-                  title={lotTitle(state, titles)}
-                  quantity={lot.quantity}
-                  rack={lot.rack}
-                  price={lot.price}
-                  onField={(field, value) => adds.send({ type: "lotField", field, value })}
-                  currency={preferredCurrency}
-                  busy={adds.busy}
-                  error={state.error}
-                  onAdd={() => void adds.lotAdd()}
-                  onMerge={(target) => void adds.lotMerge(target)}
-                  onSkip={(lotId) => adds.lotSkip(lotId)}
-                />
-              ) : null}
+                {view === "lot" && lot && lotSource ? (
+                  <CellarLotStep
+                    key={lotSource.catalogWineId}
+                    matrix={matrix}
+                    catalogWineId={lotSource.catalogWineId}
+                    title={lotTitle(state, titles)}
+                    quantity={lot.quantity}
+                    rack={lot.rack}
+                    price={lot.price}
+                    onField={(field, value) => adds.send({ type: "lotField", field, value })}
+                    currency={preferredCurrency}
+                    busy={adds.busy}
+                    error={state.error}
+                    onAdd={() => void adds.lotAdd()}
+                    onMerge={(target) => void adds.lotMerge(target)}
+                    onSkip={(lotId) => adds.lotSkip(lotId)}
+                  />
+                ) : null}
 
-              {view === "followup" && state.followUp ? (
-                <FollowUpView
-                  followUp={state.followUp}
-                  onCellar={() => adds.followUpCellar()}
-                  onNote={() => adds.followUpNote()}
-                  onDone={() => adds.followUpDone()}
-                />
-              ) : null}
+                {view === "followup" && state.followUp ? (
+                  <FollowUpView
+                    followUp={state.followUp}
+                    onCellar={() => adds.followUpCellar()}
+                    onNote={() => adds.followUpNote()}
+                    onDone={() => adds.followUpDone()}
+                  />
+                ) : null}
 
-              {view === "desktop" ? (
-                <DesktopView
-                  matrix={matrix}
-                  destination={dest}
-                  query={state.desktop.query}
-                  onQuery={(text) => adds.send({ type: "desktopQuery", query: text })}
-                  inputRef={desktopInputRef}
-                  groups={canScan ? null : shownGroups}
-                  loading={!canScan && loading}
-                  focusedRow={state.desktop.focusedRow}
-                  onFocusRow={focusDesktopRow}
-                  consume={state.desktop.consume}
-                  onConsume={(consume) => adds.send({ type: "consume", surface: "desktop", consume })}
-                  items={state.items}
-                  draftForMeta={latestDraft(state)}
-                  cellarSummary={cellarSummary}
-                  lastRack={state.lastRack}
-                  addedCount={addedCount}
-                  onRow={desktopRow}
-                  onFiles={(files) => enqueuePhotos(files)}
-                  onCellarTile={() => adds.send({ type: "go", view: "cellar" })}
-                  onByHand={() => openNewByHand(true)}
-                  onNeither={() => openNewByHand(true)}
-                  onItemAction={itemAction}
-                  onFooterButton={close}
-                  busy={adds.busy}
-                  error={state.error}
-                  skippedLot={state.skippedLot}
-                  onSkippedOpen={close}
-                />
-              ) : null}
-            </>
-          )}
+                {view === "desktop" ? (
+                  <DesktopView
+                    matrix={matrix}
+                    destination={dest}
+                    query={state.desktop.query}
+                    onQuery={(text) => adds.send({ type: "desktopQuery", query: text })}
+                    inputRef={desktopInputRef}
+                    groups={canScan ? null : shownGroups}
+                    loading={!canScan && loading}
+                    focusedRow={state.desktop.focusedRow}
+                    onFocusRow={focusDesktopRow}
+                    consume={state.desktop.consume}
+                    onConsume={(consume) => adds.send({ type: "consume", surface: "desktop", consume })}
+                    items={state.items}
+                    draftForMeta={latestDraft(state)}
+                    cellarSummary={cellarSummary}
+                    lastRack={state.lastRack}
+                    addedCount={addedCount}
+                    onRow={desktopRow}
+                    onFiles={(files) => enqueuePhotos(files)}
+                    onCellarTile={() => adds.send({ type: "go", view: "cellar" })}
+                    onByHand={() => openNewByHand(true)}
+                    onNeither={() => openNewByHand(true)}
+                    onItemAction={itemAction}
+                    onFooterButton={close}
+                    busy={adds.busy}
+                    error={state.error}
+                    skippedLot={state.skippedLot}
+                    onSkippedOpen={close}
+                  />
+                ) : null}
+              </>
+            )}
+          </div>
         </div>
 
         {/* Rule 7: never a modal. Discard hands on a note pick the ask holds; Keep going keeps every bottle. */}

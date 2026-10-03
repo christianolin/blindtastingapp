@@ -35,6 +35,8 @@ export type SheetMatrix = {
     disabled: boolean;
     affordance: "plus" | "chevron"; // phone; the laptop always draws RowActionButton with `label`
   };
+  /** Catalog dedupe: the near-match prompt's "use this wine" button. */
+  nearMatchUse: string;
   consumeLabel: string | null;
   inFlightMeta: string; // "in flight": the phone row meta; the laptop button reads "In flight"
   cellarSource: boolean;
@@ -181,6 +183,7 @@ function flightMatrix(d: FlightDestination, canScan: boolean): SheetMatrix {
       inFlight
         ? { label: "In flight", action: "add", disabled: true, affordance: "plus" }
         : { label: addAs, action: "add", disabled: false, affordance: "plus" },
+    nearMatchUse: addAs,
     consumeLabel: POUR_CONSUME,
     cellarSource: true,
     upload: {
@@ -245,6 +248,7 @@ function cellarMatrix(canScan: boolean): SheetMatrix {
       source === "lot"
         ? { label: "+1 bottle", action: "plusOne", disabled: false, affordance: "plus" }
         : { label: "Add to cellar", action: "add", disabled: false, affordance: "plus" },
+    nearMatchUse: "Add this one to my cellar",
     consumeLabel: null,
     cellarSource: false,
     upload: {
@@ -303,6 +307,7 @@ function noteMatrix(canScan: boolean, reveal: boolean): SheetMatrix {
     searchGroups: ALL_GROUPS,
     cellarGroupSubtitle: null,
     row: () => ({ label: "Start the note", action: "pick", disabled: false, affordance: "chevron" }),
+    nearMatchUse: "Rate this one",
     consumeLabel: "Take a bottle out of the cellar when I save the note",
     cellarSource: true,
     upload: {
@@ -343,6 +348,7 @@ function noteMatrix(canScan: boolean, reveal: boolean): SheetMatrix {
     title: () => copy.revealTitle,
     enterHint: copy.revealEnterHint,
     row: () => ({ label: copy.revealRowAction, action: "pick", disabled: false, affordance: "chevron" }),
+    nearMatchUse: copy.revealRowAction,
     // A bottle poured blind was opened by someone else: never drawn down.
     consumeLabel: null,
     upload: { ...note.upload, body: copy.revealUploadBody },
@@ -367,6 +373,7 @@ function catalogMatrix(canScan: boolean): SheetMatrix {
     cellarGroupSubtitle: null,
     // D9 / D1: catalog hits are offered as "Open" (a link to the wine), never Add.
     row: () => ({ label: "Open", action: "open", disabled: false, affordance: "chevron" }),
+    nearMatchUse: "Use this one",
     consumeLabel: null,
     cellarSource: false,
     upload: {
@@ -421,6 +428,7 @@ function noneMatrix(canScan: boolean): SheetMatrix {
     // D12: with no destination every add goes through the E1 chooser, never
     // silently into a hinted flight.
     row: () => ({ label: "Add", action: "choose", disabled: false, affordance: "plus" }),
+    nearMatchUse: "Use this one",
     consumeLabel: POUR_CONSUME,
     cellarSource: true,
     upload: {
