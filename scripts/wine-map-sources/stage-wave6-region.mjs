@@ -15,6 +15,7 @@ import { execSync } from "node:child_process";
 import pg from "pg";
 import { sha256hex, releaseVersion } from "../wine-map-tiles/lib.mjs";
 import { warnIfNeighbourCacheStale } from "./neighbour-cache.mjs";
+import { cleanGeomCte, withCleanupStamp } from "./footprint-cleanup.mjs";
 
 const hasFlag = (n) => process.argv.includes(`--${n}`);
 const STAGE = hasFlag("stage");
@@ -183,11 +184,12 @@ try {
        snapshot as (
          insert into wine_boundary_source_snapshots (source_id, source_revision, retrieved_at, source_url, licence, raw_snapshot_uri, raw_checksum_sha256, normalized_artifact_uri, normalized_checksum_sha256, provenance_note, importer_version)
          select source.id,$5,now(),$6,$7,null,null,$8,$9,$10,$11 from source returning id),
-       geom as (select extensions.ST_Multi(extensions.ST_CollectionExtract(extensions.ST_MakeValid(extensions.ST_SetSRID(extensions.ST_GeomFromGeoJSON($12),4326)),3)) g)
+       geom_raw as (select extensions.ST_Multi(extensions.ST_CollectionExtract(extensions.ST_MakeValid(extensions.ST_SetSRID(extensions.ST_GeomFromGeoJSON($12),4326)),3)) g),
+       ${cleanGeomCte({ placeKey: "$15" })}
        insert into wine_place_boundaries (wine_place_id, source_snapshot_id, boundary_method, quality_status, display_geometry, label_point, bbox, source_feature_refs, generation_parameters, revision, is_current, reviewed_at)
        select place.id, snapshot.id, 'GENERALIZED_FROM_OFFICIAL_SOURCE', 'DRAFT', geom.g, extensions.ST_PointOnSurface(geom.g),
               array[extensions.ST_XMin(extensions.Box3D(geom.g)),extensions.ST_YMin(extensions.Box3D(geom.g)),extensions.ST_XMax(extensions.Box3D(geom.g)),extensions.ST_YMax(extensions.Box3D(geom.g))]::double precision[],
-              $13::jsonb,$14::jsonb,$5,false,null
+              $13::jsonb,${withCleanupStamp("$14")},$5,false,null
          from wine_places place, source, snapshot, geom where place.canonical_key = $15 returning id`,
       [NAMESPACE, sourceFeatureId, AUTHORITY, JURISDICTION, revision, SOURCE_URL, LICENCE, SOURCE_FILE, sourceSha256, provenanceNote, importer, report.geojson, JSON.stringify(sourceFeatureRefs), JSON.stringify(generation), b.targetKey],
     );

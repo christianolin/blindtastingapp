@@ -39,6 +39,7 @@ import { sha256hex, releaseVersion } from "../wine-map-tiles/lib.mjs";
 import { uploadRawObject } from "./inao-lib.mjs";
 import { matchComune } from "./istat-lib.mjs";
 import { warnIfNeighbourCacheStale } from "./neighbour-cache.mjs";
+import { cleanGeomCte, methodAfterCleanupSql, withCleanupStamp } from "./footprint-cleanup.mjs";
 
 const hasFlag = (n) => process.argv.includes(`--${n}`);
 const STAGE = hasFlag("stage");
@@ -461,19 +462,20 @@ try {
          from source
          returning id
        ),
-       geom as (
+       geom_raw as (
          select extensions.ST_Multi(
                   extensions.ST_CollectionExtract(
                     extensions.ST_MakeValid(
                       extensions.ST_SetSRID(extensions.ST_GeomFromGeoJSON($14), 4326)
                     ), 3)) g
-       )
+       ),
+       ${cleanGeomCte({ placeKey: "$17" })}
        insert into wine_place_boundaries (
          wine_place_id, source_snapshot_id, boundary_method, quality_status,
          display_geometry, label_point, bbox, source_feature_refs,
          generation_parameters, revision, is_current, reviewed_at
        )
-       select place.id, snapshot.id, 'MANUAL', 'DRAFT',
+       select place.id, snapshot.id, ${methodAfterCleanupSql("'MANUAL'")}, 'DRAFT',
               geom.g, extensions.ST_PointOnSurface(geom.g),
               array[
                 extensions.ST_XMin(extensions.Box3D(geom.g)),
@@ -482,7 +484,7 @@ try {
                 extensions.ST_YMax(extensions.Box3D(geom.g))
               ]::double precision[],
               $15::jsonb,
-              $16::jsonb,
+              ${withCleanupStamp("$16")},
               $5, false, null
          from wine_places place, source, snapshot, geom
         where place.canonical_key = $17

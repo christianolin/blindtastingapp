@@ -18,6 +18,7 @@ import pg from "pg";
 import { sha256hex, releaseVersion } from "../wine-map-tiles/lib.mjs";
 import { loadWeinlagenCache, LICENCE, SOURCE_URL } from "./fetch-rlp-weinlagen.mjs";
 import { warnIfNeighbourCacheStale } from "./neighbour-cache.mjs";
+import { EINZELLAGE_CLEANED_NOTE, cleanGeomCte, methodAfterCleanupSql, withCleanupStamp } from "./footprint-cleanup.mjs";
 
 const NAMESPACE = "LWK_RLP_WEINLAGEN";
 const WINDOW = { minLon: 5.5, minLat: 46.9, maxLon: 15.6, maxLat: 55.5 };
@@ -101,11 +102,12 @@ try {
       const id = place.rows[0].id;
       await client.query("update wine_place_boundaries set is_current=false where wine_place_id=$1 and is_current", [id]);
       await client.query(
-        `with geom as (select extensions.ST_Multi(extensions.ST_CollectionExtract(extensions.ST_MakeValid(extensions.ST_SetSRID(extensions.ST_GeomFromGeoJSON($1),4326)),3)) g)
+        `with geom_raw as (select extensions.ST_Multi(extensions.ST_CollectionExtract(extensions.ST_MakeValid(extensions.ST_SetSRID(extensions.ST_GeomFromGeoJSON($1),4326)),3)) g),
+        ${cleanGeomCte({ placeId: "$2" })}
          insert into wine_place_boundaries (wine_place_id,source_snapshot_id,boundary_method,quality_status,display_geometry,label_point,bbox,source_feature_refs,generation_parameters,revision,is_current,reviewed_at)
-         select $2,$3,'MANUAL','VALIDATED',geom.g,extensions.ST_PointOnSurface(geom.g),
+         select $2,$3,${methodAfterCleanupSql("'MANUAL'")},'VALIDATED',geom.g,extensions.ST_PointOnSurface(geom.g),
                 array[extensions.ST_XMin(extensions.Box3D(geom.g)),extensions.ST_YMin(extensions.Box3D(geom.g)),extensions.ST_XMax(extensions.Box3D(geom.g)),extensions.ST_YMax(extensions.Box3D(geom.g))]::double precision[],
-                $4::jsonb,$5::jsonb,$6,true,now() from geom`,
+                $4::jsonb,${withCleanupStamp("$5", { cleanedPatch: { generalised: true, note: EINZELLAGE_CLEANED_NOTE } })},$6,true,now() from geom`,
         [r.geojson, id, snapshotId,
          JSON.stringify({ wlg_nr: t.nr, wlg_name: t.name }),
          JSON.stringify({ engine: "weinbergsrolle-asis", generalised: false, note: "Official Einzellage polygon used unmodified." }),

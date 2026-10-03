@@ -19,6 +19,7 @@ import { uploadRawObject } from "./inao-lib.mjs";
 import { loadMunicipioCache } from "./fetch-spain-municipios.mjs";
 import { buildMunicipioIndex } from "./spain-lib.mjs";
 import { warnIfNeighbourCacheStale } from "./neighbour-cache.mjs";
+import { cleanGeomCte, methodAfterCleanupSql, withCleanupStamp } from "./footprint-cleanup.mjs";
 
 const MEMBERSHIP_FILE = "data/wine-map/spain-do-membership.json";
 const NAMESPACE = "IGN_CNIG_SPAIN";
@@ -147,19 +148,20 @@ async function main() {
              select source.id, $3, now(), $4, $5, $6, $7, $8, $9, $10, $11 from source
              returning id
            ),
-           geom as (
+           geom_raw as (
              select extensions.ST_Multi(extensions.ST_CollectionExtract(
                       extensions.ST_MakeValid(extensions.ST_SetSRID(extensions.ST_GeomFromGeoJSON($12), 4326)), 3)) g
-           )
+           ),
+           ${cleanGeomCte({ placeId: "$13" })}
            insert into wine_place_boundaries (
              wine_place_id, source_snapshot_id, boundary_method, quality_status,
              display_geometry, label_point, bbox, source_feature_refs, generation_parameters,
              revision, is_current, reviewed_at
            )
-           select $13, snapshot.id, 'MANUAL', 'VALIDATED', geom.g, extensions.ST_PointOnSurface(geom.g),
+           select $13, snapshot.id, ${methodAfterCleanupSql("'MANUAL'")}, 'VALIDATED', geom.g, extensions.ST_PointOnSurface(geom.g),
                   array[extensions.ST_XMin(extensions.Box3D(geom.g)), extensions.ST_YMin(extensions.Box3D(geom.g)),
                         extensions.ST_XMax(extensions.Box3D(geom.g)), extensions.ST_YMax(extensions.Box3D(geom.g))]::double precision[],
-                  $14::jsonb, $15::jsonb, $3, true, now()
+                  $14::jsonb, ${withCleanupStamp("$15")}, $3, true, now()
              from snapshot, geom
            returning id`,
           [

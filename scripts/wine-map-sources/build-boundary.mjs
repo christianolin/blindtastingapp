@@ -13,6 +13,7 @@ import { pgConfig, sha256hex } from "../wine-map-tiles/lib.mjs";
 import { rawObjectPath, uploadRawObject, SOURCE_NAMESPACE, WFS_LICENCE } from "./inao-lib.mjs";
 import { buildConcaveGeometry } from "./concave-engine.mjs";
 import { warnIfNeighbourCacheStale } from "./neighbour-cache.mjs";
+import { cleanGeomCte, withCleanupStamp } from "./footprint-cleanup.mjs";
 
 function arg(name, fallback = null) {
   const index = process.argv.indexOf(`--${name}`);
@@ -257,12 +258,13 @@ try {
               sum(extensions.ST_Area(part)) over () total
        from geom_parts
      ),
-     geom as (
+     geom_raw as (
        -- Drop tiny MakeValid slivers below the part-area floor (0 keeps all).
        select extensions.ST_Multi(extensions.ST_Collect(part)) g
        from geom_measured
        where total = 0 or area / total >= $17
-     )
+     ),
+     ${cleanGeomCte({ placeId: "select id from place" })}
      insert into wine_place_boundaries (
        wine_place_id, source_snapshot_id, boundary_method, quality_status,
        display_geometry, label_point, bbox, source_feature_refs,
@@ -277,7 +279,7 @@ try {
               extensions.ST_YMax(extensions.Box3D(geom.g))
             ]::double precision[],
             jsonb_build_object('dataset', 'AOC-VITICOLES:aire_parcellaire', 'members', $14::jsonb, 'filtered_parcels', $15::int),
-            $16::jsonb,
+            ${withCleanupStamp("$16")},
             $4, false, null
      from place, source, snapshot, geom
      returning id`,

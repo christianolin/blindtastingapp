@@ -18,6 +18,7 @@ import { sha256hex, releaseVersion } from "../wine-map-tiles/lib.mjs";
 import { uploadRawObject } from "./inao-lib.mjs";
 import { loadWeinlagenCache, LICENCE, SOURCE_URL } from "./fetch-rlp-weinlagen.mjs";
 import { warnIfNeighbourCacheStale } from "./neighbour-cache.mjs";
+import { cleanGeomCte, withCleanupStamp } from "./footprint-cleanup.mjs";
 
 const NAMESPACE = "LWK_RLP_WEINLAGEN";
 const WINDOW = { minLon: 5.5, minLat: 46.9, maxLon: 15.6, maxLat: 55.5 };
@@ -148,11 +149,12 @@ async function buildOne(client, { key, rawName, parentKey, geoms }) {
          insert into wine_boundary_source_snapshots (source_id, source_revision, retrieved_at, source_url, licence, raw_snapshot_uri, raw_checksum_sha256, normalized_artifact_uri, normalized_checksum_sha256, provenance_note, importer_version)
          select source.id, $3, now(), $4, $5, $6, $7, $6, $7, $8, $9 from source returning id
        ),
-       geom as (select extensions.ST_Multi(extensions.ST_CollectionExtract(extensions.ST_MakeValid(extensions.ST_SetSRID(extensions.ST_GeomFromGeoJSON($10),4326)),3)) g)
+       geom_raw as (select extensions.ST_Multi(extensions.ST_CollectionExtract(extensions.ST_MakeValid(extensions.ST_SetSRID(extensions.ST_GeomFromGeoJSON($10),4326)),3)) g),
+       ${cleanGeomCte({ placeId: "$11" })}
        insert into wine_place_boundaries (wine_place_id, source_snapshot_id, boundary_method, quality_status, display_geometry, label_point, bbox, source_feature_refs, generation_parameters, revision, is_current, reviewed_at)
        select $11, snapshot.id, 'GENERALIZED_FROM_OFFICIAL_SOURCE', 'VALIDATED', geom.g, extensions.ST_PointOnSurface(geom.g),
               array[extensions.ST_XMin(extensions.Box3D(geom.g)), extensions.ST_YMin(extensions.Box3D(geom.g)), extensions.ST_XMax(extensions.Box3D(geom.g)), extensions.ST_YMax(extensions.Box3D(geom.g))]::double precision[],
-              $12::jsonb, $13::jsonb, $3, true, now() from snapshot, geom returning id`,
+              $12::jsonb, ${withCleanupStamp("$13")}, $3, true, now() from snapshot, geom returning id`,
       [
         NAMESPACE, `weinlagen-dissolve:bereich:${key}`, revision, SOURCE_URL, LICENCE,
         `storage://wine-map-sources/${rawPath}`, sha256hex(rawBody),

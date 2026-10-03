@@ -1,3 +1,4 @@
+import { cleanGeomCte, withCleanupStamp } from "./footprint-cleanup.mjs";
 // Stage rules for the USA map (spec 2026-09-29 §8.2, D9, D10, D15, D25). The
 // pure half is tested in usa-stage-lib.test.mjs; stageWave (below) is the
 // database half, shared by stage-usa-ava.mjs and the rehearsal.
@@ -136,13 +137,14 @@ snapshot as (
   select s.id from public.wine_boundary_source_snapshots s, source
    where s.source_id = source.id and s.source_revision = $4 and s.normalized_checksum_sha256 = $11
      and not exists (select 1 from ins)),
-geom as (select extensions.ST_Multi(${GEOM("$14")}) g)
+geom_raw as (select extensions.ST_Multi(${GEOM("$14")}) g),
+${cleanGeomCte({ placeKey: "$19" })}
 insert into public.wine_place_boundaries (wine_place_id, source_snapshot_id, boundary_method, quality_status,
   display_geometry, label_point, bbox, source_feature_refs, generation_parameters, revision, is_current, reviewed_at)
 select place.id, snapshot.id, $15::public.wine_boundary_method, 'DRAFT', geom.g, extensions.ST_PointOnSurface(geom.g),
        array[extensions.ST_XMin(extensions.Box3D(geom.g)), extensions.ST_YMin(extensions.Box3D(geom.g)),
              extensions.ST_XMax(extensions.Box3D(geom.g)), extensions.ST_YMax(extensions.Box3D(geom.g))]::double precision[],
-       $16::jsonb, $17::jsonb, $18, false, null
+       $16::jsonb, ${withCleanupStamp("$17")}, $18, false, null
   from public.wine_places place, snapshot, geom
  where place.canonical_key = $19
 returning id`;

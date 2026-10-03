@@ -2010,6 +2010,33 @@ a raw subquery, regardless of which two tables look involved at a glance.
   `transfer_tasting_host` documents). The refresh refuses to publish (returns
   -1, leaves the cache stale) if any stored neighbour is one an ordinary
   reader's policies would filter.
+- **Every boundary write goes through the fp-1 footprint step** (2026-10-04,
+  owner: "improve the existing polygons where they are messy"; design in the
+  footprints scratchpad, `design-final.md`). `scripts/wine-map-sources/footprint-sql.mjs`
+  is the one definition (parameters, the pure `CORE_SQL`, context, protected
+  ground, stamp, and the rendered Migration A
+  `20261004090000_wine_footprint_clean.sql`, NOT applied yet);
+  `footprint-cleanup.mjs` is the shared tail every builder uses:
+  `geom_raw as (<raw>)`, `${cleanGeomCte({ placeId | placeKey })}`, and
+  `${withCleanupStamp(<generation_parameters>)}` (`cleanGeomLateral` /
+  `STAMP_SUFFIX` / `cleanVariableSql` for the generated migrations). Per place:
+  parts within 20 m are closed into blocks (10 m mitre closing, never losing
+  raw ground), arms under 10 m opened (kept whole if that would gut or split
+  the part), holes under clamp(0.1 %·A, 2,000 m², 25 ha) filled, crumbs under
+  clamp(0.5 %·A, 1,000-5,000 m²) dropped after the constraint; never new
+  ground on a same-tier place without a DUAL_LABEL/OVERLAPS/REPLACES_WITHIN
+  edge, none outside the containment parent, no descendant ground lost;
+  every overlay on the 1e-6° grid; a place the rule leaves alone comes back
+  byte for byte; ladder full → close-only → unchanged within [-3 %, +10 %].
+  Once Migration A is live its trigger refuses any INSERT (or UPDATE OF
+  display_geometry) whose `generation_parameters.cleanup.output_sha256` does
+  not match the stored geometry, so a builder that skips the helper fails
+  loudly. Until then every wired builder fails with "function
+  public.wine_footprint_clean does not exist": apply Migration A before (or
+  with) merging the call sites. The one-off pass over today's shapes is
+  `footprint-pass.mjs` (`--dry` read-only, `--stage` at a sitting only,
+  `--render-sql` for promote/unstage/revert); its staged rows are DRAFT
+  `+fp1` revisions, and the promote ends with the neighbour-cache refresh.
 - World Wine Map Phase 3A adds the four-axis place model and the France region
   import machinery. Classification facts live as flat columns on `wine_places`
   (`is_appellation`, `appellation_system`, `appellation_level`), legal

@@ -17,6 +17,7 @@ import pg from "pg";
 import { pgConfig, releaseVersion, sha256hex } from "../wine-map-tiles/lib.mjs";
 import { uploadRawObject } from "./inao-lib.mjs";
 import { warnIfNeighbourCacheStale } from "./neighbour-cache.mjs";
+import { cleanGeomCte, methodAfterCleanupSql, withCleanupStamp } from "./footprint-cleanup.mjs";
 
 const arg = (n, d = null) => {
   const i = process.argv.indexOf(`--${n}`);
@@ -263,18 +264,19 @@ try {
        from source
        returning id
      ),
-     geom as (
+     geom_raw as (
        select extensions.ST_Multi(extensions.ST_CollectionExtract(
                 extensions.ST_MakeValid(
                   extensions.ST_SetSRID(extensions.ST_GeomFromGeoJSON($12), 4326)
                 ), 3)) g
-     )
+     ),
+     ${cleanGeomCte({ placeId: "select id from place" })}
      insert into wine_place_boundaries (
        wine_place_id, source_snapshot_id, boundary_method, quality_status,
        display_geometry, label_point, bbox, source_feature_refs,
        generation_parameters, revision, is_current, reviewed_at
      )
-     select place.id, snapshot.id, 'MANUAL', 'DRAFT',
+     select place.id, snapshot.id, ${methodAfterCleanupSql("'MANUAL'")}, 'DRAFT',
             geom.g, extensions.ST_PointOnSurface(geom.g),
             array[
               extensions.ST_XMin(extensions.Box3D(geom.g)),
@@ -283,7 +285,7 @@ try {
               extensions.ST_YMax(extensions.Box3D(geom.g))
             ]::double precision[],
             jsonb_build_object('member_commune_count', $13::int, 'commune_list', $1::text),
-            $14::jsonb,
+            ${withCleanupStamp("$14")},
             $4, false, null
      from place, source, snapshot, geom
      returning id`,

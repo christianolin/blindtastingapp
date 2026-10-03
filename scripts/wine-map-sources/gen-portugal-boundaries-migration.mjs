@@ -14,6 +14,7 @@
 // reproducible. Later waves should run it from this path.
 import { readFile, writeFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
+import { STAMP_SUFFIX, cleanGeomLateral, methodAfterCleanupSql } from "./footprint-cleanup.mjs";
 
 const OUT = "supabase/migrations/20260903110000_portugal_wave1_boundaries.sql";
 const CONCELHOS = "data/wine-map/portugal-concelhos-dissolved.geojson";
@@ -101,7 +102,7 @@ snap as (
          'scripts/wine-map-tiles/extract-portugal-ne.mjs'
   from src returning id
 ),
-geom as (
+geom_raw as (
   select extensions.ST_Multi(extensions.ST_CollectionExtract(extensions.ST_MakeValid(
     extensions.ST_SetSRID(extensions.ST_GeomFromGeoJSON('${JSON.stringify(country.geometry)}'), 4326)), 3)) g
 )
@@ -110,15 +111,15 @@ insert into wine_place_boundaries (
   display_geometry, label_point, bbox, source_feature_refs,
   generation_parameters, revision, is_current, reviewed_at
 )
-select p.id, snap.id, 'MANUAL', 'VALIDATED', geom.g, extensions.ST_PointOnSurface(geom.g),
+select p.id, snap.id, ${methodAfterCleanupSql("'MANUAL'")}, 'VALIDATED', geom.g, extensions.ST_PointOnSurface(geom.g),
        array[extensions.ST_XMin(extensions.Box3D(geom.g)), extensions.ST_YMin(extensions.Box3D(geom.g)),
              extensions.ST_XMax(extensions.Box3D(geom.g)), extensions.ST_YMax(extensions.Box3D(geom.g))]::double precision[],
        jsonb_build_object('adm0_a3', 'PRT', 'dataset', 'ne_50m_admin_0_countries'),
        jsonb_build_object('component_filter', 'outer ring fully inside lon [-9.6,-6.1], lat [36.9,42.2]',
                           'coordinate_precision', 4,
-                          'excludes', jsonb_build_array('Madeira', 'Azores')),
+                          'excludes', jsonb_build_array('Madeira', 'Azores'))${STAMP_SUFFIX},
        '${REVISION}', true, now()
-from wine_places p, snap, geom where p.canonical_key = 'portugal';
+from wine_places p cross join snap ${cleanGeomLateral({ placeId: "p.id" })} where p.canonical_key = 'portugal';
 
 `;
 
@@ -148,7 +149,7 @@ snap as (
          '.tiles-build/portugal/build-concelho-dissolve.mjs'
   from src returning id
 ),
-geom as (
+geom_raw as (
   select extensions.ST_Multi(extensions.ST_CollectionExtract(extensions.ST_MakeValid(
     extensions.ST_SetSRID(extensions.ST_GeomFromGeoJSON('${geometry}'), 4326)), 3)) g
 )
@@ -170,9 +171,9 @@ select p.id, snap.id, 'GENERALIZED_FROM_OFFICIAL_SOURCE', 'VALIDATED', geom.g,
          'coordinate_precision', 5,
          'partial_concelhos', 'included whole',
          'shares_zone_with', ${keys.length > 1 ? `jsonb_build_array(${keys.map((k) => `'${k}'`).join(", ")})` : "null"}
-       ),
+       )${STAMP_SUFFIX},
        '${REVISION}', true, now()
-from wine_places p, snap, geom
+from wine_places p cross join snap ${cleanGeomLateral({ placeId: "p.id" })}
 where p.canonical_key in (${keys.map((k) => `'${k}'`).join(", ")});
 
 `;
@@ -201,7 +202,7 @@ snap as (
          '.tiles-build/portugal/build-madeira.mjs'
   from src returning id
 ),
-geom as (
+geom_raw as (
   select extensions.ST_Multi(extensions.ST_CollectionExtract(extensions.ST_MakeValid(
     extensions.ST_SetSRID(extensions.ST_GeomFromGeoJSON('${JSON.stringify(madeira.geometry)}'), 4326)), 3)) g
 )
@@ -223,9 +224,9 @@ select p.id, snap.id, 'GENERALIZED_FROM_OFFICIAL_SOURCE', 'VALIDATED', geom.g,
          'excludes', jsonb_build_array('Desertas', 'Selvagens'),
          'coordinate_precision', 5,
          'shares_zone_with', jsonb_build_array(${madeiraKeys.map((k) => `'${k}'`).join(", ")})
-       ),
+       )${STAMP_SUFFIX},
        '${REVISION}', true, now()
-from wine_places p, snap, geom
+from wine_places p cross join snap ${cleanGeomLateral({ placeId: "p.id" })}
 where p.canonical_key in (${madeiraKeys.map((k) => `'${k}'`).join(", ")});
 
 `;

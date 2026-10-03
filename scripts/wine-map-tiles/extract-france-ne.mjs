@@ -8,6 +8,7 @@
 //        node scripts/wine-map-tiles/extract-france-ne.mjs sql <commit_sha>
 import { createHash } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { cleanVariableSql } from "../wine-map-sources/footprint-cleanup.mjs";
 
 const RAW_PATH = "data/wine-map/france-ne50m-raw.geojson";
 const NORM_PATH = "data/wine-map/france-mainland-ne50m.geojson";
@@ -115,6 +116,7 @@ declare
   v_place_id uuid;
   v_snapshot_id uuid;
   v_geom extensions.geometry;
+  v_cleanup jsonb;
   v_retired int;
 begin
   select id into v_place_id from wine_places where canonical_key = 'france';
@@ -147,12 +149,14 @@ begin
     raise exception 'expected to retire exactly 1 current france boundary, got %', v_retired;
   end if;
 
+  ${cleanVariableSql()}
+
   insert into wine_place_boundaries (
     wine_place_id, source_snapshot_id, boundary_method, quality_status,
     display_geometry, label_point, bbox, source_feature_refs,
     generation_parameters, revision, is_current, reviewed_at
   ) values (
-    v_place_id, v_snapshot_id, 'MANUAL', 'VALIDATED',
+    v_place_id, v_snapshot_id, (case when v_cleanup->>'status' = 'cleaned' then 'GENERALIZED_FROM_OFFICIAL_SOURCE' else 'MANUAL' end)::public.wine_boundary_method, 'VALIDATED',
     v_geom,
     extensions.ST_PointOnSurface(v_geom),
     array[
@@ -165,7 +169,7 @@ begin
     jsonb_build_object(
       'component_filter', 'outer ring fully inside lon [-6,11], lat [41,52]',
       'coordinate_precision', 4
-    ),
+    ) || jsonb_build_object('cleanup', v_cleanup),
     '20260731090000', true, now()
   );
 end;

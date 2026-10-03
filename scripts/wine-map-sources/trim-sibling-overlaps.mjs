@@ -12,6 +12,7 @@ import assert from "node:assert/strict";
 import pg from "pg";
 import { pgConfig } from "../wine-map-tiles/lib.mjs";
 import { warnIfNeighbourCacheStale } from "./neighbour-cache.mjs";
+import { cleanGeomCte, withCleanupStamp } from "./footprint-cleanup.mjs";
 
 const villages = process.argv.slice(2);
 assert.ok(villages.length > 0, "pass at least one village canonical key");
@@ -87,14 +88,15 @@ try {
         continue;
       }
       const inserted = await client.query(
-        `with geom as (
+        `with geom_raw as (
            -- 6-decimal GeoJSON rounding can re-break validity; repair on the
            -- way in exactly like build-boundary does.
            select extensions.ST_Multi(extensions.ST_CollectionExtract(
              extensions.ST_MakeValid(
                extensions.ST_SetSRID(extensions.ST_GeomFromGeoJSON($2), 4326)
              ), 3)) g
-         )
+         ),
+         ${cleanGeomCte({ placeId: "select wine_place_id from wine_place_boundaries where id = $1" })}
          insert into wine_place_boundaries (
            wine_place_id, source_snapshot_id, boundary_method, quality_status,
            display_geometry, label_point, bbox, source_feature_refs,
@@ -109,10 +111,10 @@ try {
                   extensions.ST_YMax(extensions.Box3D(geom.g))
                 ]::double precision[],
                 b.source_feature_refs,
-                b.generation_parameters || jsonb_build_object(
+                ${withCleanupStamp(`b.generation_parameters || jsonb_build_object(
                   'sibling_trim',
                   jsonb_build_object('village', $3::text, 'rule', 'smallest-first-keeps')
-                ),
+                )`)},
                 b.revision || '-trim', false, null
            from wine_place_boundaries b, geom where b.id = $1
          returning id`,

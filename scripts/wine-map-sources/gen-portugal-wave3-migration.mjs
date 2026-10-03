@@ -30,6 +30,7 @@
 // Usage: node scripts/wine-map-sources/gen-portugal-wave3-migration.mjs
 import { readFile, writeFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
+import { STAMP_SUFFIX, cleanGeomLateral } from "./footprint-cleanup.mjs";
 
 const OUT = "supabase/migrations/20260912100000_portugal_wave3_statute_corrections.sql";
 const ART = "data/wine-map/portugal-wave3-dissolved.geojson";
@@ -127,7 +128,7 @@ snap as (
          'scripts/wine-map-sources/build-portugal-freguesia-union.mjs'
   from src returning id
 ),
-geom as (
+geom_raw as (
   select extensions.ST_Multi(extensions.ST_CollectionExtract(extensions.ST_MakeValid(
     extensions.ST_SetSRID(extensions.ST_GeomFromGeoJSON('${JSON.stringify(feat.geometry)}'), 4326)), 3)) g
 )
@@ -151,9 +152,9 @@ select p.id, snap.id, 'GENERALIZED_FROM_OFFICIAL_SOURCE', 'VALIDATED', geom.g,
          'supersedes', 'wave-1 footprint built from a non-statutory source',
          'partial_notes', '${sq(JSON.stringify(props.partial ?? {}))}'::jsonb,
          'shares_zone_with', ${keys.length > 1 ? `jsonb_build_array(${keys.map((k) => `'${k}'`).join(", ")})` : "null"}
-       ),
+       )${STAMP_SUFFIX},
        '${REVISION}', true, now()
-from wine_places p, snap, geom
+from wine_places p cross join snap ${cleanGeomLateral({ placeId: "p.id" })}
 where p.canonical_key in (${keys.map((k) => `'${k}'`).join(", ")});
 
 `;

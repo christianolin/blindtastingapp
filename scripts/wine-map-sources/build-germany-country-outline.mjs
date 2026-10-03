@@ -24,6 +24,7 @@ import { sha256hex, releaseVersion } from "../wine-map-tiles/lib.mjs";
 import { uploadRawObject } from "./inao-lib.mjs";
 import { loadLaenderCache, DATASET_URL, LICENCE } from "./fetch-germany-laender.mjs";
 import { warnIfNeighbourCacheStale } from "./neighbour-cache.mjs";
+import { cleanGeomCte, methodAfterCleanupSql, withCleanupStamp } from "./footprint-cleanup.mjs";
 
 const NAMESPACE = "BKG_VG250";
 // Germany spans roughly lon 5.87..15.04, lat 47.27..55.06; the window is a
@@ -144,18 +145,19 @@ async function main() {
            normalized_checksum_sha256, provenance_note, importer_version)
          select source.id, $2, now(), $3, $4, $5, $6, $5, $6, $7, $8 from source returning id
        ),
-       geom as (
+       geom_raw as (
          select extensions.ST_Multi(extensions.ST_CollectionExtract(
                   extensions.ST_MakeValid(extensions.ST_SetSRID(extensions.ST_GeomFromGeoJSON($9), 4326)), 3)) g
-       )
+       ),
+       ${cleanGeomCte({ placeId: "$10" })}
        insert into wine_place_boundaries (
          wine_place_id, source_snapshot_id, boundary_method, quality_status,
          display_geometry, label_point, bbox, source_feature_refs,
          generation_parameters, revision, is_current, reviewed_at)
-       select $10, snapshot.id, 'MANUAL', 'VALIDATED', geom.g, extensions.ST_PointOnSurface(geom.g),
+       select $10, snapshot.id, ${methodAfterCleanupSql("'MANUAL'")}, 'VALIDATED', geom.g, extensions.ST_PointOnSurface(geom.g),
               array[extensions.ST_XMin(extensions.Box3D(geom.g)), extensions.ST_YMin(extensions.Box3D(geom.g)),
                     extensions.ST_XMax(extensions.Box3D(geom.g)), extensions.ST_YMax(extensions.Box3D(geom.g))]::double precision[],
-              $11::jsonb, $12::jsonb, $2, true, now()
+              $11::jsonb, ${withCleanupStamp("$12")}, $2, true, now()
          from snapshot, geom returning id`,
       [
         NAMESPACE, revision, DATASET_URL, cache.licence ?? LICENCE,
