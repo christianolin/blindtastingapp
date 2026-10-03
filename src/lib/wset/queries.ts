@@ -41,7 +41,7 @@ const SELECT =
   "appellation:appellations(name), " +
   "primary_grape:grapes!catalog_wines_primary_grape_id_fkey(name), " +
   "secondary_grape:grapes!catalog_wines_secondary_grape_id_fkey(name), " +
-  "type_designation:type_designations(name)";
+  "type_designation:type_designations!catalog_wines_type_designation_id_fkey(name)";
 
 // PostgREST embeds arrive as arrays or single objects depending on the client
 // version; normalise to a name string.
