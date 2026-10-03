@@ -1,5 +1,6 @@
 import type { Ref } from "react";
 import type { RevealMode, WineSourceMode } from "@/lib/supabase/database.types";
+import type { NearMatchRow, NearMatches, ProducerSuggestion } from "@/lib/wine-identity/near-match";
 import type { WineFieldKey, WineIdentityDraft } from "@/lib/wine-identity/types";
 import type { SheetMatrix } from "./matrix";
 import type { ByHandReferences } from "./by-hand-actions";
@@ -300,6 +301,22 @@ export type DesktopViewProps = {
       that link navigates. */
   skippedLot?: { lotId: string } | null;
   onSkippedOpen?: () => void;
+};
+
+/** Catalog dedupe (owner, 2026-10-03): "Already in the catalog?", shown by the
+    shell over the view an add that would create a new catalog wine started
+    from (`state.nearMatch`). The view writes nothing; each choice is the adds
+    hook's. `dark` follows the view underneath (the camera's confirm is dark). */
+export type NearMatchViewProps = {
+  matches: NearMatches;
+  matrix: SheetMatrix;
+  dark: boolean;
+  busy: boolean;
+  onUse: (row: NearMatchRow) => void;
+  onAddAsVintage: (row: NearMatchRow) => void;
+  onProducer: (producer: ProducerSuggestion) => void;
+  onNew: () => void;
+  onBack: () => void;
 };
 
 /** A4 (dark): one row per scanned bottle, its copy from `itemRowCopy`. Fix,

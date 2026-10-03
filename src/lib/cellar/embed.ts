@@ -32,7 +32,7 @@ export const LOT_SELECT =
   "purchased_on, purchase_source, drink_from, drink_to, storage_location, lot_note, created_at, " +
   "catalog_wines(wine_name, vintage_kind, vintage_year, vintage_tawny_years, colour, style, image_url, " +
   "producer:producers(name), appellation:appellations(name), region:regions(name), country:countries(name), " +
-  "primary_grape:grapes!catalog_wines_primary_grape_id_fkey(name), type_designation:type_designations(name))";
+  "primary_grape:grapes!catalog_wines_primary_grape_id_fkey(name), type_designation:type_designations!catalog_wines_type_designation_id_fkey(name))";
 
 /** A `(name)` embed: PostgREST returns an object or a one-element array
  *  depending on the client version. */

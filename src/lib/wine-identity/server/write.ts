@@ -308,11 +308,15 @@ function identityName(name: string | null): string {
 }
 
 /** Whether a live catalog row already holds this identity: the same columns
-    `find_or_create_catalog_wine` matches on. */
-async function identityExists(supabase: Db, wine: ResolvedWine): Promise<boolean> {
+    `find_or_create_catalog_wine` matches on. Since 20261003100000 its lookup
+    (`catalog_wine_identity_match`) also takes a name equal once folded (accents,
+    case, punctuation: "Nódal" is "Nodal"), but only on a row the caller reads
+    without any glass-based grant — public, or their own — and only for a name
+    that folds to something; this mirrors it. */
+async function identityExists(supabase: Db, userId: string, wine: ResolvedWine): Promise<boolean> {
   let query = supabase
     .from("catalog_wines")
-    .select("id, wine_name")
+    .select("id, wine_name, blind_pending, created_by")
     .eq("producer_id", wine.producerId)
     .eq("appellation_id", wine.appellationId)
     .eq("colour", wine.colour)
@@ -329,7 +333,12 @@ async function identityExists(supabase: Db, wine: ResolvedWine): Promise<boolean
   const { data, error } = await query;
   check(error, "catalog identity lookup");
   const name = identityName(wine.wineName);
-  return (data ?? []).some((row) => identityName(row.wine_name) === name);
+  const folded = foldName(wine.wineName ?? "");
+  return (data ?? []).some((row) =>
+    identityName(row.wine_name) === name
+    // A name that folds to nothing (non-Latin script) never takes the folded
+    // half, as in the SQL: it would equal every nameless wine.
+    || (folded !== "" && (!row.blind_pending || row.created_by === userId) && foldName(row.wine_name ?? "") === folded));
 }
 
 /**
@@ -356,7 +365,7 @@ export async function upsertCatalogWine(
   options: { fill?: boolean; hidden?: boolean } = {},
 ): Promise<{ catalogWineId: string; written: boolean } | WriteRefusal> {
   try {
-    const existed = await identityExists(supabase, wine);
+    const existed = await identityExists(supabase, userId, wine);
     const payload = catalogWinePayload(wine, { hidden: options.hidden === true });
 
     let written = !existed;

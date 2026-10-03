@@ -23,6 +23,8 @@ import {
   type CatalogGrapeCount,
   type PlaceGrape,
 } from "@/lib/wine-identity/grape-suggestion";
+import type { NearMatches } from "@/lib/wine-identity/near-match";
+import { loadNearMatches } from "@/lib/wine-identity/server/near-match";
 import {
   prepareCompleteWine,
   upsertCatalogWine,
@@ -31,6 +33,7 @@ import {
 import type { WineFieldKey, WineIdentityDraft } from "@/lib/wine-identity/types";
 import { catalogWineTitle, fetchCatalogWine } from "@/lib/wset/queries";
 import { addedVia } from "./added-via";
+import { recentFirst } from "./recent-first";
 import { callerKnowsWine, searchShowsCatalogWine } from "./flight-knowledge";
 import { windowContains } from "./row-format";
 import type {
@@ -319,6 +322,36 @@ function identityFields(w: CatalogIdentityRow) {
   };
 }
 
+/** "Added in the last day" for the search's circle ranking. */
+const RECENT_HOURS = 24;
+
+/**
+ * "Already in the catalog?" (catalog dedupe, owner 2026-10-03): before an add
+ * that would create a new catalog wine, the close matches the caller may read —
+ * never a hidden (blind_pending) or merged wine — and, for a producer that is a
+ * new name, the existing producers it may mean. Null when there is nothing to
+ * ask, and on any failure: the check is advice, so it never blocks an add.
+ */
+export async function checkNearMatches(draft: unknown): Promise<NearMatches | null> {
+  const parsed = parseStoredDraft(draft);
+  if (parsed === null) return null;
+  const supabase = await createClient();
+  const user = await currentUser(supabase);
+  if (!user) return null;
+  const producer = parsed.producer;
+  const safe = {
+    ...parsed,
+    producer: producer?.kind === "existing" && !UUID.test(producer.id) ? { kind: "pending" as const, name: producer.name } : producer,
+    regionId: parsed.regionId !== null && UUID.test(parsed.regionId) ? parsed.regionId : null,
+  };
+  try {
+    return await loadNearMatches(supabase, safe);
+  } catch (error) {
+    console.error("checkNearMatches failed", { message: error instanceof Error ? error.message : String(error) });
+    return null;
+  }
+}
+
 export async function searchAddWine(
   query: string,
   opts: { tastingId?: string } = {},
@@ -332,8 +365,13 @@ export async function searchAddWine(
   if (!user) return EMPTY;
   const tastingId = typeof opts?.tastingId === "string" ? opts.tastingId : null;
 
-  const [hits, lots, notes, flightIds] = await Promise.all([
+  const [hits, recent, lots, notes, flightIds] = await Promise.all([
     supabase.rpc("search_catalog_wines", { p_query: q, p_limit: 20 }),
+    // Catalog dedupe (owner, 2026-10-03): what the caller's circle added in the
+    // last day ranks first, so the second person at a tasting finds the first
+    // person's entry. Never a blind_pending row (20261003100000); a failed read
+    // just leaves the page as it was.
+    supabase.rpc("recent_circle_catalog_wines", { p_query: q, p_hours: RECENT_HOURS, p_limit: 10 }),
     supabase
       .from("cellar_lots")
       .select(
@@ -408,7 +446,8 @@ export async function searchAddWine(
   }
 
   // --- one catalog_wines read fills every catalog and tasted row ---
-  const rows = hits.data ?? [];
+  if (recent.error) console.error("add-wine search: recent circle wines failed", { message: recent.error.message });
+  const rows = recentFirst(recent.error ? [] : (recent.data ?? []), hits.data ?? []);
   const hitIds = rows.map((r) => r.id);
   const ids = [...new Set([...hitIds, ...tastedHits.map((t) => t.catalogWineId)])];
   if (ids.length === 0) return { cellar, catalog: [], tasted: [] };

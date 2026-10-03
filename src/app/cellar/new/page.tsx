@@ -1,9 +1,10 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { OpenSheetOnLoad } from "@/components/add-wine/open-sheet-on-load";
 import { createClient } from "@/lib/supabase/server";
-import { CellarLotForm } from "./cellar-lot-form";
 
+// Catalog dedupe (owner, 2026-10-03): this page's own form created catalog wines
+// without the "Already in the catalog?" check, so it now opens the add-wine
+// sheet (cellar destination) over /cellar instead.
 export default async function NewCellarLotPage() {
   const supabase = await createClient();
   const {
@@ -11,51 +12,5 @@ export default async function NewCellarLotPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const [
-    { data: countries },
-    { data: regions },
-    { data: grapes },
-    { data: typeDesignations },
-    { data: profile },
-  ] = await Promise.all([
-    supabase.from("countries").select("id, name").order("name"),
-    supabase.from("regions").select("id, name, country_id").order("name"),
-    supabase.from("grapes").select("id, name").order("name"),
-    supabase
-      .from("type_designations")
-      .select("id, name")
-      .eq("is_active", true)
-      .order("sort_order"),
-    supabase
-      .from("profiles")
-      .select("preferred_currency")
-      .eq("id", user.id)
-      .maybeSingle(),
-  ]);
-
-  return (
-    <div className="mx-auto flex w-full max-w-lg flex-1 flex-col gap-4 p-6">
-      <Link
-        href="/cellar"
-        className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-      >
-        ← Back to cellar
-      </Link>
-      <Card>
-        <CardHeader>
-          <CardTitle>Add a wine to your cellar</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <CellarLotForm
-            countries={countries ?? []}
-            regions={regions ?? []}
-            grapes={grapes ?? []}
-            typeDesignations={typeDesignations ?? []}
-            defaultCurrency={profile?.preferred_currency ?? "DKK"}
-            userId={user.id}
-          />
-        </CardContent>
-      </Card>
-    </div>
-  );
+  return <OpenSheetOnLoad kind="cellar" back="/cellar" backLabel="← Back to cellar" />;
 }

@@ -40,7 +40,7 @@ type WineRow = {
 const CATALOG_SELECT =
   "id, created_at, colour, style, wine_name, image_url, vintage_kind, vintage_year, vintage_tawny_years, " +
   "producer:producers(name), country:countries(name), region:regions(name), appellation:appellations(name), " +
-  "type_designation:type_designations(name)";
+  "type_designation:type_designations!catalog_wines_type_designation_id_fkey(name)";
 
 const CHUNK_SIZE = 200;
 
