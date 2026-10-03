@@ -68,14 +68,26 @@ export const NAV_LINKS: NavLink[] = [
       { href: "/taste/training", label: TRAINING_COPY.navLabel, preview: true },
     ],
   },
+  // The wine map and the Library are pillars of their own (owner, 2026-10-03:
+  // "Split Learn in two"), so the map is one tap from anywhere. Library lists
+  // its roots one by one: a bare "/knowledge" root would also light it on the
+  // map's own page.
   {
-    key: "learn",
+    key: "map",
     href: "/knowledge/map",
-    label: "Learn",
-    match: ["/knowledge", "/rules"],
-    children: [
-      { href: "/knowledge/map", label: "Wine map" },
-      { href: "/knowledge/designations", label: "Library" },
+    label: "Wine map",
+    match: ["/knowledge/map"],
+  },
+  {
+    key: "library",
+    href: "/knowledge/designations",
+    label: "Library",
+    match: [
+      "/knowledge/designations",
+      "/knowledge/type-designations",
+      "/knowledge/grapes",
+      "/knowledge/archetypes",
+      "/rules",
     ],
   },
   {
@@ -119,8 +131,8 @@ export function navWithAdmin(isManager: boolean): NavLink[] {
 }
 
 // A link is active when the current path is one of its section roots or sits
-// underneath one — so /tastings/[id] keeps "Taste" lit and /rules keeps "Learn"
-// lit.
+// underneath one — so /tastings/[id] keeps "Taste" lit and /rules keeps
+// "Library" lit.
 export function isNavActive(pathname: string, link: { match: string[] }) {
   return link.match.some(
     (root) => pathname === root || pathname.startsWith(`${root}/`),

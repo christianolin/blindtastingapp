@@ -36,20 +36,20 @@ export const SIGN_IN_TO_SAY_YES = "Sign in to say yes";
 export const YOU_ARE_IN = "You are in";
 export const LEAVE_TASTING = "Leave the tasting";
 export const WHILE_YOU_WAIT = "While you wait";
-export const WHILE_YOU_WAIT_LAPTOP = "While you wait · both open Learn";
+export const WHILE_YOU_WAIT_LAPTOP = "While you wait · the Wine map and the Library";
 export const ADD_TO_CALENDAR = "Add to your calendar";
 
 /** The two Learn rows (S6); S6b sets them side by side with the shorter subs. */
 export const LEARN_LINKS: readonly { title: string; sub: string; subLaptop: string; href: string }[] = [
   {
     title: "The map",
-    sub: "Regions and appellations, in Learn",
+    sub: "Regions and appellations, on the Wine map",
     subLaptop: "Regions and appellations",
     href: "/knowledge/map",
   },
   {
     title: "Knowledge",
-    sub: "Grapes, styles and vintages, in Learn",
+    sub: "Grapes, styles and vintages, in the Library",
     subLaptop: "Grapes, styles, vintages",
     href: "/knowledge",
   },

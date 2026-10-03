@@ -37,7 +37,7 @@ describe("tourSteps (spec D5)", () => {
 
   it("keeps the titles and copy word for word", () => {
     const steps = tourSteps(BASE);
-    expect(steps.map((s) => s.title)).toEqual(["Welcome to Blindr", "Taste", "Cellar & Catalog", "Learn", "Community"]);
+    expect(steps.map((s) => s.title)).toEqual(["Welcome to Blindr", "Taste", "Cellar & Catalog", "Wine map and Library", "Community"]);
     expect(paragraphsOf(steps, "welcome")).toEqual([
       "Blind tastings with friends, scored the way the Danish championship scores them; notes on every wine you drink; your cellar; and a map of the wine world. This takes a minute.",
     ]);

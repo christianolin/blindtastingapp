@@ -101,8 +101,8 @@ describe("the joined guest (S6, S6b)", () => {
     expect(guestEyebrow({ host: "Christian", revealMode: "BLIND", guided: true }, { phone: false })).toBe("Christian is hosting · blind · guided");
     expect(guestEyebrow({ host: "Christian", revealMode: "BLIND", guided: true }, { phone: true })).toBe("Christian is hosting · blind");
     expect(LEARN_LINKS).toEqual([
-      { title: "The map", sub: "Regions and appellations, in Learn", subLaptop: "Regions and appellations", href: "/knowledge/map" },
-      { title: "Knowledge", sub: "Grapes, styles and vintages, in Learn", subLaptop: "Grapes, styles, vintages", href: "/knowledge" },
+      { title: "The map", sub: "Regions and appellations, on the Wine map", subLaptop: "Regions and appellations", href: "/knowledge/map" },
+      { title: "Knowledge", sub: "Grapes, styles and vintages, in the Library", subLaptop: "Grapes, styles, vintages", href: "/knowledge" },
     ]);
   });
 });

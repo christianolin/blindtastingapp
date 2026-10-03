@@ -83,7 +83,7 @@ export function tourSteps(opts: {
     },
     {
       id: "learn",
-      title: "Learn",
+      title: "Wine map and Library",
       paragraphs: [
         "The wine map: pinch into a country for its regions and appellations; the Library explains designations and grapes.",
       ],
