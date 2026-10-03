@@ -10,7 +10,7 @@ import {
   Wine,
   BookOpen,
   Boxes,
-  BookMarkedIcon,
+  LibraryBigIcon,
   EarthIcon,
   Users,
   Shield,
@@ -43,7 +43,7 @@ const ICONS: Record<string, ComponentType<{ className?: string }>> = {
   catalog: BookOpen,
   cellar: Boxes,
   map: EarthIcon,
-  library: BookMarkedIcon,
+  library: LibraryBigIcon,
   community: Users,
   admin: Shield,
 };
