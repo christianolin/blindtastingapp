@@ -11,6 +11,10 @@ export const nearMatchCopy = {
     [regionName, `${wineCount} ${wineCount === 1 ? "wine" : "wines"} in the catalog`].filter(Boolean).join(" · "),
   differs: (differences: readonly string[]) => `Differs: ${differences.join(" · ")}`,
   addAsVintage: (vintage: string) => `Add it as ${vintage}`,
+  /** The use button on a row in another vintage: using it says the bottle IS that vintage. */
+  useOtherVintage: (vintage: string) => `Mine is the ${vintage}`,
+  /** After "Did you mean …?": the form shows the swapped producer for a check before anything is saved. */
+  producerSwapped: (name: string) => `Producer set to ${name}. Check the wine, then save.`,
   addNew: "Add as a new wine",
   addNewHint: "Only if none of these is your bottle.",
   back: "Back",

@@ -47,6 +47,11 @@ export type NearMatchRow = {
   /** The draft's vintage label when this is the same wine in another vintage,
       so "Add it as 2021" can reuse its producer, name and place; else null. */
   addAsVintage: string | null;
+  /** The candidate's vintage label ("2019") when it is not the bottle's own
+      vintage, else null. Using such a row says the bottle IS that vintage, so the
+      view words its use button that way and never makes it the primary action:
+      in a flight it becomes the answer key, in a cellar the lot. */
+  otherVintage: string | null;
 };
 
 export type NearMatches = { wines: NearMatchRow[]; producers: ProducerSuggestion[] };
@@ -70,8 +75,24 @@ function sameVintage(draft: WineIdentityDraft, c: NearMatchCandidate): boolean {
   return true;
 }
 
+/**
+ * Whether two wine names are one name the way `catalog_wine_identity_match`
+ * (20261003100000) decides it: equal once lowercased and space-trimmed (the
+ * exact half), or equal once folded (accents, case, punctuation) — but the
+ * folded half only for a name that folds to something. `foldName` keeps only
+ * [a-z0-9], so a non-Latin name ("贺兰晴雪", "Κτήμα") folds to "", the same as a
+ * wine with no name; without the guard it would be "the same" as any nameless
+ * wine and any other non-Latin name.
+ */
+export function namesMatch(a: string | null, b: string | null): boolean {
+  const exact = (name: string | null) => (name ?? "").replace(/^ +| +$/g, "").toLowerCase();
+  if (exact(a) === exact(b)) return true;
+  const folded = foldName(a ?? "");
+  return folded !== "" && folded === foldName(b ?? "");
+}
+
 function sameName(draft: WineIdentityDraft, c: NearMatchCandidate): boolean {
-  return foldName(draft.wineName ?? "") === foldName(c.wineName ?? "");
+  return namesMatch(draft.wineName, c.wineName);
 }
 
 /** The candidate `find_or_create_catalog_wine` would link to on its own (its
@@ -140,6 +161,19 @@ function compareRank(a: number[], b: number[]): number {
 }
 
 /**
+ * The same wine, whatever its vintage: "Add it as 2021" may join the bottle to
+ * it. The same producer (id, folded name or alias) with the same name; or a
+ * similar producer name (strength 1-2: a typo'd or mis-resolved producer such
+ * as "Mas Esteve Vinyes" for Marc Esteve Vives) with the same name that is a real
+ * name — not a nameless wine — so the bottle can move to the right producer.
+ */
+function isSameWine(draft: WineIdentityDraft, c: NearMatchCandidate): boolean {
+  if (!sameName(draft, c)) return false;
+  if (c.producerStrength >= 3) return true;
+  return c.producerStrength >= 1 && foldName(c.wineName ?? "").length >= 4;
+}
+
+/**
  * The rows "Already in the catalog?" shows, best first, or null when there is
  * nothing to ask: no candidate at all, or one that is this very wine (the add
  * links to it without asking). Vintage, grape, colour and style never drop a
@@ -153,13 +187,14 @@ export function nearMatchRows(draft: WineIdentityDraft, candidates: readonly Nea
     .sort((a, b) => compareRank(rank(draft, a), rank(draft, b)) || a.id.localeCompare(b.id))
     .slice(0, NEAR_MATCH_SHOWN)
     .map((c) => {
-      const sameWine = c.producerStrength >= 3 && sameName(draft, c);
+      const vintageDiffers = !sameVintage(draft, c);
       return {
         candidate: c,
         title: [c.producerName, c.wineName?.trim() || null, candidateVintage(c)].filter(Boolean).join(" "),
         meta: [c.appellationName, c.primaryGrapeName].filter(Boolean).join(" · "),
         differences: differences(draft, c),
-        addAsVintage: sameWine && !sameVintage(draft, c) && draftVintage !== "" ? draftVintage : null,
+        addAsVintage: isSameWine(draft, c) && vintageDiffers && draftVintage !== "" ? draftVintage : null,
+        otherVintage: vintageDiffers ? candidateVintage(c) : null,
       };
     });
 }
@@ -185,6 +220,31 @@ export function draftForCandidateVintage(draft: WineIdentityDraft, c: NearMatchC
       appellation: "catalog-match",
     },
   };
+}
+
+/**
+ * What a flight glass's save is about to make, as one comparable key: the
+ * columns `find_or_create_catalog_wine` matches on, the name folded the way
+ * `namesMatch` compares it. An Edit whose key is unchanged since the glass was
+ * opened (a description, a photo) is not asked "Already in the catalog?" again;
+ * one that changes what the wine is, or finishes an incomplete glass, is.
+ */
+export function identityKey(draft: WineIdentityDraft): string {
+  const producer = draft.producer === null
+    ? ""
+    : draft.producer.kind === "existing" ? `id:${draft.producer.id}` : `new:${foldName(draft.producer.name)}`;
+  const name = draft.wineName ?? "";
+  const folded = foldName(name);
+  const v = draft.vintage;
+  return JSON.stringify([
+    producer,
+    folded !== "" ? folded : name.replace(/^ +| +$/g, "").toLowerCase(),
+    draft.appellationId,
+    draft.colour,
+    v.kind,
+    v.kind === "YEAR" ? v.year : null,
+    v.kind === "TAWNY" ? v.tawnyYears : null,
+  ]);
 }
 
 /** "Did you mean Marc Esteve Vives?": the existing producer in place of a new name. */

@@ -77,6 +77,7 @@ import { readDisplay } from "@/lib/wine-identity/describe";
 import {
   draftForCandidateVintage,
   draftWithProducer,
+  identityKey,
   shouldAskNearMatch,
   type NearMatchRow,
   type ProducerSuggestion,
@@ -93,6 +94,7 @@ import {
   swapFlightGlass,
 } from "./actions";
 import { notePickPlan } from "./format";
+import { nearMatchCopy } from "./near-match-copy";
 import { revealSafePick } from "./note-pick";
 import { sheetMatrix, type SheetMatrix } from "./matrix";
 import { scanPhotoTarget, type ScanPhotoTarget } from "./scan-photo";
@@ -254,6 +256,9 @@ export function useSheetAdds({
   const [editing, setEditing] = useState<EditingGlass | null>(null);
   const busyRef = useRef(false);
   const rowCount = useRef(0);
+  /** The identity a glass had when Edit opened it (`identityKey`): a save that
+      leaves it unchanged is not asked "Already in the catalog?" again. */
+  const glassOpened = useRef<{ wineId: string; key: string } | null>(null);
 
   function send(action: SheetAction): void {
     // One step, the same one React's reducer takes: the reducer, then the D12
@@ -387,7 +392,8 @@ export function useSheetAdds({
     // wine asks "Already in the catalog?" first. Asked where the write would
     // happen — never before the chooser, which asks again once picked.
     if (route !== "choose" && route !== "lot" && source.kind === "identity" && shouldAskNearMatch(source, extra.reviewed === true)) {
-      if (await askNearMatch(ctx, source, extra)) return;
+      const paused = { source, title: extra.title, byHand: ctx.byHand, scanNext: ctx.scanNext, itemId: ctx.itemId, glass: null };
+      if (await askNearMatch(ctx.ticket, paused)) return;
     }
     switch (route) {
       case "choose":
@@ -413,23 +419,12 @@ export function useSheetAdds({
       the check ran (a stale reply never acts, and nothing is written). False when
       there is nothing to ask, or the check failed: it is advice, so it never
       blocks an add. */
-  async function askNearMatch(
-    ctx: AddContext,
-    source: Extract<AddSource, { kind: "identity" }>,
-    extra: AddExtra,
-  ): Promise<boolean> {
-    const found = await call(async () => ({ matches: await checkNearMatches(source.draft) }), ADD_FAILED);
+  async function askNearMatch(ticket: ReplyTicket, paused: Omit<NearMatchPrompt, "matches">): Promise<boolean> {
+    const found = await call(async () => ({ matches: await checkNearMatches(paused.source.draft) }), ADD_FAILED);
     if (found === null) return true;
-    if (!replyIsCurrent(stateRef.current, ctx.ticket)) return true;
+    if (!replyIsCurrent(stateRef.current, ticket)) return true;
     if ("error" in found || found.matches === null) return false;
-    const prompt: NearMatchPrompt = {
-      source,
-      title: extra.title,
-      byHand: ctx.byHand,
-      scanNext: ctx.scanNext,
-      matches: found.matches,
-    };
-    send({ type: "nearMatchFound", prompt, ticket: ctx.ticket });
+    send({ type: "nearMatchFound", prompt: { ...paused, matches: found.matches }, ticket });
     return true;
   }
 
@@ -448,6 +443,23 @@ export function useSheetAdds({
   function nearMatchUse(row: NearMatchRow): void {
     const prompt = takePrompt();
     if (prompt === null) return;
+    const glass = prompt.glass ?? null;
+    if (glass !== null) {
+      // A flight glass takes the catalog wine's own identity: its draft, saved
+      // through the glass's own save, links to that very row (an exact match).
+      void (async () => {
+        const loaded = await call(async () => ({ draft: await loadCatalogWineDraft(row.candidate.id) }), LOAD_FAILED);
+        if (loaded === null) return;
+        if ("error" in loaded || loaded.draft === null) {
+          send({ type: "error", error: "error" in loaded ? loaded.error : LOAD_FAILED });
+          return;
+        }
+        const draft = withReadPhoto(loaded.draft, prompt.source.draft);
+        send({ type: "byHandChange", draft });
+        await saveGlass(glass.wineId, false, { draft, reviewed: true });
+      })();
+      return;
+    }
     const via = prompt.source.via === "scan" ? "scan" : "search";
     void runAdd({ kind: "catalog", catalogWineId: row.candidate.id, via }, promptExtra(prompt, true, row.title));
   }
@@ -457,21 +469,41 @@ export function useSheetAdds({
     if (prompt === null) return;
     const draft = draftForCandidateVintage(prompt.source.draft, row.candidate);
     if (prompt.byHand && stateRef.current.byHand !== null) send({ type: "byHandChange", draft });
+    const glass = prompt.glass ?? null;
+    if (glass !== null) {
+      void saveGlass(glass.wineId, false, { draft, reviewed: true });
+      return;
+    }
     void runAdd({ ...prompt.source, draft }, promptExtra(prompt, true));
   }
 
+  /** "Did you mean …?" never writes: the suggestion can be a neighbouring
+      grower, and the screen the person came from still shows the read's
+      producer. It puts the producer into the by-hand form (opening it for a
+      read's confirm screen) for a check; that form's Save asks again, with the
+      existing producer's own wines. */
   function nearMatchProducer(producer: ProducerSuggestion): void {
     const prompt = takePrompt();
     if (prompt === null) return;
     const draft = draftWithProducer(prompt.source.draft, producer);
-    if (prompt.byHand && stateRef.current.byHand !== null) send({ type: "byHandChange", draft });
-    // Not reviewed: with the right producer, its wines may now be the match.
-    void runAdd({ ...prompt.source, draft }, promptExtra(prompt, false));
+    const s = stateRef.current;
+    if (s.view !== "byhand" || s.byHand === null) {
+      const itemId = prompt.itemId ?? null;
+      const origin: ByHandSession["origin"] = s.byHand?.origin ?? (itemId !== null ? { kind: "item", itemId } : { kind: "new" });
+      openForm(origin, draft);
+    }
+    if (stateRef.current.byHand !== null) send({ type: "byHandChange", draft });
+    setNotice(nearMatchCopy.producerSwapped(producer.name));
   }
 
   function nearMatchNew(): void {
     const prompt = takePrompt();
     if (prompt === null) return;
+    const glass = prompt.glass ?? null;
+    if (glass !== null) {
+      void saveGlass(glass.wineId, false, { draft: prompt.source.draft, reviewed: true });
+      return;
+    }
     void runAdd(prompt.source, promptExtra(prompt, true));
   }
 
@@ -769,14 +801,33 @@ export function useSheetAdds({
     }
   }
 
-  async function saveGlass(wineId: string, leaveGlassForLater: boolean): Promise<void> {
+  /** Saves a flight glass from its by-hand form (Fix, Edit, finishing an
+      incomplete glass). Catalog dedupe: a save that would make a catalog wine —
+      finishing an incomplete glass, or an Edit that changes what the wine is —
+      asks "Already in the catalog?" first, like any add; the prompt's choices
+      come back here with `reviewed`. */
+  async function saveGlass(
+    wineId: string,
+    leaveGlassForLater: boolean,
+    opts: { draft?: WineIdentityDraft; reviewed?: boolean } = {},
+  ): Promise<void> {
     const s = stateRef.current;
     const session = s.byHand;
     if (session === null || session.origin.kind !== "glass" || session.origin.wineId !== wineId) return;
+    const draft = opts.draft ?? session.draft;
     // Amendment 23: the reply carries the ticket taken now. A stale one is recorded on its rows and moves nothing.
     const ticket = ticketFor(s);
+    if (!leaveGlassForLater && !session.unidentified && opts.reviewed !== true) {
+      const opened = glassOpened.current;
+      const changed = session.origin.incomplete || opened === null || opened.wineId !== wineId || opened.key !== identityKey(draft);
+      const source = { kind: "identity", draft, via: "byhand", readId: null } as const;
+      if (changed && shouldAskNearMatch(source, false)) {
+        const paused = { source, byHand: true, scanNext: false, itemId: null, glass: { wineId } };
+        if (await askNearMatch(ticket, paused)) return;
+      }
+    }
     const result = await call(
-      () => saveFlightGlass({ wineId, draft: session.draft, unidentified: session.unidentified, leaveForLater: leaveGlassForLater }),
+      () => saveFlightGlass({ wineId, draft, unidentified: session.unidentified, leaveForLater: leaveGlassForLater }),
       SAVE_FAILED,
     );
     if (result === null) return;
@@ -790,7 +841,7 @@ export function useSheetAdds({
     // An Edit open is for this one glass, so its save ends the sheet: the
     // reducer closes it while the ticket is current, asking first while other
     // rows are unfinished (rule 7).
-    send({ type: "glassSaved", added: result.added, ticket, draft: session.draft, closeSheet: options.edit?.wineId === wineId });
+    send({ type: "glassSaved", added: result.added, ticket, draft, closeSheet: options.edit?.wineId === wineId });
     options.onAdded?.(result.added);
     if (result.warning) setNotice(result.warning);
     if (!wasClosing && stateRef.current.closing) {
@@ -808,6 +859,7 @@ export function useSheetAdds({
       send({ type: "error", error: loaded.error });
       return null;
     }
+    glassOpened.current = { wineId, key: identityKey(loaded.draft) };
     const focus = openForm({ kind: "glass", wineId, incomplete: loaded.incomplete }, loaded.draft, loaded.unidentified, ticket);
     const session = stateRef.current.byHand;
     if (session?.origin.kind === "glass" && session.origin.wineId === wineId) {

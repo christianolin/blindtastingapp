@@ -11,7 +11,10 @@
 --    unchanged). The new folded match is admitted ONLY on a row the caller already reads
 --    without any glass-based grant: not blind_pending, or created by the caller. So it tells
 --    nobody anything about a hidden wine that the accepted residual F12 (spec
---    2026-09-19-rule1-older-leaks) did not already tell them: F12 is not widened.
+--    2026-09-19-rule1-older-leaks) did not already tell them: F12 is not widened. A name that
+--    folds to nothing (f_search_norm keeps only [a-z0-9], so '贺兰晴雪' and 'Κτήμα' fold to '')
+--    never takes the folded half: it would otherwise equal a wine with no name, and any other
+--    non-Latin name, and link the add to the wrong wine.
 -- 2. catalog_wine_near_matches(...) — the "Already in the catalog?" candidates. SECURITY
 --    INVOKER, so "catalog read" applies, and stricter than RLS on purpose: never a
 --    blind_pending row (even one the caller could read), never a row merged away — exactly
@@ -21,13 +24,24 @@
 --    name is another producer's name, or a wine whose name is the read's producer, counts too.
 -- 3. similar_producers(name, region) — "Did you mean …?" before a new producer is created.
 --    Producers are reference rows every signed-in user already reads (search_producers lists
---    them); the wine count it returns counts only public, unmerged wines.
+--    them); the wine count it returns counts only public, unmerged wines. With a region, only
+--    producers in that region or with no region link are offered (the same rule as the
+--    near-match producers): a same-sounding grower three regions away is not a suggestion.
 -- 4. recent_circle_catalog_wines(query, hours, limit) — public catalog wines created in the
 --    last p_hours (default 24, at most 72) by the caller, people the caller shares a tasting
 --    with (both JOINED), or people the caller has as friends, filtered by the same token rule
 --    as search_catalog_wines. The add-wine search ranks them first, so the second person at a
 --    tasting finds the first person's entry. SECURITY INVOKER over "participants read",
 --    "friendships read own" and "catalog read", and again never a blind_pending row.
+--    Rule 1: a public wine can still be in tonight's glass (D11: scanned into a private cellar,
+--    poured from it; pouring never hides a public wine). So nobody who added a glass that is
+--    not revealed yet, in a tasting the caller is in (host or any participant row), is in the
+--    caller's circle — not by the tasting arm, not by the friend arm — until that glass is
+--    revealed. The caller themselves always is. This keys on the PERSON, from rows the caller
+--    already reads (that tasting's glasses: who added them, revealed or not), never on which
+--    wine is poured, so leaving someone out tells the caller nothing they could not see in the
+--    lobby: it is not an oracle for any wine. A tasting closed before the window opened is
+--    ignored (a wine created inside the window cannot be in its glasses).
 --
 -- Every new function: authenticated and service_role EXECUTE only (PUBLIC and anon revoked).
 -- No begin/commit: the applier owns the transaction.
@@ -91,6 +105,7 @@ as $$
     and (
       coalesce(lower(btrim(c.wine_name)), '') = coalesce(lower(btrim(p->>'wine_name')), '')
       or ((not c.blind_pending or c.created_by = auth.uid())
+          and public.f_search_norm(p->>'wine_name') <> ''
           and public.f_search_norm(c.wine_name) = public.f_search_norm(p->>'wine_name'))
     )
   order by (coalesce(lower(btrim(c.wine_name)), '') = coalesce(lower(btrim(p->>'wine_name')), '')) desc,
@@ -233,6 +248,7 @@ as $$
     and public.f_search_norm(p.name) <> public.f_search_norm(p_name)
     and public.f_unaccent(p.name) % public.f_unaccent(coalesce(p_name, ''))
     and public.similarity(public.f_unaccent(p.name), public.f_unaccent(coalesce(p_name, ''))) >= 0.45
+    and (p_region_id is null or p.region_id is null or p.region_id = p_region_id)
   order by 5 desc, 7 desc, 6 desc, p.name, p.id
   limit least(greatest(coalesce(p_limit, 5), 1), 10);
 $$;
@@ -264,15 +280,37 @@ security invoker
 set search_path = public, extensions
 as $$
   with q as (select btrim(coalesce(p_query, '')) as raw),
+  win as (select make_interval(hours => least(greatest(coalesce(p_hours, 24), 1), 72)) as span),
+  -- Rule 1: whoever added a glass not revealed yet, in a tasting the caller is in. Read
+  -- under the caller's own "wines read" / "participants read", so only tastings the caller
+  -- already sees count; keyed on the adder, never on the poured wine.
+  adders as (
+    select case when w.added_by_host then t.host_id else cp.user_id end as user_id
+      from wines w
+      join tastings t on t.id = w.tasting_id
+      left join tasting_participants cp on cp.id = w.contributor_participant_id
+      cross join win
+     where not w.is_revealed
+       and (t.status::text <> 'CLOSED' or coalesce(t.finished_at, t.created_at) > now() - win.span)
+       and (t.host_id = auth.uid()
+            or exists (select 1 from tasting_participants me
+                        where me.tasting_id = t.id and me.user_id = auth.uid()))
+  ),
   circle as (
     select auth.uid() as user_id
     union
-    select other.user_id
-      from tasting_participants mine
-      join tasting_participants other on other.tasting_id = mine.tasting_id
-     where mine.user_id = auth.uid() and mine.status = 'JOINED' and other.status = 'JOINED'
-    union
-    select f.friend_id from friendships f where f.user_id = auth.uid()
+    (
+      (
+        select other.user_id
+          from tasting_participants mine
+          join tasting_participants other on other.tasting_id = mine.tasting_id
+         where mine.user_id = auth.uid() and mine.status = 'JOINED' and other.status = 'JOINED'
+        union
+        select f.friend_id from friendships f where f.user_id = auth.uid()
+      )
+      except
+      select a.user_id from adders a where a.user_id is not null
+    )
   )
   select
     c.id, c.wine_name, pr.name, ap.name, rg.name, co.name, c.colour, c.style,
@@ -283,10 +321,11 @@ as $$
   left join regions rg on rg.id = c.region_id
   left join countries co on co.id = c.country_id
   cross join q
+  cross join win
   where auth.uid() is not null
     and c.merged_into is null
     and not c.blind_pending
-    and c.created_at > now() - make_interval(hours => least(greatest(coalesce(p_hours, 24), 1), 72))
+    and c.created_at > now() - win.span
     and c.created_by in (select circle.user_id from circle)
     and q.raw <> ''
     and (
@@ -376,6 +415,25 @@ begin
   limit 1;
   if v_id is not null and public.catalog_wine_identity_match(v_payload) is distinct from v_id then
     raise exception '20261003100000: a case/punctuation variant of % did not resolve to it', v_id;
+  end if;
+
+  -- A name that folds to nothing (non-Latin script) never takes the folded half: it must not
+  -- land on a wine with no name.
+  select c.id, jsonb_build_object(
+           'producer_id', c.producer_id,
+           'wine_name', '贺兰晴雪',
+           'appellation_id', c.appellation_id, 'colour', c.colour, 'vintage_kind', c.vintage_kind,
+           'vintage_year', c.vintage_year, 'vintage_tawny_years', c.vintage_tawny_years)
+    into v_id, v_payload
+  from catalog_wines c
+  where c.merged_into is null and not c.blind_pending and coalesce(btrim(c.wine_name), '') = ''
+  order by c.created_at, c.id
+  limit 1;
+  if public.f_search_norm('贺兰晴雪') <> '' then
+    raise exception '20261003100000: expected a non-Latin name to fold to nothing';
+  end if;
+  if v_id is not null and public.catalog_wine_identity_match(v_payload) is not distinct from v_id then
+    raise exception '20261003100000: a non-Latin name matched the nameless row %', v_id;
   end if;
 
   -- A hidden row is never matched by the folded half for someone who is not its creator.

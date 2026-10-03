@@ -152,6 +152,13 @@ export type NearMatchPrompt = {
   title?: string;
   byHand: boolean;
   scanNext: boolean;
+  /** The bottle in hand when the add started (`addTargetId`), so "Did you mean
+      …?" can open its form for a check. */
+  itemId?: string | null;
+  /** Set when the paused save is a flight glass's (Fix, Edit, finishing an
+      incomplete glass): every choice then saves THAT glass (`saveFlightGlass`)
+      instead of adding a new one. */
+  glass?: { wineId: string } | null;
   matches: NearMatches;
 };
 

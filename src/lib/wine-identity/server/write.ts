@@ -311,7 +311,8 @@ function identityName(name: string | null): string {
     `find_or_create_catalog_wine` matches on. Since 20261003100000 its lookup
     (`catalog_wine_identity_match`) also takes a name equal once folded (accents,
     case, punctuation: "Nódal" is "Nodal"), but only on a row the caller reads
-    without any glass-based grant — public, or their own; this mirrors it. */
+    without any glass-based grant — public, or their own — and only for a name
+    that folds to something; this mirrors it. */
 async function identityExists(supabase: Db, userId: string, wine: ResolvedWine): Promise<boolean> {
   let query = supabase
     .from("catalog_wines")
@@ -335,7 +336,9 @@ async function identityExists(supabase: Db, userId: string, wine: ResolvedWine):
   const folded = foldName(wine.wineName ?? "");
   return (data ?? []).some((row) =>
     identityName(row.wine_name) === name
-    || ((!row.blind_pending || row.created_by === userId) && foldName(row.wine_name ?? "") === folded));
+    // A name that folds to nothing (non-Latin script) never takes the folded
+    // half, as in the SQL: it would equal every nameless wine.
+    || (folded !== "" && (!row.blind_pending || row.created_by === userId) && foldName(row.wine_name ?? "") === folded));
 }
 
 /**

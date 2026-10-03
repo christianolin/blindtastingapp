@@ -6,7 +6,9 @@ import {
   NEAR_MATCH_SHOWN,
   draftForCandidateVintage,
   draftWithProducer,
+  identityKey,
   isSameIdentity,
+  namesMatch,
   nearMatchQuery,
   nearMatchRows,
   shouldAskNearMatch,
@@ -59,9 +61,50 @@ describe("isSameIdentity — what find_or_create_catalog_wine would link to on i
     expect(isSameIdentity(nodal2021(), candidate({ appellationId: "a-other" }))).toBe(false);
     expect(isSameIdentity(nodal2021(), candidate({ producerId: "p-other" }))).toBe(false);
   });
+  it("never treats a non-Latin name as the same as a nameless wine, or as another non-Latin name", () => {
+    // foldName keeps only [a-z0-9]: both fold to "" and must not count as equal.
+    expect(isSameIdentity({ ...nodal2021(), wineName: "贺兰晴雪" }, candidate({ wineName: null }))).toBe(false);
+    expect(isSameIdentity({ ...nodal2021(), wineName: "贺兰晴雪" }, candidate({ wineName: "长城干红" }))).toBe(false);
+    expect(isSameIdentity({ ...nodal2021(), wineName: "Κτήμα" }, candidate({ wineName: "Κτήμα" }))).toBe(true);
+  });
   it("never matches a pending producer", () => {
     const draft = { ...nodal2021(), producer: { kind: "pending", name: "Marc Esteve Vives" } as const };
     expect(isSameIdentity(draft, candidate())).toBe(false);
+  });
+});
+
+describe("namesMatch — the identity lookup's name rule", () => {
+  it("matches exact (case, outer spaces) and folded (accents, punctuation) names", () => {
+    expect(namesMatch("Nódal", "Nodal")).toBe(true);
+    expect(namesMatch("Semi-sec", "Semi Sec")).toBe(true);
+    expect(namesMatch(" Ortus ", "ortus")).toBe(true);
+    expect(namesMatch(null, "")).toBe(true);
+    expect(namesMatch(null, null)).toBe(true);
+  });
+  it("never lets a name that folds to nothing take the folded half", () => {
+    expect(namesMatch("贺兰晴雪", null)).toBe(false);
+    expect(namesMatch("贺兰晴雪", "")).toBe(false);
+    expect(namesMatch("贺兰晴雪", "长城干红")).toBe(false);
+    expect(namesMatch("...", null)).toBe(false);
+    expect(namesMatch("贺兰晴雪", "贺兰晴雪")).toBe(true);
+  });
+});
+
+describe("identityKey — whether an Edit changed what the wine is", () => {
+  it("ignores accents and case in the name, and fields outside the identity", () => {
+    expect(identityKey({ ...nodal2021(), wineName: "NODAL" })).toBe(identityKey(nodal2021()));
+    expect(identityKey({ ...nodal2021(), description: "Fine bubbles." })).toBe(identityKey(nodal2021()));
+  });
+  it("changes with the producer, name, appellation, colour or vintage", () => {
+    const base = identityKey(nodal2021());
+    expect(identityKey({ ...nodal2021(), wineName: "Ortus" })).not.toBe(base);
+    expect(identityKey({ ...nodal2021(), producer: { kind: "pending", name: "Marc Esteve Vives" } })).not.toBe(base);
+    expect(identityKey({ ...nodal2021(), appellationId: "a-other" })).not.toBe(base);
+    expect(identityKey({ ...nodal2021(), colour: "ROSE" })).not.toBe(base);
+    expect(identityKey({ ...nodal2021(), vintage: { kind: "YEAR", year: 2019, tawnyYears: null, read: false } })).not.toBe(base);
+  });
+  it("tells two non-Latin names apart", () => {
+    expect(identityKey({ ...nodal2021(), wineName: "贺兰晴雪" })).not.toBe(identityKey({ ...nodal2021(), wineName: "长城干红" }));
   });
 });
 
@@ -108,6 +151,13 @@ describe("nearMatchRows", () => {
     expect(rows![0].meta).toBe("Cava DO · Macabeo");
     expect(rows![0].differences).toEqual(["2019, yours is 2021"]);
     expect(rows![0].addAsVintage).toBe("2021");
+    // Using it would file the bottle as the 2019: the view words it that way.
+    expect(rows![0].otherVintage).toBe("2019");
+  });
+
+  it("marks no other vintage on a row in the bottle's own vintage", () => {
+    const rows = nearMatchRows(nodal2021(), [candidate({ id: "w-o", wineName: "Ortus Blanc de Noirs", nameScore: 0.4 })]);
+    expect(rows![0].otherVintage).toBeNull();
   });
 
   it("shows colour, style and grape differences without dropping the candidate", () => {
@@ -118,12 +168,30 @@ describe("nearMatchRows", () => {
     expect(rows![0].addAsVintage).toBeNull();
   });
 
-  it("offers no add-as-vintage for a different wine name or producer", () => {
+  it("offers no add-as-vintage for a different wine name", () => {
     const rows = nearMatchRows(nodal2021(), [
       candidate({ id: "w-o", wineName: "Ortus Blanc de Noirs", nameScore: 0.4, vintage: { kind: "YEAR", year: 2020, tawnyYears: null } }),
-      candidate({ id: "w-p", producerId: "p-x", producerName: "Mas Esteve Vinyes", producerStrength: 1, vintage: { kind: "YEAR", year: 2020, tawnyYears: null } }),
     ]);
-    expect(rows!.map((r) => r.addAsVintage)).toEqual([null, null]);
+    expect(rows!.map((r) => r.addAsVintage)).toEqual([null]);
+  });
+
+  it("offers add-as-vintage under a similar producer with the same real name (the bottle moves to that producer)", () => {
+    // 2026-10-02: a read resolved to the wrongly created "Mas Esteve Vinyes";
+    // Marc Esteve Vives's Òrtus 2020 is the same wine.
+    const draft = { ...nodal2021(), producer: { kind: "existing", id: "p-mas", name: "Mas Esteve Vinyes" } as const, wineName: "Òrtus Blanc de Noirs", vintage: { kind: "YEAR" as const, year: 2022, tawnyYears: null, read: false } };
+    const rows = nearMatchRows(draft, [
+      candidate({ id: "w-marc", wineName: "Ortus Blanc de Noirs", producerStrength: 1, vintage: { kind: "YEAR", year: 2020, tawnyYears: null } }),
+    ]);
+    expect(rows![0].addAsVintage).toBe("2022");
+    expect(draftForCandidateVintage(draft, rows![0].candidate).producer).toEqual(MEV);
+  });
+
+  it("offers no add-as-vintage under a similar producer for a nameless wine", () => {
+    const draft = { ...nodal2021(), producer: { kind: "existing", id: "p-x", name: "Miquel Pons" } as const, wineName: null };
+    const rows = nearMatchRows(draft, [
+      candidate({ id: "w-n", producerId: "p-y", producerName: "Miquel Ponsa", wineName: null, producerStrength: 1, vintage: { kind: "NV", year: null, tawnyYears: null } }),
+    ]);
+    expect(rows![0].addAsVintage).toBeNull();
   });
 
   it("ranks the same producer and name first, then the same vintage, and caps the list", () => {
@@ -170,7 +238,19 @@ describe("the SQL the near-match step reads (20261003100000)", () => {
     expect(body).toContain("and not c.blind_pending");
     expect(body).toContain("c.merged_into is null");
   });
-  it("folds the identity lookup's name only for rows the caller already reads", () => {
-    expect(sql).toContain("or ((not c.blind_pending or c.created_by = auth.uid())\n          and public.f_search_norm(c.wine_name) = public.f_search_norm(p->>'wine_name'))");
+  it("folds the identity lookup's name only for rows the caller already reads, and only for a name that folds to something", () => {
+    expect(sql).toContain("or ((not c.blind_pending or c.created_by = auth.uid())\n          and public.f_search_norm(p->>'wine_name') <> ''\n          and public.f_search_norm(c.wine_name) = public.f_search_norm(p->>'wine_name'))");
+  });
+  it("offers similar producers only in the draft's region (or with no region link)", () => {
+    const body = sql.slice(sql.indexOf("create function public.similar_producers"), sql.indexOf("create function public.recent_circle_catalog_wines"));
+    expect(body).toContain("and (p_region_id is null or p.region_id is null or p.region_id = p_region_id)");
+  });
+  it("keeps anyone who added a not-yet-revealed glass in the caller's tastings out of the recent circle (rule 1)", () => {
+    const body = sql.slice(sql.indexOf("create function public.recent_circle_catalog_wines"), sql.indexOf("-- Post-state, same transaction"));
+    expect(body).toContain("security invoker");
+    expect(body).toContain("where not w.is_revealed");
+    expect(body).toContain("case when w.added_by_host then t.host_id else cp.user_id end");
+    expect(body).toContain("except\n      select a.user_id from adders a where a.user_id is not null");
+    expect(body).toContain("and not c.blind_pending");
   });
 });

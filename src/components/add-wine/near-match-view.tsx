@@ -37,7 +37,10 @@ export function NearMatchView({
   return (
     <section aria-labelledby="near-match-title" className="flex flex-col gap-[14px] p-4 md:p-[18px_22px]">
       <div className="flex flex-col gap-1">
-        <h2 id="near-match-title" className="font-heading text-[21px] font-semibold leading-[1.15]">
+        {/* The shell scrolls to the top and focuses this heading when the prompt
+            opens, so a long by-hand form scrolled down never lands the person on
+            "Add as a new wine" with the matches above the fold. */}
+        <h2 id="near-match-title" tabIndex={-1} className="font-heading text-[21px] font-semibold leading-[1.15] outline-none">
           {copy.title}
         </h2>
         <p className={cn("text-[12.5px]", muted)}>{copy.lead}</p>
@@ -84,22 +87,32 @@ export function NearMatchView({
                     </span>
                   ) : null}
                 </div>
+                {/* A row in another vintage never makes "use" the filled button: in a
+                    flight it would become the answer key, in a cellar the lot. Its
+                    filled action is "Add it as {vintage}" when that applies; "use"
+                    stays as an outline button that names the vintage it takes. */}
                 <div className="flex flex-wrap gap-2">
-                  <Button type="button" size="sm" disabled={busy} onClick={() => onUse(row)} className="min-h-10">
-                    {matrix.nearMatchUse}
-                  </Button>
                   {row.addAsVintage ? (
+                    <Button type="button" size="sm" disabled={busy} onClick={() => onAddAsVintage(row)} className="min-h-10">
+                      {copy.addAsVintage(row.addAsVintage)}
+                    </Button>
+                  ) : null}
+                  {row.otherVintage ? (
                     <Button
                       type="button"
                       size="sm"
                       variant="outline"
                       disabled={busy}
-                      onClick={() => onAddAsVintage(row)}
+                      onClick={() => onUse(row)}
                       className={cn("min-h-10", dark && "border-white/30 bg-transparent text-primary-foreground hover:bg-white/10 hover:text-primary-foreground")}
                     >
-                      {copy.addAsVintage(row.addAsVintage)}
+                      {copy.useOtherVintage(row.otherVintage)}
                     </Button>
-                  ) : null}
+                  ) : (
+                    <Button type="button" size="sm" disabled={busy} onClick={() => onUse(row)} className="min-h-10">
+                      {matrix.nearMatchUse}
+                    </Button>
+                  )}
                 </div>
               </li>
             ))}

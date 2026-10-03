@@ -747,6 +747,21 @@ export function AddWineSheet({
     );
   }
 
+  // Catalog dedupe: "Already in the catalog?" shares the scroller with the view it
+  // covers. Opened from a long by-hand form scrolled to its sticky Save, the
+  // browser would clamp that scroll to the prompt's own bottom and show "Add as a
+  // new wine" with the matches above the fold. So it opens at its top, with its
+  // heading focused (without a second scroll) for a screen reader.
+  const scrollerRef = useRef<HTMLDivElement>(null);
+  const nearMatch = state.nearMatch;
+  useLayoutEffect(() => {
+    if (nearMatch === null) return;
+    const scroller = scrollerRef.current;
+    if (scroller === null) return;
+    scroller.scrollTop = 0;
+    scroller.querySelector<HTMLElement>("#near-match-title")?.focus({ preventScroll: true });
+  }, [nearMatch]);
+
   // --- render -----------------------------------------------------------------------
 
   const dark = DARK_VIEWS.includes(view);
@@ -871,7 +886,7 @@ export function AddWineSheet({
           />
         ) : null}
 
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+        <div ref={scrollerRef} className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
           {/* Catalog dedupe: "Already in the catalog?" sits over the view its add
               started from; that view stays mounted underneath (rule 9). */}
           {state.nearMatch !== null ? (
