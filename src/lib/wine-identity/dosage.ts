@@ -15,42 +15,79 @@ export const DOSAGE_NAMES = ["Brut Nature", "Extra Brut", "Brut", "Extra Dry", "
 export type DosageName = (typeof DOSAGE_NAMES)[number];
 
 /** Curated label spellings, folded → the row's exact name. A lookup table, never a
-    heuristic: a word that is not here ("Nature" alone, "Dry") is no dosage. */
+    heuristic: a word that is not here ("Nature" alone) is no dosage. The EU's own
+    terms for each band (Regulation (EU) 2019/33, Annex III part B) in the languages
+    labels on our shelves use. These are safe anywhere, a wine name included. */
 const SYNONYMS: ReadonlyArray<readonly [string, DosageName]> = [
   ...DOSAGE_NAMES.map((name) => [name, name] as const),
   ["Pas dosé", "Brut Nature"],
+  ["Non dosé", "Brut Nature"],
+  ["Non dosato", "Brut Nature"],
   ["Dosage zéro", "Brut Nature"],
   ["Zero dosage", "Brut Nature"],
   ["Dosaggio zero", "Brut Nature"],
   ["Brut zero", "Brut Nature"],
+  ["Brut Natur", "Brut Nature"],
+  ["Bruto natural", "Brut Nature"],
+  ["Naturherb", "Brut Nature"],
+  ["Extra herb", "Extra Brut"],
   ["Extra seco", "Extra Dry"],
   ["Extra sec", "Extra Dry"],
+  ["Extra secco", "Extra Dry"],
+  ["Extra trocken", "Extra Dry"],
   ["Seco", "Sec"],
+  ["Secco", "Sec"],
+  ["Asciutto", "Sec"],
   ["Semiseco", "Demi-Sec"],
   ["Semi-seco", "Demi-Sec"],
   ["Semi-sec", "Demi-Sec"],
+  ["Abboccato", "Demi-Sec"],
   ["Dulce", "Doux"],
   ["Dolce", "Doux"],
+];
+
+/** Terms that mean a dosage only where a dosage is expected: the reader's own
+    `dosage` field, or the designation of a wine the read says is sparkling. Each
+    is also an ordinary word or a still wine's sweetness ("Dry" Riesling, the
+    German "Trocken"/"Halbtrocken" rows of the Sweetness category), so it is never
+    taken out of a wine name and never read from the designation of a wine whose
+    style is not known. */
+const FIELD_SYNONYMS: ReadonlyArray<readonly [string, DosageName]> = [
+  ["Herb", "Brut"],
+  ["Dry", "Sec"],
+  ["Trocken", "Sec"],
+  ["Medium dry", "Demi-Sec"],
+  ["Halbtrocken", "Demi-Sec"],
+  ["Sweet", "Doux"],
+  ["Mild", "Doux"],
 ];
 
 const BY_FOLDED: ReadonlyMap<string, DosageName> = new Map(
   SYNONYMS.map(([spelling, name]) => [foldName(spelling), name] as const),
 );
+const FIELD_BY_FOLDED: ReadonlyMap<string, DosageName> = new Map(
+  FIELD_SYNONYMS.map(([spelling, name]) => [foldName(spelling), name] as const),
+);
 
 /** The longest synonym, in whitespace-separated words ("dosaggio zero" is two). */
 const MAX_PHRASE_WORDS = 3;
 
+/** Where the text came from: `field` is a place a dosage is expected (the reader's
+    `dosage` field, a sparkling read's designation), so FIELD_SYNONYMS count too. */
+export type DosageContext = { field?: boolean };
+
 /** The dosage row name a label's text names, or null. Compared folded: accents,
     case, spaces and hyphens never matter ("SEMI SEC" is Demi-Sec). */
-export function canonicalDosageName(text: string | null | undefined): DosageName | null {
+export function canonicalDosageName(text: string | null | undefined, ctx: DosageContext = {}): DosageName | null {
   if (typeof text !== "string") return null;
   const key = foldName(text);
-  return key === "" ? null : (BY_FOLDED.get(key) ?? null);
+  if (key === "") return null;
+  return BY_FOLDED.get(key) ?? (ctx.field ? (FIELD_BY_FOLDED.get(key) ?? null) : null);
 }
 
-function phraseAt(tokens: readonly string[], from: number, count: number): DosageName | null {
+function phraseAt(tokens: readonly string[], from: number, count: number, ctx: DosageContext): DosageName | null {
   if (count < 1 || from < 0 || from + count > tokens.length) return null;
-  return canonicalDosageName(tokens.slice(from, from + count).join(" "));
+  return canonicalDosageName(tokens.slice(from, from + count).join(" "), ctx);
 }
 
 /** Leftover separators ("–", "·", "-") at either end of what remains of a name. */
@@ -63,20 +100,22 @@ function trimSeparators(tokens: string[]): string[] {
 }
 
 /**
- * A wine name with any dosage phrase at its start or its end taken out: a dosage
- * word never belongs in `wine_name` (owner, 2026-10-03). "Semi-sec" → no name,
- * Demi-Sec; "Brut Yellow Label" → "Yellow Label", Brut; "Òrtus Brut Nature" →
- * "Òrtus", Brut Nature. The longest phrase wins, so "Extra Brut" is never "Brut".
- * A dosage word inside a name ("Le Brut de Mon Père") is left alone. When both
- * ends carry one, the end's is taken.
+ * Text with any dosage phrase at its start or its end taken out. The longest phrase
+ * wins, so "Extra Brut" is never "Brut" and "Brut Natur" never "Brut". A dosage word
+ * inside the text ("Le Brut de Mon Père") is left alone. When both ends carry one,
+ * the end's is taken. `rest` is what is left, or null when nothing is.
  */
-export function splitDosageFromName(name: string | null): { wineName: string | null; dosage: DosageName | null } {
-  let tokens = (name ?? "").trim().split(/\s+/).filter((t) => t !== "");
-  if (tokens.length === 0) return { wineName: null, dosage: null };
+export function splitDosagePhrase(
+  text: string | null | undefined,
+  ctx: DosageContext = {},
+): { rest: string | null; dosage: DosageName | null } {
+  const raw = typeof text === "string" ? text.trim() : "";
+  let tokens = raw.split(/\s+/).filter((t) => t !== "");
+  if (tokens.length === 0) return { rest: null, dosage: null };
 
   let dosage: DosageName | null = null;
   for (let count = Math.min(MAX_PHRASE_WORDS, tokens.length); count >= 1; count -= 1) {
-    const hit = phraseAt(tokens, tokens.length - count, count);
+    const hit = phraseAt(tokens, tokens.length - count, count, ctx);
     if (hit !== null) {
       dosage = hit;
       tokens = trimSeparators(tokens.slice(0, tokens.length - count));
@@ -84,16 +123,27 @@ export function splitDosageFromName(name: string | null): { wineName: string | n
     }
   }
   for (let count = Math.min(MAX_PHRASE_WORDS, tokens.length); count >= 1; count -= 1) {
-    const hit = phraseAt(tokens, 0, count);
+    const hit = phraseAt(tokens, 0, count, ctx);
     if (hit !== null) {
       dosage = dosage ?? hit;
       tokens = trimSeparators(tokens.slice(count));
       break;
     }
   }
-  if (dosage === null) return { wineName: (name ?? "").trim() || null, dosage: null };
+  if (dosage === null) return { rest: raw || null, dosage: null };
   const rest = tokens.join(" ").trim();
-  return { wineName: rest === "" ? null : rest, dosage };
+  return { rest: rest === "" ? null : rest, dosage };
+}
+
+/**
+ * A wine name with any dosage phrase at its start or its end taken out: a dosage
+ * word never belongs in `wine_name` (owner, 2026-10-03). "Semi-sec" → no name,
+ * Demi-Sec; "Brut Yellow Label" → "Yellow Label", Brut; "Òrtus Brut Nature" →
+ * "Òrtus", Brut Nature. Only SYNONYMS count here: "Prosecco Dry" keeps its name.
+ */
+export function splitDosageFromName(name: string | null): { wineName: string | null; dosage: DosageName | null } {
+  const { rest, dosage } = splitDosagePhrase(name);
+  return { wineName: rest, dosage };
 }
 
 /** A dosage belongs to a sparkling wine only. */
@@ -128,4 +178,34 @@ export function dosageChoices<T extends DesignationRow>(options: readonly T[]): 
   return options
     .filter((o) => isDosageCategory(o.category) && rank(o.name) >= 0)
     .sort((a, b) => rank(a.name) - rank(b.name));
+}
+
+/** Every spelling a search box may use for this dosage: its name and each synonym
+    that maps to it. The field-only words ("Dry", "Herb", "Sweet") are left out: as
+    search words they would match far more than a dosage. Empty for none. */
+export function dosageSearchTerms(name: string | null | undefined): string[] {
+  const wanted = canonicalDosageName(name);
+  if (wanted === null) return [];
+  return SYNONYMS.filter(([, target]) => target === wanted).map(([spelling]) => spelling);
+}
+
+/** The four dosages only a sparkling wine can carry. Sec, Demi-Sec and Doux also
+    name a still wine's sweetness (a still Vouvray Sec), and stay valid type
+    designations there. */
+export const SPARKLING_ONLY_DOSAGES: readonly DosageName[] = ["Brut Nature", "Extra Brut", "Brut", "Extra Dry"];
+
+export function isSparklingOnlyDosage(row: { name: string; category?: string | null }): boolean {
+  return isDosageCategory(row.category) && (SPARKLING_ONLY_DOSAGES as readonly string[]).includes(row.name);
+}
+
+/**
+ * The guess ladder's type designation rows (review, 2026-10-03). A sparkling wine's
+ * dosage is its own catalog field and is never scored, so no new answer key holds
+ * Brut Nature, Extra Brut, Brut or Extra Dry: those four are not offered as a guess.
+ * Sec, Demi-Sec and Doux stay, since a still wine's key can still name one. A guess
+ * that already names a row keeps it, so it still shows. The ladder never knows the
+ * glass's style (rule 1), so this is the same list for every glass.
+ */
+export function guessDesignationChoices<T extends DesignationRow>(options: readonly T[], currentId: string | null): T[] {
+  return options.filter((o) => !isSparklingOnlyDosage(o) || o.id === currentId);
 }

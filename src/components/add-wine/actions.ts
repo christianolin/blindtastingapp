@@ -17,6 +17,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { VintageKind } from "@/lib/supabase/database.types";
 import { glassSwapRefusal } from "@/lib/flight-glass-rules";
 import { readDisplay, vintageLabel } from "@/lib/wine-identity/describe";
+import { dosageSearchTerms } from "@/lib/wine-identity/dosage";
 import { draftFromCatalogWine, parseStoredDraft } from "@/lib/wine-identity/from-sources";
 import {
   pickGrapeSuggestion,
@@ -32,6 +33,7 @@ import {
 } from "@/lib/wine-identity/server/write";
 import type { WineFieldKey, WineIdentityDraft } from "@/lib/wine-identity/types";
 import { catalogWineTitle, fetchCatalogWine } from "@/lib/wset/queries";
+import { DOSAGE_EMBED } from "@/lib/wset/wine-title";
 import { addedVia } from "./added-via";
 import { recentFirst } from "./recent-first";
 import { callerKnowsWine, searchShowsCatalogWine } from "./flight-knowledge";
@@ -196,7 +198,8 @@ function queryTokens(query: string): string[] {
 // title, the thumbnail, the blind-pending gate and the match text.
 const WINE_EMBED =
   "id, wine_name, image_url, blind_pending, created_by, vintage_kind, vintage_year, vintage_tawny_years, " +
-  "producer:producers(name), appellation:appellations(name), region:regions(name), country:countries(name)";
+  "producer:producers(name), appellation:appellations(name), region:regions(name), country:countries(name), " +
+  DOSAGE_EMBED;
 
 type EmbeddedWine = {
   id: string;
@@ -211,6 +214,7 @@ type EmbeddedWine = {
   appellation: unknown;
   region: unknown;
   country: unknown;
+  dosage?: unknown;
 };
 
 // The types file carries no relationship metadata, so an embed comes back
@@ -236,11 +240,13 @@ function embeddedTitle(w: EmbeddedWine): string {
     vintageYear: w.vintage_year,
     vintageTawnyYears: w.vintage_tawny_years,
     appellationName: relName(w.appellation),
+    dosageName: relName(w.dosage),
   });
 }
 
 // The same searchable text the RPC builds (minus the grape names — those
-// are a separate join and the RPC treats them as an additive extra).
+// are a separate join and the RPC treats them as an additive extra), with the
+// dosage and its local spellings, as search_catalog_wines has them (20261003101200).
 function embeddedSearchText(w: EmbeddedWine): string {
   return searchNorm(
     [
@@ -250,6 +256,7 @@ function embeddedSearchText(w: EmbeddedWine): string {
       relName(w.region),
       relName(w.country),
       w.vintage_year == null ? null : String(w.vintage_year),
+      ...dosageSearchTerms(relName(w.dosage)),
     ]
       .filter(Boolean)
       .join(" "),
@@ -283,6 +290,8 @@ type CatalogIdentityRow = {
   vintage_kind: VintageKind;
   vintage_year: number | null;
   vintage_tawny_years: number | null;
+  dosage_designation_id: string | null;
+  dosage: unknown;
 };
 
 /** The columns behind every catalog and tasted row (spec §C.1): the RPC returns
@@ -295,7 +304,8 @@ async function catalogIdentities(supabase: Db, ids: readonly string[]): Promise<
       .from("catalog_wines")
       .select(
         "id, blind_pending, created_by, image_url, primary_grape_id, producer_id, wine_name, appellation_id, " +
-          "vintage_kind, vintage_year, vintage_tawny_years",
+          "vintage_kind, vintage_year, vintage_tawny_years, dosage_designation_id, " +
+          DOSAGE_EMBED,
       )
       .in("id", ids.slice(from, from + ID_CHUNK));
     if (error) {
@@ -319,6 +329,7 @@ function identityFields(w: CatalogIdentityRow) {
       tawnyYears: w.vintage_tawny_years,
       read: false,
     }),
+    dosageId: w.dosage_designation_id,
   };
 }
 
@@ -501,6 +512,7 @@ export async function searchAddWine(
           vintageYear: r.vintage_year,
           vintageTawnyYears: r.vintage_tawny_years,
           appellationName: r.appellation || null,
+          dosageName: relName(w.dosage),
         }),
         subtitle,
         imageUrl: w.image_url,

@@ -441,3 +441,18 @@ describe("pickImageFiles", () => {
     ]);
   });
 });
+
+describe("catalogRowMeta and the dosage (review, 2026-10-03)", () => {
+  const cava: WineIdentityDraft = {
+    ...emptyDraft(), producer: { kind: "existing", id: "mp", name: "Miquel Pons" }, wineName: null, appellationId: "cava",
+    style: "SPARKLING", dosageId: "bn", vintage: { kind: "NV", year: null, tawnyYears: null, read: true },
+  };
+  const row = { producerId: "mp", wineName: null, appellationId: "cava", vintageLabel: "NV" };
+  it("another dosage of the same Cava is another wine", () =>
+    expect(catalogRowMeta({ ...row, dosageId: "ds" }, cava)).toBe("Already in the catalog · different wine"));
+  it("the same dosage is the same wine", () => expect(catalogRowMeta({ ...row, dosageId: "bn" }, cava)).toBe("Already in the catalog · NV"));
+  it("a draft with no dosage yet, or a row that did not say, compares without it", () => {
+    expect(catalogRowMeta({ ...row, dosageId: "ds" }, { ...cava, dosageId: null })).toBe("Already in the catalog · NV");
+    expect(catalogRowMeta(row, cava)).toBe("Already in the catalog · NV");
+  });
+});

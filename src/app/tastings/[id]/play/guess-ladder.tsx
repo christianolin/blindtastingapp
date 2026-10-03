@@ -11,6 +11,7 @@ import type { TypeDesignationOption } from "@/components/type-designation-field"
 import { useMediaQuery } from "@/components/add-wine/use-camera";
 import { listAppellationsForRegions, searchProducers } from "@/lib/reference-search";
 import { shortlistGrapesForRegion } from "@/lib/grape-shortlist";
+import { guessDesignationChoices } from "@/lib/wine-identity/dosage";
 import {
   LADDER_ORDER,
   OPTIONAL_FIELDS,
@@ -652,7 +653,10 @@ export function GuessLadder({
         // Static fallback only — the producer picker searches server-side.
         return [];
       case "type_designation":
-        return groupDesignations(typeDesignations);
+        // A sparkling wine's dosage is its own catalog field and is never scored
+        // (owner, 2026-10-03): the sparkling-only dosages are not offered as a
+        // guess (guessDesignationChoices; Sec, Demi-Sec and Doux stay for still wines).
+        return groupDesignations(guessDesignationChoices(typeDesignations, guess.type_designation_id));
       case "vintage": {
         const years: PickerOption[] = vintageYears.map((y) => ({
           id: vintageYearId(y),

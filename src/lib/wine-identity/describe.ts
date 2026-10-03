@@ -10,7 +10,15 @@ export type DisplayNames = {
   region: string | null;
   country: string | null;
   primaryGrape: string | null;
+  /** The resolved dosage's name ("Brut Nature"). Left out (undefined) by callers
+      that only want a short title; null means a sparkling draft has none. */
+  dosage?: string | null;
 };
+
+/** The confirm screen's line for a sparkling read whose dosage did not resolve, so a
+    Brut Nature and a Semi-sec read never look alike (review, 2026-10-03). Provisional
+    copy. */
+export const NO_DOSAGE_READ = "No dosage read";
 
 const NOUNS: Record<WineFieldKey, { article: "a" | "an"; noun: string }> = {
   producer: { article: "a", noun: "producer" },
@@ -88,11 +96,17 @@ export function readDisplay(
 ): { title: string; meta: string; newProducer: boolean } {
   const d = normaliseDraft(draft);
   const producer = clean(names.producer) ?? clean(d.producer?.name);
-  const wine = [d.wineName ?? withoutDesignation(names.appellation), vintageLabel(d.vintage)]
+  // A sparkling wine's dosage is part of its identity, so it sits in the title the
+  // way the catalog title has it ("Miquel Pons, Cava Demi-Sec NV"); a sparkling
+  // draft with none says so first on the meta line.
+  const sparkling = d.style === "SPARKLING";
+  const dosage = sparkling ? clean(names.dosage) : null;
+  const wine = [d.wineName ?? withoutDesignation(names.appellation), dosage, vintageLabel(d.vintage)]
     .filter(Boolean)
     .join(" ");
   const title = [producer, wine].filter(Boolean).join(", ");
-  const meta = [names.appellation, names.region, names.country, names.primaryGrape]
+  const noDosage = sparkling && names.dosage !== undefined && dosage === null ? NO_DOSAGE_READ : null;
+  const meta = [noDosage, names.appellation, names.region, names.country, names.primaryGrape]
     .map(clean)
     .filter(Boolean)
     .join(" · ");

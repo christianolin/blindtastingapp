@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { emptyDraft } from "./complete";
-import { pickConfidentMatch, type CatalogCandidate } from "./match";
+import { matchCardTitle, pickConfidentMatch, type CatalogCandidate } from "./match";
 import type { WineIdentityDraft } from "./types";
 
 const draft = (o: Partial<WineIdentityDraft> = {}): WineIdentityDraft => ({
@@ -54,5 +54,27 @@ describe("pickConfidentMatch and the dosage (20261003101000)", () => {
 
   it("a dosage on a still read does not count", () => {
     expect(pickConfidentMatch(cava({ style: "STILL", dosageId: "d-nature" }), [nv({})])?.id).toBe("c1");
+  });
+
+  // Review finding (2026-10-03): after the cleanup Miquel Pons holds one wine, the NV
+  // Demi-Sec (c3bf8b20). A Brut Nature bottle whose dosage did not land must not be
+  // added as it: the "Already in the catalog?" step asks instead.
+  it("an unread dosage never lands on the producer's only wine when that wine has one", () => {
+    expect(pickConfidentMatch(cava(), [nv({ id: "c3bf8b20", dosageId: "d-demisec" })])).toBeNull();
+    expect(pickConfidentMatch(cava({ dosageId: "d-nature" }), [nv({ id: "c3bf8b20", dosageId: "d-demisec" })])).toBeNull();
+    expect(pickConfidentMatch(cava({ dosageId: "d-demisec" }), [nv({ id: "c3bf8b20", dosageId: "d-demisec" })])?.id).toBe("c3bf8b20");
+  });
+
+  it("a read dosage never lands on a wine with none, and two without one still match", () => {
+    expect(pickConfidentMatch(cava({ dosageId: "d-nature" }), [nv({ dosageId: null })])).toBeNull();
+    expect(pickConfidentMatch(cava(), [nv({ dosageId: null })])?.id).toBe("c1");
+  });
+});
+
+describe("matchCardTitle", () => {
+  it("names the dosage after the vintage, and leaves out what is missing", () => {
+    expect(matchCardTitle("Cava DO", "NV", "Demi-Sec")).toBe("Cava DO NV · Demi-Sec");
+    expect(matchCardTitle("Barbaresco DOCG", "2018", null)).toBe("Barbaresco DOCG 2018");
+    expect(matchCardTitle(null, "", "Brut")).toBe("Brut");
   });
 });

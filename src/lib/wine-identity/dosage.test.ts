@@ -12,6 +12,9 @@ import {
   effectiveDosageId,
   isDosageCategory,
   splitDosageFromName,
+  splitDosagePhrase,
+  dosageSearchTerms,
+  guessDesignationChoices,
 } from "./dosage";
 
 describe("canonicalDosageName", () => {
@@ -153,5 +156,82 @@ describe("the two pickers (type designation and dosage) never offer the same row
 
   it("the dosage picker lists only the dosages, driest first", () => {
     expect(dosageChoices(rows).map((r) => r.name)).toEqual(["Brut Nature", "Brut", "Doux"]);
+  });
+});
+
+describe("review fixes (2026-10-03)", () => {
+  it.each([
+    ["Brut Natur", "Brut Nature"],
+    ["Non dosé", "Brut Nature"],
+    ["Non dosato", "Brut Nature"],
+    ["Bruto natural", "Brut Nature"],
+    ["Naturherb", "Brut Nature"],
+    ["Extra herb", "Extra Brut"],
+    ["Extra Secco", "Extra Dry"],
+    ["Extra Trocken", "Extra Dry"],
+    ["Secco", "Sec"],
+    ["Asciutto", "Sec"],
+    ["Abboccato", "Demi-Sec"],
+  ])("knows the EU spelling %s as %s anywhere", (text, name) => {
+    expect(canonicalDosageName(text)).toBe(name);
+    expect(canonicalDosageName(text, { field: true })).toBe(name);
+  });
+
+  it.each([
+    ["Dry", "Sec"],
+    ["DRY", "Sec"],
+    ["Trocken", "Sec"],
+    ["Halbtrocken", "Demi-Sec"],
+    ["Medium dry", "Demi-Sec"],
+    ["Herb", "Brut"],
+    ["Sweet", "Doux"],
+    ["Mild", "Doux"],
+  ])("reads %s as %s only where a dosage is expected", (text, name) => {
+    expect(canonicalDosageName(text)).toBeNull();
+    expect(canonicalDosageName(text, { field: true })).toBe(name);
+  });
+
+  it("splits a compound designation or dosage, longest phrase first", () => {
+    expect(splitDosagePhrase("Reserva Brut Nature")).toEqual({ rest: "Reserva", dosage: "Brut Nature" });
+    expect(splitDosagePhrase("Gran Reserva Brut Nature")).toEqual({ rest: "Gran Reserva", dosage: "Brut Nature" });
+    expect(splitDosagePhrase("Brut Classic")).toEqual({ rest: "Classic", dosage: "Brut" });
+    expect(splitDosagePhrase("Brut Natur")).toEqual({ rest: null, dosage: "Brut Nature" });
+    expect(splitDosagePhrase("Gran Reserva")).toEqual({ rest: "Gran Reserva", dosage: null });
+    expect(splitDosagePhrase(null)).toEqual({ rest: null, dosage: null });
+  });
+
+  it("splits the field-only words only when asked", () => {
+    expect(splitDosagePhrase("Prosecco Superiore Dry")).toEqual({ rest: "Prosecco Superiore Dry", dosage: null });
+    expect(splitDosagePhrase("Prosecco Superiore Dry", { field: true })).toEqual({ rest: "Prosecco Superiore", dosage: "Sec" });
+  });
+
+  it("never takes a field-only word out of a wine name", () => {
+    expect(splitDosageFromName("Prosecco Dry")).toEqual({ wineName: "Prosecco Dry", dosage: null });
+    expect(splitDosageFromName("Riesling Trocken")).toEqual({ wineName: "Riesling Trocken", dosage: null });
+    expect(splitDosageFromName("Brut Natur")).toEqual({ wineName: null, dosage: "Brut Nature" });
+  });
+
+  it("lists every spelling a search may use for a dosage, never the field-only words", () => {
+    expect(dosageSearchTerms("Demi-Sec")).toEqual(["Demi-Sec", "Semiseco", "Semi-seco", "Semi-sec", "Abboccato"]);
+    expect(dosageSearchTerms("Sec")).toEqual(["Sec", "Seco", "Secco", "Asciutto"]);
+    expect(dosageSearchTerms("Brut")).toEqual(["Brut"]);
+    expect(dosageSearchTerms(null)).toEqual([]);
+    expect(dosageSearchTerms("Gran Reserva")).toEqual([]);
+  });
+
+  it("the guess ladder leaves out the four sparkling-only dosages, keeping a still wine's Sec", () => {
+    const rows = [
+      { id: "res", name: "Reserva", category: "Aging Classification" },
+      { id: "bn", name: "Brut Nature", category: DOSAGE_CATEGORY },
+      { id: "eb", name: "Extra Brut", category: DOSAGE_CATEGORY },
+      { id: "b", name: "Brut", category: DOSAGE_CATEGORY },
+      { id: "ed", name: "Extra Dry", category: DOSAGE_CATEGORY },
+      { id: "sec", name: "Sec", category: DOSAGE_CATEGORY },
+      { id: "ds", name: "Demi-Sec", category: DOSAGE_CATEGORY },
+      { id: "dx", name: "Doux", category: DOSAGE_CATEGORY },
+      { id: "tr", name: "Trocken", category: "Sweetness" },
+    ];
+    expect(guessDesignationChoices(rows, null).map((r) => r.id)).toEqual(["res", "sec", "ds", "dx", "tr"]);
+    expect(guessDesignationChoices(rows, "b").map((r) => r.id)).toEqual(["res", "b", "sec", "ds", "dx", "tr"]);
   });
 });

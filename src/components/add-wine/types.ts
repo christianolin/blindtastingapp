@@ -108,11 +108,15 @@ export type SearchGroups = {
     avgScore: number | null; noteCount: number; inFlight: boolean;
     /** Filled after the RPC so D1's row metas can compare a row with a draft (spec §C.1). */
     producerId: string; wineName: string | null; appellationId: string; vintageLabel: string;
+    /** The sparkling dosage (20261003101000): part of the identity D1 compares. */
+    dosageId?: string | null;
   }[];
   tasted: {
     catalogWineId: string; title: string; imageUrl: string | null;
     myScore: number | null; tastedOn: string;
     producerId: string; wineName: string | null; appellationId: string; vintageLabel: string;
+    /** The sparkling dosage (20261003101000): part of the identity D1 compares. */
+    dosageId?: string | null;
     /** sources-8: tasted rows beyond the catalog RPC's first page carry their own flag. */
     inFlight: boolean;
   }[];

@@ -215,33 +215,40 @@ async function consistencyRefusal(
 const UNKNOWN_DOSAGE = "Pick the dosage from the list.";
 
 /**
- * The dosage a wine is written with (20261003101000). Only a sparkling wine has one.
+ * The type designation and the dosage a wine is written with (20261003101000). Only a
+ * sparkling wine has a dosage, and a sparkling wine never keeps a dosage row as its
+ * type designation: the dosage is its own field and is never scored (owner,
+ * 2026-10-03). A still wine is written as before (a still Vouvray's "Sec" stays its
+ * type designation).
  * - The wine's own dosage, verified to be a "Sparkling Dosage" row; any other id is
  *   refused with UNKNOWN_DOSAGE.
- * - Else a dosage row given as its type designation (an older answer key's "Brut"): the
- *   catalog keeps that as the dosage, as catalog_wines_dosage_rule does on the insert, so
- *   the identity lookup and the `written` flag see the dosage the row will really have.
- *   The draft's type designation itself is left alone — an answer key keeps scoring it.
+ * - Else a dosage row given as its type designation (an older client's "Brut"): the
+ *   sparkling wine takes it as its dosage, as catalog_wines_dosage_rule does on the
+ *   insert, so the identity lookup and the `written` flag see the dosage the row will
+ *   really have.
+ * - Either way such a type designation is dropped, from the catalog row (the trigger
+ *   does the same) and from an answer key written from this wine, so no sparkling
+ *   answer key holds a dosage the guess ladder no longer offers.
  * Throws on a database error.
  */
-async function resolveDosage(
+async function resolveDesignations(
   supabase: Db,
   wine: { style: WineStyle | null; dosageId: string | null; typeDesignationId: string | null },
-): Promise<string | null> {
-  if (!dosageApplies(wine.style)) return null;
-  if (wine.dosageId === null && wine.typeDesignationId === null) return null;
-  const ids = [wine.dosageId, wine.typeDesignationId].filter((id): id is string => id !== null && UUID.test(id));
+): Promise<{ typeDesignationId: string | null; dosageId: string | null }> {
+  if (!dosageApplies(wine.style)) return { typeDesignationId: wine.typeDesignationId, dosageId: null };
   if (wine.dosageId !== null && !UUID.test(wine.dosageId)) throw new Error(UNKNOWN_DOSAGE);
-  if (ids.length === 0) return null;
+  const ids = [wine.dosageId, wine.typeDesignationId].filter((id): id is string => id !== null && UUID.test(id));
+  if (ids.length === 0) return { typeDesignationId: wine.typeDesignationId, dosageId: null };
   const { data, error } = await supabase.from("type_designations").select("id, category").in("id", ids);
   check(error, "dosage lookup");
   const isDosage = (id: string | null) =>
     id !== null && (data ?? []).some((row) => row.id === id && row.category === DOSAGE_CATEGORY);
+  const typeDesignationId = isDosage(wine.typeDesignationId) ? null : wine.typeDesignationId;
   if (wine.dosageId !== null) {
     if (!isDosage(wine.dosageId)) throw new Error(UNKNOWN_DOSAGE);
-    return wine.dosageId;
+    return { typeDesignationId, dosageId: wine.dosageId };
   }
-  return isDosage(wine.typeDesignationId) ? wine.typeDesignationId : null;
+  return { typeDesignationId, dosageId: isDosage(wine.typeDesignationId) ? wine.typeDesignationId : null };
 }
 
 /**
@@ -264,7 +271,7 @@ export async function prepareCompleteWine(
     const producerId = await resolveProducer(supabase, wine.producer, wine.regionId);
     const blend = await resolveBlend(supabase, wine.blend);
     if (blend.length === 0) return refusalFor(["primaryGrape"]);
-    const dosageId = await resolveDosage(supabase, wine);
+    const { typeDesignationId, dosageId } = await resolveDesignations(supabase, wine);
 
     return {
       wine: {
@@ -279,7 +286,7 @@ export async function prepareCompleteWine(
         blend,
         primaryGrapeId: blend[0].grapeId,
         secondaryGrapeId: blend[1]?.grapeId ?? null,
-        typeDesignationId: wine.typeDesignationId,
+        typeDesignationId,
         dosageId,
         alcohol: wine.alcohol,
         description: wine.description,
@@ -312,7 +319,7 @@ export async function prepareUnidentifiedWine(
     const producerId = wine.producer ? await resolveProducer(supabase, wine.producer, wine.regionId) : null;
     const blend = await resolveBlend(supabase, wine.blend);
     if (blend.length === 0) return refusalFor(["primaryGrape"]);
-    const dosageId = await resolveDosage(supabase, wine);
+    const { typeDesignationId, dosageId } = await resolveDesignations(supabase, wine);
 
     return {
       wine: {
@@ -327,7 +334,7 @@ export async function prepareUnidentifiedWine(
         blend,
         primaryGrapeId: blend[0].grapeId,
         secondaryGrapeId: blend[1]?.grapeId ?? null,
-        typeDesignationId: wine.typeDesignationId,
+        typeDesignationId,
         dosageId,
         alcohol: wine.alcohol,
         description: wine.description,

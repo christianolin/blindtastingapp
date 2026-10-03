@@ -1325,6 +1325,7 @@ describe("dosage and Corpinnat (owner, 2026-10-03)", () => {
       { id: "brut", name: "Brut", country_id: null, category: "Sparkling Dosage" },
       { id: "ds", name: "Demi-Sec", country_id: null, category: "Sparkling Dosage" },
       { id: "sec", name: "Sec", country_id: null, category: "Sparkling Dosage" },
+      { id: "trk", name: "Trocken", country_id: null, category: "Sweetness" },
     ],
   });
   const cava = (patch: Record<string, unknown>) => resolve("rioja-spain.json", {
@@ -1374,5 +1375,44 @@ describe("dosage and Corpinnat (owner, 2026-10-03)", () => {
       const d = await cava({ producer: "Huguet de Can Feixes", appellation });
       expect([d.appellationId, d.regionId, d.countryId]).toEqual(["corp", "cat", "es"]);
     }
+  });
+
+  // Review fixes (2026-10-03): compound strings and the EU's other spellings.
+  it("a compound designation keeps both halves: Reserva and the dosage", async () => {
+    const d = await cava({ designation: "Reserva Brut Nature" });
+    expect([d.typeDesignationId, d.dosageId]).toEqual(["res", "bn"]);
+    const g = await cava({ designation: "Gran Reserva Brut Nature" });
+    expect([g.typeDesignationId, g.dosageId]).toEqual(["gr", "bn"]);
+  });
+
+  it("the real Huguet read of 2026-10-02 (designation \"Brut Classic\") keeps its Brut", async () => {
+    const d = await cava({
+      producer: "Huguet de Can Feixes", appellation: "Corpinnat", designation: "Brut Classic", wineName: "Reserva 5 Anys",
+    });
+    expect([d.dosageId, d.typeDesignationId, d.wineName]).toEqual(["brut", null, "Reserva 5 Anys"]);
+    expect((await cava({ dosage: "Brut Classic" })).dosageId).toBe("brut");
+    expect((await cava({ dosage: "Reserva Brut Nature" })).dosageId).toBe("bn");
+  });
+
+  it("the dosage field reads Dry, Trocken and Brut Natur on a sparkling wine", async () => {
+    expect((await cava({ dosage: "DRY" })).dosageId).toBe("sec");
+    expect((await cava({ dosage: "Trocken" })).dosageId).toBe("sec");
+    expect((await cava({ dosage: "Brut Natur" })).dosageId).toBe("bn");
+    expect((await cava({ dosage: "Halbtrocken" })).dosageId).toBe("ds");
+  });
+
+  it("a Prosecco 'Dry' designation is the dosage on a sparkling read, and the name keeps its word", async () => {
+    const d = await cava({ designation: "Dry", wineName: "Prosecco Dry" });
+    expect([d.dosageId, d.typeDesignationId, d.wineName]).toEqual(["sec", null, "Prosecco Dry"]);
+  });
+
+  it("on a read of unknown style, Trocken stays a still wine's sweetness", async () => {
+    const d = await cava({ style: null, designation: "Trocken" });
+    expect([d.dosageId, d.typeDesignationId]).toEqual([null, "trk"]);
+  });
+
+  it("a sparkling-only dosage is never a still wine's type designation", async () => {
+    const d = await cava({ style: "STILL", designation: "Brut" });
+    expect([d.dosageId, d.typeDesignationId]).toEqual([null, null]);
   });
 });

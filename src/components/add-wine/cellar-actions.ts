@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import type { VintageKind } from "@/lib/supabase/database.types";
 import { catalogWineTitle } from "@/lib/wset/queries";
+import { DOSAGE_EMBED } from "@/lib/wset/wine-title";
 import { callerKnowsWine } from "./flight-knowledge";
 import {
   glassNumbers,
@@ -36,7 +37,7 @@ export async function listCellarForSheet(tastingId?: string): Promise<CellarShee
       .select(
         "id, catalog_wine_id, quantity, storage_location, drink_from, drink_to, " +
           "catalog_wines(wine_name, image_url, vintage_kind, vintage_year, vintage_tawny_years, " +
-          "producer:producers(name), appellation:appellations(name))",
+          `producer:producers(name), appellation:appellations(name), ${DOSAGE_EMBED})`,
       )
       .eq("owner_id", user.id)
       .gt("quantity", 0),
@@ -76,6 +77,7 @@ export async function listCellarForSheet(tastingId?: string): Promise<CellarShee
             vintageYear: (cw.vintage_year as number | null) ?? null,
             vintageTawnyYears: (cw.vintage_tawny_years as number | null) ?? null,
             appellationName: relName(cw.appellation),
+            dosageName: relName(cw.dosage),
           })
         : "Untitled wine";
       const glass = flight.get(l.catalog_wine_id) ?? null;

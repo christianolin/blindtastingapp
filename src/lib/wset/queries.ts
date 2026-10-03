@@ -206,7 +206,8 @@ export async function fetchNoteView(
           .select(
             "wine_name, vintage_kind, vintage_year, vintage_tawny_years, colour, " +
               "producer:producers(name), appellation:appellations(name), " +
-              "region:regions(name), country:countries(name)",
+              "region:regions(name), country:countries(name), " +
+              "dosage:type_designations!catalog_wines_dosage_designation_id_fkey(name)",
           )
           .eq("id", note.catalog_wine_id)
           .maybeSingle()
@@ -242,6 +243,7 @@ export async function fetchNoteView(
         vintageYear: (wine.vintage_year as number | null) ?? null,
         vintageTawnyYears: (wine.vintage_tawny_years as number | null) ?? null,
         appellationName: name(wine.appellation),
+        dosageName: name(wine.dosage),
       })
     : "Untitled wine";
   const subtitle = wine

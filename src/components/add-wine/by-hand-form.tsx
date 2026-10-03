@@ -84,6 +84,7 @@ import {
   pickProducerAdoption,
   regionFirstLabel,
   regionGrapeChipIds,
+  dosageChip,
   type ChipField,
   type FieldChipContext,
 } from "./by-hand-logic";
@@ -1207,7 +1208,7 @@ export function ByHandForm({
         {/* 4b · Dosage — a sparkling wine only (owner, 2026-10-03: its own field) */}
         {draft.style === "SPARKLING" && !tawny && dosageOptions.length > 0 ? (
           <Field>
-            <FieldHead label={DOSAGE_COPY.label} chip={null} />
+            <FieldHead label={DOSAGE_COPY.label} chip={dosageChip(draft, chipContext)} />
             <DosageField
               options={dosageOptions}
               value={draft.dosageId}

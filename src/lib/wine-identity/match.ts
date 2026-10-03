@@ -45,8 +45,10 @@ function sameVintage(vintage: WineIdentityDraft["vintage"], c: CatalogCandidate)
  * The one catalog wine a draft certainly is, or null. All four must hold:
  * 1. the draft's vintage is complete and was read (an unread vintage is never a
  *    wildcard), and the candidate has the same vintage;
- * 2. the candidate's colour agrees whenever the draft has one, and so does its
- *    dosage whenever the draft (a sparkling wine) has one;
+ * 2. the candidate's colour agrees whenever the draft has one, and its dosage is
+ *    the draft's exactly: a draft with no dosage (none read, or not sparkling)
+ *    never lands on a wine that has one, even the producer's only wine — the
+ *    "Already in the catalog?" step asks instead;
  * 3. when the producer has more than one identity among ALL its candidates, the
  *    folded cuvée name matches, and so does the appellation whenever the draft
  *    has one;
@@ -72,11 +74,18 @@ export function pickConfidentMatch(
   const survivors = candidates.filter((c) =>
     sameVintage(d.vintage, c)
     && (d.colour === null || c.colour === d.colour)
-    && (draftDosage === null || c.dosageId === draftDosage)
+    && (c.dosageId ?? null) === draftDosage
     && (!severalWines || (
       foldName(c.wineName ?? "") === draftName
       && (draftAppellation === null || c.appellationId === draftAppellation)
     )),
   );
   return survivors.length === 1 ? survivors[0] : null;
+}
+
+/** The match card's title: "{appellation} {vintage}", and a sparkling wine's dosage
+    after it ("Cava DO NV · Demi-Sec"), so a scan shows which dosage it lands on. */
+export function matchCardTitle(appellation: string | null, vintage: string, dosage: string | null): string {
+  const wine = [appellation?.trim(), vintage].filter(Boolean).join(" ");
+  return [wine, dosage?.trim()].filter(Boolean).join(" · ");
 }

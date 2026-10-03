@@ -10,6 +10,7 @@ import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import { summarizeNoteRow, type WsetNoteRow } from "@/lib/wset/note-summary";
 import { catalogWineTitle } from "@/lib/wset/queries";
+import { DOSAGE_EMBED } from "@/lib/wset/wine-title";
 import { makeT } from "@/lib/wset/i18n";
 import type { WineStyle } from "@/lib/wset/types";
 import {
@@ -50,6 +51,8 @@ type WineEmbed = {
   appellation: One<{ name: string }>;
   primary_grape: One<{ name: string }>;
   secondary_grape: One<{ name: string }>;
+  /** The catalog wine's dosage (an unidentified wine has none). */
+  dosage?: One<{ name: string }>;
 };
 
 type AromaEmbed = {
@@ -87,7 +90,8 @@ const NOTE_SELECT = [
   "*",
   `catalog_wine:catalog_wines(${WINE_FIELDS}, image_url, ` +
     "primary_grape:grapes!catalog_wines_primary_grape_id_fkey(name), " +
-    "secondary_grape:grapes!catalog_wines_secondary_grape_id_fkey(name))",
+    "secondary_grape:grapes!catalog_wines_secondary_grape_id_fkey(name), " +
+    `${DOSAGE_EMBED})`,
   `unidentified_wine:catalog_wines_unidentified(${WINE_FIELDS}, ` +
     "primary_grape:grapes!catalog_wines_unidentified_primary_grape_id_fkey(name), " +
     "secondary_grape:grapes!catalog_wines_unidentified_secondary_grape_id_fkey(name))",
@@ -108,6 +112,7 @@ function wineTitle(wine: WineEmbed | null): string | null {
     vintageYear: wine.vintage_year,
     vintageTawnyYears: wine.vintage_tawny_years,
     appellationName: nameOf(wine.appellation),
+    dosageName: wine.dosage ? nameOf(wine.dosage) : null,
   });
 }
 
