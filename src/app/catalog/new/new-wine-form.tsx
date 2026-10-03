@@ -41,6 +41,8 @@ export type WineFormInitial = {
   producerId: string;
   producerLabel: string | null;
   typeDesignationId: string;
+  /** A sparkling wine's dosage ("" when none). */
+  dosageId?: string;
   colour: Colour | null;
   style: Style | null;
   wineName: string;
@@ -69,7 +71,8 @@ export function NewWineForm({
   countries: ReferenceOption[];
   regions: (ReferenceOption & { country_id: string })[];
   grapes: ReferenceOption[];
-  typeDesignations: ReferenceOption[];
+  /** With `category`, the dosage rows get their own picker. */
+  typeDesignations: (ReferenceOption & { category?: string | null })[];
   userId: string;
   // When set (e.g. rendered inside the Add-wine popup), called with the new
   // wine's id instead of navigating — the modal decides what happens next.
@@ -88,7 +91,7 @@ export function NewWineForm({
     () =>
       initialTypeDesignations.map((t) => ({
         ...t,
-        category: null,
+        category: t.category ?? null,
         country_id: null,
       })),
   );
@@ -106,6 +109,7 @@ export function NewWineForm({
   const [typeDesignationId, setTypeDesignationId] = useState(
     initialWine?.typeDesignationId ?? "",
   );
+  const [dosageId, setDosageId] = useState(initialWine?.dosageId ?? "");
   const [colour, setColour] = useState<Colour | null>(
     initialWine?.colour ?? null,
   );
@@ -140,6 +144,7 @@ export function NewWineForm({
         producerId,
         producerLabel,
         typeDesignationId,
+        dosageId,
         wineName,
         colour: colour ?? "",
         style: style ?? "",
@@ -217,6 +222,8 @@ export function NewWineForm({
         pendingProducerHint="New producer — we'll add it when you save, or search above to pick an existing one."
         typeDesignationId={typeDesignationId}
         setTypeDesignationId={setTypeDesignationId}
+        dosageId={dosageId}
+        setDosageId={setDosageId}
         wineName={wineName}
         setWineName={setWineName}
         description={description}

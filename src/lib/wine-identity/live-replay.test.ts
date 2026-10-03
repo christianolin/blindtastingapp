@@ -358,7 +358,8 @@ describe("the live fixtures (plan L1)", () => {
 
   it.each(CASES.map((c) => [c.file, c] as const))("%s is a stored read: coerceLabelRead leaves it unchanged", (_file, c) => {
     const raw = rawFixture(c.file);
-    expect(coerceLabelRead(raw)).toEqual(raw);
+    // Every stored read predates the dosage field (2026-10-03): it reads as no dosage.
+    expect(coerceLabelRead(raw)).toEqual({ ...raw, dosage: null });
   });
 });
 

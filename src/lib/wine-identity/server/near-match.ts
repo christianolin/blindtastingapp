@@ -11,6 +11,7 @@ import {
   type NearMatches,
   type ProducerSuggestion,
 } from "../near-match";
+import { DOSAGE_CATEGORY } from "../dosage";
 import type { WineIdentityDraft } from "../types";
 
 /** Candidates read per check; the prompt shows NEAR_MATCH_SHOWN of them. */
@@ -39,7 +40,7 @@ export async function loadNearMatches(
   if (query === null) return null;
 
   const pendingProducer = draft.producer?.kind === "pending";
-  const [wines, producers] = await Promise.all([
+  const [wines, producers, dosages] = await Promise.all([
     supabase.rpc("catalog_wine_near_matches", {
       p_producer_id: query.producerId,
       p_producer_name: query.producerName,
@@ -50,6 +51,10 @@ export async function loadNearMatches(
     pendingProducer
       ? supabase.rpc("similar_producers", { p_name: query.producerName, p_region_id: query.regionId, p_limit: PRODUCER_LIMIT })
       : Promise.resolve({ data: [], error: null }),
+    // The seven dosage names, so "what differs" can name the bottle's own dosage.
+    draft.dosageId
+      ? supabase.from("type_designations").select("id, name").eq("category", DOSAGE_CATEGORY)
+      : Promise.resolve({ data: [] as { id: string; name: string }[], error: null }),
   ]);
   if (wines.error) throw new Error(`catalog_wine_near_matches failed: ${wines.error.message}`);
   if (producers.error) throw new Error(`similar_producers failed: ${producers.error.message}`);
@@ -70,6 +75,8 @@ export async function loadNearMatches(
     primaryGrapeName: row.primary_grape_name,
     producerStrength: Number(row.producer_strength),
     nameScore: Number(row.name_score),
+    dosageId: row.dosage_designation_id ?? null,
+    dosageName: row.dosage_name ?? null,
   }));
   if (candidates.some((c) => isSameIdentity(draft, c))) return null;
 
@@ -80,7 +87,9 @@ export async function loadNearMatches(
     inRegion: row.in_region,
     wineCount: Number(row.wine_count),
   }));
-  const rows = nearMatchRows(draft, candidates) ?? [];
+  // A failed name read only loses the bottle's dosage name in "what differs".
+  const dosageNames = Object.fromEntries((dosages.error ? [] : (dosages.data ?? [])).map((row) => [row.id, row.name]));
+  const rows = nearMatchRows(draft, candidates, dosageNames) ?? [];
   if (rows.length === 0 && suggestions.length === 0) return null;
   return { wines: rows, producers: suggestions };
 }

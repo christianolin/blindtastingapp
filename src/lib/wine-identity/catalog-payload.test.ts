@@ -20,6 +20,7 @@ const WINE: CatalogWineIdentity = {
   secondaryGrapeId: "c0000000-0000-4000-8000-000000000005",
   producerId: "c0000000-0000-4000-8000-000000000006",
   typeDesignationId: null,
+  dosageId: null,
   vintage: { kind: "YEAR", year: 2015, tawnyYears: null },
   wineName: "Cuvée Test",
   colour: "RED",
@@ -30,6 +31,7 @@ const IDENTITY_KEYS = [
   "appellation_id",
   "colour",
   "country_id",
+  "dosage_designation_id",
   "primary_grape_id",
   "producer_id",
   "region_id",
@@ -57,7 +59,7 @@ describe("flightWineBornHidden", () => {
 });
 
 describe("catalogWinePayload", () => {
-  it("sends exactly the 13 identity keys and no hidden key by default", () => {
+  it("sends exactly the 14 identity keys and no hidden key by default", () => {
     const payload = catalogWinePayload(WINE);
     expect(Object.keys(payload).sort()).toEqual(IDENTITY_KEYS);
     expect(BORN_HIDDEN_KEY in payload).toBe(false);
@@ -69,6 +71,7 @@ describe("catalogWinePayload", () => {
       secondary_grape_id: WINE.secondaryGrapeId,
       producer_id: WINE.producerId,
       type_designation_id: null,
+      dosage_designation_id: null,
       vintage_kind: "YEAR",
       vintage_year: 2015,
       vintage_tawny_years: null,
@@ -84,13 +87,22 @@ describe("catalogWinePayload", () => {
     expect(BORN_HIDDEN_KEY in payload).toBe(false);
   });
 
-  it("adds hidden: true to the same 13 keys for { hidden: true }", () => {
+  it("adds hidden: true to the same 14 keys for { hidden: true }", () => {
     const payload = catalogWinePayload(WINE, { hidden: true });
     expect(Object.keys(payload).sort()).toEqual([...IDENTITY_KEYS, BORN_HIDDEN_KEY].sort());
     expect((payload as Record<string, unknown>)[BORN_HIDDEN_KEY]).toBe(true);
     const identity: Record<string, unknown> = { ...payload };
     delete identity[BORN_HIDDEN_KEY];
     expect(identity).toEqual(catalogWinePayload(WINE));
+  });
+
+  it("always sends the dosage key, null included, so the lookup compares it (20261003101000)", () => {
+    expect(catalogWinePayload({ ...WINE, style: "SPARKLING", dosageId: "d1" }).dosage_designation_id).toBe("d1");
+    expect("dosage_designation_id" in catalogWinePayload(WINE)).toBe(true);
+  });
+
+  it("sends no dosage for a wine that is not sparkling", () => {
+    expect(catalogWinePayload({ ...WINE, style: "STILL", dosageId: "d1" }).dosage_designation_id).toBeNull();
   });
 
   it("sends a blank wine name as null (D3)", () => {
@@ -102,6 +114,15 @@ describe("catalogWinePayload", () => {
     expect(payload.vintage_kind).toBe("TAWNY");
     expect(payload.vintage_year).toBeNull();
     expect(payload.vintage_tawny_years).toBe(20);
+  });
+});
+
+describe("the dosage key is pinned to the migration", () => {
+  const sql = readFileSync("supabase/migrations/20261003101000_catalog_dosage.sql", "utf8").replace(/\r\n/g, "\n");
+
+  it("find_or_create_catalog_wine writes and catalog_wine_identity_match compares dosage_designation_id", () => {
+    expect(sql).toContain("(p->>'dosage_designation_id')::uuid,\n    (p->>'vintage_kind')");
+    expect(sql).toContain("(p ? 'dosage_designation_id')");
   });
 });
 

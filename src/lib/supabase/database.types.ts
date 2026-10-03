@@ -1343,6 +1343,8 @@ export type Database = {
           secondary_grape_id: string | null;
           producer_id: string;
           type_designation_id: string | null;
+          /** 20261003101000: a "Sparkling Dosage" type_designations row; null unless SPARKLING. */
+          dosage_designation_id: string | null;
           vintage_kind: VintageKind;
           vintage_year: number | null;
           vintage_tawny_years: number | null;
@@ -1376,6 +1378,7 @@ export type Database = {
           secondary_grape_id?: string | null;
           producer_id: string;
           type_designation_id?: string | null;
+          dosage_designation_id?: string | null;
           vintage_kind: VintageKind;
           vintage_year?: number | null;
           vintage_tawny_years?: number | null;
@@ -2117,6 +2120,8 @@ export type Database = {
           created_at: string;
           producer_strength: number;
           name_score: number;
+          dosage_designation_id: string | null;
+          dosage_name: string | null;
         }[];
       };
       // 20261003100000: "Did you mean …?" before a new producer is created.

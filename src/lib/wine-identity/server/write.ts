@@ -7,6 +7,7 @@ import { blendNeedsReplace, storableBlend } from "../blend-sync";
 import { catalogWinePayload } from "../catalog-payload";
 import { toCompleteWine, toUnidentifiedWine } from "../complete";
 import { describeMissing } from "../describe";
+import { DOSAGE_CATEGORY, dosageApplies } from "../dosage";
 import { catalogFillPlan, type CatalogFillContext } from "../fill-rule";
 import { foldName } from "../fold";
 import type {
@@ -210,6 +211,39 @@ async function consistencyRefusal(
   return null;
 }
 
+/** A dosage the user did not pick from the list (a tampered or stale id). */
+const UNKNOWN_DOSAGE = "Pick the dosage from the list.";
+
+/**
+ * The dosage a wine is written with (20261003101000). Only a sparkling wine has one.
+ * - The wine's own dosage, verified to be a "Sparkling Dosage" row; any other id is
+ *   refused with UNKNOWN_DOSAGE.
+ * - Else a dosage row given as its type designation (an older answer key's "Brut"): the
+ *   catalog keeps that as the dosage, as catalog_wines_dosage_rule does on the insert, so
+ *   the identity lookup and the `written` flag see the dosage the row will really have.
+ *   The draft's type designation itself is left alone — an answer key keeps scoring it.
+ * Throws on a database error.
+ */
+async function resolveDosage(
+  supabase: Db,
+  wine: { style: WineStyle | null; dosageId: string | null; typeDesignationId: string | null },
+): Promise<string | null> {
+  if (!dosageApplies(wine.style)) return null;
+  if (wine.dosageId === null && wine.typeDesignationId === null) return null;
+  const ids = [wine.dosageId, wine.typeDesignationId].filter((id): id is string => id !== null && UUID.test(id));
+  if (wine.dosageId !== null && !UUID.test(wine.dosageId)) throw new Error(UNKNOWN_DOSAGE);
+  if (ids.length === 0) return null;
+  const { data, error } = await supabase.from("type_designations").select("id, category").in("id", ids);
+  check(error, "dosage lookup");
+  const isDosage = (id: string | null) =>
+    id !== null && (data ?? []).some((row) => row.id === id && row.category === DOSAGE_CATEGORY);
+  if (wine.dosageId !== null) {
+    if (!isDosage(wine.dosageId)) throw new Error(UNKNOWN_DOSAGE);
+    return wine.dosageId;
+  }
+  return isDosage(wine.typeDesignationId) ? wine.typeDesignationId : null;
+}
+
 /**
  * A draft ready for a catalog write, as ids only (spec §B.9 steps 1–5):
  * completeness through `toCompleteWine`, the place's consistency, the producer
@@ -230,6 +264,7 @@ export async function prepareCompleteWine(
     const producerId = await resolveProducer(supabase, wine.producer, wine.regionId);
     const blend = await resolveBlend(supabase, wine.blend);
     if (blend.length === 0) return refusalFor(["primaryGrape"]);
+    const dosageId = await resolveDosage(supabase, wine);
 
     return {
       wine: {
@@ -245,6 +280,7 @@ export async function prepareCompleteWine(
         primaryGrapeId: blend[0].grapeId,
         secondaryGrapeId: blend[1]?.grapeId ?? null,
         typeDesignationId: wine.typeDesignationId,
+        dosageId,
         alcohol: wine.alcohol,
         description: wine.description,
         imageUrl: wine.imageUrl,
@@ -276,6 +312,7 @@ export async function prepareUnidentifiedWine(
     const producerId = wine.producer ? await resolveProducer(supabase, wine.producer, wine.regionId) : null;
     const blend = await resolveBlend(supabase, wine.blend);
     if (blend.length === 0) return refusalFor(["primaryGrape"]);
+    const dosageId = await resolveDosage(supabase, wine);
 
     return {
       wine: {
@@ -291,6 +328,7 @@ export async function prepareUnidentifiedWine(
         primaryGrapeId: blend[0].grapeId,
         secondaryGrapeId: blend[1]?.grapeId ?? null,
         typeDesignationId: wine.typeDesignationId,
+        dosageId,
         alcohol: wine.alcohol,
         description: wine.description,
         imageUrl: wine.imageUrl,
@@ -312,7 +350,8 @@ function identityName(name: string | null): string {
     (`catalog_wine_identity_match`) also takes a name equal once folded (accents,
     case, punctuation: "Nódal" is "Nodal"), but only on a row the caller reads
     without any glass-based grant — public, or their own — and only for a name
-    that folds to something; this mirrors it. */
+    that folds to something; this mirrors it. Since 20261003101000 the dosage is part
+    of the identity: the payload always carries it, so the lookup always compares it. */
 async function identityExists(supabase: Db, userId: string, wine: ResolvedWine): Promise<boolean> {
   let query = supabase
     .from("catalog_wines")
@@ -330,6 +369,8 @@ async function identityExists(supabase: Db, userId: string, wine: ResolvedWine):
   query = wine.vintage.tawnyYears === null
     ? query.is("vintage_tawny_years", null)
     : query.eq("vintage_tawny_years", wine.vintage.tawnyYears);
+  const dosageId = dosageApplies(wine.style) ? wine.dosageId : null;
+  query = dosageId === null ? query.is("dosage_designation_id", null) : query.eq("dosage_designation_id", dosageId);
   const { data, error } = await query;
   check(error, "catalog identity lookup");
   const name = identityName(wine.wineName);

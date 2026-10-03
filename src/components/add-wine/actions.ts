@@ -717,8 +717,8 @@ export async function loadCatalogWineDraft(catalogWineId: string): Promise<WineI
       .from("catalog_wines")
       .select(
         "id, producer_id, wine_name, vintage_kind, vintage_year, vintage_tawny_years, colour, style, " +
-          "country_id, region_id, appellation_id, type_designation_id, alcohol_percent, description, " +
-          "image_url, primary_grape_id, secondary_grape_id",
+          "country_id, region_id, appellation_id, type_designation_id, dosage_designation_id, alcohol_percent, " +
+          "description, image_url, primary_grape_id, secondary_grape_id",
       )
       .eq("id", catalogWineId)
       // `merged_into` is not in the hand-written types, so the untyped filter.
@@ -732,6 +732,7 @@ export async function loadCatalogWineDraft(catalogWineId: string): Promise<WineI
       colour: Parameters<typeof draftFromCatalogWine>[0]["colour"];
       style: Parameters<typeof draftFromCatalogWine>[0]["style"];
       country_id: string; region_id: string; appellation_id: string; type_designation_id: string | null;
+      dosage_designation_id: string | null;
       alcohol_percent: number | string | null; description: string | null; image_url: string | null;
       primary_grape_id: string; secondary_grape_id: string | null;
     };
@@ -770,6 +771,7 @@ export async function loadCatalogWineDraft(catalogWineId: string): Promise<WineI
       regionId: w.region_id,
       appellationId: w.appellation_id,
       typeDesignationId: w.type_designation_id,
+      dosageId: w.dosage_designation_id,
       alcohol: w.alcohol_percent === null ? null : Number(w.alcohol_percent),
       description: w.description,
       imageUrl: w.image_url,

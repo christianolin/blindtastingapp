@@ -11,7 +11,7 @@ export type FieldProvenance =
   | "catalog-sibling" | "lookup";
 
 export type ProvenanceKey =
-  | WineFieldKey | "wineName" | "blend" | "typeDesignation" | "alcohol" | "description" | "imageUrl";
+  | WineFieldKey | "wineName" | "blend" | "typeDesignation" | "dosage" | "alcohol" | "description" | "imageUrl";
 
 /** An existing reference row, or a name that is created only on the explicit add. */
 export type RefChoice =
@@ -36,6 +36,11 @@ export type WineIdentityDraft = {
   appellationId: string | null;
   blend: BlendRow[];
   typeDesignationId: string | null;
+  /** A sparkling wine's dosage (./dosage.ts): one of the seven "Sparkling Dosage"
+      type_designations rows, beside the type designation. A draft keeps it unless its
+      style is set to something other than sparkling; a complete wine keeps it only
+      when sparkling. Part of the identity, never scored. */
+  dosageId: string | null;
   alcohol: number | null;
   description: string | null;
   imageUrl: string | null;
@@ -60,6 +65,7 @@ export type CompleteWine = {
   primaryGrape: RefChoice;          // blend[0]
   secondaryGrape: RefChoice | null; // blend[1] ?? null
   typeDesignationId: string | null;
+  dosageId: string | null;          // null unless style is SPARKLING
   alcohol: number | null;
   description: string | null;
   imageUrl: string | null;

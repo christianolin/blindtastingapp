@@ -650,6 +650,7 @@ type CatalogWineDetails = {
   style: NonNullable<AnswerKeySource["catalog"]>["style"];
   description: string | null;
   alcohol_percent: number | null;
+  dosage_designation_id: string | null;
 };
 
 /** A complete glass's answer key as a draft: the answer key, plus its catalog
@@ -664,7 +665,7 @@ async function draftFromStoredAnswer(
   if (answer.catalog_wine_id) {
     const { data, error } = await supabase
       .from("catalog_wines")
-      .select("wine_name, colour, style, description, alcohol_percent")
+      .select("wine_name, colour, style, description, alcohol_percent, dosage_designation_id")
       .eq("id", answer.catalog_wine_id)
       .maybeSingle();
     if (error) return { error: error.message };
@@ -722,6 +723,7 @@ async function draftFromStoredAnswer(
           style: catalogWine.style,
           description: catalogWine.description,
           alcohol: toNumber(catalogWine.alcohol_percent),
+          dosageId: catalogWine.dosage_designation_id,
           grapes: blendRows.map((row) => ({ ...named(row.grape_id), percentage: toNumber(row.percentage) })),
         }
       : null,

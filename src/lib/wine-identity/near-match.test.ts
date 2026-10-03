@@ -48,7 +48,45 @@ const candidate = (over: Partial<NearMatchCandidate> = {}): NearMatchCandidate =
   primaryGrapeName: "Macabeo",
   producerStrength: 3,
   nameScore: 1,
+  dosageId: null,
+  dosageName: null,
   ...over,
+});
+
+describe("the dosage is part of the identity (20261003101000)", () => {
+  const brutNature = { dosageId: "d-nature", dosageName: "Brut Nature" };
+  it("a Brut Nature and a Semi-sec of one wine are not the same wine", () => {
+    const draft = { ...nodal2021(), dosageId: "d-demisec" };
+    expect(isSameIdentity(draft, candidate(brutNature))).toBe(false);
+    expect(isSameIdentity({ ...nodal2021(), dosageId: "d-nature" }, candidate(brutNature))).toBe(true);
+  });
+  it("a draft with no dosage is not the Brut Nature either", () => {
+    expect(isSameIdentity(nodal2021(), candidate(brutNature))).toBe(false);
+  });
+  it("a dosage on a draft that is not sparkling does not count", () => {
+    expect(isSameIdentity({ ...nodal2021(), style: "STILL", dosageId: "d-nature" }, candidate({ style: "STILL" }))).toBe(true);
+  });
+  it("says what differs and shows the dosage in the meta line", () => {
+    const rows = nearMatchRows({ ...nodal2021(), dosageId: "d-demisec" }, [candidate(brutNature)])!;
+    expect(rows[0].differences).toContain("Brut Nature, yours has another dosage");
+    expect(rows[0].meta).toBe("Cava DO · Macabeo · Brut Nature");
+    const none = nearMatchRows(nodal2021(), [candidate(brutNature)])!;
+    expect(none[0].differences).toContain("Brut Nature, yours has no dosage");
+    const named = nearMatchRows({ ...nodal2021(), dosageId: "d-demisec" }, [candidate(brutNature)], { "d-demisec": "Demi-Sec" })!;
+    expect(named[0].differences).toContain("Brut Nature, yours is Demi-Sec");
+    const theirsNone = nearMatchRows({ ...nodal2021(), dosageId: "d-nature" }, [candidate()])!;
+    expect(theirsNone[0].differences).toContain("No dosage, yours has one");
+  });
+  it("Add it as a vintage keeps the bottle's own dosage, or takes the wine's", () => {
+    const other = candidate({ ...brutNature, vintage: { kind: "YEAR", year: 2019, tawnyYears: null } });
+    expect(draftForCandidateVintage({ ...nodal2021(), dosageId: "d-demisec" }, other).dosageId).toBe("d-demisec");
+    expect(draftForCandidateVintage(nodal2021(), other).dosageId).toBe("d-nature");
+  });
+  it("identityKey changes with the dosage", () => {
+    expect(identityKey({ ...nodal2021(), dosageId: "d-nature" })).not.toBe(identityKey(nodal2021()));
+    expect(identityKey({ ...nodal2021(), style: "STILL", dosageId: "d-nature" }))
+      .toBe(identityKey({ ...nodal2021(), style: "STILL" }));
+  });
 });
 
 describe("isSameIdentity — what find_or_create_catalog_wine would link to on its own", () => {

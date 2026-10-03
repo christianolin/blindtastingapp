@@ -30,7 +30,7 @@ export async function findConfidentMatch(
 
   const { data, error } = await supabase
     .from("catalog_wines")
-    .select("id, wine_name, appellation_id, colour, vintage_kind, vintage_year, vintage_tawny_years")
+    .select("id, wine_name, appellation_id, colour, vintage_kind, vintage_year, vintage_tawny_years, dosage_designation_id")
     .eq("producer_id", producer.id)
     .eq("blind_pending", false)
     // `merged_into` exists (20260829203000_catalog_curation) but not in the
@@ -49,6 +49,7 @@ export async function findConfidentMatch(
     vintageKind: row.vintage_kind,
     vintageYear: row.vintage_year,
     vintageTawnyYears: row.vintage_tawny_years,
+    dosageId: row.dosage_designation_id,
   }));
   const wine = pickConfidentMatch(draft, candidates);
   if (!wine) return null;

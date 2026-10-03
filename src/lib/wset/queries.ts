@@ -26,6 +26,8 @@ export type CellarWine = {
   primaryGrapeName: string | null;
   secondaryGrapeName: string | null;
   typeDesignationName: string | null;
+  /** A sparkling wine's dosage ("Brut Nature"; 20261003101000), beside the designation. */
+  dosageName: string | null;
   /** Alcohol by volume as printed on the label (the label reader or Manage
       wine). `description` above is the wine's one catalog text ("About this
       wine"); the FastCork-era profile columns are no longer read. */
@@ -41,7 +43,8 @@ const SELECT =
   "appellation:appellations(name), " +
   "primary_grape:grapes!catalog_wines_primary_grape_id_fkey(name), " +
   "secondary_grape:grapes!catalog_wines_secondary_grape_id_fkey(name), " +
-  "type_designation:type_designations!catalog_wines_type_designation_id_fkey(name)";
+  "type_designation:type_designations!catalog_wines_type_designation_id_fkey(name), " +
+  "dosage:type_designations!catalog_wines_dosage_designation_id_fkey(name)";
 
 // PostgREST embeds arrive as arrays or single objects depending on the client
 // version; normalise to a name string.
@@ -69,6 +72,7 @@ function shape(row: Record<string, unknown>, avgScore: number | null, noteCount:
     primaryGrapeName: name(row.primary_grape),
     secondaryGrapeName: name(row.secondary_grape),
     typeDesignationName: name(row.type_designation),
+    dosageName: name(row.dosage),
     alcoholPercent:
       row.alcohol_percent == null ? null : Number(row.alcohol_percent),
     avgScore,

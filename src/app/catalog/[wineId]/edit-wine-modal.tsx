@@ -12,7 +12,7 @@ type RefData = {
   countries: ReferenceOption[];
   regions: (ReferenceOption & { country_id: string })[];
   grapes: ReferenceOption[];
-  typeDesignations: ReferenceOption[];
+  typeDesignations: (ReferenceOption & { category: string | null })[];
   initial: WineFormInitial;
 };
 
@@ -41,13 +41,13 @@ export function EditWineModal({
         supabase.from("grapes").select("id, name").order("name"),
         supabase
           .from("type_designations")
-          .select("id, name")
+          .select("id, name, category")
           .eq("is_active", true)
           .order("sort_order"),
         supabase
           .from("catalog_wines")
           .select(
-            "country_id, region_id, appellation_id, producer_id, type_designation_id, colour, style, wine_name, description, vintage_kind, vintage_year, vintage_tawny_years, image_url, alcohol_percent",
+            "country_id, region_id, appellation_id, producer_id, type_designation_id, dosage_designation_id, colour, style, wine_name, description, vintage_kind, vintage_year, vintage_tawny_years, image_url, alcohol_percent",
           )
           .eq("id", wineId)
           .maybeSingle(),
@@ -93,6 +93,7 @@ export function EditWineModal({
           producerId: w.producer_id ?? "",
           producerLabel,
           typeDesignationId: w.type_designation_id ?? "",
+          dosageId: w.dosage_designation_id ?? "",
           colour: w.colour as WineFormInitial["colour"],
           style: w.style as WineFormInitial["style"],
           wineName: w.wine_name ?? "",

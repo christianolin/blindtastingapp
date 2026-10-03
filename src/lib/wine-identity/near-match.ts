@@ -6,6 +6,7 @@
 // blind_pending or merged row; this module only decides what the prompt shows.
 import { missingWineFields } from "./complete";
 import { vintageLabel } from "./describe";
+import { effectiveDosageId } from "./dosage";
 import { foldName } from "./fold";
 import type { VintageKind, WineColour, WineIdentityDraft, WineStyle } from "./types";
 
@@ -32,6 +33,9 @@ export type NearMatchCandidate = {
   producerStrength: number;
   /** 0..1, how close the wine names are. */
   nameScore: number;
+  /** The sparkling dosage (20261003101000), part of the identity, and its name. */
+  dosageId: string | null;
+  dosageName: string | null;
 };
 
 export type ProducerSuggestion = { id: string; name: string; regionName: string | null; inRegion: boolean; wineCount: number };
@@ -40,7 +44,7 @@ export type NearMatchRow = {
   candidate: NearMatchCandidate;
   /** "Marc Esteve Vives Nodal 2019" */
   title: string;
-  /** "Cava DO · Macabeo" */
+  /** "Cava DO · Macabeo · Brut Nature" */
   meta: string;
   /** What differs from the bottle in hand: "2019, yours is 2021". */
   differences: string[];
@@ -95,6 +99,15 @@ function sameName(draft: WineIdentityDraft, c: NearMatchCandidate): boolean {
   return namesMatch(draft.wineName, c.wineName);
 }
 
+/** The draft's dosage as the catalog would store it: only a sparkling wine has one. */
+function draftDosage(draft: WineIdentityDraft): string | null {
+  return effectiveDosageId(draft.style, draft.dosageId ?? null);
+}
+
+function sameDosage(draft: WineIdentityDraft, c: NearMatchCandidate): boolean {
+  return draftDosage(draft) === (c.dosageId ?? null);
+}
+
 /** The candidate `find_or_create_catalog_wine` would link to on its own (its
     folded identity lookup): the same existing producer, a name equal once folded,
     the same appellation, colour and vintage. Then there is nothing to ask. */
@@ -104,7 +117,8 @@ export function isSameIdentity(draft: WineIdentityDraft, c: NearMatchCandidate):
     && sameName(draft, c)
     && draft.appellationId === c.appellationId
     && draft.colour === c.colour
-    && sameVintage(draft, c);
+    && sameVintage(draft, c)
+    && sameDosage(draft, c);
 }
 
 /** What the server reads candidates with, or null when there is no producer to anchor them. */
@@ -128,7 +142,18 @@ export function shouldAskNearMatch(source: { kind: string; draft?: WineIdentityD
   return missingWineFields(source.draft).length === 0;
 }
 
-function differences(draft: WineIdentityDraft, c: NearMatchCandidate): string[] {
+/** "Brut Nature, yours is Demi-Sec" — the bottle's dosage named when the caller knows it. */
+function dosageDifference(draft: WineIdentityDraft, c: NearMatchCandidate, dosageNames: Readonly<Record<string, string>>): string | null {
+  if (sameDosage(draft, c)) return null;
+  const mine = draftDosage(draft);
+  if (c.dosageId === null) return "No dosage, yours has one";
+  const theirs = c.dosageName ?? "Another dosage";
+  if (mine === null) return `${theirs}, yours has no dosage`;
+  const mineName = dosageNames[mine];
+  return mineName ? `${theirs}, yours is ${mineName}` : `${theirs}, yours has another dosage`;
+}
+
+function differences(draft: WineIdentityDraft, c: NearMatchCandidate, dosageNames: Readonly<Record<string, string>>): string[] {
   const out: string[] = [];
   if (!sameVintage(draft, c)) {
     const mine = vintageLabel(draft.vintage);
@@ -143,6 +168,11 @@ function differences(draft: WineIdentityDraft, c: NearMatchCandidate): string[] 
   const grape = draft.blend[0]?.grape ?? null;
   const grapeDiffers = grape !== null && (grape.kind === "existing" ? grape.id !== c.primaryGrapeId : foldName(grape.name) !== foldName(c.primaryGrapeName ?? ""));
   if (grapeDiffers && c.primaryGrapeName) out.push(`${c.primaryGrapeName}, yours is ${grape!.name}`);
+  // Only between two sparkling wines: a style difference is already said above.
+  if (draft.style === "SPARKLING" && c.style === "SPARKLING") {
+    const dosage = dosageDifference(draft, c, dosageNames);
+    if (dosage !== null) out.push(dosage);
+  }
   return out;
 }
 
@@ -152,6 +182,7 @@ function rank(draft: WineIdentityDraft, c: NearMatchCandidate): number[] {
     c.nameScore,
     sameVintage(draft, c) ? 1 : 0,
     draft.colour === c.colour ? 1 : 0,
+    sameDosage(draft, c) ? 1 : 0,
   ];
 }
 
@@ -179,7 +210,12 @@ function isSameWine(draft: WineIdentityDraft, c: NearMatchCandidate): boolean {
  * links to it without asking). Vintage, grape, colour and style never drop a
  * candidate — they are shown as what differs.
  */
-export function nearMatchRows(draft: WineIdentityDraft, candidates: readonly NearMatchCandidate[]): NearMatchRow[] | null {
+export function nearMatchRows(
+  draft: WineIdentityDraft,
+  candidates: readonly NearMatchCandidate[],
+  /** Dosage id → name, so a difference can name the bottle's own dosage. */
+  dosageNames: Readonly<Record<string, string>> = {},
+): NearMatchRow[] | null {
   if (candidates.length === 0) return null;
   if (candidates.some((c) => isSameIdentity(draft, c))) return null;
   const draftVintage = vintageLabel(draft.vintage);
@@ -191,8 +227,8 @@ export function nearMatchRows(draft: WineIdentityDraft, candidates: readonly Nea
       return {
         candidate: c,
         title: [c.producerName, c.wineName?.trim() || null, candidateVintage(c)].filter(Boolean).join(" "),
-        meta: [c.appellationName, c.primaryGrapeName].filter(Boolean).join(" · "),
-        differences: differences(draft, c),
+        meta: [c.appellationName, c.primaryGrapeName, c.dosageName].filter(Boolean).join(" · "),
+        differences: differences(draft, c, dosageNames),
         addAsVintage: isSameWine(draft, c) && vintageDiffers && draftVintage !== "" ? draftVintage : null,
         otherVintage: vintageDiffers ? candidateVintage(c) : null,
       };
@@ -200,7 +236,8 @@ export function nearMatchRows(draft: WineIdentityDraft, candidates: readonly Nea
 }
 
 /** "Add it as 2021": the matched wine's producer, name, place, colour and style,
-    with the bottle's own vintage — so the new vintage joins the same wine. */
+    with the bottle's own vintage — so the new vintage joins the same wine. The
+    bottle's own dosage stays when it has one; otherwise it takes the wine's. */
 export function draftForCandidateVintage(draft: WineIdentityDraft, c: NearMatchCandidate): WineIdentityDraft {
   return {
     ...draft,
@@ -211,6 +248,7 @@ export function draftForCandidateVintage(draft: WineIdentityDraft, c: NearMatchC
     countryId: c.countryId,
     regionId: c.regionId,
     appellationId: c.appellationId,
+    dosageId: draftDosage(draft) ?? c.dosageId ?? null,
     provenance: {
       ...draft.provenance,
       producer: "catalog-match",
@@ -244,6 +282,7 @@ export function identityKey(draft: WineIdentityDraft): string {
     v.kind,
     v.kind === "YEAR" ? v.year : null,
     v.kind === "TAWNY" ? v.tawnyYears : null,
+    draftDosage(draft),
   ]);
 }
 
