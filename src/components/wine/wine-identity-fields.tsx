@@ -20,6 +20,8 @@ import {
   TypeDesignationField,
   type TypeDesignationOption,
 } from "@/components/type-designation-field";
+import { DOSAGE_COPY, DosageField } from "@/components/dosage-field";
+import { dosageChoices, typeDesignationChoices } from "@/lib/wine-identity/dosage";
 import { ImageUploader } from "@/components/image-uploader";
 import { GrapeBlendEditor, type BlendRow } from "@/app/catalog/new/grape-blend-editor";
 import { orderedBlend } from "@/lib/wine-blend";
@@ -79,6 +81,8 @@ export function WineIdentityFields({
   pendingProducerHint,
   typeDesignationId,
   setTypeDesignationId,
+  dosageId,
+  setDosageId,
   wineName,
   setWineName,
   colour,
@@ -125,6 +129,10 @@ export function WineIdentityFields({
   pendingProducerHint?: string;
   typeDesignationId: string;
   setTypeDesignationId: (id: string) => void;
+  /** A sparkling wine's dosage; the picker shows only when `setDosageId` is given and
+      the style is sparkling. The type designation picker then leaves the dosage rows out. */
+  dosageId?: string;
+  setDosageId?: (id: string) => void;
   wineName: string;
   setWineName: (v: string) => void;
   colour: string;
@@ -312,7 +320,7 @@ export function WineIdentityFields({
             <Label>Type designation (optional)</Label>
             <TypeDesignationField
               formFieldName="type_designation_id"
-              options={typeDesignations}
+              options={setDosageId ? typeDesignationChoices(typeDesignations, typeDesignationId || null) : typeDesignations}
               value={typeDesignationId}
               onValueChange={setTypeDesignationId}
               onCreate={async (name) => {
@@ -382,6 +390,18 @@ export function WineIdentityFields({
               </SelectContent>
             </Select>
           </div>
+          {setDosageId && style === "SPARKLING" && dosageChoices(typeDesignations).length > 0 ? (
+            <div className="flex flex-col gap-2">
+              <Label>{DOSAGE_COPY.label}</Label>
+              <DosageField
+                formFieldName="dosage_designation_id"
+                options={dosageChoices(typeDesignations)}
+                value={dosageId || null}
+                onChange={(id) => setDosageId(id ?? "")}
+              />
+              <p className="text-xs text-muted-foreground">{DOSAGE_COPY.hint}</p>
+            </div>
+          ) : null}
         </div>
       </fieldset>
 

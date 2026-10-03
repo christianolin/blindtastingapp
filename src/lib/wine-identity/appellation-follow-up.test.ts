@@ -203,7 +203,7 @@ describe("pickListedAppellation: our own list, exactly one fold-equal entry", ()
 function coerceDraft(): WineIdentityDraft {
   return {
     producer: null, wineName: null, vintage: { kind: null, year: null, tawnyYears: null, read: false }, colour: null, style: null,
-    countryId: null, regionId: null, appellationId: null, blend: [], typeDesignationId: null, alcohol: null,
+    countryId: null, regionId: null, appellationId: null, blend: [], typeDesignationId: null, dosageId: null, alcohol: null,
     description: null, imageUrl: null, provenance: {},
   };
 }

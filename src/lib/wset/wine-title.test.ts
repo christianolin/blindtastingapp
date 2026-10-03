@@ -191,3 +191,39 @@ describe("catalogWineTitle: different words are never dropped", () => {
     ).toBe("Château Margaux Pavillon Rouge du Chateau Margaux 2015");
   });
 });
+
+describe("catalogWineTitle: the dosage (review, 2026-10-03)", () => {
+  const miquel = {
+    producerName: "Miquel Pons",
+    wineName: null,
+    vintageKind: "NV" as const,
+    vintageYear: null,
+    vintageTawnyYears: null,
+    appellationName: "Cava DO",
+  };
+
+  it("two dosages of one Cava get two titles, the dosage before the vintage", () => {
+    expect(catalogWineTitle({ ...miquel, dosageName: "Demi-Sec" })).toBe("Miquel Pons Cava DO Demi-Sec NV");
+    expect(catalogWineTitle({ ...miquel, dosageName: "Brut Nature" })).toBe("Miquel Pons Cava DO Brut Nature NV");
+  });
+
+  it("no dosage, or none passed, keeps today's title", () => {
+    expect(catalogWineTitle({ ...miquel, dosageName: null })).toBe("Miquel Pons Cava DO NV");
+    expect(catalogWineTitle(miquel)).toBe("Miquel Pons Cava DO NV");
+  });
+
+  it("leaves the dosage out when the wine name already carries it as whole words", () => {
+    const vcp = {
+      producerName: "Veuve Clicquot",
+      wineName: "Brut Yellow Label",
+      vintageKind: "NV" as const,
+      vintageYear: null,
+      vintageTawnyYears: null,
+      appellationName: "Champagne AOP",
+    };
+    expect(catalogWineTitle({ ...vcp, dosageName: "Brut" })).toBe("Veuve Clicquot Brut Yellow Label Champagne AOP NV");
+    expect(catalogWineTitle({ ...vcp, wineName: "Brutal", dosageName: "Brut" })).toBe(
+      "Veuve Clicquot Brutal Champagne AOP Brut NV",
+    );
+  });
+});

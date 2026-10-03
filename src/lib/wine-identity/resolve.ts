@@ -32,6 +32,7 @@ import {
   canonicalCountryName, canonicalRegionName, curatedAppellationName, regionSynonymsOf,
 } from "../label-scan/region-canonical";
 import { emptyDraft, normaliseDraft } from "./complete";
+import { DOSAGE_CATEGORY, isSparklingOnlyDosage, splitDosageFromName, splitDosagePhrase } from "./dosage";
 import { DESIGNATION_SUFFIXES, foldName, foldWords, isTitleOnly, normaliseCru, stripDesignationSuffix } from "./fold";
 import type {
   BlendRow, FieldProvenance, ProvenanceKey, RefChoice, WineColour, WineIdentityDraft, WineStyle,
@@ -73,7 +74,8 @@ export interface RefLookup {
   producerByFoldedName(name: string, regionId: string | null): Promise<{ id: string; name: string; regionId: string | null } | null>;
   regionById(id: string): Promise<{ id: string; name: string; countryId: string } | null>;
   grapes(): Promise<{ id: string; name: string }[]>;                                   // small table
-  typeDesignations(): Promise<{ id: string; name: string; countryId: string | null }[]>; // ~50 rows, is_active
+  /** ~50 rows, is_active. `category` tells the seven "Sparkling Dosage" rows apart (step 8b). */
+  typeDesignations(): Promise<{ id: string; name: string; countryId: string | null; category?: string | null }[]>;
   /** Step 7.6 (owner fix B, 2026-09-19): one existing producer's catalog wines as the
       caller may read them — never merged away, never blind_pending — the candidate
       set findConfidentMatch reads (server/match.ts). At most CATALOG_SIBLING_LIMIT
@@ -259,7 +261,11 @@ async function resolveDesignation(
 ): Promise<string | null> {
   const wanted = foldName(designation);
   if (wanted === "") return null;
-  const rows = await lookup.typeDesignations();
+  // Brut Nature, Extra Brut, Brut and Extra Dry are a sparkling wine's dosage only —
+  // its own field, never scored (owner, 2026-10-03) — so never a type designation.
+  // Sec, Demi-Sec and Doux still name a still wine's sweetness (a still Vouvray Sec);
+  // a sparkling read's dosage words were split off before this runs.
+  const rows = (await lookup.typeDesignations()).filter((row) => !isSparklingOnlyDosage(row));
   // Spec §B.5 step 8: the draft's country first, then a designation with no
   // country, "otherwise leave it null". There is deliberately no fall back to the
   // first remaining row: a designation scoped to another country is a read the
@@ -599,11 +605,41 @@ export async function resolveLabelRead(
     }
   }
 
+  // 8b's input: a sparkling (or not yet known) wine's dosage is its own field (owner,
+  // 2026-10-03). A dosage term the reader put in the designation or the wine name is
+  // taken out of them: it never becomes a type designation or part of a wine name.
+  // A dosage phrase at either end of the designation is split off it, so "Reserva
+  // Brut Nature" is Reserva and Brut Nature, and "Brut Classic" is Brut. The
+  // field-only words ("Dry", "Trocken") count there only when the read says the
+  // wine is sparkling: on a wine of unknown style they may be a still wine's.
+  const sparklingRead = read.style === null || read.style === "SPARKLING";
+  const designationSplit = sparklingRead
+    ? splitDosagePhrase(read.designation, { field: read.style === "SPARKLING" })
+    : { rest: read.designation, dosage: null };
+  const nameSplit = sparklingRead ? splitDosageFromName(read.wineName) : { wineName: read.wineName, dosage: null };
+
   // 8. Designation — the draft's country first, then a designation with no
   //    country. After step 7.6, so a country that step filled counts here too.
-  if (read.designation !== null) {
-    draft.typeDesignationId = await resolveDesignation(read.designation, lookup, draft.countryId);
+  if (designationSplit.rest !== null) {
+    draft.typeDesignationId = await resolveDesignation(designationSplit.rest, lookup, draft.countryId);
     if (draft.typeDesignationId !== null) provenance.typeDesignation = "label";
+  }
+
+  // 8b. Dosage — the read's own field, else a dosage term it put in the designation or
+  //     the wine name, through the curated synonyms ("Semi Seco" is Demi-Sec, "Pas Dosé"
+  //     Brut Nature). Exactly the "Sparkling Dosage" row of that name, or nothing.
+  if (sparklingRead) {
+    const wanted =
+      splitDosagePhrase(read.dosage, { field: true }).dosage ?? designationSplit.dosage ?? nameSplit.dosage;
+    if (wanted !== null) {
+      const row = (await lookup.typeDesignations()).find(
+        (r) => r.category === DOSAGE_CATEGORY && r.name === wanted,
+      );
+      if (row !== undefined) {
+        draft.dosageId = row.id;
+        provenance.dosage = "label";
+      }
+    }
   }
 
   // 10. Vintage — only a vintage actually read off the label counts.
@@ -617,7 +653,7 @@ export async function resolveLabelRead(
   if (draft.colour !== null) provenance.colour = "label";
   draft.style = read.style;
   if (draft.style !== null) provenance.style = "label";
-  draft.wineName = read.wineName;
+  draft.wineName = nameSplit.wineName;
   if (draft.wineName !== null) provenance.wineName = "label";
   draft.alcohol = read.alcoholPercent;
   if (draft.alcohol !== null) provenance.alcohol = "label";

@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { Plus } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { catalogWineTitle } from "@/lib/wset/queries";
+import { DOSAGE_EMBED } from "@/lib/wset/wine-title";
 import { bottleTitle } from "@/lib/cellar/format";
 import type { BottleWine } from "@/lib/cellar/types";
 import { PageHeader } from "@/components/patterns/page-header";
@@ -31,6 +32,7 @@ type WineRow = {
   region: Rel;
   appellation: Rel;
   type_designation: Rel;
+  dosage: Rel;
   created_at: string;
 };
 
@@ -40,7 +42,8 @@ type WineRow = {
 const CATALOG_SELECT =
   "id, created_at, colour, style, wine_name, image_url, vintage_kind, vintage_year, vintage_tawny_years, " +
   "producer:producers(name), country:countries(name), region:regions(name), appellation:appellations(name), " +
-  "type_designation:type_designations!catalog_wines_type_designation_id_fkey(name)";
+  "type_designation:type_designations!catalog_wines_type_designation_id_fkey(name), " +
+  DOSAGE_EMBED;
 
 const CHUNK_SIZE = 200;
 
@@ -232,6 +235,7 @@ export default async function CatalogPage() {
         vintageYear: w.vintage_year,
         vintageTawnyYears: w.vintage_tawny_years,
         appellationName: relName(w.appellation),
+        dosageName: relName(w.dosage),
       }),
       producer,
       wineName: w.wine_name,
@@ -242,6 +246,7 @@ export default async function CatalogPage() {
       colour: w.colour,
       style: w.style,
       designation: relName(w.type_designation),
+      dosage: relName(w.dosage),
       appellation: relName(w.appellation),
       region: relName(w.region),
       country: relName(w.country),
@@ -259,6 +264,7 @@ export default async function CatalogPage() {
       appellation: wine.appellation,
       grapes,
       designation: wine.designation,
+      dosage: wine.dosage ?? null,
       vintage,
       imageUrl: w.image_url,
       avgScore: rating ? Number(rating.avg_score) : null,

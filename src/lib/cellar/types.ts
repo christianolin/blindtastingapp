@@ -28,6 +28,10 @@ export type BottleWine = {
   style: WineStyle | null;
   /** type_designations.name — "Riserva", "Grosses Gewächs". */
   designation: string | null;
+  /** A sparkling wine's dosage ("Brut Nature"; 20261003101000), part of its
+      identity, so two dosages of one wine never share a name. Optional: a
+      surface that does not read it shows the name without it. */
+  dosage?: string | null;
   appellation: string | null;
   region: string | null;
   country: string | null;

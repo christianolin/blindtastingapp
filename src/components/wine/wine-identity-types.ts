@@ -14,6 +14,9 @@ export type WineIdentityInput = {
   producerId: string;
   producerLabel: string | null;
   typeDesignationId: string | null;
+  /** A sparkling wine's dosage ("Sparkling Dosage" type_designations row); optional so the
+      older callers of this shape need not know it. */
+  dosageId?: string | null;
   wineName: string;
   colour: string;
   style: string;

@@ -32,6 +32,8 @@ import {
   TypeDesignationField,
   type TypeDesignationOption,
 } from "@/components/type-designation-field";
+import { DOSAGE_COPY, DosageField } from "@/components/dosage-field";
+import { dosageChoices, typeDesignationChoices } from "@/lib/wine-identity/dosage";
 import {
   GrapeBlendEditor,
   type BlendRow as EditorBlendRow,
@@ -82,6 +84,7 @@ import {
   pickProducerAdoption,
   regionFirstLabel,
   regionGrapeChipIds,
+  dosageChip,
   type ChipField,
   type FieldChipContext,
 } from "./by-hand-logic";
@@ -367,6 +370,11 @@ export function ByHandForm({
     })),
     created.typeDesignations,
   );
+  // The dosage has its own picker (owner, 2026-10-03), so the type designation picker
+  // leaves the seven dosage rows out — unless this glass's stored answer key already
+  // names one (an older "Brut"), which keeps showing and scoring as it always did.
+  const dosageOptions = dosageChoices(typeDesignations);
+  const typeDesignationOptions = typeDesignationChoices(typeDesignations, draft.typeDesignationId);
   const regionById = (id: string | null) => (id ? (regions.find((r) => r.id === id) ?? null) : null);
 
   function grapeCreated(option: RefRow) {
@@ -1197,6 +1205,22 @@ export function ByHandForm({
           </Field>
         </div>
 
+        {/* 4b · Dosage — a sparkling wine only (owner, 2026-10-03: its own field) */}
+        {draft.style === "SPARKLING" && !tawny && dosageOptions.length > 0 ? (
+          <Field>
+            <FieldHead label={DOSAGE_COPY.label} chip={dosageChip(draft, chipContext)} />
+            <DosageField
+              options={dosageOptions}
+              value={draft.dosageId}
+              onChange={(dosageId) =>
+                change(patchDraft(draftRef.current, { dosageId }, { dosage: dosageId ? "manual" : null }))
+              }
+              disabled={disabled}
+            />
+            <FieldNote>{DOSAGE_COPY.hint}</FieldNote>
+          </Field>
+        ) : null}
+
         {/* 5 · Country and region */}
         <Field>
           <FieldHead label="Country and region" chip={originChip} />
@@ -1385,7 +1409,7 @@ export function ByHandForm({
                 <div className={PICKER}>
                   <TypeDesignationField
                     formFieldName="type_designation_id"
-                    options={typeDesignations}
+                    options={typeDesignationOptions}
                     value={draft.typeDesignationId ?? ""}
                     onValueChange={(id) =>
                       change(

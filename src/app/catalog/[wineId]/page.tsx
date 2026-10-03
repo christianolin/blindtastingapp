@@ -125,6 +125,10 @@ export default async function CatalogWinePage({
       ),
     });
   }
+  // The type designation (Reserva, Gran Reserva…) and, for a sparkling wine, its dosage
+  // (Brut Nature … Doux): two facts side by side, as the two fields are (20261003101000).
+  if (wine.typeDesignationName) facts.push({ label: "Designation", node: wine.typeDesignationName });
+  if (wine.dosageName) facts.push({ label: "Dosage", node: wine.dosageName });
   if (wine.alcoholPercent != null) {
     facts.push({ label: "Alcohol", node: `${wine.alcoholPercent}%` });
   }

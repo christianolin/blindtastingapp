@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { emptyDraft } from "./complete";
-import { pickConfidentMatch, type CatalogCandidate } from "./match";
+import { matchCardTitle, pickConfidentMatch, type CatalogCandidate } from "./match";
 import type { WineIdentityDraft } from "./types";
 
 const draft = (o: Partial<WineIdentityDraft> = {}): WineIdentityDraft => ({
@@ -8,7 +8,8 @@ const draft = (o: Partial<WineIdentityDraft> = {}): WineIdentityDraft => ({
   appellationId: "a-bbr", colour: "RED", style: "STILL", vintage: { kind: "YEAR", year: 2017, tawnyYears: null, read: true }, ...o,
 });
 const cand = (o: Partial<CatalogCandidate> = {}): CatalogCandidate => ({
-  id: "c1", wineName: "Serraboella", appellationId: "a-bbr", colour: "RED", vintageKind: "YEAR", vintageYear: 2017, vintageTawnyYears: null, ...o,
+  id: "c1", wineName: "Serraboella", appellationId: "a-bbr", colour: "RED", vintageKind: "YEAR", vintageYear: 2017, vintageTawnyYears: null,
+  dosageId: null, ...o,
 });
 
 describe("pickConfidentMatch (scan-1)", () => {
@@ -32,5 +33,48 @@ describe("pickConfidentMatch (scan-1)", () => {
     expect(pickConfidentMatch(draft(), cs)?.id).toBe("c1");
     expect(pickConfidentMatch(draft({ wineName: null }), cs)).toBeNull();
     expect(pickConfidentMatch(draft({ appellationId: "a-other" }), cs)).toBeNull();
+  });
+});
+
+describe("pickConfidentMatch and the dosage (20261003101000)", () => {
+  const cava = (o: Partial<WineIdentityDraft> = {}) =>
+    draft({ wineName: null, colour: "WHITE", style: "SPARKLING", vintage: { kind: "NV", year: null, tawnyYears: null, read: true }, ...o });
+  const nv = (o: Partial<CatalogCandidate>) => cand({ wineName: null, colour: "WHITE", vintageKind: "NV", vintageYear: null, ...o });
+
+  it("a Semi-sec read never lands on the Brut Nature", () => {
+    expect(pickConfidentMatch(cava({ dosageId: "d-demisec" }), [nv({ dosageId: "d-nature" })])).toBeNull();
+    expect(pickConfidentMatch(cava({ dosageId: "d-demisec" }), [nv({ dosageId: "d-demisec" })])?.id).toBe("c1");
+  });
+
+  it("two dosages of one wine are two identities: an unread dosage matches neither", () => {
+    const cs = [nv({ id: "c1", dosageId: "d-nature" }), nv({ id: "c2", dosageId: "d-demisec" })];
+    expect(pickConfidentMatch(cava(), cs)).toBeNull();
+    expect(pickConfidentMatch(cava({ dosageId: "d-nature" }), cs)?.id).toBe("c1");
+  });
+
+  it("a dosage on a still read does not count", () => {
+    expect(pickConfidentMatch(cava({ style: "STILL", dosageId: "d-nature" }), [nv({})])?.id).toBe("c1");
+  });
+
+  // Review finding (2026-10-03): after the cleanup Miquel Pons holds one wine, the NV
+  // Demi-Sec (c3bf8b20). A Brut Nature bottle whose dosage did not land must not be
+  // added as it: the "Already in the catalog?" step asks instead.
+  it("an unread dosage never lands on the producer's only wine when that wine has one", () => {
+    expect(pickConfidentMatch(cava(), [nv({ id: "c3bf8b20", dosageId: "d-demisec" })])).toBeNull();
+    expect(pickConfidentMatch(cava({ dosageId: "d-nature" }), [nv({ id: "c3bf8b20", dosageId: "d-demisec" })])).toBeNull();
+    expect(pickConfidentMatch(cava({ dosageId: "d-demisec" }), [nv({ id: "c3bf8b20", dosageId: "d-demisec" })])?.id).toBe("c3bf8b20");
+  });
+
+  it("a read dosage never lands on a wine with none, and two without one still match", () => {
+    expect(pickConfidentMatch(cava({ dosageId: "d-nature" }), [nv({ dosageId: null })])).toBeNull();
+    expect(pickConfidentMatch(cava(), [nv({ dosageId: null })])?.id).toBe("c1");
+  });
+});
+
+describe("matchCardTitle", () => {
+  it("names the dosage after the vintage, and leaves out what is missing", () => {
+    expect(matchCardTitle("Cava DO", "NV", "Demi-Sec")).toBe("Cava DO NV · Demi-Sec");
+    expect(matchCardTitle("Barbaresco DOCG", "2018", null)).toBe("Barbaresco DOCG 2018");
+    expect(matchCardTitle(null, "", "Brut")).toBe("Brut");
   });
 });

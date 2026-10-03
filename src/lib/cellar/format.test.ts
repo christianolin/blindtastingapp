@@ -160,3 +160,17 @@ describe("scores and plurals", () => {
     expect(plural(0, "note", "notes")).toBe("0 notes");
   });
 });
+
+describe("the dosage in a bottle's name (review, 2026-10-03)", () => {
+  const cava = (dosage: string | null) =>
+    wine({ producer: "Miquel Pons", wineName: null, appellation: "Cava DO", vintageKind: "NV", vintageYear: null, style: "SPARKLING", dosage });
+  it("two dosages of one Cava get two names", () => {
+    expect(bottleTitle(cava("Demi-Sec"))).toBe("Cava DO Demi-Sec NV");
+    expect(bottleTitle(cava("Brut Nature"))).toBe("Cava DO Brut Nature NV");
+    expect(lotTitle(cava("Brut Nature"))).toBe("Miquel Pons, Cava DO Brut Nature NV");
+    expect(bottleTitle(cava(null))).toBe("Cava DO NV");
+  });
+  it("a name that already carries the dosage is not repeated", () => {
+    expect(bottleTitle(wine({ wineName: "Brut Yellow Label", vintageKind: "NV", vintageYear: null, dosage: "Brut" }))).toBe("Brut Yellow Label NV");
+  });
+});

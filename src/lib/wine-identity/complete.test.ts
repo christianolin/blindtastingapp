@@ -122,3 +122,39 @@ describe("toCompleteWine / toUnidentifiedWine", () => {
     expect(r.wine.producer).toBeNull();
   });
 });
+
+describe("dosage (owner, 2026-10-03: its own field, part of the identity)", () => {
+  const sparkling = (): WineIdentityDraft => ({ ...full(), colour: "WHITE", style: "SPARKLING", dosageId: "d-nature" });
+
+  it("is never a completeness field", () => {
+    expect(missingWineFields({ ...sparkling(), dosageId: null }, { now: NOW })).toEqual([]);
+  });
+
+  it("a complete sparkling wine keeps its dosage beside its type designation", () => {
+    const result = toCompleteWine({ ...sparkling(), typeDesignationId: "t-gran-reserva" }, { now: NOW });
+    expect("wine" in result && result.wine.dosageId).toBe("d-nature");
+    expect("wine" in result && result.wine.typeDesignationId).toBe("t-gran-reserva");
+  });
+
+  it("a wine that is not sparkling has none", () => {
+    const result = toCompleteWine({ ...sparkling(), style: "STILL" }, { now: NOW });
+    expect("wine" in result && result.wine.dosageId).toBeNull();
+    expect(normaliseDraft({ ...sparkling(), style: "STILL" }).dosageId).toBeNull();
+  });
+
+  it("a draft keeps it while the style is still open, and a blank one is null", () => {
+    expect(normaliseDraft({ ...sparkling(), style: null }).dosageId).toBe("d-nature");
+    expect(normaliseDraft({ ...sparkling(), dosageId: "  " }).dosageId).toBeNull();
+  });
+
+  it("a stored draft from before the field reads as no dosage", () => {
+    const legacy = { ...sparkling() } as Partial<WineIdentityDraft>;
+    delete legacy.dosageId;
+    expect(normaliseDraft(legacy as WineIdentityDraft).dosageId).toBeNull();
+  });
+
+  it("an unidentified glass carries one only when sparkling", () => {
+    const result = toUnidentifiedWine({ ...sparkling(), producer: null }, { now: NOW });
+    expect("wine" in result && result.wine.dosageId).toBe("d-nature");
+  });
+});

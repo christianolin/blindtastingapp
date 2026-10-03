@@ -26,7 +26,7 @@ export type ReferenceSnapshot = {
       snapshot exported before the table still loads and resolves as before. */
   aliases?: { id: string; producer_id: string; alias: string }[];
   grapes: { id: string; name: string }[];
-  type_designations: { id: string; name: string; country_id: string | null }[];
+  type_designations: { id: string; name: string; country_id: string | null; category?: string | null }[];
   /** Resolver step 7.6's catalog wines (owner fix B, 2026-09-19): the committed
       snapshot carries exactly the two live Bodegas Tridente rows. Absent means none,
       so every synthetic snapshot and an export from before the field still load. */
@@ -173,7 +173,9 @@ export function snapshotLookup(snapshot: ReferenceSnapshot): RefLookup {
     grapes: async () => snapshot.grapes.map(({ id, name }) => ({ id, name })),
 
     typeDesignations: async () =>
-      snapshot.type_designations.map(({ id, name, country_id }) => ({ id, name, countryId: country_id })),
+      snapshot.type_designations.map(({ id, name, country_id, category }) => ({
+        id, name, countryId: country_id, category: category ?? null,
+      })),
 
     // server/lookup.ts's read: the producer's rows, never blind_pending, never
     // merged away, ordered by id, at most CATALOG_SIBLING_LIMIT (one more read to
