@@ -20,7 +20,7 @@
 // Tokens only, so the portal follows `.dark` like every other surface.
 import { useRef, useState, type ComponentType } from "react";
 import Link from "next/link";
-import { Boxes, MapIcon, Sparkles, UserRound, Users, Wine } from "lucide-react";
+import { Boxes, EarthIcon, Sparkles, UserRound, Users, Wine } from "lucide-react";
 import { useCanScan } from "@/components/add-wine/use-can-scan";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
@@ -42,7 +42,7 @@ const STEP_ICONS: Record<TourStepId, ComponentType<{ className?: string }>> = {
   welcome: Sparkles,
   taste: Wine,
   cellar: Boxes,
-  learn: MapIcon,
+  learn: EarthIcon,
   community: Users,
   profile: UserRound,
 };
