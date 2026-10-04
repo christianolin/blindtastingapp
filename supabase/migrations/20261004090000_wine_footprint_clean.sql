@@ -23,7 +23,7 @@
 create or replace function public.wine_footprint_clean_core(
   p_raw extensions.geometry, p_blockers extensions.geometry, p_parent extensions.geometry,
   p_protected extensions.geometry, p_params jsonb)
-returns table (clean4 geometry, unchanged boolean, area_m2_before double precision, area_m2_after double precision, parts_before integer, parts_after integer, holes_before integer, holes_after integer, vertices_before integer, vertices_after integer, perimeter_m_before double precision, perimeter_m_after double precision, clusters integer, passthrough_clusters integer, dropped_parts integer, hole_floor_m2 double precision, crumb_floor_m2 double precision, grown_m2 double precision, lost_m2 double precision, raw_overlap_m2 double precision, new_overlap_m2 double precision, new_overlap_sliver_m2 double precision, outside_parent_raw_m2 double precision, outside_parent_new_m2 double precision, protected_lost_m2 double precision, valid boolean)
+returns table (clean4 extensions.geometry, unchanged boolean, area_m2_before double precision, area_m2_after double precision, parts_before integer, parts_after integer, holes_before integer, holes_after integer, vertices_before integer, vertices_after integer, perimeter_m_before double precision, perimeter_m_after double precision, clusters integer, passthrough_clusters integer, dropped_parts integer, hole_floor_m2 double precision, crumb_floor_m2 double precision, grown_m2 double precision, lost_m2 double precision, raw_overlap_m2 double precision, new_overlap_m2 double precision, new_overlap_sliver_m2 double precision, outside_parent_raw_m2 double precision, outside_parent_new_m2 double precision, protected_lost_m2 double precision, valid boolean)
 language sql stable
 set search_path = public, extensions
 as $core$
@@ -171,7 +171,15 @@ near as (
      and ((b.is_current and b.quality_status = 'VALIDATED')
           or (not b.is_current and b.quality_status = 'DRAFT'
               and b.generation_parameters->'cleanup'->>'version' = 'fp-1'))
-     and not exists (select 1 from pend where pend.id = b.wine_place_id)
+     and (b.is_current or not exists (select 1 from pend where pend.id = b.wine_place_id and pend.g = b.display_geometry))
+  union all
+  select b.wine_place_id id, i.display_geometry g
+    from public.wine_place_boundaries b
+    join public.wine_place_boundaries i
+      on i.id = (b.generation_parameters->'cleanup'->>'input_boundary_id')::uuid
+     and i.wine_place_id = b.wine_place_id and i.id <> b.id
+   where i.display_geometry && st_expand($2::geometry, 0.002)
+     and b.is_current and b.quality_status = 'VALIDATED'
   union all
   select pend.id, pend.g from pend where pend.g && st_expand($2::geometry, 0.002)),
 blk as (

@@ -15,7 +15,8 @@
 // one-off runner (footprint-pass.mjs --dry) does not need it: cleanFootprint()
 // runs the same SQL inline in a read-only transaction.
 import {
-  CONTEXT_SQL, CORE_SQL, FOOTPRINT_VERSION, PARAMS, PROTECTED_SQL, STAMP_SQL, ladderReason, metricsOf, rungs,
+  CONTEXT_SQL, CORE_SQL, FOOTPRINT_VERSION, PARAMS, PROTECTED_SQL, STAMP_SQL, independentFailuresSql, ladderReason, metricsOf,
+  rungs,
 } from "./footprint-sql.mjs";
 
 /** The raw input every GeoJSON builder used to write: Multi(CollectionExtract(MakeValid(SetSRID(GeoJSON))). */
@@ -173,6 +174,71 @@ export async function cleanFootprint(client, { raw, placeId, pending = {}, param
     `select extensions.ST_XMin(b) x0, extensions.ST_YMin(b) y0, extensions.ST_XMax(b) x1, extensions.ST_YMax(b) y1
        from (select extensions.Box3D($1::extensions.geometry) b) z`, [hex])).rows[0];
   return { hex, cleanup, metrics: cleanup.metrics, context, bbox: [bb.x0, bb.y0, bb.x1, bb.y1].map(Number) };
+}
+
+/**
+ * A builder batch's guard (review 2026-10-04, F3). A place cleaned before its
+ * neighbour exists (a first import) or before its neighbour's larger re-imported
+ * raw is written could otherwise close onto that raw, and the later place keeps
+ * its whole raw: a same-tier overlap with clean stamps on both. So:
+ *   1. createBatchGuard(): every raw of the batch is computed up front;
+ *   2. pendingFor(place): the OTHER places' raws near it, passed as the
+ *      cleanGeomCte `pending` jsonb: they block like standing rows (a two-pass
+ *      batch; CONTEXT_SQL);
+ *   3. check(place, boundaryId): after the INSERT, before the commit, the
+ *      independent check (footprint-sql.mjs independentCheckSql) of the row just
+ *      written against its raw, every standing shape and the batch's raws; it
+ *      throws on any failure, so the caller rolls that write back.
+ * `items`: [{ placeId | placeKey, geojson }]; `rawSql` is the builder's own raw
+ * expression over $1 = item.geojson (default rawFromGeoJson("$1")), so the raw
+ * here is byte for byte the raw its INSERT cleans.
+ */
+export async function createBatchGuard(client, items, { rawSql = rawFromGeoJson("$1") } = {}) {
+  const raws = new Map();
+  const ids = new Map();
+  for (const it of items) {
+    const { rows } = await client.query(
+      `select coalesce($2::uuid, (select id from public.wine_places where canonical_key = $3)) id,
+              encode(extensions.ST_AsEWKB(g), 'hex') hex,
+              extensions.ST_XMin(extensions.Box3D(g)) x0, extensions.ST_YMin(extensions.Box3D(g)) y0,
+              extensions.ST_XMax(extensions.Box3D(g)) x1, extensions.ST_YMax(extensions.Box3D(g)) y1
+         from (select ${rawSql} g) z`,
+      [it.geojson, it.placeId ?? null, it.placeKey ?? null]);
+    const r = rows[0];
+    if (r?.id && r.hex) raws.set(r.id, { hex: r.hex, bbox: [r.x0, r.y0, r.x1, r.y1].map(Number) });
+    if (r?.id && it.placeKey) ids.set(it.placeKey, r.id);
+  }
+  const pendingFor = (placeId, pad = 0.01) => {
+    const me = raws.get(placeId);
+    const out = {};
+    for (const [id, v] of raws) {
+      if (id !== placeId && (!me || bboxesMeet(me.bbox, v.bbox, pad))) out[id] = v.hex;
+    }
+    return out;
+  };
+  return {
+    size: raws.size,
+    /** The place id prepared for a canonical key (null when the place does not exist). */
+    idFor: (key) => ids.get(key) ?? null,
+    /** {"<uuid>": "<hex>"} of the other places' raws near `placeId`'s raw. */
+    pendingFor,
+    /** Throws unless the row just written for `placeId` passes the independent check. */
+    async check(placeId, boundaryId) {
+      const me = raws.get(placeId);
+      if (!me) throw new Error(`fp-1 batch guard: no raw prepared for place ${placeId}`);
+      const sql = independentFailuresSql({
+        waveSql: `select $1::uuid place_id, (select display_geometry from public.wine_place_boundaries where id = $2::uuid) g_new,
+                         extensions.ST_GeomFromEWKB(decode($3, 'hex')) g_old`,
+        pendingSql: "$4::jsonb",
+      });
+      await client.query("set local search_path = public, extensions");
+      const { rows } = await client.query(sql, [placeId, boundaryId, me.hex, JSON.stringify(pendingFor(placeId))]);
+      if (rows.length) {
+        const list = rows.map((x) => `${x.kind} ${x.key}${x.other_key ? ` / ${x.other_key}` : ""} ${Number(x.m2).toFixed(1)} m²`);
+        throw new Error(`fp-1 batch guard refused place ${placeId}: ${list.join("; ")}`);
+      }
+    },
+  };
 }
 
 /**

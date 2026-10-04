@@ -18,7 +18,9 @@ import pg from "pg";
 import { sha256hex, releaseVersion } from "../wine-map-tiles/lib.mjs";
 import { loadWeinlagenCache, LICENCE, SOURCE_URL } from "./fetch-rlp-weinlagen.mjs";
 import { warnIfNeighbourCacheStale } from "./neighbour-cache.mjs";
-import { EINZELLAGE_CLEANED_NOTE, cleanGeomCte, methodAfterCleanupSql, withCleanupStamp } from "./footprint-cleanup.mjs";
+import {
+  EINZELLAGE_CLEANED_NOTE, cleanGeomCte, createBatchGuard, methodAfterCleanupSql, rawFromGeoJson, withCleanupStamp,
+} from "./footprint-cleanup.mjs";
 
 const NAMESPACE = "LWK_RLP_WEINLAGEN";
 const WINDOW = { minLon: 5.5, minLat: 46.9, maxLon: 15.6, maxLat: 55.5 };
@@ -74,6 +76,14 @@ try {
        `scripts/wine-map-sources/build-germany-einzellagen.mjs@${process.env.GITHUB_SHA ?? execSync("git rev-parse HEAD").toString().trim()}`]);
     snapshotId = s.rows[0].id;
   }
+  // fp-1 batch guard: every site's raw blocks its neighbours from the start (a site
+  // written before its neighbour never closes onto that neighbour's parcels), and
+  // each written row passes the independent check before its commit. The raw is the
+  // INSERT's own: the 6-decimal GeoJSON of the validated source polygon.
+  const guard = COMMIT
+    ? await createBatchGuard(client, targets.map((t) => ({ placeKey: t.key, geojson: JSON.stringify(t.geometry) })),
+      { rawSql: rawFromGeoJson(`extensions.ST_AsGeoJSON(${rawFromGeoJson("$1")}, 6)`) })
+    : null;
 
   for (const t of targets) {
     try {
@@ -101,17 +111,19 @@ try {
       assert.equal(place.rows.length, 1, `${t.key} place missing`);
       const id = place.rows[0].id;
       await client.query("update wine_place_boundaries set is_current=false where wine_place_id=$1 and is_current", [id]);
-      await client.query(
+      const inserted = await client.query(
         `with geom_raw as (select extensions.ST_Multi(extensions.ST_CollectionExtract(extensions.ST_MakeValid(extensions.ST_SetSRID(extensions.ST_GeomFromGeoJSON($1),4326)),3)) g),
-        ${cleanGeomCte({ placeId: "$2" })}
+        ${cleanGeomCte({ placeId: "$2", pending: "$7" })}
          insert into wine_place_boundaries (wine_place_id,source_snapshot_id,boundary_method,quality_status,display_geometry,label_point,bbox,source_feature_refs,generation_parameters,revision,is_current,reviewed_at)
          select $2,$3,${methodAfterCleanupSql("'MANUAL'")},'VALIDATED',geom.g,extensions.ST_PointOnSurface(geom.g),
                 array[extensions.ST_XMin(extensions.Box3D(geom.g)),extensions.ST_YMin(extensions.Box3D(geom.g)),extensions.ST_XMax(extensions.Box3D(geom.g)),extensions.ST_YMax(extensions.Box3D(geom.g))]::double precision[],
-                $4::jsonb,${withCleanupStamp("$5", { cleanedPatch: { generalised: true, note: EINZELLAGE_CLEANED_NOTE } })},$6,true,now() from geom`,
+                $4::jsonb,${withCleanupStamp("$5", { cleanedPatch: { generalised: true, note: EINZELLAGE_CLEANED_NOTE } })},$6,true,now() from geom
+         returning id`,
         [r.geojson, id, snapshotId,
          JSON.stringify({ wlg_nr: t.nr, wlg_name: t.name }),
          JSON.stringify({ engine: "weinbergsrolle-asis", generalised: false, note: "Official Einzellage polygon used unmodified." }),
-         revision]);
+         revision, JSON.stringify(guard.pendingFor(id))]);
+      await guard.check(id, inserted.rows[0].id);
       await client.query("update wine_places set publication_status='VERIFIED' where id=$1 and publication_status='DRAFT'", [id]);
       await client.query("commit");
       await warnIfNeighbourCacheStale(client);

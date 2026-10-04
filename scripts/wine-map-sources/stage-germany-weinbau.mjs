@@ -20,7 +20,7 @@ import { execSync } from "node:child_process";
 import pg from "pg";
 import { sha256hex, releaseVersion, attributionKeyFor } from "../wine-map-tiles/lib.mjs";
 import { warnIfNeighbourCacheStale } from "./neighbour-cache.mjs";
-import { cleanGeomCte, withCleanupStamp } from "./footprint-cleanup.mjs";
+import { cleanGeomCte, createBatchGuard, withCleanupStamp } from "./footprint-cleanup.mjs";
 
 const STAGE = process.argv.includes("--stage");
 const SOURCE_FILE = "data/wine-map/germany-weinbau-dissolved.geojson";
@@ -131,6 +131,10 @@ if (!STAGE) {
 
 const importer = `scripts/wine-map-sources/stage-germany-weinbau.mjs@${process.env.GITHUB_SHA ?? execSync("git rev-parse HEAD").toString().trim()}`;
 try {
+  // fp-1 batch guard: every target's raw blocks the others from the start (a place
+  // staged first never closes onto a neighbour staged later), and each staged row
+  // passes the independent check before the commit.
+  const guard = await createBatchGuard(client, Object.values(reports).map((rep) => ({ placeKey: rep.targetKey, geojson: rep.geojson })));
   for (const [slug, rep] of Object.entries(reports)) {
     const props = rep.feature.properties;
     const generation = {
@@ -170,7 +174,7 @@ try {
          insert into wine_boundary_source_snapshots (source_id, source_revision, retrieved_at, source_url, licence, raw_snapshot_uri, raw_checksum_sha256, normalized_artifact_uri, normalized_checksum_sha256, provenance_note, importer_version)
          select source.id,$5,now(),$6,$7,null,null,$8,$9,$10,$11 from source returning id),
        geom_raw as (select extensions.ST_Multi(extensions.ST_CollectionExtract(extensions.ST_MakeValid(extensions.ST_SetSRID(extensions.ST_GeomFromGeoJSON($12),4326)),3)) g),
-       ${cleanGeomCte({ placeKey: "$15" })}
+       ${cleanGeomCte({ placeKey: "$15", pending: "$16" })}
        insert into wine_place_boundaries (wine_place_id, source_snapshot_id, boundary_method, quality_status, display_geometry, label_point, bbox, source_feature_refs, generation_parameters, revision, is_current, reviewed_at)
        select place.id, snapshot.id, 'GENERALIZED_FROM_OFFICIAL_SOURCE', 'DRAFT', geom.g, extensions.ST_PointOnSurface(geom.g),
               array[extensions.ST_XMin(extensions.Box3D(geom.g)),extensions.ST_YMin(extensions.Box3D(geom.g)),extensions.ST_XMax(extensions.Box3D(geom.g)),extensions.ST_YMax(extensions.Box3D(geom.g))]::double precision[],
@@ -182,9 +186,10 @@ try {
        "https://ec.europa.eu/geographical-indications-register/",
        props.licence, SOURCE_FILE, sourceSha256, provenanceNote, importer, rep.geojson,
        JSON.stringify({ slug, name: props.name, gi_id: props.gi_id }),
-       JSON.stringify(generation), rep.targetKey],
+       JSON.stringify(generation), rep.targetKey, JSON.stringify(guard.pendingFor(guard.idFor(rep.targetKey)))],
     );
     assert.equal(result.rows.length, 1, `${slug}: expected one staged boundary`);
+    await guard.check(guard.idFor(rep.targetKey), result.rows[0].id);
     console.log(`BOUNDARY-STAGED ${slug} DRAFT boundary=${result.rows[0].id}`);
   }
   await client.query("commit");

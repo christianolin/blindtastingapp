@@ -1,8 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
-  REVISION_SUFFIX, WAVES, flagsOf, inScope, renderPromoteSql, renderReport, renderRevertSql, renderUnstageSql,
-  renderedPaths, revealDiff, revealOf, sittingGate, summarize, waveOf, wavesFor,
+  BUILDING_WINDOW, REVISION_SUFFIX, ROLLBACK_RUNNER, WAVES, flagsOf, inScope, rejectPath, renderPromoteSql,
+  renderRejectReleaseSql, renderReport, renderRevertSql, renderUnstageSql, renderedPaths, revealDiff, revealOf,
+  sittingGate, summarize, waveOf, wavesFor,
 } from "./footprint-pass-lib.mjs";
 
 test("waves run worst first: Mittelrhein, then the rest of Germany, then the other countries", () => {
@@ -112,4 +113,31 @@ test("the report counts changes per country and lists refusals", () => {
   const md = renderReport({ provenance: { generated_at: "t", via: "inline", waves: ["germany"], postgis: "3", geos: "3" }, records });
   assert.match(md, /\*\*changed: 1\*\*/);
   assert.match(md, /`france\.c`: \*\*skipped:grow\*\*/);
+});
+
+test("the promote re-checks tiles runs first and runs the independent check before the refresh (review 2026-10-04)", () => {
+  const sql = renderPromoteSql(review);
+  assert.ok(sql.indexOf("status = 'BUILDING'") < sql.indexOf("changed since approval"), "the BUILDING re-check comes first");
+  assert.match(sql, new RegExp(`interval '${BUILDING_WINDOW}'`));
+  for (const kind of ["new_ground_on_neighbour", "outside_parent", "descendant_ground_lost"]) assert.ok(sql.includes(kind), kind);
+  const flip = sql.indexOf("set quality_status = 'VALIDATED', is_current = true");
+  const check = sql.indexOf("independent check failure(s)");
+  assert.ok(flip > 0 && check > flip, "the independent check reads the flipped rows");
+  assert.ok(check < sql.indexOf("v_refreshed := public.refresh_wine_place_neighbours()"), "and refuses before the refresh");
+  assert.match(sql, /jsonb_to_recordset\(v_expect\) e\(place_id uuid, current_boundary_id uuid, output_sha text\)/);
+  assert.doesNotMatch(sql, /area_m2_before[^\n]*rederiv/i);
+});
+
+test("the rollback files name their runner, and a Gate B rejection marks only a VALIDATED draft FAILED", () => {
+  for (const sql of [renderUnstageSql(review), renderRevertSql(review)]) assert.ok(sql.includes(ROLLBACK_RUNNER));
+  assert.match(ROLLBACK_RUNNER, /scripts\/usa-map\/apply-rollback\.mjs/);
+  const rj = renderRejectReleaseSql(review, "20261005T101500Z");
+  assert.ok(rj.includes(ROLLBACK_RUNNER));
+  assert.match(rj, /set status = 'FAILED'/);
+  assert.match(rj, /where version = '20261005T101500Z' and status = 'VALIDATED'/);
+  assert.match(rj, /only a VALIDATED draft is rejected/);
+  assert.equal(rejectPath("germany.mittelrhein", "20261005T101500Z"),
+    "scripts/wine-map-sources/footprints/footprints_germany_mittelrhein_reject_20261005t101500z.sql");
+  assert.throws(() => rejectPath("germany.mittelrhein", "latest"), /not a release version/);
+  assert.throws(() => renderRejectReleaseSql(review, "x'; drop table y; --"), /not a release version/);
 });

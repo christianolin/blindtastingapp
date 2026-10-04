@@ -71,12 +71,42 @@ const STANDING = (b) => `((${b}.is_current and ${b}.quality_status = 'VALIDATED'
               and ${b}.generation_parameters->'cleanup'->>'version' = '${FOOTPRINT_VERSION}'))`;
 
 /**
+ * Every shape a place stands with, near `box` (SQL of a geometry), as rows (id, g):
+ * its standing rows (a staged fp-1 DRAFT is skipped when the place's pending entry
+ * is that very geometry: the one-off stage carries each staged output as pending,
+ * so it is not counted twice; a builder's pending raw is a different shape and
+ * both stand), plus the recorded input of a current fp-1 pass
+ * row (cleanup.input_boundary_id): ground a promoted wave's cleanup gave up is still
+ * that place's raw ground for every later wave, exactly as the dry run saw it (the
+ * input was still current there). Needs the PENDING_CTE `pend` in scope.
+ */
+const STANDING_SHAPES = (box) => `  select b.wine_place_id id, b.display_geometry g
+    from public.wine_place_boundaries b
+   where b.display_geometry && ${box}
+     and ${STANDING("b")}
+     and (b.is_current or not exists (select 1 from pend where pend.id = b.wine_place_id and pend.g = b.display_geometry))
+  union all
+  select b.wine_place_id id, i.display_geometry g
+    from public.wine_place_boundaries b
+    join public.wine_place_boundaries i
+      on i.id = (b.generation_parameters->'cleanup'->>'input_boundary_id')::uuid
+     and i.wine_place_id = b.wine_place_id and i.id <> b.id
+   where i.display_geometry && ${box}
+     and b.is_current and b.quality_status = 'VALIDATED'`;
+
+/**
  * Context of one write. $1 place id (uuid), $2 raw input (geometry, 4326),
  * $3 pending jsonb. One row: tier, key, partner keys, the union of the blockers
  * (same display_tier, not this place, no DUAL_LABEL/OVERLAPS/REPLACES_WITHIN edge,
- * within near_m of the input; a pending output replaces a place's stored shapes),
- * their keys, and the containment parent (nearest ancestor along primary_parent_id
- * whose current boundary is not DERIVED_FROM_DESCENDANTS).
+ * within near_m of the input), their keys, and the containment parent (nearest
+ * ancestor along primary_parent_id whose current boundary is not
+ * DERIVED_FROM_DESCENDANTS; a pending output replaces the parent's stored row).
+ * A neighbour with a pending output blocks with its stored current row AND that
+ * output (review 2026-10-04, F2): ground the neighbour's own cleanup gave up (an
+ * opened arm, a dropped crumb) is still its raw ground, never painted onto this
+ * place. Its staged fp-1 DRAFT is that same output, so it is not counted twice
+ * (dry run and --stage then see the same blockers). Builders pass the raws of a
+ * batch's not-yet-written places as pending the same way (createBatchGuard).
  */
 export const CONTEXT_SQL = `
 with recursive me as (
@@ -89,11 +119,7 @@ partner as (
    where (r.source_place_id = me.id or r.target_place_id = me.id)
      and r.relationship_type::text in (${PARTNER_TYPES.map((t) => `'${t}'`).join(", ")})),
 near as (
-  select b.wine_place_id id, b.display_geometry g
-    from public.wine_place_boundaries b
-   where b.display_geometry && st_expand($2::geometry, ${NEAR_DEG})
-     and ${STANDING("b")}
-     and not exists (select 1 from pend where pend.id = b.wine_place_id)
+${STANDING_SHAPES("st_expand($2::geometry, " + NEAR_DEG + ")")}
   union all
   select pend.id, pend.g from pend where pend.g && st_expand($2::geometry, ${NEAR_DEG})),
 blk as (
@@ -152,7 +178,7 @@ select st_unaryunion(st_collect(dg.g)) prot
  where dg.g is not null and lost.g is not null and dg.g && lost.g and st_intersects(dg.g, lost.g)`;
 
 const CORE_OUT = [
-  ["clean4", "geometry"], ["unchanged", "boolean"],
+  ["clean4", "extensions.geometry"], ["unchanged", "boolean"],
   ["area_m2_before", "double precision"], ["area_m2_after", "double precision"],
   ["parts_before", "integer"], ["parts_after", "integer"],
   ["holes_before", "integer"], ["holes_after", "integer"],
@@ -300,20 +326,107 @@ select jsonb_build_object(
   'geos', postgis_geos_version()) stamp,
   encode(st_asewkb($2::geometry), 'hex') out_hex`;
 
+/** Real ground of a polygonal geometry SQL `x`, in m²: pieces at least 0.1 m wide (2A/P), as CORE_SQL's ov. */
+const REAL_M2 = (x) => `(select coalesce(sum(st_area(d.geom::geography)) filter (
+    where 2 * st_area(d.geom::geography) / nullif(st_perimeter(d.geom::geography), 0) >= 0.1), 0)
+   from st_dump(st_collectionextract(${x}, 3)) d)`;
+
 /**
- * Re-derive a DERIVED_FROM_DESCENDANTS parent from its children, exactly as
- * derive-boundary.mjs does: $1 text[] child hex EWKB, $2 simplify tolerance,
- * $3 closing (deg), $4 min part share. Returns the raw input (hex EWKB) the way
- * derive-boundary would have written it (GeoJSON at 4 decimals, MakeValid, Multi).
+ * The independent check (review 2026-10-04, F1/F3): measured on the shapes
+ * themselves, trusting no stamp and no re-derived input. `waveSql` yields rows
+ * (place_id uuid, g_new geometry, g_old geometry): each written place's new shape
+ * and the shape it replaces (the promote: the staged row and the current input
+ * row; a builder: the row it just wrote and its raw input). `pendingSql` (SQL of
+ * a {"<uuid>": "<hex EWKB>"} jsonb) adds shapes that stand for not-yet-written
+ * places (a builder batch's raws). Every other place stands with STANDING_SHAPES.
+ * One row per failure (kind, key, other_key, m2), only above 1 m² of real ground:
+ *   new_ground_on_neighbour: a place's new ground (g_new − g_old) on any shape of a
+ *     same-tier place without a DUAL_LABEL/OVERLAPS/REPLACES_WITHIN edge, its old
+ *     shape included (catches both a new overlap and painting a neighbour's
+ *     given-up raw parcels);
+ *   outside_parent: new ground outside the containment parent (nearest ancestor
+ *     whose current boundary is not DERIVED_FROM_DESCENDANTS; its new shape when
+ *     it is written too);
+ *   descendant_ground_lost: ground a place gave up (g_old − g_new) that one of its
+ *     descendants still holds.
  */
-export const DERIVE_SQL = `
-with u as (select st_union(st_geomfromewkb(decode(x, 'hex'))) g from unnest($1::text[]) x),
-closed as (select case when $3::float8 > 0 then st_buffer(st_buffer(g, $3::float8, 'quad_segs=4'), -$3::float8, 'quad_segs=4') else g end g from u),
-simplified as (select st_collectionextract(st_makevalid(st_simplifypreservetopology(g, $2::float8)), 3) g from closed),
-covered as (select st_collectionextract(st_makevalid(st_union(s.g, u.g)), 3) g from simplified s, u),
-parts as (select (st_dump(g)).geom part, st_area(g) total from covered),
-gj as (select st_asgeojson(st_multi(st_collect(part)), 4) geojson from parts where $4::float8 <= 0 or st_area(part) >= total * $4::float8)
-select encode(st_asewkb(st_multi(st_collectionextract(st_makevalid(st_setsrid(st_geomfromgeojson(gj.geojson), 4326)), 3))), 'hex') raw_hex from gj`;
+export function independentCheckSql({ waveSql, pendingSql = "'{}'::jsonb" }) {
+  const G = GRID;
+  const partners = PARTNER_TYPES.map((t) => `'${t}'`).join(", ");
+  return `
+with recursive
+pend as (
+  select (e.key)::uuid id, st_geomfromewkb(decode(e.value, 'hex')) g
+    from jsonb_each_text(coalesce((${pendingSql})::jsonb, '{}'::jsonb)) e),
+w as (${waveSql}),
+wp as (
+  select w.place_id id, p.canonical_key k, p.display_tier tier, p.primary_parent_id ppid, w.g_new,
+         st_collectionextract(st_difference(st_reduceprecision(w.g_new, ${G}), st_reduceprecision(w.g_old, ${G}), ${G}), 3) grown,
+         st_collectionextract(st_difference(st_reduceprecision(w.g_old, ${G}), st_reduceprecision(w.g_new, ${G}), ${G}), 3) lost
+    from w join public.wine_places p on p.id = w.place_id),
+nb as (
+  select a.id aid, o.id bid, st_unaryunion(st_collect(st_reduceprecision(o.g, ${G}))) g
+    from wp a
+    cross join lateral (
+${STANDING_SHAPES("a.grown").replaceAll("\n", "\n    ")}
+      union all select w2.place_id, w2.g_new from w w2 where w2.g_new && a.grown
+      union all select w2.place_id, w2.g_old from w w2 where w2.g_old && a.grown
+      union all select pend.id, pend.g from pend where pend.g && a.grown) o
+    join public.wine_places q on q.id = o.id
+   where not st_isempty(a.grown) and o.id <> a.id and q.display_tier = a.tier
+     and not exists (select 1 from public.wine_place_relationships r
+                      where r.relationship_type::text in (${partners})
+                        and ((r.source_place_id = a.id and r.target_place_id = o.id)
+                          or (r.source_place_id = o.id and r.target_place_id = a.id)))
+   group by a.id, o.id),
+anc as (
+  select a.id aid, q.id, q.primary_parent_id ppid, 1 depth from wp a join public.wine_places q on q.id = a.ppid
+  union all
+  select anc.aid, q.id, q.primary_parent_id, anc.depth + 1 from anc join public.wine_places q on q.id = anc.ppid
+   where anc.depth < 20),
+par as (
+  select distinct on (anc.aid) anc.aid, q.canonical_key k, coalesce(w.g_new, pend.g, b.display_geometry) g
+    from anc join public.wine_places q on q.id = anc.id
+    left join w on w.place_id = anc.id
+    left join pend on pend.id = anc.id
+    left join public.wine_place_boundaries b
+      on b.wine_place_id = anc.id and b.is_current and b.quality_status = 'VALIDATED'
+   where (w.place_id is not null or pend.id is not null or b.id is not null)
+     and coalesce(b.boundary_method::text, '') <> 'DERIVED_FROM_DESCENDANTS'
+   order by anc.aid, anc.depth),
+des as (
+  select a.id pid, q.id, 1 depth from wp a join public.wine_places q on q.primary_parent_id = a.id
+   where not st_isempty(a.lost)
+  union all
+  select des.pid, q.id, des.depth + 1 from des join public.wine_places q on q.primary_parent_id = des.id
+   where des.depth < 20),
+dg as (
+  select des.pid, st_unaryunion(st_collect(st_reduceprecision(x.g, ${G}))) g
+    from des join wp a on a.id = des.pid
+    cross join lateral (
+      select w.g_new g from w where w.place_id = des.id
+      union all
+      select b.display_geometry from public.wine_place_boundaries b
+       where b.wine_place_id = des.id and not exists (select 1 from w where w.place_id = des.id)
+         and ${STANDING("b")}) x
+   where x.g && a.lost
+   group by des.pid)
+select 'new_ground_on_neighbour' kind, a.k key, q.canonical_key other_key,
+       ${REAL_M2(`st_intersection(a.grown, nb.g, ${G})`)} m2
+  from nb join wp a on a.id = nb.aid join public.wine_places q on q.id = nb.bid
+union all
+select 'outside_parent', a.k, par.k, ${REAL_M2(`st_difference(a.grown, st_reduceprecision(par.g, ${G}), ${G})`)}
+  from wp a join par on par.aid = a.id
+ where not st_isempty(a.grown)
+union all
+select 'descendant_ground_lost', a.k, null, ${REAL_M2(`st_intersection(a.lost, dg.g, ${G})`)}
+  from wp a join dg on dg.pid = a.id`;
+}
+
+/** The independent check, failures only (> 1 m² of real ground), ordered. */
+export function independentFailuresSql(opts) {
+  return `select * from (${independentCheckSql(opts)}) x where x.m2 > 1 order by x.kind, x.key, x.other_key`;
+}
 
 /** The ladder (design §3.2 step 8): null when the attempt is acceptable, else the reason. */
 export function ladderReason(r, params = PARAMS) {
@@ -349,6 +462,134 @@ const dq = (tag, body) => {
   return `$${tag}$${body}$${tag}$`;
 };
 
+/** How the wrapper calls the step: the installed SQL function (Migration A). */
+const CORE_CALL_FUNCTION = (prot) => `select * into v_r from public.wine_footprint_clean_core(p_raw, v_ctx.blockers, v_ctx.parent, ${prot}, v_try);`;
+/** The same step run as its own text (the read-only rehearsal; no function exists yet). */
+const CORE_CALL_EXECUTE = (prot) => `execute ${dq("core", CORE_SQL)} into v_r using p_raw, v_ctx.blockers, v_ctx.parent, ${prot}::extensions.geometry, v_try;`;
+
+/**
+ * public.wine_footprint_clean's plpgsql body (declare ... end). `core` renders the
+ * call of the step; the migration and the read-only rehearsal (renderWrapperRehearsal)
+ * share every other byte.
+ */
+function wrapperBody(core) {
+  const P = JSON.stringify(PARAMS);
+  return `declare
+  v_params jsonb := coalesce(p_params, ${dq("p", P)}::jsonb);
+  v_pending jsonb := coalesce(p_pending, '{}'::jsonb);
+  v_ctx record;
+  v_r record;
+  v_prot extensions.geometry;
+  v_try jsonb;
+  v_rung text;
+  v_reason text;
+  v_status text;
+  v_out extensions.geometry;
+  v_before numeric;
+  v_delta numeric;
+  v_stamp jsonb;
+begin
+  if p_raw is null then
+    raise exception 'wine_footprint_clean: no geometry for place %', p_place_id using errcode = '22004';
+  end if;
+  execute ${dq("ctx", CONTEXT_SQL)} into v_ctx using p_place_id, p_raw, v_pending;
+  if v_ctx.k is null then
+    raise exception 'wine_footprint_clean: no wine_places row %', p_place_id using errcode = '23503';
+  end if;
+  foreach v_rung in array array['full', 'close-only'] loop
+    v_try := case when v_rung = 'full' then v_params else v_params || '{"arm_m": 0}'::jsonb end;
+    v_prot := null;
+    ${core("null")}
+    if not v_r.unchanged then
+      execute ${dq("prot", PROTECTED_SQL)} into v_prot using p_place_id, p_raw, v_r.clean4, v_pending;
+      if v_prot is not null then
+        ${core("v_prot")}
+      end if;
+    end if;
+    -- the ladder (footprint-sql.mjs ladderReason)
+    v_before := v_r.area_m2_before;
+    if v_r.valid is not true or v_before is null or v_before <= 0 then v_reason := 'invalid';
+    else
+      v_delta := (v_r.area_m2_after - v_before) / v_before;
+      if v_delta > (v_try->>'grow_max')::numeric then v_reason := 'grow';
+      elsif v_delta < -(v_try->>'shrink_max')::numeric then v_reason := 'shrink';
+      elsif v_r.parts_after > v_r.parts_before then v_reason := 'parts';
+      else v_reason := null;
+      end if;
+    end if;
+    exit when v_reason is null;
+  end loop;
+  if v_reason is null then
+    v_out := v_r.clean4;
+    v_status := case when v_r.unchanged then 'unchanged' else 'cleaned' end;
+  else
+    v_out := p_raw;
+    v_rung := 'none';
+    v_status := 'skipped:' || v_reason;
+  end if;
+  execute ${dq("stamp", STAMP_SQL)} into v_stamp
+    using p_raw, v_out, v_ctx.blockers, v_ctx.parent, v_prot,
+          jsonb_build_object('version', '${FOOTPRINT_VERSION}', 'params', v_try, 'rung', v_rung, 'status', v_status,
+                             'input_boundary_id', null, 'partners', to_jsonb(v_ctx.partner_keys),
+                             'parent_key', v_ctx.parent_key, 'metrics', to_jsonb(v_r) - 'clean4');
+  return query select v_out, v_stamp;
+end`;
+}
+
+/** The require-cleanup trigger's plpgsql body (begin ... end), on the row variable `row`. */
+function triggerBody(row) {
+  return `begin
+  if coalesce(${row}.generation_parameters->'cleanup'->>'version', '') <> '${FOOTPRINT_VERSION}'
+     or ${row}.display_geometry is null
+     or coalesce(${row}.generation_parameters->'cleanup'->>'output_sha256', '')
+        <> encode(sha256(st_asewkb(${row}.display_geometry)), 'hex') then
+    raise exception 'wine_place_boundaries: display_geometry must come from public.wine_footprint_clean (${FOOTPRINT_VERSION})'
+      using errcode = '23514',
+            hint = 'Build the INSERT with cleanGeomCte() and withCleanupStamp() from scripts/wine-map-sources/footprint-cleanup.mjs (or footprint-pass.mjs for the one-off pass); generation_parameters.cleanup.output_sha256 must equal sha256(ST_AsEWKB(display_geometry)).';
+  end if;
+  return new;
+end`;
+}
+
+/**
+ * The wrapper run as a DO block in a READ-ONLY transaction (review 2026-10-04, F4):
+ * every byte of public.wine_footprint_clean's body except the call of the step
+ * (EXECUTEd as CORE_SQL instead of the not-yet-installed function), with its
+ * arguments as literals. Raises NOTICE 'fp1-rehearsal <json>' with
+ * {out_hex, cleanup}. $1-free: run it as a plain statement.
+ */
+export function renderWrapperRehearsal({ rawHex, placeId, pending = {}, params = null }) {
+  const lit = (v) => `'${String(v).replaceAll("'", "''")}'`;
+  const args = [
+    `  p_raw extensions.geometry := ${lit(rawHex)}::extensions.geometry;`,
+    `  p_place_id uuid := ${lit(placeId)}::uuid;`,
+    `  p_pending jsonb := ${lit(JSON.stringify(pending))}::jsonb;`,
+    `  p_params jsonb := ${params ? `${lit(JSON.stringify(params))}::jsonb` : "null"};`,
+  ].join("\n");
+  const body = wrapperBody(CORE_CALL_EXECUTE)
+    .replace(/^declare\n/, `declare\n${args}\n`)
+    .replace(/\nbegin\n/, "\nbegin\n  perform set_config('search_path', 'public, extensions', true);\n")
+    .replace("  return query select v_out, v_stamp;",
+      "  raise notice 'fp1-rehearsal %', jsonb_build_object('out_hex', encode(st_asewkb(v_out), 'hex'), 'cleanup', v_stamp);");
+  if (!body.includes("fp1-rehearsal") || !body.includes("p_place_id uuid :=")) {
+    throw new Error("renderWrapperRehearsal: the wrapper's shape moved");
+  }
+  return `do ${dq("rehearse", `\n${body}\n`)};`;
+}
+
+/**
+ * The trigger body run as a DO block on a literal row (geometry hex + generation
+ * parameters jsonb): raises 23514 exactly when the trigger would refuse it.
+ */
+export function renderTriggerRehearsal({ geomHex, generationParameters }) {
+  const lit = (v) => `'${String(v).replaceAll("'", "''")}'`;
+  const row = `  select ${lit(geomHex)}::extensions.geometry display_geometry, ${lit(JSON.stringify(generationParameters))}::jsonb generation_parameters into v_new;`;
+  const body = triggerBody("v_new")
+    .replace("  return new;\n", "")
+    .replace(/^begin\n/, `begin\n  perform set_config('search_path', 'public, extensions', true);\n${row}\n`);
+  return `do ${dq("rehearse", `\ndeclare\n  v_new record;\n${body}\n`)};`;
+}
+
 /**
  * Migration A (design §5.1): the two functions, the trigger, the grants. Changes no
  * data. Rendered from this module; footprint-sql.test.mjs fails if the committed
@@ -356,7 +597,6 @@ const dq = (tag, body) => {
  */
 export function renderMigrationA() {
   const coreOut = CORE_OUT.map(([n, t]) => `${n} ${t}`).join(", ");
-  const P = JSON.stringify(PARAMS);
   const partnerList = PARTNER_TYPES.join(", ");
   return `-- Footprint cleanup fp-1 (Migration A). RENDERED by
 -- scripts/wine-map-sources/footprint-sql.mjs renderMigrationA() — do not hand-edit;
@@ -394,66 +634,7 @@ returns table (geom extensions.geometry, cleanup jsonb)
 language plpgsql stable security invoker
 set search_path = public, extensions
 as $fn$
-declare
-  v_params jsonb := coalesce(p_params, ${dq("p", P)}::jsonb);
-  v_pending jsonb := coalesce(p_pending, '{}'::jsonb);
-  v_ctx record;
-  v_r record;
-  v_prot extensions.geometry;
-  v_try jsonb;
-  v_rung text;
-  v_reason text;
-  v_status text;
-  v_out extensions.geometry;
-  v_before numeric;
-  v_delta numeric;
-  v_stamp jsonb;
-begin
-  if p_raw is null then
-    raise exception 'wine_footprint_clean: no geometry for place %', p_place_id using errcode = '22004';
-  end if;
-  execute ${dq("ctx", CONTEXT_SQL)} into v_ctx using p_place_id, p_raw, v_pending;
-  if v_ctx.k is null then
-    raise exception 'wine_footprint_clean: no wine_places row %', p_place_id using errcode = '23503';
-  end if;
-  foreach v_rung in array array['full', 'close-only'] loop
-    v_try := case when v_rung = 'full' then v_params else v_params || '{"arm_m": 0}'::jsonb end;
-    v_prot := null;
-    select * into v_r from public.wine_footprint_clean_core(p_raw, v_ctx.blockers, v_ctx.parent, null, v_try);
-    if not v_r.unchanged then
-      execute ${dq("prot", PROTECTED_SQL)} into v_prot using p_place_id, p_raw, v_r.clean4, v_pending;
-      if v_prot is not null then
-        select * into v_r from public.wine_footprint_clean_core(p_raw, v_ctx.blockers, v_ctx.parent, v_prot, v_try);
-      end if;
-    end if;
-    -- the ladder (footprint-sql.mjs ladderReason)
-    v_before := v_r.area_m2_before;
-    if v_r.valid is not true or v_before is null or v_before <= 0 then v_reason := 'invalid';
-    else
-      v_delta := (v_r.area_m2_after - v_before) / v_before;
-      if v_delta > (v_try->>'grow_max')::numeric then v_reason := 'grow';
-      elsif v_delta < -(v_try->>'shrink_max')::numeric then v_reason := 'shrink';
-      elsif v_r.parts_after > v_r.parts_before then v_reason := 'parts';
-      else v_reason := null;
-      end if;
-    end if;
-    exit when v_reason is null;
-  end loop;
-  if v_reason is null then
-    v_out := v_r.clean4;
-    v_status := case when v_r.unchanged then 'unchanged' else 'cleaned' end;
-  else
-    v_out := p_raw;
-    v_rung := 'none';
-    v_status := 'skipped:' || v_reason;
-  end if;
-  execute ${dq("stamp", STAMP_SQL)} into v_stamp
-    using p_raw, v_out, v_ctx.blockers, v_ctx.parent, v_prot,
-          jsonb_build_object('version', '${FOOTPRINT_VERSION}', 'params', v_try, 'rung', v_rung, 'status', v_status,
-                             'input_boundary_id', null, 'partners', to_jsonb(v_ctx.partner_keys),
-                             'parent_key', v_ctx.parent_key, 'metrics', to_jsonb(v_r) - 'clean4');
-  return query select v_out, v_stamp;
-end
+${wrapperBody(CORE_CALL_FUNCTION)}
 $fn$;
 
 create or replace function public.wine_place_boundaries_require_cleanup()
@@ -461,17 +642,7 @@ returns trigger
 language plpgsql
 set search_path = public, extensions
 as $fn$
-begin
-  if coalesce(new.generation_parameters->'cleanup'->>'version', '') <> '${FOOTPRINT_VERSION}'
-     or new.display_geometry is null
-     or coalesce(new.generation_parameters->'cleanup'->>'output_sha256', '')
-        <> encode(sha256(st_asewkb(new.display_geometry)), 'hex') then
-    raise exception 'wine_place_boundaries: display_geometry must come from public.wine_footprint_clean (${FOOTPRINT_VERSION})'
-      using errcode = '23514',
-            hint = 'Build the INSERT with cleanGeomCte() and withCleanupStamp() from scripts/wine-map-sources/footprint-cleanup.mjs (or footprint-pass.mjs for the one-off pass); generation_parameters.cleanup.output_sha256 must equal sha256(ST_AsEWKB(display_geometry)).';
-  end if;
-  return new;
-end
+${triggerBody("new")}
 $fn$;
 
 drop trigger if exists wine_place_boundaries_require_cleanup on public.wine_place_boundaries;

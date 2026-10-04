@@ -6,10 +6,26 @@
 //   a pause between places, a statement timeout. Per wave, places run deepest tier
 //   first, then ascending area; each changed output is carried as "pending" for the
 //   places after it (and for later waves), so the dry run computes exactly what a
-//   stage would. A DERIVED_FROM_DESCENDANTS parent with a changed child is
-//   re-derived (derive-boundary's SQL, its own stored parameters) and then goes
-//   through the step like any other write. A place whose current row is itself a
-//   cleanup re-cleans from its recorded input (idempotence by provenance).
+//   stage would. Every place, a DERIVED_FROM_DESCENDANTS parent included, is cleaned
+//   from its stored current row: the pass never re-derives a parent (review
+//   2026-10-04, F1/F7: a re-derived input moved Sud-Ouest by 76 km² and dropped the
+//   own ground of a parent_plus_children_union premier-cru group, while every
+//   stamp metric, measured against that re-derived input, read clean). So every
+//   metric, the ladder, the report and the promote measure against the live row.
+//   Re-deriving a parent stays derive-boundary.mjs's job, with its own review. A
+//   place whose current row is itself a cleanup re-cleans from its recorded input
+//   (idempotence by provenance).
+//
+//   --closure-from <prior review dir> --seed-geojson <prior geojson dir>: re-run
+//   only the places a change can reach (after a fix to the step), in the same global
+//   order, seeding every other place's prior output as pending (each seed must
+//   round-trip to its recorded sha256, else it is recomputed). Starts from
+//   --keys plus the prior run's re-derived parents plus every place whose cleaned
+//   reach (12 m, or inside its outer rings) touches ground a neighbour's prior
+//   cleanup gave up; a recomputed place whose output moved adds the same-tier
+//   places after it its change can reach, and its ancestors that lost ground.
+//   Writes the merged review files (prior records, recomputed ones replaced),
+//   the recomputed GeoJSON (deleting a stale one), the report, and closure.json.
 //   Outputs: one review JSON per wave (owner approval goes into its _provenance),
 //   <geojson-dir>/<key>.geojson for every changed place (before, after, blockers,
 //   parent), and a markdown report (per country, refusals, flags, reveal flips).
@@ -29,22 +45,27 @@
 //   unchanged place is never restaged.
 //
 //   --render-sql --review <file>: the promote migration and the unstage / revert
-//   rollback files, from the approved review file. "Do not hand-edit."
+//   rollback files, from the approved review file. "Do not hand-edit." The
+//   rollback files run through scripts/usa-map/apply-rollback.mjs.
+//
+//   --render-reject --review <file> --release <version>: Gate B rejected the
+//   wave's draft tiles release: the rollback file that marks it FAILED, so no
+//   promote.mjs (bare or by version) can ship it after the DB revert.
 import assert from "node:assert/strict";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { copyFile, mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import pg from "pg";
 import { pgConfig, releaseVersion } from "../wine-map-tiles/lib.mjs";
 import { withReadOnly } from "./read-only-client.mjs";
 import { refreshNeighbourCache } from "./neighbour-cache.mjs";
-import { CONTEXT_SQL, DERIVE_SQL, FOOTPRINT_VERSION, MIGRATION_A_VERSION, PARAMS } from "./footprint-sql.mjs";
+import { CONTEXT_SQL, FOOTPRINT_VERSION, MIGRATION_A_VERSION, PARAMS } from "./footprint-sql.mjs";
 import {
   EINZELLAGE_CLEANED_NOTE, cleanFootprint, cleanGeomCte, createPending, footprintStepLive, methodAfterCleanupSql,
   orderBatch,
 } from "./footprint-cleanup.mjs";
 import {
-  REVISION_SUFFIX, areaDelta, flagsOf, inScope, renderPromoteSql, renderReport, renderRevertSql, renderUnstageSql,
-  renderedPaths, revealDiff, sittingGate, wavesFor,
+  REVISION_SUFFIX, areaDelta, flagsOf, inScope, rejectPath, renderPromoteSql, renderRejectReleaseSql, renderReport,
+  renderRevertSql, renderUnstageSql, renderedPaths, revealDiff, sittingGate, wavesFor,
 } from "./footprint-pass-lib.mjs";
 
 function arg(name, fallback = null) {
@@ -84,44 +105,18 @@ select case when $1::extensions.geometry is null then null else
       0.25 * greatest(extensions.ST_XMax(extensions.Box2D($2::extensions.geometry)) - extensions.ST_XMin(extensions.Box2D($2::extensions.geometry)),
                       extensions.ST_YMax(extensions.Box2D($2::extensions.geometry)) - extensions.ST_YMin(extensions.Box2D($2::extensions.geometry)), 0.002))), 6) end gj`;
 
-/** Children a DERIVED parent is re-derived from (derive-boundary: VERIFIED children, current VALIDATED). */
-function childrenOf(place, catalogue) {
-  return catalogue.filter((c) => c.primary_parent_id === place.id && c.pub === "VERIFIED");
-}
-
-async function rawInput(c, place, catalogue, pending) {
-  // a derived parent with a changed child: re-derived from the pending children
-  if (place.method === "DERIVED_FROM_DESCENDANTS") {
-    const kids = childrenOf(place, catalogue);
-    if (kids.some((k) => pending.has(k.id))) {
-      const hex = [];
-      for (const k of kids) hex.push(pending.get(k.id) ?? (await c.query(BOUNDARY_SQL, [k.boundary_id])).rows[0].hex);
-      const gp = place.gp ?? {};
-      const r = (await c.query(DERIVE_SQL, [hex, Number(gp.simplify_tolerance ?? 0.002), Number(gp.closing ?? 0), Number(gp.min_part_share ?? 0)])).rows[0];
-      return { hex: r.raw_hex, inputBoundaryId: place.boundary_id, rederived: true };
-    }
-  }
-  // idempotence by provenance: a cleaned row re-cleans from its recorded input
+/**
+ * The raw input of a place: its stored current row, never a re-derivation (F1/F7);
+ * a row that is itself a cleanup re-cleans from its recorded input (idempotence by
+ * provenance).
+ */
+async function rawInput(c, place) {
   const prior = place.gp?.cleanup?.input_boundary_id;
   const from = prior ?? place.boundary_id;
-  return { hex: (await c.query(BOUNDARY_SQL, [from])).rows[0].hex, inputBoundaryId: from, rederived: false };
+  return { hex: (await c.query(BOUNDARY_SQL, [from])).rows[0].hex, inputBoundaryId: from };
 }
 
-async function dryRun() {
-  const waves = wavesFor(arg("wave", "all"));
-  const keys = arg("keys") ? new Set(arg("keys").split(",")) : null;
-  const reviewDir = arg("review-dir", "data/wine-map/review");
-  const geojsonDir = arg("geojson-dir", ".superpowers/footprints");
-  const reportPath = arg("report", null);
-  const batch = Number(arg("batch", "40"));
-  const pauseMs = Number(arg("pause-ms", "150"));
-  const timeoutMs = Number(arg("timeout-ms", "90000"));
-  const limit = arg("limit") ? Number(arg("limit")) : Infinity;
-  const survey = arg("survey") ? new Map(JSON.parse(await readFile(arg("survey"), "utf8")).places.map((p) => [p.key, p.score])) : null;
-  await mkdir(geojsonDir, { recursive: true });
-  await mkdir(reviewDir, { recursive: true });
-  const t0 = Date.now();
-
+async function loadCatalogue(timeoutMs) {
   let catalogue;
   let versions;
   let via;
@@ -131,104 +126,80 @@ async function dryRun() {
     via = (await footprintStepLive(c)) ? "function" : "inline";
   }, { statementTimeoutMs: timeoutMs });
   console.log(`catalogue: ${catalogue.length} places with a current VALIDATED boundary; step via ${via}`);
+  return { catalogue, versions, via };
+}
 
-  const pending = createPending();
+/** The global order of a run: per wave (worst first), deepest tier first, then ascending area. */
+function globalOrder(catalogue, waves, keep = () => true) {
   const done = new Set();
-  const records = [];
-  const perWave = new Map();
-  let processed = 0;
+  const out = [];
   for (const wave of waves) {
-    const list = orderBatch(catalogue.filter((p) => !done.has(p.id) && inScope(p.key, wave) && (!keys || keys.has(p.key))));
+    const list = orderBatch(catalogue.filter((p) => !done.has(p.id) && inScope(p.key, wave) && keep(p)));
     list.forEach((p) => done.add(p.id));
-    if (!list.length) continue;
-    console.log(`wave ${wave}: ${list.length} places`);
-    const waveRecords = [];
-    perWave.set(wave, waveRecords);
-    let i = 0;
-    while (i < list.length && processed < limit) {
-      i = await withReadOnly(async (c) => {
-        await c.query("set local search_path = public, extensions");
-        let j = i;
-        for (; j < list.length && j < i + batch && processed < limit; j += 1) {
-          const place = list[j];
-          const started = Date.now();
-          const rec = {
-            key: place.key, place_id: place.id, tier: place.tier, kind: place.kind, wave,
-            current_boundary_id: place.boundary_id, current_revision: place.revision, current_sha256: place.sha,
-            method: place.method, score_before: survey?.get(place.key) ?? null,
-          };
-          try {
-            const raw = await rawInput(c, place, catalogue, pending);
-            const result = await cleanFootprint(c, {
-              raw: raw.hex, placeId: place.id, pending: pending.near(place.bbox), via, inputBoundaryId: raw.inputBoundaryId,
-            });
-            const cu = result.cleanup;
-            Object.assign(rec, {
-              input_boundary_id: raw.inputBoundaryId, input_sha256: cu.input_sha256, rederived: raw.rederived,
-              status: cu.status, rung: cu.rung, output_sha256: cu.output_sha256,
-              changed: cu.output_sha256 !== place.sha, metrics: cu.metrics, parent: cu.context?.parent_key ?? null,
-              partners: cu.context?.partners ?? [], flags: flagsOf(cu.metrics),
-            });
-            if (rec.changed) {
-              rec.stamp = cu;
-              pending.map.set(place.id, { hex: result.hex, bbox: result.bbox });
-              const before = (await c.query(BOUNDARY_SQL, [place.boundary_id])).rows[0];
-              const after = (await c.query(AFTER_SQL, [result.hex])).rows[0];
-              const row = (gj, lp) => ({
-                id: place.id, canonical_key: place.key, display_tier: place.tier, kind: place.kind,
-                primary_parent_id: place.primary_parent_id, min_zoom: place.min_zoom, geometry: gj, label_point: lp,
-              });
-              rec.reveal = revealDiff(row(before.gj, before.lp), row(after.gj, after.lp));
-              let blk = result.context?.blockersHex ?? null;
-              let par = result.context?.parentHex ?? null;
-              if (via === "function") {
-                const ctx = (await c.query(CONTEXT_SQL, [place.id, raw.hex, JSON.stringify(pending.near(place.bbox))])).rows[0];
-                blk = ctx.blockers;
-                par = ctx.parent;
-              }
-              const blkGj = (await c.query(CLIP_SQL, [blk, before.hex])).rows[0].gj;
-              const parGj = (await c.query(CLIP_SQL, [par, before.hex])).rows[0].gj;
-              const feature = (role, gj, props = {}) => (gj ? { type: "Feature", properties: { role, ...props }, geometry: JSON.parse(gj) } : null);
-              const fc = {
-                type: "FeatureCollection",
-                properties: { key: place.key, status: cu.status, rung: cu.rung, metrics: cu.metrics, parent: rec.parent, blockers: cu.context?.blocker_keys ?? null },
-                features: [
-                  feature("before", before.gj, { sha256: place.sha }),
-                  feature("after", after.gj, { sha256: cu.output_sha256 }),
-                  feature("blockers", blkGj),
-                  feature("parent", parGj, { key: rec.parent }),
-                ].filter(Boolean),
-              };
-              await writeFile(path.join(geojsonDir, `${place.key}.geojson`), JSON.stringify(fc));
-            }
-          } catch (error) {
-            Object.assign(rec, { status: `error:${error.code ?? "?"}`, error: String(error.message).slice(0, 300), changed: false });
-            records.push(rec);
-            waveRecords.push(rec);
-            processed += 1;
-            console.log(`  ERROR ${place.key}: ${rec.error}`);
-            return j + 1; // the read-only transaction is aborted: the next batch starts after this place
-          }
-          rec.ms = Date.now() - started;
-          records.push(rec);
-          waveRecords.push(rec);
-          processed += 1;
-          if (rec.changed || rec.status !== "unchanged") {
-            const m = rec.metrics;
-            console.log(`  ${rec.status}/${rec.rung} ${place.key} parts ${m.parts_before}->${m.parts_after} holes ${m.holes_before}->${m.holes_after} area ${(100 * (areaDelta(m) ?? 0)).toFixed(2)}% ${rec.ms}ms`);
-          }
-          await sleep(pauseMs);
-        }
-        return j;
-      }, { statementTimeoutMs: timeoutMs });
-      console.log(`  ${wave}: ${i}/${list.length} (${processed} total, ${Math.round((Date.now() - t0) / 1000)} s)`);
-    }
+    for (const place of list) out.push({ place, wave });
   }
+  return out;
+}
 
-  const provenance = {
-    generated_at: new Date().toISOString(), version: FOOTPRINT_VERSION, params: PARAMS, via,
-    postgis: versions.postgis, geos: versions.geos, waves: [...perWave.keys()], elapsed_s: Math.round((Date.now() - t0) / 1000),
+/** One place through the step: its record (and its GeoJSON when it changed). Throws on a database error. */
+async function processPlace(c, { place, wave, pending, via, geojsonDir, survey }) {
+  const started = Date.now();
+  const rec = {
+    key: place.key, place_id: place.id, tier: place.tier, kind: place.kind, wave,
+    current_boundary_id: place.boundary_id, current_revision: place.revision, current_sha256: place.sha,
+    method: place.method, score_before: survey?.get(place.key) ?? null,
   };
+  const raw = await rawInput(c, place);
+  const result = await cleanFootprint(c, {
+    raw: raw.hex, placeId: place.id, pending: pending.near(place.bbox), via, inputBoundaryId: raw.inputBoundaryId,
+  });
+  const cu = result.cleanup;
+  Object.assign(rec, {
+    input_boundary_id: raw.inputBoundaryId, input_sha256: cu.input_sha256,
+    status: cu.status, rung: cu.rung, output_sha256: cu.output_sha256,
+    changed: cu.output_sha256 !== place.sha, metrics: cu.metrics, parent: cu.context?.parent_key ?? null,
+    partners: cu.context?.partners ?? [], flags: flagsOf(cu.metrics),
+  });
+  if (rec.changed) {
+    rec.stamp = cu;
+    const before = (await c.query(BOUNDARY_SQL, [place.boundary_id])).rows[0];
+    const after = (await c.query(AFTER_SQL, [result.hex])).rows[0];
+    const row = (gj, lp) => ({
+      id: place.id, canonical_key: place.key, display_tier: place.tier, kind: place.kind,
+      primary_parent_id: place.primary_parent_id, min_zoom: place.min_zoom, geometry: gj, label_point: lp,
+    });
+    rec.reveal = revealDiff(row(before.gj, before.lp), row(after.gj, after.lp));
+    let blk = result.context?.blockersHex ?? null;
+    let par = result.context?.parentHex ?? null;
+    if (via === "function") {
+      const ctx = (await c.query(CONTEXT_SQL, [place.id, raw.hex, JSON.stringify(pending.near(place.bbox))])).rows[0];
+      blk = ctx.blockers;
+      par = ctx.parent;
+    }
+    const blkGj = (await c.query(CLIP_SQL, [blk, before.hex])).rows[0].gj;
+    const parGj = (await c.query(CLIP_SQL, [par, before.hex])).rows[0].gj;
+    const feature = (role, gj, props = {}) => (gj ? { type: "Feature", properties: { role, ...props }, geometry: JSON.parse(gj) } : null);
+    const fc = {
+      type: "FeatureCollection",
+      properties: { key: place.key, status: cu.status, rung: cu.rung, metrics: cu.metrics, parent: rec.parent, blockers: cu.context?.blocker_keys ?? null },
+      features: [
+        feature("before", before.gj, { sha256: place.sha }),
+        feature("after", after.gj, { sha256: cu.output_sha256 }),
+        feature("blockers", blkGj),
+        feature("parent", parGj, { key: rec.parent }),
+      ].filter(Boolean),
+    };
+    await writeFile(path.join(geojsonDir, `${place.key}.geojson`), JSON.stringify(fc));
+  }
+  rec.ms = Date.now() - started;
+  if (rec.changed || rec.status !== "unchanged") {
+    const m = rec.metrics;
+    console.log(`  ${rec.status}/${rec.rung} ${place.key} parts ${m.parts_before}->${m.parts_after} holes ${m.holes_before}->${m.holes_after} area ${(100 * (areaDelta(m) ?? 0)).toFixed(2)}% ${rec.ms}ms`);
+  }
+  return { rec, hex: rec.changed ? result.hex : null, bbox: result.bbox };
+}
+
+async function writeOutputs({ reviewDir, perWave, provenance, reportPath, records }) {
   for (const [wave, recs] of perWave) {
     const file = path.join(reviewDir, `footprints-${slugOf(wave)}.json`);
     await writeFile(file, `${JSON.stringify({
@@ -242,7 +213,252 @@ async function dryRun() {
     await writeFile(reportPath, renderReport({ provenance, records }));
     console.log(`wrote ${reportPath}`);
   }
+}
+
+function runOptions() {
+  return {
+    reviewDir: arg("review-dir", "data/wine-map/review"),
+    geojsonDir: arg("geojson-dir", ".superpowers/footprints"),
+    reportPath: arg("report", null),
+    batch: Number(arg("batch", "40")),
+    pauseMs: Number(arg("pause-ms", "150")),
+    timeoutMs: Number(arg("timeout-ms", "90000")),
+  };
+}
+
+async function dryRun() {
+  const waves = wavesFor(arg("wave", "all"));
+  const keys = arg("keys") ? new Set(arg("keys").split(",")) : null;
+  const { reviewDir, geojsonDir, reportPath, batch, pauseMs, timeoutMs } = runOptions();
+  const limit = arg("limit") ? Number(arg("limit")) : Infinity;
+  const survey = arg("survey") ? new Map(JSON.parse(await readFile(arg("survey"), "utf8")).places.map((p) => [p.key, p.score])) : null;
+  await mkdir(geojsonDir, { recursive: true });
+  await mkdir(reviewDir, { recursive: true });
+  const t0 = Date.now();
+  const { catalogue, versions, via } = await loadCatalogue(timeoutMs);
+
+  const pending = createPending();
+  const records = [];
+  const perWave = new Map();
+  const order = globalOrder(catalogue, waves, (p) => !keys || keys.has(p.key));
+  let i = 0;
+  while (i < order.length && records.length < limit) {
+    i = await withReadOnly(async (c) => {
+      await c.query("set local search_path = public, extensions");
+      let j = i;
+      for (; j < order.length && j < i + batch && records.length < limit; j += 1) {
+        const { place, wave } = order[j];
+        if (!perWave.has(wave)) perWave.set(wave, []);
+        try {
+          const out = await processPlace(c, { place, wave, pending, via, geojsonDir, survey });
+          if (out.rec.changed) pending.map.set(place.id, { hex: out.hex, bbox: out.bbox });
+          records.push(out.rec);
+          perWave.get(wave).push(out.rec);
+        } catch (error) {
+          const rec = { key: place.key, place_id: place.id, tier: place.tier, kind: place.kind, wave, current_boundary_id: place.boundary_id,
+            current_revision: place.revision, current_sha256: place.sha, method: place.method,
+            status: `error:${error.code ?? "?"}`, error: String(error.message).slice(0, 300), changed: false };
+          records.push(rec);
+          perWave.get(wave).push(rec);
+          console.log(`  ERROR ${place.key}: ${rec.error}`);
+          return j + 1; // the read-only transaction is aborted: the next batch starts after this place
+        }
+        await sleep(pauseMs);
+      }
+      return j;
+    }, { statementTimeoutMs: timeoutMs });
+    console.log(`  ${i}/${order.length} (${Math.round((Date.now() - t0) / 1000)} s)`);
+  }
+
+  const provenance = {
+    generated_at: new Date().toISOString(), version: FOOTPRINT_VERSION, params: PARAMS, via,
+    postgis: versions.postgis, geos: versions.geos, waves: [...perWave.keys()], elapsed_s: Math.round((Date.now() - t0) / 1000),
+  };
+  await writeOutputs({ reviewDir, perWave, provenance, reportPath, records });
   console.log(`DONE dry: ${records.length} places, ${records.filter((r) => r.changed).length} changed, ${Math.round((Date.now() - t0) / 1000)} s; nothing written`);
+}
+
+// ---------------------------------------------------------------- closure re-run
+
+/** Hex EWKB of a prior run's "after" (6-decimal GeoJSON on the 1e-6° grid: it round-trips byte for byte). */
+const SEED_SQL = `
+select encode(extensions.ST_AsEWKB(g), 'hex') hex, encode(sha256(extensions.ST_AsEWKB(g)), 'hex') sha,
+       extensions.ST_XMin(extensions.Box3D(g)) x0, extensions.ST_YMin(extensions.Box3D(g)) y0,
+       extensions.ST_XMax(extensions.Box3D(g)) x1, extensions.ST_YMax(extensions.Box3D(g)) y1
+  from (select extensions.ST_SetSRID(extensions.ST_GeomFromGeoJSON($1), 4326) g) z`;
+
+/** The region a place's output moved by: (a ∆ b) as hex, or null when empty. */
+const MOVED_SQL = `
+select case when extensions.ST_IsEmpty(d) then null else encode(extensions.ST_AsEWKB(d), 'hex') end hex
+  from (select extensions.ST_CollectionExtract(extensions.ST_SymDifference($1::extensions.geometry, $2::extensions.geometry, ${PARAMS.grid_deg}), 3) d) z`;
+
+/**
+ * Same-tier places (no partner edge) whose cleaned reach could touch `region`:
+ * within 12 m of the region (the closing radius is 10 m) or the region inside one
+ * of their parts' outer rings (hole filling).
+ */
+const REACH_SQL = `
+with l as (select $1::extensions.geometry g)
+select p.canonical_key k
+  from l, public.wine_place_boundaries yb join public.wine_places p on p.id = yb.wine_place_id
+ where yb.is_current and yb.quality_status = 'VALIDATED' and p.display_tier = $2 and p.id <> $3::uuid
+   and yb.display_geometry && extensions.ST_Expand(l.g, 0.0005)
+   and not exists (select 1 from public.wine_place_relationships r
+                    where r.relationship_type::text in ('DUAL_LABEL', 'OVERLAPS', 'REPLACES_WITHIN')
+                      and ((r.source_place_id = p.id and r.target_place_id = $3::uuid) or (r.source_place_id = $3::uuid and r.target_place_id = p.id)))
+   and (extensions.ST_DWithin(l.g::extensions.geography, yb.display_geometry::extensions.geography, 12)
+        or extensions.ST_Intersects(l.g, (select extensions.ST_Collect(extensions.ST_MakePolygon(extensions.ST_ExteriorRing(d.geom)))
+                                            from extensions.ST_Dump(yb.display_geometry) d)))`;
+
+async function readPrior(dir) {
+  const prior = new Map();
+  for (const name of (await readdir(dir)).filter((n) => n.startsWith("footprints-") && n.endsWith(".json"))) {
+    for (const rec of JSON.parse(await readFile(path.join(dir, name), "utf8")).places) prior.set(rec.key, rec);
+  }
+  return prior;
+}
+
+async function closureRun() {
+  const priorDir = arg("closure-from");
+  const seedDir = arg("seed-geojson");
+  assert.ok(priorDir && seedDir, "--closure-from <prior review dir> needs --seed-geojson <prior geojson dir>");
+  const { reviewDir, geojsonDir, reportPath, batch, pauseMs, timeoutMs } = runOptions();
+  assert.notEqual(path.resolve(geojsonDir), path.resolve(seedDir), "write the closure's GeoJSON to a new --geojson-dir");
+  await mkdir(geojsonDir, { recursive: true });
+  await mkdir(reviewDir, { recursive: true });
+  const t0 = Date.now();
+  const prior = await readPrior(priorDir);
+  const { catalogue, versions, via } = await loadCatalogue(timeoutMs);
+  const order = globalOrder(catalogue, wavesFor("all"));
+  const index = new Map(order.map((o, i) => [o.place.key, i]));
+  const byId = new Map(catalogue.map((p) => [p.id, p]));
+  const seedOf = async (key) => {
+    const fc = JSON.parse(await readFile(path.join(seedDir, `${key}.geojson`), "utf8"));
+    return fc.features.find((f) => f.properties.role === "after").geometry;
+  };
+
+  // the starting set
+  const todo = new Set(arg("keys") ? arg("keys").split(",") : []);
+  const why = new Map();
+  const add = (key, reason) => {
+    if (!index.has(key) || todo.has(key)) return;
+    todo.add(key);
+    why.set(key, reason);
+  };
+  for (const { place } of order) {
+    const p = prior.get(place.key);
+    if (!p) add(place.key, "no prior record");
+    else if (p.rederived) add(place.key, "re-derived before (F1/F7)");
+    else if (String(p.status).startsWith("error")) add(place.key, "prior error");
+  }
+  // F2: ground a prior output gave up now blocks every same-tier place after it that could reach it
+  await withReadOnly(async (c) => {
+    await c.query("set local search_path = public, extensions");
+    for (const { place } of order) {
+      const p = prior.get(place.key);
+      if (!p?.changed || p.rederived || !(Number(p.metrics?.lost_m2) > 0)) continue;
+      const after = await seedOf(place.key);
+      const lost = (await c.query(
+        `select case when extensions.ST_IsEmpty(d) then null else encode(extensions.ST_AsEWKB(d), 'hex') end hex
+           from (select extensions.ST_CollectionExtract(extensions.ST_Difference(b.display_geometry,
+                   extensions.ST_SetSRID(extensions.ST_GeomFromGeoJSON($2), 4326), ${PARAMS.grid_deg}), 3) d
+                   from public.wine_place_boundaries b where b.id = $1) z`, [place.boundary_id, JSON.stringify(after)])).rows[0]?.hex;
+      if (!lost) continue;
+      for (const { k } of (await c.query(REACH_SQL, [lost, place.tier, place.id])).rows) {
+        if (index.get(k) > index.get(place.key)) add(k, `reaches ground ${place.key} gave up (F2)`);
+      }
+    }
+  }, { statementTimeoutMs: timeoutMs });
+  console.log(`closure start: ${todo.size} places`);
+
+  // the walk
+  const pending = createPending();
+  const records = new Map();
+  const moved = [];
+  const seedFailed = [];
+  let i = 0;
+  while (i < order.length) {
+    i = await withReadOnly(async (c) => {
+      await c.query("set local search_path = public, extensions");
+      let computed = 0;
+      let j = i;
+      for (; j < order.length && computed < batch; j += 1) {
+        const { place, wave } = order[j];
+        const p = prior.get(place.key);
+        if (!todo.has(place.key)) {
+          if (p?.changed) {
+            const s = (await c.query(SEED_SQL, [JSON.stringify(await seedOf(place.key))])).rows[0];
+            if (s.sha === p.output_sha256) {
+              pending.map.set(place.id, { hex: s.hex, bbox: [s.x0, s.y0, s.x1, s.y1].map(Number) });
+              await copyFile(path.join(seedDir, `${place.key}.geojson`), path.join(geojsonDir, `${place.key}.geojson`));
+              continue;
+            }
+            seedFailed.push(place.key);
+            add(place.key, "its prior output does not round-trip");
+          } else {
+            continue;
+          }
+        }
+        computed += 1;
+        let out;
+        try {
+          out = await processPlace(c, { place, wave, pending, via, geojsonDir, survey: null });
+        } catch (error) {
+          records.set(place.key, { key: place.key, place_id: place.id, wave, status: `error:${error.code ?? "?"}`,
+            error: String(error.message).slice(0, 300), changed: false, current_boundary_id: place.boundary_id, current_sha256: place.sha });
+          console.log(`  ERROR ${place.key}: ${String(error.message).slice(0, 200)}`);
+          return j + 1;
+        }
+        out.rec.closure_reason = why.get(place.key) ?? "--keys";
+        records.set(place.key, out.rec);
+        if (out.rec.changed) pending.map.set(place.id, { hex: out.hex, bbox: out.bbox });
+        else await rm(path.join(geojsonDir, `${place.key}.geojson`), { force: true });
+        const priorSha = p?.output_sha256 ?? place.sha;
+        if (out.rec.output_sha256 !== priorSha) {
+          moved.push({ key: place.key, prior_sha256: priorSha, sha256: out.rec.output_sha256, prior_changed: !!p?.changed, changed: out.rec.changed });
+          // what this place's move can reach: same-tier places after it, ancestors that lost ground
+          const priorHex = p?.changed
+            ? (await c.query(SEED_SQL, [JSON.stringify(await seedOf(place.key))])).rows[0].hex
+            : (await c.query(BOUNDARY_SQL, [place.boundary_id])).rows[0].hex;
+          const nowHex = out.hex ?? (await c.query(BOUNDARY_SQL, [place.boundary_id])).rows[0].hex;
+          const region = (await c.query(MOVED_SQL, [priorHex, nowHex])).rows[0].hex;
+          if (region) {
+            for (const { k } of (await c.query(REACH_SQL, [region, place.tier, place.id])).rows) {
+              if (index.get(k) > j) add(k, `reaches the move of ${place.key}`);
+            }
+          }
+          for (let a = byId.get(place.primary_parent_id); a; a = byId.get(a.primary_parent_id)) {
+            const pa = prior.get(a.key);
+            if (!pa || Number(pa.metrics?.lost_m2) > 0) add(a.key, `ancestor of the move of ${place.key}`);
+          }
+        }
+        await sleep(pauseMs);
+      }
+      return j;
+    }, { statementTimeoutMs: timeoutMs });
+    console.log(`  walked ${i}/${order.length}; computed ${records.size}, moved ${moved.length} (${Math.round((Date.now() - t0) / 1000)} s)`);
+  }
+
+  // merged outputs: the prior records, the recomputed ones replaced, in the global order
+  const perWave = new Map();
+  const all = [];
+  for (const { place, wave } of order) {
+    const rec = records.get(place.key) ?? prior.get(place.key);
+    if (!rec) continue;
+    if (!perWave.has(wave)) perWave.set(wave, []);
+    perWave.get(wave).push(rec);
+    all.push(rec);
+  }
+  const provenance = {
+    generated_at: new Date().toISOString(), version: FOOTPRINT_VERSION, params: PARAMS, via,
+    postgis: versions.postgis, geos: versions.geos, waves: [...perWave.keys()], elapsed_s: Math.round((Date.now() - t0) / 1000),
+    closure: { from: priorDir, computed: records.size, moved: moved.length },
+  };
+  await writeOutputs({ reviewDir, perWave, provenance, reportPath, records: all });
+  const closurePath = path.join(reviewDir, "closure.json");
+  await writeFile(closurePath, `${JSON.stringify({ computed: [...records.keys()].map((k) => ({ key: k, reason: records.get(k).closure_reason ?? null })), moved, seed_failed: seedFailed }, null, 1)}\n`);
+  console.log(`wrote ${closurePath}`);
+  console.log(`DONE closure: ${records.size} recomputed, ${moved.length} moved, ${all.filter((r) => r.changed).length} changed in all; nothing written to the database`);
 }
 
 async function readGateFacts(client, review) {
@@ -319,7 +535,7 @@ async function stage() {
     for (const p of review.places.filter((x) => x.changed)) {
       const place = byId.get(p.place_id);
       assert.ok(place, `${p.key}: no current row`);
-      const raw = await rawInput(client, place, catalogue, pending);
+      const raw = await rawInput(client, place);
       assert.equal(raw.inputBoundaryId, p.input_boundary_id, `${p.key}: input moved since the dry run`);
       const gp = { ...(place.gp ?? {}) };
       delete gp.cleanup;
@@ -355,6 +571,19 @@ async function renderSql() {
   console.log(`wrote\n  ${Object.values(files).join("\n  ")}`);
 }
 
+async function renderReject() {
+  const reviewPath = arg("review");
+  const version = arg("release");
+  assert.ok(reviewPath && version, "--render-reject needs --review <file> --release <version>");
+  const review = JSON.parse(await readFile(reviewPath, "utf8"));
+  const file = rejectPath(review._provenance.wave, version);
+  await mkdir(path.dirname(file), { recursive: true });
+  await writeFile(file, renderRejectReleaseSql(review, version));
+  console.log(`wrote ${file}`);
+}
+
 if (has("stage")) await stage();
 else if (has("render-sql")) await renderSql();
+else if (has("render-reject")) await renderReject();
+else if (arg("closure-from")) await closureRun();
 else await dryRun();

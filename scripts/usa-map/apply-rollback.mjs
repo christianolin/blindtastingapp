@@ -1,5 +1,6 @@
-// Runs one US rollback file (scripts/usa-map/usa_us2_*.sql) against the LIVE
-// database in a single transaction, and records NOTHING in
+// Runs one versionless rollback file (a US one, scripts/usa-map/usa_us2_*.sql, or
+// an fp-1 footprint pass one, scripts/wine-map-sources/footprints/*.sql) against
+// the LIVE database in a single transaction, and records NOTHING in
 // supabase_migrations.schema_migrations (spec 2026-09-29 §16, §25).
 //
 // Why not the migration applier: it records the file's 14-digit version when
@@ -24,11 +25,20 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { topLevelTransactionStatements } from "../migration-preflight.mjs";
 
-/** The file must be one of the US rollbacks: never a migration, never a versioned file. */
+/**
+ * The versionless rollback files this runner may apply, never a migration and never
+ * a versioned file: the US ones, and the fp-1 footprint pass's (rendered by
+ * footprint-pass.mjs --render-sql / --render-reject).
+ */
+export const ROLLBACK_FILE_PATTERNS = Object.freeze([
+  /^scripts\/usa-map\/usa_us\d+_[a-z_]+\.sql$/,
+  /^scripts\/wine-map-sources\/footprints\/footprints_[a-z0-9_-]+_(?:unstage|revert|reject_\d{8}t\d{6}z)\.sql$/,
+]);
+
 export function rollbackRefusal(file) {
   const rel = path.relative(process.cwd(), path.resolve(file)).split(path.sep).join("/");
-  if (!/^scripts\/usa-map\/usa_us\d+_[a-z_]+\.sql$/.test(rel)) {
-    return `REFUSED: ${rel} is not a US rollback file (scripts/usa-map/usa_us<n>_<name>.sql)`;
+  if (!ROLLBACK_FILE_PATTERNS.some((re) => re.test(rel))) {
+    return `REFUSED: ${rel} is not a rollback file (scripts/usa-map/usa_us<n>_<name>.sql, or scripts/wine-map-sources/footprints/footprints_<wave>_{unstage,revert,reject_<release>}.sql)`;
   }
   return null;
 }

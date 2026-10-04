@@ -3,7 +3,7 @@
 // footprint-pass.mjs is the database half. Design: scratchpad
 // footprints/design-final.md §5.4, §6, §7.
 import { firstDrawnZoom, revealPlan } from "../wine-map-tiles/lib.mjs";
-import { FOOTPRINT_VERSION, PARAMS } from "./footprint-sql.mjs";
+import { FOOTPRINT_VERSION, PARAMS, independentFailuresSql } from "./footprint-sql.mjs";
 
 /** Waves, worst first (survey p90, 2026-10-03): Germany by region, then the rest by country. */
 export const WAVES = Object.freeze([
@@ -189,12 +189,25 @@ function expectations(review) {
   return rows;
 }
 
-function header(kind, review) {
+function header(kind, review, runner = null) {
   return `-- Footprint cleanup ${FOOTPRINT_VERSION}, wave ${review._provenance.wave}: ${kind}.
 -- RENDERED by scripts/wine-map-sources/footprint-pass.mjs --render-sql from the
 -- approved review file — do not hand-edit. Approval: ${review._provenance.owner_approval ?? "(none)"}.
-`;
+${runner ? `-- Run with ${runner}\n` : ""}`;
 }
+
+/** The runner of the versionless rollback files (never the migration applier: they record no history). */
+export const ROLLBACK_RUNNER = "node --env-file=.env.local scripts/usa-map/apply-rollback.mjs <this file> --check, then --dry, then with no flag";
+
+/** Tiles runs a promote or a rollback refuses to race (the sitting gate's own window). */
+export const BUILDING_WINDOW = "1 hour";
+
+/** The wave as the independent check reads it inside a rendered DO block: new shape (current) and replaced input. */
+const PROMOTED_WAVE_SQL = `select e.place_id, nb.display_geometry g_new, ob.display_geometry g_old
+       from jsonb_to_recordset(v_expect) e(place_id uuid, current_boundary_id uuid, output_sha text)
+       join public.wine_place_boundaries nb on nb.wine_place_id = e.place_id and nb.is_current
+        and encode(sha256(extensions.ST_AsEWKB(nb.display_geometry)), 'hex') = e.output_sha
+       join public.wine_place_boundaries ob on ob.id = e.current_boundary_id`;
 
 /** The promote migration: re-assert, flip, refresh the neighbour cache, assert the post-state. */
 export function renderPromoteSql(review) {
@@ -207,7 +220,15 @@ declare
   v_n int := jsonb_array_length(v_expect);
   v_bad int;
   v_refreshed int;
+  v_list text;
 begin
+  perform set_config('search_path', 'public, extensions', true);
+  -- 0. never alongside a tiles run: a release built from a half-flipped wave would
+  --    publish it before Gate B
+  select count(*) into v_bad from public.wine_map_releases
+   where status = 'BUILDING' and created_at > now() - interval '${BUILDING_WINDOW}';
+  if v_bad > 0 then raise exception 'footprints promote: % tiles release(s) BUILDING in the last ${BUILDING_WINDOW}: wait, then re-run', v_bad; end if;
+
   -- 1. every input is still current with the sha the owner approved against
   select count(*) into v_bad
     from jsonb_to_recordset(v_expect) e(place_id uuid, current_boundary_id uuid, current_sha text, output_sha text)
@@ -264,6 +285,15 @@ begin
                        and encode(sha256(extensions.ST_AsEWKB(b.display_geometry)), 'hex') = e.output_sha);
   if v_bad > 0 then raise exception 'footprints promote: post-state wrong for % place(s)', v_bad; end if;
 
+  -- 5b. the independent check (footprint-sql.mjs independentCheckSql), on the stored
+  --     rows themselves, trusting no stamp: each place's new ground against the input
+  --     row it replaces, on every same-tier non-partner place (old and new shapes),
+  --     outside its containment parent, and descendant ground given up; > 1 m² refuses
+  select count(*), string_agg(format('%s %s / %s %s m²', x.kind, x.key, coalesce(x.other_key, '-'), round(x.m2::numeric, 1)), '; ')
+    into v_bad, v_list
+    from (${independentFailuresSql({ waveSql: PROMOTED_WAVE_SQL }).replaceAll("\n", "\n    ")}) x;
+  if v_bad > 0 then raise exception 'footprints promote: % independent check failure(s): %', v_bad, left(v_list, 3000); end if;
+
   -- 6. the neighbour cache, in the same transaction
   v_refreshed := public.refresh_wine_place_neighbours();
   if v_refreshed < 0 then raise exception 'footprints promote: refresh_wine_place_neighbours() refused (%)', v_refreshed; end if;
@@ -275,7 +305,7 @@ $promote$;
 /** Before the promote: delete the wave's staged rows (none may be current), refresh. */
 export function renderUnstageSql(review) {
   const rows = expectations(review);
-  return `${header("unstage (rollback before the promote; re-appliable)", review)}
+  return `${header("unstage (rollback before the promote; re-appliable)", review, ROLLBACK_RUNNER)}
 do $unstage$
 declare
   v_expect jsonb := ${sqlStr(JSON.stringify(rows))}::jsonb;
@@ -297,7 +327,7 @@ $unstage$;
 /** After the promote: demote the cleaned rows, make the recorded inputs current again, refresh. */
 export function renderRevertSql(review) {
   const rows = expectations(review);
-  return `${header("revert (rollback after the promote; re-appliable)", review)}
+  return `${header("revert (rollback after the promote; re-appliable)", review, ROLLBACK_RUNNER)}
 do $revert$
 declare
   v_expect jsonb := ${sqlStr(JSON.stringify(rows))}::jsonb;
@@ -334,4 +364,43 @@ export function renderedPaths(wave, timestamp) {
     unstage: `scripts/wine-map-sources/footprints/footprints_${slug}_unstage.sql`,
     revert: `scripts/wine-map-sources/footprints/footprints_${slug}_revert.sql`,
   };
+}
+
+const RELEASE_VERSION = /^\d{8}T\d{6}Z$/;
+
+/** File name for --render-reject: the wave's slug and the release version (lowercase). */
+export function rejectPath(wave, version) {
+  if (!RELEASE_VERSION.test(version)) throw new Error(`not a release version: ${version}`);
+  const slug = wave.replaceAll(".", "_").replaceAll("*", "rest");
+  return `scripts/wine-map-sources/footprints/footprints_${slug}_reject_${version.toLowerCase()}.sql`;
+}
+
+/**
+ * Gate B rejected the wave's draft tiles release (review 2026-10-04, F7): mark it
+ * FAILED, so a bare promote.mjs (which picks the newest VALIDATED release) can
+ * never ship it after the DB revert, and promote.mjs refuses it by version too.
+ * Only a VALIDATED release is rejected; an ACTIVE one is already live (revert the
+ * DB, then a NEW release from master). Re-appliable: an already FAILED one is a no-op.
+ */
+export function renderRejectReleaseSql(review, version) {
+  if (!RELEASE_VERSION.test(version)) throw new Error(`not a release version: ${version}`);
+  return `${header(`reject the Gate B draft release ${version} (re-appliable)`, review, ROLLBACK_RUNNER)}
+do $reject$
+declare
+  v_status text;
+begin
+  select status::text into v_status from public.wine_map_releases where version = ${sqlStr(version)};
+  if v_status is null then raise exception 'footprints reject: no release ${version}'; end if;
+  if v_status = 'FAILED' then raise notice 'footprints reject: ${version} is already FAILED'; return; end if;
+  if v_status <> 'VALIDATED' then
+    raise exception 'footprints reject: release ${version} is %; only a VALIDATED draft is rejected (an ACTIVE one: revert the DB, then a new release from master)', v_status;
+  end if;
+  update public.wine_map_releases
+     set status = 'FAILED',
+         validation_report = validation_report || jsonb_build_object('gate_b_rejected',
+           jsonb_build_object('wave', ${sqlStr(review._provenance.wave)}, 'at', now(), 'by', 'footprint-pass.mjs --render-reject'))
+   where version = ${sqlStr(version)} and status = 'VALIDATED';
+end
+$reject$;
+`;
 }

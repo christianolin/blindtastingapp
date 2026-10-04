@@ -2037,6 +2037,36 @@ a raw subquery, regardless of which two tables look involved at a glance.
   `footprint-pass.mjs` (`--dry` read-only, `--stage` at a sitting only,
   `--render-sql` for promote/unstage/revert); its staged rows are DRAFT
   `+fp1` revisions, and the promote ends with the neighbour-cache refresh.
+  Review 2026-10-04 (things that would otherwise pass every check and still
+  hurt live data): (1) the pass cleans EVERY place, a
+  `DERIVED_FROM_DESCENDANTS` parent included, from its stored current row and
+  never re-derives one: a re-derived input moved Sud-Ouest by 76 km² and
+  dropped the own ground of the 12 `parent_plus_children_union` premier-cru
+  groups while every stamp metric, measured against that input, read clean;
+  re-deriving stays `derive-boundary.mjs`'s job (which still knows only the
+  plain `derived` engine: never run it on a `parent_plus_children_union`
+  group). (2) A neighbour blocks with its stored row AND its pending output,
+  and a promoted wave's recorded input (`cleanup.input_boundary_id`) keeps
+  blocking later waves: ground a neighbour's cleanup gave up (an opened arm,
+  a dropped crumb) is never painted onto the next place. (3) The promote
+  re-checks for a BUILDING tiles release, and after the flip runs
+  `independentCheckSql` (`footprint-sql.mjs`) on the stored rows themselves
+  (new ground on any same-tier non-partner shape, outside the containment
+  parent, descendant ground given up; > 1 m² refuses). (4) A builder that
+  writes several places uses `createBatchGuard` (`footprint-cleanup.mjs`):
+  every raw of the batch is passed as `pending` so a place written first never
+  closes onto a neighbour written later, and each row passes the independent
+  check before its commit — wired into `build-germany-einzellagen.mjs`,
+  `stage-germany-weinbau.mjs` and `stage-hessen-weinbau.mjs`; wire it into
+  any other multi-place builder before its next first import. (5) The
+  rollback files (and `--render-reject`, which marks a Gate-B-rejected draft
+  release FAILED so no `promote.mjs` can ship it) run through
+  `scripts/usa-map/apply-rollback.mjs`; the pins of a wave are committed with
+  `splice-boundary-expectations.mjs --keys-from <review file> --write`, in
+  the same sitting as the stage and the promote. (6) The plpgsql wrapper and
+  the trigger body are rehearsed read-only (`renderWrapperRehearsal` /
+  `renderTriggerRehearsal`, FOOTPRINT_DB=1 tests); applying Migration A in a
+  rolled-back transaction is still DDL and needs the owner's go-ahead.
 - World Wine Map Phase 3A adds the four-axis place model and the France region
   import machinery. Classification facts live as flat columns on `wine_places`
   (`is_appellation`, `appellation_system`, `appellation_level`), legal

@@ -11,7 +11,26 @@ test("runs the US rollback files, and nothing else", () => {
     "scripts/usa-map/20260930124747_usa_us2_unstage.sql",
     "scripts/usa-map/render-us2-sql.mjs",
     "scripts/usa-map/../usa-map/../x.sql",
-  ]) assert.match(rollbackRefusal(f), /is not a US rollback file/, f);
+  ]) assert.match(rollbackRefusal(f), /is not a rollback file/, f);
+});
+
+test("runs the fp-1 footprint pass's rollback files too (review 2026-10-04), and nothing else under footprints", async () => {
+  const { renderedPaths, rejectPath } = await import("../wine-map-sources/footprint-pass-lib.mjs");
+  for (const wave of ["germany.mittelrhein", "germany", "united-states", "*"]) {
+    const p = renderedPaths(wave, "20261005090000");
+    assert.equal(rollbackRefusal(p.unstage), null, p.unstage);
+    assert.equal(rollbackRefusal(p.revert), null, p.revert);
+    assert.match(rollbackRefusal(p.promote), /is not a rollback file/, "the promote is a migration");
+    const rj = rejectPath(wave, "20261005T101500Z");
+    assert.equal(rollbackRefusal(rj), null, rj);
+  }
+  for (const f of [
+    "scripts/wine-map-sources/footprints/footprints_germany_mittelrhein_promote.sql",
+    "scripts/wine-map-sources/footprints/20261005090000_footprints_germany_unstage.sql",
+    "scripts/wine-map-sources/footprints/footprints_germany_unstage.sql.bak",
+    "scripts/wine-map-sources/footprints/../footprints/x_revert.sql",
+    "supabase/migrations/20261005090000_footprints_germany_mittelrhein_promote.sql",
+  ]) assert.match(rollbackRefusal(f), /is not a rollback file/, f);
 });
 
 test("flags: --check, --dry or none; anything else refuses (a typo of --dry never applies)", () => {

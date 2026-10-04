@@ -12,7 +12,8 @@ import assert from "node:assert/strict";
 import { readFile, readdir } from "node:fs/promises";
 import test from "node:test";
 import {
-  CORE_COLUMNS, CORE_SQL, FOOTPRINT_VERSION, MIGRATION_A, PARAMS, ladderReason, metricsOf, renderMigrationA, rungs,
+  CONTEXT_SQL, CORE_COLUMNS, CORE_SQL, FOOTPRINT_VERSION, MIGRATION_A, PARAMS, independentFailuresSql, ladderReason, metricsOf,
+  renderMigrationA, renderTriggerRehearsal, renderWrapperRehearsal, rungs,
 } from "./footprint-sql.mjs";
 import {
   bboxesMeet, cleanGeomCte, createPending, generationAfterCleanup, methodAfterCleanup, methodAfterCleanupSql,
@@ -280,4 +281,158 @@ test("geometry fixtures (read-only, FOOTPRINT_DB=1)", { skip: !DB && "set FOOTPR
       assert.equal(ladderReason(closeOnly), "grow");
     });
   }, { statementTimeoutMs: 60000 });
+});
+
+// ---------------------------------------------------------------- review 2026-10-04 fixes (pure)
+
+test("F2: a neighbour blocks with its stored row AND its pending output (only a staged DRAFT equal to it is skipped)", () => {
+  assert.doesNotMatch(CONTEXT_SQL, /and not exists \(select 1 from pend where pend\.id = b\.wine_place_id\)\n/);
+  assert.match(CONTEXT_SQL, /and \(b\.is_current or not exists \(select 1 from pend where pend\.id = b\.wine_place_id and pend\.g = b\.display_geometry\)\)/);
+  assert.match(CONTEXT_SQL, /input_boundary_id'\)::uuid/, "a promoted wave's recorded input still blocks later waves");
+});
+
+test("F1/F7: the pass never re-derives a parent; every metric is against the stored row", async () => {
+  const pass = await readFile("scripts/wine-map-sources/footprint-pass.mjs", "utf8");
+  assert.doesNotMatch(pass, /DERIVE_SQL|rederived: raw|childrenOf\(/);
+  assert.match(pass, /async function rawInput\(c, place\) \{/);
+  const sql = await import("./footprint-sql.mjs");
+  assert.equal(sql.DERIVE_SQL, undefined);
+});
+
+test("F4: Migration A qualifies its geometry types; the rehearsals share the wrapper and trigger bytes", () => {
+  const sql = renderMigrationA();
+  assert.match(sql, /returns table \(clean4 extensions\.geometry, /);
+  const ddl = sql.split("\n").filter((l) => /^(returns|create|revoke|  p_)/.test(l)).join("\n");
+  assert.doesNotMatch(ddl, /(?<!extensions\.)\bgeometry\b/, "no unqualified geometry type in the DDL");
+  const fnBody = sql.slice(sql.indexOf("as $fn$\ndeclare"), sql.indexOf("$fn$;\n\ncreate or replace function public.wine_place_boundaries_require_cleanup"));
+  const rehearsal = renderWrapperRehearsal({ rawHex: "00", placeId: "11111111-1111-1111-1111-111111111111" });
+  // every wrapper line but the two core calls and the return appears in the rehearsal, in order
+  const lines = fnBody.split("\n").slice(1).filter((l) => l.trim() && !l.includes("wine_footprint_clean_core(") && !l.includes("return query"));
+  let at = 0;
+  for (const l of lines) {
+    const i = rehearsal.indexOf(l, at);
+    assert.ok(i >= 0, `rehearsal lacks: ${l}`);
+    at = i;
+  }
+  assert.equal((rehearsal.match(/execute \$core\$/g) ?? []).length, 2);
+  const trig = renderTriggerRehearsal({ geomHex: "00", generationParameters: {} });
+  assert.ok(trig.includes("raise exception 'wine_place_boundaries: display_geometry must come from public.wine_footprint_clean"));
+  assert.ok(trig.includes("v_new.generation_parameters->'cleanup'->>'output_sha256'"));
+});
+
+test("F3: the multi-place Germany builders run the batch guard (raws pending, independent check before commit)", async () => {
+  for (const f of ["build-germany-einzellagen.mjs", "stage-germany-weinbau.mjs", "stage-hessen-weinbau.mjs"]) {
+    const text = await readFile(`scripts/wine-map-sources/${f}`, "utf8");
+    assert.match(text, /createBatchGuard\(client, /, f);
+    assert.match(text, /cleanGeomCte\(\{ place(Id|Key): "\$\d+", pending: "\$\d+" \}\)/, f);
+    assert.match(text, /guard\.pendingFor\(/, f);
+    assert.match(text, /await guard\.check\(/, f);
+  }
+  const check = independentFailuresSql({ waveSql: "select null::uuid place_id, null::geometry g_new, null::geometry g_old" });
+  for (const kind of ["new_ground_on_neighbour", "outside_parent", "descendant_ground_lost"]) assert.ok(check.includes(`'${kind}'`), kind);
+  assert.match(check, /x\.m2 > 1/);
+});
+
+// ---------------------------------------------------------------- review 2026-10-04 fixes (read-only DB)
+
+const MECK = "germany.pfalz.mittelhaardt-dt-weinstrasse.hofstueck.meckenheim-";
+test("review fixes against live shapes (read-only, FOOTPRINT_DB=1)", { skip: !DB && "set FOOTPRINT_DB=1" }, async (t) => {
+  const { withReadOnly } = await import("./read-only-client.mjs");
+  const { cleanFootprint } = await import("./footprint-cleanup.mjs");
+  await withReadOnly(async (c) => {
+    await c.query("set local search_path = public, extensions");
+    const place = async (key) => (await c.query(
+      `select p.id, b.id bid, encode(st_asewkb(b.display_geometry), 'hex') hex
+         from wine_places p join wine_place_boundaries b on b.wine_place_id = p.id and b.is_current and b.quality_status = 'VALIDATED'
+        where p.canonical_key = $1`, [key])).rows[0];
+    const neuberg = await place(`${MECK}neuberg`);
+    const spielberg = await place(`${MECK}spielberg`);
+    assert.ok(neuberg && spielberg, "the Meckenheim fixtures exist");
+
+    await t.test("F2: a pending neighbour still blocks with its stored row", async () => {
+      // Spielberg pending as a tiny square: its whole stored row must still be in Neuberg's blockers
+      const tiny = (await c.query("select encode(st_asewkb(st_multi(st_expand(st_centroid($1::geometry), 0.0001))), 'hex') h", [spielberg.hex])).rows[0].h;
+      const ctx = (await c.query(CONTEXT_SQL, [neuberg.id, neuberg.hex, JSON.stringify({ [spielberg.id]: tiny })])).rows[0];
+      const r = (await c.query("select st_area(st_difference($1::geometry, $2::geometry)::geography) left_out", [spielberg.hex, ctx.blockers])).rows[0];
+      assert.ok(Number(r.left_out) < 1, `Spielberg's stored ground left unblocked: ${r.left_out} m²`);
+    });
+
+    await t.test("F3: a not-yet-written neighbour's raw, passed as pending, blocks the closing", async () => {
+      // far from every boundary (North Sea), as two countries (tier 0: no containment parent): P = two 100 m
+      // squares 15 m apart; Q = a strip in that gap, its raw not written yet
+      const france = await place("france");
+      const germany = await place("germany");
+      const at = (wkt) => `st_reduceprecision(st_multi(st_transform(st_setsrid(st_geomfromtext('${wkt}'), 32632), 4326)), 0.000001)`;
+      const geo = (await c.query(`select
+          encode(st_asewkb(${at("MULTIPOLYGON(((300000 6100000,300100 6100000,300100 6100100,300000 6100100,300000 6100000)),((300115 6100000,300215 6100000,300215 6100100,300115 6100100,300115 6100000)))")}), 'hex') p,
+          encode(st_asewkb(${at("MULTIPOLYGON(((300101 6099950,300114 6099950,300114 6100150,300101 6100150,300101 6099950)))")}), 'hex') q`)).rows[0];
+      const onQ = async (pending) => {
+        const res = await cleanFootprint(c, { raw: geo.p, placeId: france.id, pending, via: "inline" });
+        return Number((await c.query("select st_area(st_intersection($1::geometry, $2::geometry)::geography) a", [res.hex, geo.q])).rows[0].a);
+      };
+      assert.ok(await onQ({}) > 500, "without the pending raw the 15 m gap closes over the strip");
+      assert.ok(await onQ({ [germany.id]: geo.q }) < 1, "with it, no ground on the strip");
+    });
+
+    await t.test("F1/F3: the independent check catches new ground on a neighbour and outside the parent", async () => {
+      const wave = (gNewSql) => `select p.id place_id, ${gNewSql} g_new, b.display_geometry g_old
+          from wine_places p join wine_place_boundaries b on b.wine_place_id = p.id and b.is_current and b.quality_status = 'VALIDATED'
+         where p.canonical_key = '${MECK}neuberg'`;
+      const fails = async (gNewSql) => (await c.query(independentFailuresSql({ waveSql: wave(gNewSql) }))).rows;
+      assert.deepEqual(await fails("b.display_geometry"), [], "an unchanged place passes");
+      const onNeighbour = await fails(`st_multi(st_union(b.display_geometry, (select st_intersection(sb.display_geometry, st_buffer(b.display_geometry::geography, 25)::geometry)
+          from wine_place_boundaries sb where sb.id = '${spielberg.bid}')))`);
+      assert.ok(onNeighbour.some((x) => x.kind === "new_ground_on_neighbour" && x.other_key === `${MECK}spielberg` && x.m2 > 1), JSON.stringify(onNeighbour));
+      const outside = await fails("st_multi(st_union(b.display_geometry, st_expand(st_setsrid(st_point(2.5, 56.5), 4326), 0.001)))");
+      assert.ok(outside.some((x) => x.kind === "outside_parent" && x.m2 > 10000), JSON.stringify(outside));
+    });
+
+    await t.test("F4: the plpgsql wrapper, run as written, equals the inline step; the trigger refuses unstamped rows", async () => {
+      const notices = [];
+      const onNotice = (n) => notices.push(n.message);
+      c.on("notice", onNotice);
+      try {
+        for (const key of ["germany.mittelrhein.loreley.schloss-stahleck.bacharach-lennenborn", `${MECK}spielberg`]) {
+          const p = await place(key);
+          const inline = await cleanFootprint(c, { raw: p.hex, placeId: p.id, via: "inline" });
+          notices.length = 0;
+          await c.query(renderWrapperRehearsal({ rawHex: p.hex, placeId: p.id }));
+          const msg = notices.find((m) => m.startsWith("fp1-rehearsal "));
+          assert.ok(msg, `${key}: no rehearsal notice`);
+          const got = JSON.parse(msg.slice("fp1-rehearsal ".length));
+          assert.equal(got.out_hex, inline.hex, `${key}: output`);
+          assert.equal(got.cleanup.output_sha256, inline.cleanup.output_sha256);
+          assert.equal(got.cleanup.status, inline.cleanup.status);
+          assert.equal(got.cleanup.rung, inline.cleanup.rung);
+          assert.deepEqual(Object.keys(got.cleanup.metrics).sort(), Object.keys(inline.cleanup.metrics).sort());
+          for (const [k, v] of Object.entries(inline.cleanup.metrics)) assert.equal(got.cleanup.metrics[k], v, `${key}: metric ${k}`);
+          // the trigger: the stamped output passes; a wrong sha and an unstamped row are refused with 23514
+          await c.query(renderTriggerRehearsal({ geomHex: got.out_hex, generationParameters: { cleanup: got.cleanup } }));
+          for (const bad of [{ geomHex: p.hex, generationParameters: { cleanup: { ...got.cleanup, output_sha256: "0" } } },
+            { geomHex: got.out_hex, generationParameters: {} }]) {
+            await c.query("savepoint trig");
+            await assert.rejects(c.query(renderTriggerRehearsal(bad)), (e) => e.code === "23514");
+            await c.query("rollback to savepoint trig");
+          }
+        }
+        await c.query("savepoint missing");
+        await assert.rejects(c.query(renderWrapperRehearsal({ rawHex: neuberg.hex, placeId: "00000000-0000-0000-0000-000000000000" })),
+          (e) => e.code === "23503");
+        await c.query("rollback to savepoint missing");
+      } finally {
+        c.off("notice", onNotice);
+      }
+    });
+
+    await t.test("F4: the core's result columns are exactly the declared types (a SQL function refuses a mismatch)", async () => {
+      const raw = (await c.query("select encode(st_asewkb(st_multi(st_expand(st_setsrid(st_point(2.5, 56.5), 4326), 0.001))), 'hex') h")).rows[0].h;
+      const res = await c.query(CORE_SQL, [raw, null, null, null, JSON.stringify(PARAMS)]);
+      const types = new Map((await c.query("select oid::int oid, format_type(oid, null) t from pg_type where oid = any($1::oid[])",
+        [res.fields.map((f) => f.dataTypeID)])).rows.map((x) => [x.oid, x.t]));
+      const got = res.fields.map((f) => `${f.name} ${types.get(f.dataTypeID)}`);
+      const declared = renderMigrationA().match(/returns table \((clean4 [^)]*)\)/)[1].split(", ")
+        .map((s) => s.replace("extensions.geometry", "geometry"));
+      assert.deepEqual(got, declared);
+    });
+  }, { statementTimeoutMs: 120000 });
 });
