@@ -66,6 +66,15 @@ test("metrics are every core column but the geometry, as JSON scalars", () => {
   assert.equal(Object.keys(m).length, CORE_COLUMNS.length - 1);
 });
 
+test("new overlap counts real ground only; sub-grid slivers (mean width < 0.1 m) are counted apart", () => {
+  // Muscat de Rivesaltes, whole-map dry run 2026-10-04: one 16 m² piece 4 cm wide along its 1,397 km²
+  // overlap with its neighbours, i.e. 1e-6 degree overlay noise, would otherwise trip the promote's
+  // <= 1 m² assertion.
+  assert.ok(CORE_COLUMNS.includes("new_overlap_sliver_m2"));
+  assert.match(CORE_SQL, /filter \(where w >= 0\.1\)[^\n]*new_overlap_m2,/);
+  assert.match(CORE_SQL, /filter \(where w < 0\.1\)[^\n]*new_overlap_sliver_m2,/);
+});
+
 test("batches run deepest tier first, then ascending area, then key", () => {
   const rows = [
     { key: "b", tier: 3, area: 10 }, { key: "a", tier: 4, area: 50 }, { key: "c", tier: 4, area: 5 },

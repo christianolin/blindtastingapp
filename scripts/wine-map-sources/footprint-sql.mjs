@@ -161,7 +161,7 @@ const CORE_OUT = [
   ["clusters", "integer"], ["passthrough_clusters", "integer"], ["dropped_parts", "integer"],
   ["hole_floor_m2", "double precision"], ["crumb_floor_m2", "double precision"],
   ["grown_m2", "double precision"], ["lost_m2", "double precision"],
-  ["raw_overlap_m2", "double precision"], ["new_overlap_m2", "double precision"],
+  ["raw_overlap_m2", "double precision"], ["new_overlap_m2", "double precision"], ["new_overlap_sliver_m2", "double precision"],
   ["outside_parent_raw_m2", "double precision"], ["outside_parent_new_m2", "double precision"],
   ["protected_lost_m2", "double precision"], ["valid", "boolean"],
 ];
@@ -250,7 +250,12 @@ same as (select coalesce(st_area(st_symdifference(st_transform(i.r4, i.srid), st
                  and st_numgeometries(i.r4) = st_numgeometries(out0.g) and st_nrings(i.r4) = st_nrings(out0.g), false) v
            from i, out0, prm, a),
 fin as (select case when same.v then $1::geometry else out0.g end g from same, out0),
-m as (select st_transform(i.r4, i.srid) rm, st_transform(fin.g, i.srid) fm from i, fin)
+m as (select st_transform(i.r4, i.srid) rm, st_transform(fin.g, i.srid) fm from i, fin),
+-- new ground on a non-partner, piece by piece: a piece whose mean width (2A/P) is under 0.1 m is
+-- overlay noise on the 1e-6 degree grid (~0.07-0.11 m), never real ground; it is counted apart
+ov as (select st_area(d.geom::geography) a, coalesce(2 * st_area(d.geom::geography) / nullif(st_perimeter(d.geom::geography), 0), 0) w
+         from g, fin, prm, lateral st_dump(st_collectionextract(st_intersection(st_collectionextract(st_difference(st_reduceprecision(fin.g, prm.grid), g.r4g, prm.grid), 3), g.blk, prm.grid), 3)) d
+        where g.blk is not null)
 select (select g from fin) clean4, (select v from same) unchanged,
   (select round(area::numeric, 2)::float8 from a) area_m2_before, (select round(st_area(fm)::numeric, 2)::float8 from m) area_m2_after,
   (select st_numgeometries(r4) from i) parts_before, (select st_numgeometries(g) from fin) parts_after,
@@ -263,7 +268,8 @@ select (select g from fin) clean4, (select v from same) unchanged,
   (select round(st_area(st_difference(fm, rm))::numeric, 2)::float8 from m) grown_m2,
   (select round(st_area(st_difference(rm, fm))::numeric, 2)::float8 from m) lost_m2,
   (select case when g.blk is null then 0 else round(st_area(st_collectionextract(st_intersection(g.r4g, g.blk, (select grid from prm)), 3)::geography)::numeric, 2)::float8 end from g) raw_overlap_m2,
-  (select case when g.blk is null then 0 else round(st_area(st_collectionextract(st_intersection(st_collectionextract(st_difference(st_reduceprecision(fin.g, (select grid from prm)), g.r4g, (select grid from prm)), 3), g.blk, (select grid from prm)), 3)::geography)::numeric, 2)::float8 end from g, fin) new_overlap_m2,
+  (select coalesce(round(sum(a) filter (where w >= 0.1)::numeric, 2)::float8, 0) from ov) new_overlap_m2,
+  (select coalesce(round(sum(a) filter (where w < 0.1)::numeric, 2)::float8, 0) from ov) new_overlap_sliver_m2,
   (select case when g.par is null then 0 else round(st_area(st_collectionextract(st_difference(g.r4g, g.par, (select grid from prm)), 3)::geography)::numeric, 2)::float8 end from g) outside_parent_raw_m2,
   (select case when g.par is null then 0 else round(st_area(st_collectionextract(st_difference(st_collectionextract(st_difference(st_reduceprecision(fin.g, (select grid from prm)), g.r4g, (select grid from prm)), 3), g.par, (select grid from prm)), 3)::geography)::numeric, 2)::float8 end from g, fin) outside_parent_new_m2,
   (select case when g.prot is null then 0 else round(st_area(st_collectionextract(st_difference(st_collectionextract(st_intersection(g.r4g, g.prot, (select grid from prm)), 3), st_reduceprecision(fin.g, (select grid from prm)), (select grid from prm)), 3)::geography)::numeric, 2)::float8 end from g, fin) protected_lost_m2,
