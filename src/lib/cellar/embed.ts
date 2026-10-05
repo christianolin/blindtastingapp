@@ -13,7 +13,7 @@
 //
 // Pure: type-only `@/` imports plus the pure `wine-title` module, not
 // server-bound, no `next` import.
-import { catalogWineTitle } from "@/lib/wset/wine-title";
+import { DOSAGE_EMBED, catalogWineTitle } from "@/lib/wset/wine-title";
 import type {
   BottleLot,
   BottleRow,
@@ -32,7 +32,8 @@ export const LOT_SELECT =
   "purchased_on, purchase_source, drink_from, drink_to, storage_location, lot_note, created_at, " +
   "catalog_wines(wine_name, vintage_kind, vintage_year, vintage_tawny_years, colour, style, image_url, " +
   "producer:producers(name), appellation:appellations(name), region:regions(name), country:countries(name), " +
-  "primary_grape:grapes!catalog_wines_primary_grape_id_fkey(name), type_designation:type_designations(name))";
+  "primary_grape:grapes!catalog_wines_primary_grape_id_fkey(name), type_designation:type_designations!catalog_wines_type_designation_id_fkey(name), " +
+  `${DOSAGE_EMBED})`;
 
 /** A `(name)` embed: PostgREST returns an object or a one-element array
  *  depending on the client version. */
@@ -52,6 +53,8 @@ export type CatalogEmbed = {
   country: Rel;
   primary_grape: Rel;
   type_designation: Rel;
+  /** Absent from an older payload or a test row: then no dosage is shown. */
+  dosage?: Rel;
 };
 
 export type LotEmbedRow = {
@@ -130,6 +133,7 @@ export function wineFrom(
           vintageYear: c.vintage_year,
           vintageTawnyYears: c.vintage_tawny_years,
           appellationName: appellation,
+          dosageName: relName(c.dosage),
         })
       : "Untitled wine",
     producer,
@@ -141,6 +145,7 @@ export function wineFrom(
     colour: c?.colour ?? null,
     style: c?.style ?? null,
     designation: relName(c?.type_designation),
+    dosage: relName(c?.dosage),
     appellation,
     region: relName(c?.region),
     country: relName(c?.country),

@@ -6,7 +6,7 @@
 import { dayMonthYear } from "../cellar/format";
 import { TRAINING_COPY } from "../training/copy";
 import { scoreWord } from "../wset/note-summary";
-import { catalogWineTitle } from "../wset/wine-title";
+import { DOSAGE_EMBED, catalogWineTitle } from "../wset/wine-title";
 
 /** The fixed strings of the three surfaces (spec §7.2-§7.4). */
 export const SHARED_NOTES_COPY = {
@@ -196,7 +196,7 @@ export const PROFILE_NOTE_SELECT = [
   "id, author_id, catalog_wine_id, context_kind, tasted_on, created_at",
   CONTENT_SELECT,
   "catalog_wine:catalog_wines!inner(wine_name, vintage_kind, vintage_year, vintage_tawny_years, image_url, " +
-    "producer:producers(name), appellation:appellations(name))",
+    `producer:producers(name), appellation:appellations(name), ${DOSAGE_EMBED})`,
   AROMA_EMBED,
 ].join(", ");
 
@@ -225,6 +225,7 @@ export type RawProfileNote = RawSharedNote & {
     image_url: string | null;
     producer: One<{ name: string }>;
     appellation: One<{ name: string }>;
+    dosage?: One<{ name: string }>;
   }>;
 };
 
@@ -308,6 +309,7 @@ export function toProfileNoteRows(raws: readonly RawProfileNote[], held: Readonl
             vintageYear: wine.vintage_year,
             vintageTawnyYears: wine.vintage_tawny_years,
             appellationName: one(wine.appellation)?.name ?? null,
+            dosageName: one(wine.dosage ?? null)?.name ?? null,
           }),
           imageUrl: wine.image_url,
           held: held.has(raw.id),

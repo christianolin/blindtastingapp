@@ -10,6 +10,7 @@ import type {
 } from "@/lib/supabase/database.types";
 import { getTastingLeaderboard } from "@/lib/tasting-leaderboard";
 import { catalogWineTitle } from "@/lib/wset/queries";
+import { DOSAGE_EMBED } from "@/lib/wset/wine-title";
 import { competitorRank, foldOther, wineTypeLabel } from "@/lib/stats-math";
 import type { DistributionItem } from "@/lib/overview-types";
 import type {
@@ -315,6 +316,7 @@ type LotEmbed = {
   appellation: Rel;
   country: Rel;
   primary_grape: Rel;
+  dosage?: Rel;
 };
 type LotRaw = {
   id: string;
@@ -375,6 +377,7 @@ function cellarNumbers(
           vintageYear: oldestLot.cw.vintage_year,
           vintageTawnyYears: oldestLot.cw.vintage_tawny_years,
           appellationName: relName(oldestLot.cw.appellation),
+          dosageName: relName(oldestLot.cw.dosage ?? null),
         }),
         year: oldestLot.year,
       }
@@ -453,7 +456,8 @@ export async function getYourNumbers(
         "id, catalog_wine_id, quantity, purchased_quantity, purchased_on, created_at, " +
           "catalog_wines(colour, style, vintage_kind, vintage_year, wine_name, vintage_tawny_years, producer_id, country_id, " +
           "producer:producers(name), appellation:appellations(name), country:countries(name), " +
-          "primary_grape:grapes!catalog_wines_primary_grape_id_fkey(name))",
+          "primary_grape:grapes!catalog_wines_primary_grape_id_fkey(name), " +
+          `${DOSAGE_EMBED})`,
       )
       .eq("owner_id", userId),
     supabase

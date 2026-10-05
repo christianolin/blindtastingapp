@@ -11,6 +11,7 @@ import { getTastingPlace } from "@/app/tastings/new/place";
 import { getProfileStats } from "@/lib/profile-stats";
 import { getTastingLeaderboard, type LeaderboardRow } from "@/lib/tasting-leaderboard";
 import { catalogWineTitle } from "@/lib/wset/queries";
+import { DOSAGE_EMBED } from "@/lib/wset/wine-title";
 import { competitorRank, foldOther, percent, wineTypeLabel } from "@/lib/stats-math";
 import {
   bannerStage,
@@ -108,6 +109,7 @@ type CatalogEmbed = {
   image_url: string | null;
   producer: Rel;
   appellation: Rel;
+  dosage?: Rel;
 };
 
 function embedTitle(c: CatalogEmbed | null): string {
@@ -119,6 +121,7 @@ function embedTitle(c: CatalogEmbed | null): string {
     vintageYear: c.vintage_year,
     vintageTawnyYears: c.vintage_tawny_years,
     appellationName: relName(c.appellation),
+    dosageName: relName(c.dosage ?? null),
   });
 }
 
@@ -248,7 +251,7 @@ export async function getOverviewData(userId: string): Promise<OverviewData> {
       .select(
         "id, catalog_wine_id, tasted_on, quality_score, context_kind, " +
           "catalog_wines(wine_name, vintage_kind, vintage_year, vintage_tawny_years, image_url, " +
-          "producer:producers(name), appellation:appellations(name))",
+          `producer:producers(name), appellation:appellations(name), ${DOSAGE_EMBED})`,
       )
       .eq("author_id", userId)
       // A hidden-glass note (blind-tasting B8) carries neither identity until
@@ -271,7 +274,7 @@ export async function getOverviewData(userId: string): Promise<OverviewData> {
       .select(
         "id, catalog_wine_id, quantity, storage_location, created_at, " +
           "catalog_wines(wine_name, vintage_kind, vintage_year, vintage_tawny_years, image_url, colour, style, producer_id, country_id, " +
-          "producer:producers(name), appellation:appellations(name), country:countries(name))",
+          `producer:producers(name), appellation:appellations(name), country:countries(name), ${DOSAGE_EMBED})`,
       )
       .eq("owner_id", userId)
       .gt("quantity", 0)

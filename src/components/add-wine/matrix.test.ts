@@ -67,6 +67,8 @@ describe("search and rows", () => {
     expect(m("cellar", true).cellarGroupSubtitle).toBeNull();
     expect(all.map((k) => m(k, true).consumeLabel)).toEqual(["Take it out of the cellar when we pour it", null, "Take a bottle out of the cellar when I save the note", null, "Take it out of the cellar when we pour it"]);
     expect(all.map((k) => m(k, true).cellarSource)).toEqual([true, false, true, false, true]);
+    // Catalog dedupe: the near-match prompt's "use this wine" button.
+    expect(all.map((k) => m(k, true).nearMatchUse)).toEqual(["Add as glass 4", "Add this one to my cellar", "Rate this one", "Use this one", "Use this one"]);
     expect([m("catalog", false).resultCount(3), m("flight", false).resultCount(31), m("flight", false).inFlightMeta]).toEqual(["3 near matches", "31 found", "in flight"]);
   });
 });
@@ -233,7 +235,8 @@ describe("every C.2 cell, for each destination with canScan true and false (spec
   it.each(all.flatMap((k) => [true, false].map((canScan) => [k, canScan] as const)))("%s canScan=%s", (k, canScan) => {
     const x = m(k, canScan);
     // Every SheetMatrix key is read above (row has its own describe below).
-    expect(Object.keys(x).sort()).toEqual([...Object.keys(cells(x)), "row"].sort());
+    // `nearMatchUse` (catalog dedupe) is pinned per destination in "subtitles, consume, cellar source, counts".
+    expect(Object.keys(x).sort()).toEqual([...Object.keys(cells(x)), "row", "nearMatchUse"].sort());
     expect(cells(x)).toEqual(expected[k](canScan));
   });
 });

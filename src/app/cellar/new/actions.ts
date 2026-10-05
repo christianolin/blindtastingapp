@@ -13,6 +13,7 @@ import {
 } from "@/lib/wine-identity/server/write";
 import type { WineIdentityDraft } from "@/lib/wine-identity/types";
 import { catalogWineTitle } from "@/lib/wset/queries";
+import { DOSAGE_EMBED } from "@/lib/wset/wine-title";
 
 export type CellarLotInput = {
   /** Attach the lot to this existing catalog wine. */
@@ -223,7 +224,7 @@ export async function listMyCellarLots(): Promise<CellarLotOption[]> {
     .select(
       "id, catalog_wine_id, bottle_size_ml, quantity, storage_location, " +
         "catalog_wines(wine_name, image_url, vintage_kind, vintage_year, vintage_tawny_years, " +
-        "producer:producers(name), appellation:appellations(name))",
+        `producer:producers(name), appellation:appellations(name), ${DOSAGE_EMBED})`,
     )
     .eq("owner_id", user.id)
     .gt("quantity", 0);
@@ -253,6 +254,7 @@ export async function listMyCellarLots(): Promise<CellarLotOption[]> {
             vintageYear: (cw.vintage_year as number | null) ?? null,
             vintageTawnyYears: (cw.vintage_tawny_years as number | null) ?? null,
             appellationName: relName(cw.appellation),
+            dosageName: relName(cw.dosage),
           })
         : "Untitled wine";
       return {

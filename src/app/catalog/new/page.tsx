@@ -1,43 +1,16 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { OpenSheetOnLoad } from "@/components/add-wine/open-sheet-on-load";
 import { createClient } from "@/lib/supabase/server";
-import { NewWineForm } from "./new-wine-form";
 
-export default async function NewCellarWinePage() {
+// Catalog dedupe (owner, 2026-10-03): this page's own form created catalog wines
+// without the "Already in the catalog?" check, so it now opens the add-wine
+// sheet (catalog destination) over /catalog instead.
+export default async function NewCatalogWinePage() {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const [{ data: countries }, { data: regions }, { data: grapes }, { data: typeDesignations }] =
-    await Promise.all([
-      supabase.from("countries").select("id, name").order("name"),
-      supabase.from("regions").select("id, name, country_id").order("name"),
-      supabase.from("grapes").select("id, name").order("name"),
-      supabase.from("type_designations").select("id, name").eq("is_active", true).order("sort_order"),
-    ]);
-
-  return (
-    <div className="mx-auto flex w-full max-w-lg flex-1 flex-col gap-4 p-6">
-      <Link href="/catalog" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
-        ← Back to catalog
-      </Link>
-      <Card>
-        <CardHeader>
-          <CardTitle>Add a wine</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <NewWineForm
-            countries={countries ?? []}
-            regions={regions ?? []}
-            grapes={grapes ?? []}
-            typeDesignations={typeDesignations ?? []}
-            userId={user.id}
-          />
-        </CardContent>
-      </Card>
-    </div>
-  );
+  return <OpenSheetOnLoad kind="catalog" back="/catalog" backLabel="← Back to catalog" />;
 }

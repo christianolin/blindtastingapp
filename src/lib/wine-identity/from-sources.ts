@@ -12,6 +12,8 @@ export type CatalogWineSource = {
   vintageKind: VintageKind; vintageYear: number | null; vintageTawnyYears: number | null;
   colour: WineColour; style: WineStyle; countryId: string; regionId: string; appellationId: string;
   typeDesignationId: string | null; alcohol: number | null; description: string | null; imageUrl: string | null;
+  /** catalog_wines.dosage_designation_id (20261003101000). */
+  dosageId: string | null;
   grapes: { id: string; name: string; percentage: number | null }[];
 };
 export type AnswerKeySource = {
@@ -20,7 +22,9 @@ export type AnswerKeySource = {
   vintageKind: VintageKind | null; vintageYear: number | null; vintageTawnyYears: number | null;
   imageUrl: string | null;
   primaryGrape: { id: string; name: string }; secondaryGrape: { id: string; name: string } | null;
-  catalog: Pick<CatalogWineSource, "wineName" | "colour" | "style" | "description" | "alcohol" | "grapes"> | null;
+  /** The linked catalog wine's own columns. Its dosage too: an Edit that dropped it would
+      save the glass onto a different wine (the dosage is part of the identity). */
+  catalog: Pick<CatalogWineSource, "wineName" | "colour" | "style" | "description" | "alcohol" | "grapes" | "dosageId"> | null;
 };
 
 function existing(ref: { id: string; name: string }): RefChoice {
@@ -51,6 +55,7 @@ function stamped(draft: WineIdentityDraft, source: FieldProvenance): WineIdentit
     primaryGrape: d.blend.length > 0,
     blend: d.blend.length > 0,
     typeDesignation: filled(d.typeDesignationId),
+    dosage: filled(d.dosageId),
     alcohol: d.alcohol !== null,
     description: d.description !== null,
     imageUrl: filled(d.imageUrl),
@@ -76,6 +81,7 @@ export function draftFromCatalogWine(w: CatalogWineSource): WineIdentityDraft {
     appellationId: w.appellationId,
     blend: blendFrom(w.grapes),
     typeDesignationId: w.typeDesignationId,
+    dosageId: w.dosageId,
     alcohol: w.alcohol,
     description: w.description,
     imageUrl: w.imageUrl,
@@ -100,6 +106,7 @@ export function draftFromAnswerKey(k: AnswerKeySource): WineIdentityDraft {
     appellationId: k.appellationId,
     blend: blendFrom(grapes),
     typeDesignationId: k.typeDesignationId,
+    dosageId: k.catalog?.dosageId ?? null,
     alcohol: k.catalog?.alcohol ?? null,
     description: k.catalog?.description ?? null,
     imageUrl: k.imageUrl,
@@ -123,7 +130,8 @@ const PROVENANCES: Record<FieldProvenance, true> = {
 };
 const PROVENANCE_KEYS: Record<ProvenanceKey, true> = {
   producer: true, vintage: true, colour: true, style: true, country: true, region: true, appellation: true,
-  primaryGrape: true, wineName: true, blend: true, typeDesignation: true, alcohol: true, description: true, imageUrl: true,
+  primaryGrape: true, wineName: true, blend: true, typeDesignation: true, dosage: true, alcohol: true, description: true,
+  imageUrl: true,
 };
 
 function hasOwn(obj: object, key: string): boolean {
@@ -223,6 +231,7 @@ export function parseStoredDraft(json: unknown): WineIdentityDraft | null {
     appellationId: field("appellationId", nullableText),
     blend: field("blend", blend),
     typeDesignationId: field("typeDesignationId", nullableText),
+    dosageId: field("dosageId", nullableText),
     alcohol: field("alcohol", nullableNumber),
     description: field("description", nullableText),
     imageUrl: field("imageUrl", nullableText),

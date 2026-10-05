@@ -4,7 +4,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/database.types";
 
 import { vintageLabel } from "../describe";
-import { pickConfidentMatch, type CatalogCandidate, type CatalogMatch } from "../match";
+import { matchCardTitle, pickConfidentMatch, type CatalogCandidate, type CatalogMatch } from "../match";
 import type { WineIdentityDraft } from "../types";
 
 /** Candidates per producer (spec §B.6), ordered by id, so the read stays bounded. */
@@ -30,7 +30,7 @@ export async function findConfidentMatch(
 
   const { data, error } = await supabase
     .from("catalog_wines")
-    .select("id, wine_name, appellation_id, colour, vintage_kind, vintage_year, vintage_tawny_years")
+    .select("id, wine_name, appellation_id, colour, vintage_kind, vintage_year, vintage_tawny_years, dosage_designation_id")
     .eq("producer_id", producer.id)
     .eq("blind_pending", false)
     // `merged_into` exists (20260829203000_catalog_curation) but not in the
@@ -49,6 +49,7 @@ export async function findConfidentMatch(
     vintageKind: row.vintage_kind,
     vintageYear: row.vintage_year,
     vintageTawnyYears: row.vintage_tawny_years,
+    dosageId: row.dosage_designation_id,
   }));
   const wine = pickConfidentMatch(draft, candidates);
   if (!wine) return null;
@@ -57,21 +58,24 @@ export async function findConfidentMatch(
   return { catalogWineId: wine.id, title, meta };
 }
 
-/** "{appellation name} {vintage}": "Barbaresco DOCG 2018". */
+/** "{appellation name} {vintage}": "Barbaresco DOCG 2018"; a sparkling wine's
+    dosage after it: "Cava DO NV · Demi-Sec" (`matchCardTitle`). */
 async function matchTitle(supabase: SupabaseClient<Database>, wine: CatalogCandidate): Promise<string> {
-  const { data, error } = await supabase
-    .from("appellations")
-    .select("name")
-    .eq("id", wine.appellationId)
-    .maybeSingle();
-  if (error) throw new Error(`catalog match appellation failed: ${error.message}`);
+  const [appellation, dosage] = await Promise.all([
+    supabase.from("appellations").select("name").eq("id", wine.appellationId).maybeSingle(),
+    wine.dosageId
+      ? supabase.from("type_designations").select("name").eq("id", wine.dosageId).maybeSingle()
+      : Promise.resolve({ data: null, error: null }),
+  ]);
+  if (appellation.error) throw new Error(`catalog match appellation failed: ${appellation.error.message}`);
+  if (dosage.error) throw new Error(`catalog match dosage failed: ${dosage.error.message}`);
   const vintage = vintageLabel({
     kind: wine.vintageKind,
     year: wine.vintageYear,
     tawnyYears: wine.vintageTawnyYears,
     read: true,
   });
-  return [data?.name, vintage].filter(Boolean).join(" ");
+  return matchCardTitle(appellation.data?.name ?? null, vintage, dosage.data?.name ?? null);
 }
 
 /** "★ 91 · 14 notes · in 6 cellars", leaving out the parts with nothing to say. */

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Star, Wine, NotebookPen, Trophy } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { catalogWineTitle } from "@/lib/wset/queries";
+import { DOSAGE_EMBED } from "@/lib/wset/wine-title";
 import { NewNoteModal } from "@/components/new-note-modal";
 
 type Row = {
@@ -68,7 +69,8 @@ export function OpenBoard({
               .from("catalog_wines")
               .select(
                 "id, wine_name, vintage_kind, vintage_year, vintage_tawny_years, image_url, " +
-                  "producer:producers(name), appellation:appellations(name)",
+                  "producer:producers(name), appellation:appellations(name), " +
+                  DOSAGE_EMBED,
               )
               .in("id", catalogIds)
           : Promise.resolve({ data: [] }),
@@ -152,6 +154,7 @@ export function OpenBoard({
               vintageTawnyYears: (cat.vintage_tawny_years as number | null) ?? null,
               appellationName:
                 unwrap(cat.appellation as { name: string }[] | null)?.name ?? null,
+              dosageName: unwrap(cat.dosage as { name: string }[] | null)?.name ?? null,
             })
           : "Wine",
         imageUrl: (cat?.image_url as string | null) ?? null,

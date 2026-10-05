@@ -338,3 +338,15 @@ export function regionGrapeChipIds(
       : [...grapeIds];
   return filtered.slice(0, MAX_REGION_GRAPE_CHIPS);
 }
+
+// ---------------------------------------------------------------------------
+// The dosage chip (review, 2026-10-03): a read dosage and a picked one must not
+// look alike, and a sparkling read whose dosage did not land must say so.
+
+/** "read from the label" for a dosage the reader found and nobody changed; "did not
+    read" after a read that found none; otherwise nothing. Never "required": the
+    dosage is optional. */
+export function dosageChip(draft: WineIdentityDraft, ctx: Pick<FieldChipContext, "readAttempted">): string | null {
+  if (draft.dosageId?.trim()) return draft.provenance.dosage === "label" ? READ_FROM_LABEL : null;
+  return ctx.readAttempted ? DID_NOT_READ : null;
+}

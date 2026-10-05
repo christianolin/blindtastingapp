@@ -3770,3 +3770,34 @@ a raw subquery, regardless of which two tables look involved at a glance.
   "Champagne AOP" under Beaujolais (a Fleurie lieu-dit named Champagne),
   deleted as data cleanup. If a user reports a bizarre appellation under
   the wrong region, this artifact pattern is the first suspect.
+- **Catalog duplicates and dosage** (2026-10-03, after a Cava tasting where three
+  people scanned the same bottles into 11 catalog rows for 5 wines; migrations
+  `20261003100000_catalog_near_matches`, `…101000_catalog_dosage`,
+  `…101200_dosage_training_and_search`, `…101500_corpinnat_appellation`,
+  `…102000_cava_duplicates_cleanup`, applied in that order). Before any add
+  would CREATE a catalog wine (every destination, scan or by hand, and a flight
+  glass's Fix/Edit), the add-wine sheet asks "Already in the catalog?" with
+  close matches (accent/case/punctuation-folded name, same or similar producer;
+  vintage, grape, colour, style and dosage shown, not used to hide a match);
+  creating a new wine is a deliberate tap, and "Add it as {vintage}" adds a
+  matched wine's other vintage. Accent-only variants ("Nódal"/"Nodal") resolve
+  to one row automatically, only among rows the caller can already read (never
+  a blind_pending row — rule 1). A new producer is first offered similar
+  producers in the same region ("Did you mean …?"); producer_aliases maps
+  "Marc Esteve Vives" and "Mas Esteve Vinyes" to Forns Raventós. Add-wine
+  search ranks wines the caller's circle (friends and tasting companions, minus
+  anyone with an unrevealed glass in the caller's tastings) added in the last
+  24 h first. **Dosage is its own field** (`catalog_wines.dosage_designation_id`,
+  only the seven "Sparkling Dosage" type_designations rows, only on sparkling
+  wines), part of the identity (a Brut Nature and a Semi-sec stay two wines),
+  read by the label reader with curated local synonyms (Semiseco/Semi-sec →
+  Demi-Sec, Pas dosé/Brut Natur → Brut Nature, …) and never left in the wine
+  name; a trigger moves a dosage saved as a type designation into the field.
+  It is NOT scored: answer keys and guesses were untouched, the guess ladder no
+  longer offers Brut Nature/Extra Brut/Brut/Extra Dry (Sec/Demi-Sec/Doux stay
+  for still wines), and the training room's designation match reads either
+  field. "Corpinnat" is an appellation under Spain/Catalonia with no DO suffix
+  (a collective brand, not a DO). Open owner questions (defaults kept): the
+  Forns Raventós rosé vintage (hand-typed 2023), the Can Feixes cuvée name and
+  third grape, the Nodal grape shares, the Dry/Trocken rule, and that a
+  Brut-only Cava has no scored type designation.

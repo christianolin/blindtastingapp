@@ -1,5 +1,6 @@
 import type { Ref } from "react";
 import type { RevealMode, WineSourceMode } from "@/lib/supabase/database.types";
+import type { NearMatchRow, NearMatches, ProducerSuggestion } from "@/lib/wine-identity/near-match";
 import type { WineFieldKey, WineIdentityDraft } from "@/lib/wine-identity/types";
 import type { SheetMatrix } from "./matrix";
 import type { ByHandReferences } from "./by-hand-actions";
@@ -107,11 +108,15 @@ export type SearchGroups = {
     avgScore: number | null; noteCount: number; inFlight: boolean;
     /** Filled after the RPC so D1's row metas can compare a row with a draft (spec §C.1). */
     producerId: string; wineName: string | null; appellationId: string; vintageLabel: string;
+    /** The sparkling dosage (20261003101000): part of the identity D1 compares. */
+    dosageId?: string | null;
   }[];
   tasted: {
     catalogWineId: string; title: string; imageUrl: string | null;
     myScore: number | null; tastedOn: string;
     producerId: string; wineName: string | null; appellationId: string; vintageLabel: string;
+    /** The sparkling dosage (20261003101000): part of the identity D1 compares. */
+    dosageId?: string | null;
     /** sources-8: tasted rows beyond the catalog RPC's first page carry their own flag. */
     inFlight: boolean;
   }[];
@@ -300,6 +305,22 @@ export type DesktopViewProps = {
       that link navigates. */
   skippedLot?: { lotId: string } | null;
   onSkippedOpen?: () => void;
+};
+
+/** Catalog dedupe (owner, 2026-10-03): "Already in the catalog?", shown by the
+    shell over the view an add that would create a new catalog wine started
+    from (`state.nearMatch`). The view writes nothing; each choice is the adds
+    hook's. `dark` follows the view underneath (the camera's confirm is dark). */
+export type NearMatchViewProps = {
+  matches: NearMatches;
+  matrix: SheetMatrix;
+  dark: boolean;
+  busy: boolean;
+  onUse: (row: NearMatchRow) => void;
+  onAddAsVintage: (row: NearMatchRow) => void;
+  onProducer: (producer: ProducerSuggestion) => void;
+  onNew: () => void;
+  onBack: () => void;
 };
 
 /** A4 (dark): one row per scanned bottle, its copy from `itemRowCopy`. Fix,

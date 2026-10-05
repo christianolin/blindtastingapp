@@ -73,3 +73,16 @@ describe("band and row strings", () => {
     expect(phoneFactsLine(rows[2])).toBe("Riesling · Rheinhessen, Germany");
   });
 });
+
+describe("the dosage in the catalog search (review, 2026-10-03)", () => {
+  const cava = row({
+    producer: "Miquel Pons", name: "Cava DO Demi-Sec NV", title: "Miquel Pons Cava DO Demi-Sec NV",
+    appellation: "Cava DO", region: "Cava", country: "Spain", grapes: ["Macabeo"], dosage: "Demi-Sec",
+  });
+  it("finds a Cava by its dosage and by a local spelling of it", () => {
+    for (const q of ["demi-sec", "Semi-sec", "semiseco", "miquel pons cava do demi-sec"]) {
+      expect(matchesCatalogSearch(cava, q)).toBe(true);
+    }
+    expect(matchesCatalogSearch(cava, "brut nature")).toBe(false);
+  });
+});

@@ -304,6 +304,9 @@ export async function updateCatalogWine(
       secondary_grape_id: wine.secondaryGrapeId,
       producer_id: wine.producerId,
       type_designation_id: wine.typeDesignationId,
+      // Null for a wine that is not sparkling (prepareCompleteWine); the database's
+      // catalog_wines_dosage_rule holds the same rule for every writer.
+      dosage_designation_id: wine.dosageId,
       colour: wine.colour,
       style: wine.style,
       wine_name: wine.wineName,

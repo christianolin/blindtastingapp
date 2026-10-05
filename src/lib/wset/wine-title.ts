@@ -16,6 +16,24 @@ function repeatKey(part: string): string {
   return part.normalize("NFD").replace(COMBINING_MARKS, "").toLowerCase();
 }
 
+// Whether `text` holds `phrase` as whole words, up to accents and case.
+function hasWords(text: string | null, phrase: string): boolean {
+  const words = (s: string) => ` ${repeatKey(s).replace(/[^a-z0-9]+/g, " ").trim()} `;
+  return text !== null && words(phrase).trim() !== "" && words(text).includes(words(phrase));
+}
+
+/** `name` with a sparkling wine's dosage after it ("Cava DO" → "Cava DO Brut
+    Nature"), unless the name already carries it as whole words. */
+export function withDosage(name: string, dosage: string | null | undefined): string {
+  const d = dosage?.trim();
+  return d && !hasWords(name, d) ? `${name} ${d}` : name;
+}
+
+/** The catalog wine embed of the dosage's name, for any `catalog_wines` select
+    that builds a title (`dosageName`). Names its FK: catalog_wines has two to
+    type_designations (PGRST201 otherwise). */
+export const DOSAGE_EMBED = "dosage:type_designations!catalog_wines_dosage_designation_id_fkey(name)";
+
 // Builds a readable title, collapsing a part that repeats an earlier one up to
 // accents and case — a wine whose name is its producer's ("Château Lascombes",
 // or a plain "Chateau Lascombes") renders once, in the first spelling.
@@ -26,12 +44,20 @@ export function catalogWineTitle(wine: {
   vintageYear: number | null;
   vintageTawnyYears: number | null;
   appellationName: string | null;
+  /** A sparkling wine's dosage ("Brut Nature"; 20261003101000), part of its
+      identity: two dosages of one Cava are two wines and must not share a title. */
+  dosageName?: string | null;
 }): string {
   const vintage =
     wine.vintageKind === "YEAR" ? (wine.vintageYear ? String(wine.vintageYear) : null)
     : wine.vintageKind === "TAWNY" ? (wine.vintageTawnyYears ? `${wine.vintageTawnyYears}yo` : "Tawny")
     : "NV";
-  const parts = [wine.producerName, wine.wineName, wine.appellationName, vintage].filter(
+  // The dosage goes before the vintage, as labels and shops write it ("Cava Brut
+  // Nature 2019"), and is left out when the wine name already carries it as whole
+  // words (an older "Brut Yellow Label").
+  const dosage = wine.dosageName?.trim() || null;
+  const dosagePart = dosage && !hasWords(wine.wineName, dosage) ? dosage : null;
+  const parts = [wine.producerName, wine.wineName, wine.appellationName, dosagePart, vintage].filter(
     Boolean,
   ) as string[];
   const seen = new Set<string>();
