@@ -8245,7 +8245,7 @@
   },
   {
     "canonical_key": "france.champagne",
-    "boundary_method": "MANUAL",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "aire-geographique:champagne",
     "normalized_checksum_sha256": "A9D8C8F29C283AD5D80F2C41063AB18967A9EF575EBB7450E41B71A51D2B7E73",
     "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260723T192110Z/champagne/raw-communes.geojson",
@@ -8407,7 +8407,7 @@
   },
   {
     "canonical_key": "france.champagne.cote-des-bar",
-    "boundary_method": "MANUAL",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "aire-subregion:cote-des-bar",
     "normalized_checksum_sha256": "49BAB517ABD14D2D8F2BCB4935483BA741FC42EB1BCD848AAEA8A03B440CDAC7",
     "raw_snapshot_uri": "storage://wine-map-sources/IGN_ADMIN_EXPRESS/20260724T105159Z/champagne-sub/cote-des-bar-raw.geojson",
@@ -28576,7 +28576,7 @@
   },
   {
     "canonical_key": "spain.andalucia",
-    "boundary_method": "MANUAL",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "comunidad:andalucia",
     "normalized_checksum_sha256": "A92D4D651E1770A81A54BC1FA5368B12FB1E9992E2D45A1F7C197D1EB5DD9896",
     "raw_snapshot_uri": "storage://wine-map-sources/IGN_CNIG_SPAIN/20260820T173506Z/comunidad-andalucia/raw-municipios.geojson",
@@ -28594,7 +28594,7 @@
   },
   {
     "canonical_key": "spain.andalucia.granada",
-    "boundary_method": "MANUAL",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "do:granada",
     "normalized_checksum_sha256": "6CA7F970126E7CCB3F84A81D71C76500787E220076CB03BE199F2E114B771B60",
     "raw_snapshot_uri": "storage://wine-map-sources/IGN_CNIG_SPAIN/20260819T213412Z/granada/raw-municipios.geojson",
@@ -28603,7 +28603,7 @@
   },
   {
     "canonical_key": "spain.andalucia.jerez",
-    "boundary_method": "MANUAL",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "do:jerez",
     "normalized_checksum_sha256": "0960D6855F1400007CD328ABF75EA4DA155F49DE72343579BDA9E665C96927F8",
     "raw_snapshot_uri": "storage://wine-map-sources/IGN_CNIG_SPAIN/20260818T232717Z/jerez/raw-municipios.geojson",
@@ -28693,7 +28693,7 @@
   },
   {
     "canonical_key": "spain.baleares",
-    "boundary_method": "MANUAL",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "comunidad:baleares",
     "normalized_checksum_sha256": "6CACFE871ADF887A11C7C7DAA92E56F9D551BD3268B57F7CFF3432F2CB7DCA63",
     "raw_snapshot_uri": "storage://wine-map-sources/IGN_CNIG_SPAIN/20260820T173506Z/comunidad-baleares/raw-municipios.geojson",
@@ -28711,7 +28711,7 @@
   },
   {
     "canonical_key": "spain.baleares.pla-i-llevant",
-    "boundary_method": "MANUAL",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "do:pla-i-llevant",
     "normalized_checksum_sha256": "7DD5C70F1F2DB79BF868A983E6BD6AA90BA41641EF3AC93A5E71D0B28493428C",
     "raw_snapshot_uri": "storage://wine-map-sources/IGN_CNIG_SPAIN/20260819T212540Z/pla-i-llevant/raw-municipios.geojson",
@@ -28927,7 +28927,7 @@
   },
   {
     "canonical_key": "spain.cataluna",
-    "boundary_method": "MANUAL",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "comunidad:cataluna",
     "normalized_checksum_sha256": "292D92C989C2579532F5D2136B91BEE571327CE87C085D5829A95FAB83375070",
     "raw_snapshot_uri": "storage://wine-map-sources/IGN_CNIG_SPAIN/20260820T173506Z/comunidad-cataluna/raw-municipios.geojson",
@@ -28963,7 +28963,7 @@
   },
   {
     "canonical_key": "spain.cataluna.emporda",
-    "boundary_method": "MANUAL",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "do:emporda",
     "normalized_checksum_sha256": "13520A7F897EADD7B279BF8D6B5087478298C6FA5EEAA0C500F46607E2605751",
     "raw_snapshot_uri": "storage://wine-map-sources/IGN_CNIG_SPAIN/20260819T150448Z/emporda/raw-municipios.geojson",
@@ -29044,7 +29044,7 @@
   },
   {
     "canonical_key": "spain.galicia",
-    "boundary_method": "MANUAL",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "comunidad:galicia",
     "normalized_checksum_sha256": "3A5E2B98A7B64506AD474E5B9E76BEF14B3D7F4AFFE40A251F4861B64E61DA35",
     "raw_snapshot_uri": "storage://wine-map-sources/IGN_CNIG_SPAIN/20260820T173506Z/comunidad-galicia/raw-municipios.geojson",
@@ -29062,7 +29062,7 @@
   },
   {
     "canonical_key": "spain.galicia.rias-baixas",
-    "boundary_method": "MANUAL",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "do:rias-baixas",
     "normalized_checksum_sha256": "D33A5B7E4708E6FFE6BE2F2D6780AC1F13175576B65FB7CCEA12DDF9B216C46F",
     "raw_snapshot_uri": "storage://wine-map-sources/IGN_CNIG_SPAIN/20260819T210711Z/rias-baixas/raw-municipios.geojson",
@@ -29080,7 +29080,7 @@
   },
   {
     "canonical_key": "spain.galicia.rias-baixas.o-rosal",
-    "boundary_method": "MANUAL",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "do:o-rosal",
     "normalized_checksum_sha256": "062C70B3703673754AA3340BB2F70C15E86F8BB550A3045DA63F0B6AD37DF1F5",
     "raw_snapshot_uri": "storage://wine-map-sources/IGN_CNIG_SPAIN/20260820T173316Z/o-rosal/raw-municipios.geojson",
@@ -29107,7 +29107,7 @@
   },
   {
     "canonical_key": "spain.galicia.rias-baixas.val-do-salnes",
-    "boundary_method": "MANUAL",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "do:val-do-salnes",
     "normalized_checksum_sha256": "7ADE8D82F59A93BF75D768D357974874A3839F3475FEE614D3F272410A6C8C8E",
     "raw_snapshot_uri": "storage://wine-map-sources/IGN_CNIG_SPAIN/20260820T173316Z/val-do-salnes/raw-municipios.geojson",
@@ -29242,7 +29242,7 @@
   },
   {
     "canonical_key": "spain.pais-vasco",
-    "boundary_method": "MANUAL",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "comunidad:pais-vasco",
     "normalized_checksum_sha256": "53E42CCA3F8E7C0BD11223DF99A2BF5A590D56658E283D423213D4AA91DE43D3",
     "raw_snapshot_uri": "storage://wine-map-sources/IGN_CNIG_SPAIN/20260820T173506Z/comunidad-pais-vasco/raw-municipios.geojson",
@@ -29260,7 +29260,7 @@
   },
   {
     "canonical_key": "spain.pais-vasco.bizkaiko",
-    "boundary_method": "MANUAL",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "do:bizkaiko",
     "normalized_checksum_sha256": "997D695B6FD8026603482DCC12209157C8BB2E69BC643A898EF81AC0B0BD815F",
     "raw_snapshot_uri": "storage://wine-map-sources/IGN_CNIG_SPAIN/20260819T212536Z/bizkaiko/raw-municipios.geojson",
@@ -29269,7 +29269,7 @@
   },
   {
     "canonical_key": "spain.pais-vasco.getariako",
-    "boundary_method": "MANUAL",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "do:getariako",
     "normalized_checksum_sha256": "FFC0AEF2634D190DD4D744A3EDDD1793454A862AC1530583B163315A01F3F020",
     "raw_snapshot_uri": "storage://wine-map-sources/IGN_CNIG_SPAIN/20260819T212536Z/getariako/raw-municipios.geojson",
@@ -29278,7 +29278,7 @@
   },
   {
     "canonical_key": "spain.valencia",
-    "boundary_method": "MANUAL",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "comunidad:valencia",
     "normalized_checksum_sha256": "39825D1BFBB60987F45ED547DA4A3A938D01415BC42E6519691D639B32F512D9",
     "raw_snapshot_uri": "storage://wine-map-sources/IGN_CNIG_SPAIN/20260820T173506Z/comunidad-valencia/raw-municipios.geojson",
@@ -29287,7 +29287,7 @@
   },
   {
     "canonical_key": "spain.valencia.alicante",
-    "boundary_method": "MANUAL",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "do:alicante",
     "normalized_checksum_sha256": "54444F9EB278951D6D6F2541B7611FE2641F8087D2EEC331DDA46653F96CB4D9",
     "raw_snapshot_uri": "storage://wine-map-sources/IGN_CNIG_SPAIN/20260912T090003Z/alicante/raw-municipios.geojson",
@@ -29305,7 +29305,7 @@
   },
   {
     "canonical_key": "spain.valencia.valencia",
-    "boundary_method": "MANUAL",
+    "boundary_method": "GENERALIZED_FROM_OFFICIAL_SOURCE",
     "source_feature_id": "do:valencia",
     "normalized_checksum_sha256": "DA82AD769E0DCD1B3B81AD74343B0FB4659D7363ADE12D911E02C6CCE40F2BA6",
     "raw_snapshot_uri": "storage://wine-map-sources/IGN_CNIG_SPAIN/20260819T213802Z/valencia/raw-municipios.geojson",
