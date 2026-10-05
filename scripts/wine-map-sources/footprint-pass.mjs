@@ -470,8 +470,9 @@ async function closureRun() {
     }
   }
   // F2: ground a prior output gave up now blocks every same-tier place after it that could reach it.
-  // Every changed prior output, whatever its lost_m2 says: that metric is rounded to 0.01 m²
-  // and a sub-grid sliver of given-up ground still blocks (cded7a3).
+  // Every changed prior output, its given-up ground exact (LOST_SQL): a gridded difference
+  // collapsed the sub-grid slivers along shared edges, which still block (cded7a3), and missed
+  // the 8 stale seeds of review4.
   await withReadOnly(async (c) => {
     await c.query("set local search_path = public, extensions");
     for (const { place } of order) {

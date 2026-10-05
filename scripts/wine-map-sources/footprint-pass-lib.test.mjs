@@ -197,3 +197,18 @@ test("the report names the code a run was computed by", () => {
     code: { commit: "abc1234", branch: "map-footprints", dirty: [] } }, records: [] });
   assert.match(md, /Code: map-footprints @ abc1234; a full run/);
 });
+
+test("closure F2 measures given-up ground exactly: no grid, no lost_m2 floor (the 8 stale seeds of review4)", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const src = (await readFile(new URL("./footprint-pass.mjs", import.meta.url), "utf8")).replace(/\r\n/g, "\n");
+  const lost = /const LOST_SQL = `([\s\S]*?)`;/.exec(src)[1];
+  // a gridded ST_Difference (gridSize 1e-6) collapsed the sub-grid slivers along each
+  // stale seed's shared edge: empty for 4 of the 8, 57-187 m away for the other 4
+  assert.match(lost, /ST_Difference\(b\.display_geometry, \$2::extensions\.geometry\)/);
+  const reach = /const REACH_SQL = `([\s\S]*?)`;/.exec(src)[1];
+  assert.match(reach, /\$\{REACH_M\}/);
+  assert.doesNotMatch(reach, /geography, 12\)/);
+  const f2 = /\/\/ F2: ground a prior output gave up[\s\S]*?closure start/.exec(src)[0];
+  assert.doesNotMatch(f2, /metrics?.lost_m2/);
+  assert.match(f2, /LOST_SQL/);
+});
