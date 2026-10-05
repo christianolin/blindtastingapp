@@ -2014,8 +2014,11 @@ a raw subquery, regardless of which two tables look involved at a glance.
   owner: "improve the existing polygons where they are messy"; design in the
   footprints scratchpad, `design-final.md`). `scripts/wine-map-sources/footprint-sql.mjs`
   is the one definition (parameters, the pure `CORE_SQL`, context, protected
-  ground, stamp, and the rendered Migration A
-  `20261004090000_wine_footprint_clean.sql`, NOT applied yet);
+  ground, stamp, the frozen Migration A
+  `20261004090000_wine_footprint_clean.sql` and the rendered Migration W
+  `20261005122000_wine_footprint_water.sql`; A is applied live — the
+  pre-water step the German waves are promoted with — and W is NOT applied
+  yet);
   `footprint-cleanup.mjs` is the shared tail every builder uses:
   `geom_raw as (<raw>)`, `${cleanGeomCte({ placeId | placeKey })}`, and
   `${withCleanupStamp(<generation_parameters>)}` (`cleanGeomLateral` /
@@ -2032,9 +2035,10 @@ a raw subquery, regardless of which two tables look involved at a glance.
   Once Migration A is live its trigger refuses any INSERT (or UPDATE OF
   display_geometry) whose `generation_parameters.cleanup.output_sha256` does
   not match the stored geometry, so a builder that skips the helper fails
-  loudly. Until then every wired builder fails with "function
-  public.wine_footprint_clean does not exist": apply Migration A before (or
-  with) merging the call sites. The one-off pass over today's shapes is
+  loudly. Without A every wired builder fails with "function
+  public.wine_footprint_clean does not exist"; with A alone it runs the
+  pre-water step, so apply W before any coastal write (France, Spain, Italy,
+  the USA, Portugal). The one-off pass over today's shapes is
   `footprint-pass.mjs` (`--dry` read-only, `--stage` at a sitting only,
   `--render-sql` for promote/unstage/revert); its staged rows are DRAFT
   `+fp1` revisions, and the promote ends with the neighbour-cache refresh.
@@ -2081,6 +2085,48 @@ a raw subquery, regardless of which two tables look involved at a glance.
   decimals when exact, else shortest round-trip digits, else an `ewkb`
   property every reader takes first (Entre-deux-Mers' output has a vertex at
   longitude -0.0, which GeoJSON writes as 0).
+  (9) **Keep water out** (owner 2026-10-03, "Keep water out (Recommended)":
+  "Never fill across water: gap-closing only bridges land"; the trigger was
+  Porto Ercole's marina, filled between jetties under 20 m apart). Each
+  connected piece of the closing's new ground is left out when it is OPEN
+  (not inside a hole of the raw: an enclosed pond or yard is the place's own
+  and still filled) and COASTAL: within 3 km of the sea, or within 300 m of
+  the outside of the place's national outline (the COUNTRY's stored row,
+  ~150 m shore) while within 15 km of the sea; and within those 15 km a
+  piece that DAMS a basin (borders a hole the closing made) is left out too
+  (we cannot tell a bay from a field there: Long Island's and San Francisco
+  Bay's creeks were dammed 3+ km from the coarse sea). "The sea" is
+  `public.wine_footprint_water`, Natural Earth 1:50m (lakes are land: the
+  Caspian, the Great Lakes, the IJsselmeer too), loaded by **Migration W**
+  (`20261005122000_wine_footprint_water.sql`) from
+  `data/wine-map/footprint-water-ne50m.json` (`build-footprint-water.mjs`,
+  read-only, from the NE copy cached for the USA base). It covers the whole
+  band |lat| <= 57 (europe, usa, then "world" for the rest; probes assert
+  the Black Sea, Azov and Marmara are sea), and the step REFUSES (22023) a
+  place whose box plus 0.25° leaves that band — outside the sea data the
+  rule used to switch itself off with a stamp reading like "no water
+  nearby". No finer water data exists in the repo or the database: inland
+  lakes and rivers are land to this rule, and near the sea a road gap is
+  taken for water too (owner: "a few coastal outlines stay a bit more
+  jagged"). Far from the sea the context carries no water and the step is
+  byte for byte what it was (30 German places recomputed: all equal). Before
+  Migration W, `readContext` (`footprint-cleanup.mjs`) passes the committed
+  pieces as `$4` instead of the table. (10) **Migration A is frozen**
+  (sha256 pinned, `MIGRATION_A_SHA256`): track A applied it live first, and a
+  version already recorded live is never re-run, so the water rule is its
+  own later migration W (needs A; drops A's 5-argument core; replaces the
+  wrapper under the same signature). Apply W before any coastal wave: with A
+  alone a builder's INSERT runs the pre-water step. Nothing trusts the bare wrapper's
+  existence any more: `footprintStepState` compares the live wrapper and
+  7-argument core sources (md5, line ends aside) and the sea rows'
+  `WATER_ROWS_SHA256` with the module; the sitting gate refuses W unrecorded
+  or any mismatch, `cleanFootprint` takes the function only when it matches,
+  every stamp's params must equal the run's for its rung
+  (`assertStampParams`, also per staged row), and params missing a key are
+  refused (22P02/22023), never read as NULL. A run records the sea it used
+  (`_provenance.water`: rows and data-file sha256), `codeRefusals` refuses
+  other rows or another file, and `codeOf`'s
+  dirty scope (`CODE_PATHS`) includes the data file and both migrations.
 - World Wine Map Phase 3A adds the four-axis place model and the France region
   import machinery. Classification facts live as flat columns on `wine_places`
   (`is_appellation`, `appellation_system`, `appellation_level`), legal
