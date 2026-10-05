@@ -2016,7 +2016,7 @@ a raw subquery, regardless of which two tables look involved at a glance.
   is the one definition (parameters, the pure `CORE_SQL`, context, protected
   ground, stamp, the frozen Migration A
   `20261004090000_wine_footprint_clean.sql` and the rendered Migration W
-  `20261004100000_wine_footprint_water.sql`; A is applied live — the
+  `20261005122000_wine_footprint_water.sql`; A is applied live — the
   pre-water step the German waves are promoted with — and W is NOT applied
   yet);
   `footprint-cleanup.mjs` is the shared tail every builder uses:
@@ -2098,7 +2098,7 @@ a raw subquery, regardless of which two tables look involved at a glance.
   Bay's creeks were dammed 3+ km from the coarse sea). "The sea" is
   `public.wine_footprint_water`, Natural Earth 1:50m (lakes are land: the
   Caspian, the Great Lakes, the IJsselmeer too), loaded by **Migration W**
-  (`20261004100000_wine_footprint_water.sql`) from
+  (`20261005122000_wine_footprint_water.sql`) from
   `data/wine-map/footprint-water-ne50m.json` (`build-footprint-water.mjs`,
   read-only, from the NE copy cached for the USA base). It covers the whole
   band |lat| <= 57 (europe, usa, then "world" for the rest; probes assert

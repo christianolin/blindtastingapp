@@ -850,8 +850,8 @@ export const MIGRATION_A_VERSION = "20261004090000";
 export const MIGRATION_A_SHA256 = "4be37028c383168fb05704b930c38637a440887829c0dc44b8317a31bb481cb8";
 
 /** Migration W: the sea, the 7-argument core and the water wrapper (renderMigrationW). Applied after A. */
-export const MIGRATION_W = "supabase/migrations/20261004100000_wine_footprint_water.sql";
-export const MIGRATION_W_VERSION = "20261004100000";
+export const MIGRATION_W = "supabase/migrations/20261005122000_wine_footprint_water.sql";
+export const MIGRATION_W_VERSION = "20261005122000";
 
 const CORE_SIG = "public.wine_footprint_clean_core(extensions.geometry, extensions.geometry, extensions.geometry, extensions.geometry, jsonb, extensions.geometry, extensions.geometry)";
 const CORE_SIG_A = "public.wine_footprint_clean_core(extensions.geometry, extensions.geometry, extensions.geometry, extensions.geometry, jsonb)";

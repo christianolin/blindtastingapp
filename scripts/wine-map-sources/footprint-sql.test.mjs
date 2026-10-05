@@ -142,12 +142,14 @@ test("Migration A is frozen: the pre-water step exactly as 851c21c rendered it (
   assert.match(committed, /errcode = '23514'/);
 });
 
-test("Migration W is rendered from the module (no drift), a NEW version after A and before any promote", async () => {
+test("Migration W is rendered from the module (no drift), a NEW version after A and after every version live when it was written", async () => {
   const committed = (await readFile(MIGRATION_W, "utf8")).replace(/\r\n/g, "\n");
   assert.equal(committed, renderMigrationW());
-  assert.equal(MIGRATION_W_VERSION, "20261004100000");
+  assert.equal(MIGRATION_W_VERSION, "20261005122000");
   assert.ok(MIGRATION_W.startsWith(`supabase/migrations/${MIGRATION_W_VERSION}_`));
-  assert.ok(MIGRATION_W_VERSION > MIGRATION_A_VERSION && MIGRATION_W_VERSION < "20261005090000", "between A and the first wave's promote");
+  // A (20261004090000) and the first German promotes (20261005115558 mittelrhein, 20261005121018 pfalz) were
+  // recorded live before W was written (review 2026-10-05): W replays after them, never before
+  assert.ok(MIGRATION_W_VERSION > MIGRATION_A_VERSION && MIGRATION_W_VERSION > "20261005121018", "after A and every version live when W was written");
   const names = (await readdir("supabase/migrations")).filter((n) => n.startsWith("2026100"));
   assert.ok(names.includes(MIGRATION_W.split("/").pop()) && names.includes(MIGRATION_A.split("/").pop()));
 });

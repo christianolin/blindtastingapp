@@ -20,7 +20,7 @@ test("waves run worst first: Mittelrhein, then the rest of Germany, then the oth
 
 const okFacts = {
   ownerApproval: "owner 2026-10-05: approved previews", migrationVersion: "20261004090000", migrationRecorded: true,
-  waterMigrationVersion: "20261004100000", waterMigrationRecorded: true, stepProblems: [],
+  waterMigrationVersion: "20261005122000", waterMigrationRecorded: true, stepProblems: [],
   functionLive: true, draftBoundaries: 0, buildingReleases: 0, priorPromote: null, priorPromoted: true, staleInputs: 0, changed: 3,
 };
 
@@ -30,7 +30,7 @@ test("the sitting gate passes only with approval, Migrations A and W live, no DR
     draftBoundaries: 2, buildingReleases: 1, priorPromote: "x", priorPromoted: false, staleInputs: 4, changed: 0 });
   assert.equal(refusals.length, 9);
   assert.match(refusals.join("\n"), /owner approval/);
-  assert.match(refusals.join("\n"), /Migration W 20261004100000 \(keep water out\) is not recorded live/);
+  assert.match(refusals.join("\n"), /Migration W 20261005122000 \(keep water out\) is not recorded live/);
   assert.match(refusals.join("\n"), /DRAFT/);
   assert.match(refusals.join("\n"), /BUILDING/);
 });
@@ -47,7 +47,7 @@ test("the sitting gate refuses a live step that is not the module's (review 2026
 test("a run's code includes the sea data file and both migrations (review 2026-10-05)", async () => {
   const { CODE_PATHS } = await import("./footprint-pass-lib.mjs");
   assert.deepEqual([...CODE_PATHS], ["scripts", "data/wine-map/footprint-water-ne50m.json",
-    "supabase/migrations/20261004090000_wine_footprint_clean.sql", "supabase/migrations/20261004100000_wine_footprint_water.sql"]);
+    "supabase/migrations/20261004090000_wine_footprint_clean.sql", "supabase/migrations/20261005122000_wine_footprint_water.sql"]);
   const { readFile } = await import("node:fs/promises");
   const pass = (await readFile(new URL("./footprint-pass.mjs", import.meta.url), "utf8")).replace(/\r\n/g, "\n");
   assert.match(pass, /git\("status", "--porcelain", "--", \.\.\.CODE_PATHS\)/);
