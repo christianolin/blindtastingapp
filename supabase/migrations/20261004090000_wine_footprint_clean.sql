@@ -135,7 +135,7 @@ language plpgsql stable security invoker
 set search_path = public, extensions
 as $fn$
 declare
-  v_params jsonb := coalesce(p_params, $p${"version":"fp-1","gap_m":20,"arm_m":10,"arm_keep_share":0.5,"hole_min_m2":2000,"hole_share":0.001,"hole_max_m2":250000,"crumb_min_m2":1000,"crumb_share":0.005,"crumb_max_m2":5000,"crumb_cap_share":0.02,"noop_share":0.005,"buffer_style":"join=mitre mitre_limit=3","grid_deg":0.000001,"denoise_m":0.01,"grow_max":0.1,"shrink_max":0.03,"near_m":50,"protect_min_m2":1}$p$::jsonb);
+  v_params jsonb := coalesce(p_params, $p${"version":"fp-1","gap_m":20,"arm_m":10,"arm_keep_share":0.5,"hole_min_m2":2000,"hole_share":0.001,"hole_max_m2":250000,"crumb_min_m2":1000,"crumb_share":0.005,"crumb_max_m2":1000,"crumb_cap_share":0.02,"noop_share":0.005,"buffer_style":"join=mitre mitre_limit=3","grid_deg":0.000001,"denoise_m":0.01,"grow_max":0.1,"shrink_max":0.03,"near_m":50,"protect_min_m2":1}$p$::jsonb);
   v_pending jsonb := coalesce(p_pending, '{}'::jsonb);
   v_ctx record;
   v_r record;

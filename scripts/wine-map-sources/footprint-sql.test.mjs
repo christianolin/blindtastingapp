@@ -29,7 +29,8 @@ test("fp-1 parameters are the design's and frozen", () => {
   assert.equal(PARAMS.hole_share, 0.001);
   assert.equal(PARAMS.hole_min_m2, 2000);
   assert.equal(PARAMS.hole_max_m2, 250000);
-  assert.equal(PARAMS.crumb_max_m2, 5000);
+  assert.equal(PARAMS.crumb_min_m2, 1000);
+  assert.equal(PARAMS.crumb_max_m2, 1000, "owner 2026-10-04: keep parcels over 0.1 ha (the cap was 5,000 m²)");
   assert.equal(PARAMS.grid_deg, 0.000001);
   assert.equal(PARAMS.grow_max, 0.1);
   assert.equal(PARAMS.shrink_max, 0.03);
@@ -230,6 +231,20 @@ test("geometry fixtures (read-only, FOOTPRINT_DB=1)", { skip: !DB && "set FOOTPR
       assert.equal(r.dropped_parts, 1);
       const far = await g(MP(sq(0, 0, 100), sq(300, 0, 100)));
       assert.equal((await core(far)).unchanged, true, "two separate 1 ha parcels 200 m apart stay as they are");
+    });
+
+    await t.test("crumb cap 1,000 m² (owner 2026-10-04): a 3,000 m² detached parcel is kept, a 400 m² speck goes", async () => {
+      // a 100 ha place: under the old 5,000 m² cap its floor was clamp(0.5 % x 100 ha, 1,000, 5,000) = 5,000 m²
+      const raw = await g(MP(sq(0, 0, 1000), sq(1500, 0, 60, 50), sq(1500, 600, 20)));
+      const r = await core(raw);
+      assert.equal(r.crumb_floor_m2, 1000);
+      assert.equal(r.parts_before, 3);
+      assert.equal(r.parts_after, 2, "the 3,000 m² parcel 500 m away stays");
+      assert.equal(r.dropped_parts, 1, "only the 400 m² speck is dropped");
+      assert.ok(r.lost_m2 > 350 && r.lost_m2 < 450, `lost ${r.lost_m2}`);
+      const old = await core(raw, { params: { ...PARAMS, crumb_max_m2: 5000 } });
+      assert.equal(old.crumb_floor_m2, 5000);
+      assert.equal(old.parts_after, 1, "the 5,000 m² cap dropped it");
     });
 
     await t.test("blockers: closing never grows onto a non-partner; a legal partner is not a blocker", async () => {

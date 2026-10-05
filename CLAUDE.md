@@ -2023,7 +2023,8 @@ a raw subquery, regardless of which two tables look involved at a glance.
   parts within 20 m are closed into blocks (10 m mitre closing, never losing
   raw ground), arms under 10 m opened (kept whole if that would gut or split
   the part), holes under clamp(0.1 %·A, 2,000 m², 25 ha) filled, crumbs under
-  clamp(0.5 %·A, 1,000-5,000 m²) dropped after the constraint; never new
+  1,000 m² dropped after the constraint (owner 2026-10-04: "keep parcels
+  over 0.1 ha"; a 5,000 m² cap dropped 636 real Einzellage parcels); never new
   ground on a same-tier place without a DUAL_LABEL/OVERLAPS/REPLACES_WITHIN
   edge, none outside the containment parent, no descendant ground lost;
   every overlay on the 1e-6° grid; a place the rule leaves alone comes back

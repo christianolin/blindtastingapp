@@ -22,7 +22,11 @@
 //   round-trip to its recorded sha256, else it is recomputed). Starts from
 //   --keys plus the prior run's re-derived parents plus every place whose cleaned
 //   reach (12 m, or inside its outer rings) touches ground a neighbour's prior
-//   cleanup gave up; a recomputed place whose output moved adds the same-tier
+//   cleanup gave up, plus (when the prior run's parameters differ: only the crumb
+//   bounds may, footprint-pass-lib.mjs paramReach) every place whose crumb floor
+//   moves; a seeded record then carries the new parameters in its stamp and a
+//   "carried" note (its floor, hence its output and stamp, is the same under both);
+//   a recomputed place whose output moved adds the same-tier
 //   places after it its change can reach, and its ancestors that lost ground.
 //   Writes the merged review files (prior records, recomputed ones replaced),
 //   the recomputed GeoJSON (deleting a stale one), the report, and closure.json.
@@ -64,7 +68,7 @@ import {
   orderBatch,
 } from "./footprint-cleanup.mjs";
 import {
-  REVISION_SUFFIX, areaDelta, flagsOf, inScope, rejectPath, renderPromoteSql, renderRejectReleaseSql, renderReport,
+  REVISION_SUFFIX, areaDelta, flagsOf, inScope, paramReach, rejectPath, renderPromoteSql, renderRejectReleaseSql, renderReport,
   renderRevertSql, renderUnstageSql, renderedPaths, revealDiff, sittingGate, wavesFor,
 } from "./footprint-pass-lib.mjs";
 
@@ -312,10 +316,14 @@ select p.canonical_key k
 
 async function readPrior(dir) {
   const prior = new Map();
+  let params = null;
   for (const name of (await readdir(dir)).filter((n) => n.startsWith("footprints-") && n.endsWith(".json"))) {
-    for (const rec of JSON.parse(await readFile(path.join(dir, name), "utf8")).places) prior.set(rec.key, rec);
+    const file = JSON.parse(await readFile(path.join(dir, name), "utf8"));
+    assert.ok(!params || JSON.stringify(params) === JSON.stringify(file._provenance.params), `${name}: the prior run's files disagree on params`);
+    params = file._provenance.params;
+    for (const rec of file.places) prior.set(rec.key, rec);
   }
-  return prior;
+  return { prior, params };
 }
 
 async function closureRun() {
@@ -327,7 +335,8 @@ async function closureRun() {
   await mkdir(geojsonDir, { recursive: true });
   await mkdir(reviewDir, { recursive: true });
   const t0 = Date.now();
-  const prior = await readPrior(priorDir);
+  const { prior, params: priorParams } = await readPrior(priorDir);
+  const paramsChanged = JSON.stringify(priorParams) !== JSON.stringify(PARAMS);
   const { catalogue, versions, via } = await loadCatalogue(timeoutMs);
   const order = globalOrder(catalogue, wavesFor("all"));
   const index = new Map(order.map((o, i) => [o.place.key, i]));
@@ -350,6 +359,10 @@ async function closureRun() {
     if (!p) add(place.key, "no prior record");
     else if (p.rederived) add(place.key, "re-derived before (F1/F7)");
     else if (String(p.status).startsWith("error")) add(place.key, "prior error");
+    else if (paramsChanged) {
+      const r = paramReach(priorParams, PARAMS, p.metrics);
+      if (r.to !== r.from) add(place.key, `crumb floor ${r.from ?? "?"} -> ${r.to ?? "?"} m²`);
+    }
   }
   // F2: ground a prior output gave up now blocks every same-tier place after it that could reach it
   await withReadOnly(async (c) => {
@@ -443,7 +456,17 @@ async function closureRun() {
   const perWave = new Map();
   const all = [];
   for (const { place, wave } of order) {
-    const rec = records.get(place.key) ?? prior.get(place.key);
+    let rec = records.get(place.key);
+    if (!rec && prior.has(place.key)) {
+      rec = prior.get(place.key);
+      if (paramsChanged) {
+        // not reached: its crumb floor is the same under both parameter sets (paramReach),
+        // and so are its input and neighbours, so the step returns the same output and stamp
+        const floor = paramReach(priorParams, PARAMS, rec.metrics);
+        rec = { ...rec, carried: { from: priorDir, crumb_floor_m2: floor.to, note: "seeded: same crumb floor under both parameter sets" } };
+        if (rec.stamp) rec.stamp = { ...rec.stamp, params: PARAMS };
+      }
+    }
     if (!rec) continue;
     if (!perWave.has(wave)) perWave.set(wave, []);
     perWave.get(wave).push(rec);
@@ -452,7 +475,9 @@ async function closureRun() {
   const provenance = {
     generated_at: new Date().toISOString(), version: FOOTPRINT_VERSION, params: PARAMS, via,
     postgis: versions.postgis, geos: versions.geos, waves: [...perWave.keys()], elapsed_s: Math.round((Date.now() - t0) / 1000),
-    closure: { from: priorDir, computed: records.size, moved: moved.length },
+    closure: { from: priorDir, computed: records.size, moved: moved.length,
+      params_changed: paramsChanged ? Object.keys(PARAMS).filter((k) => JSON.stringify(priorParams[k]) !== JSON.stringify(PARAMS[k]))
+        .map((k) => ({ param: k, from: priorParams[k], to: PARAMS[k] })) : [] },
   };
   await writeOutputs({ reviewDir, perWave, provenance, reportPath, records: all });
   const closurePath = path.join(reviewDir, "closure.json");
@@ -514,6 +539,8 @@ async function stage() {
   assert.ok(reviewPath, "--stage needs --review <file>");
   const review = JSON.parse(await readFile(reviewPath, "utf8"));
   assert.equal(review._provenance.version, FOOTPRINT_VERSION, "review file of another version");
+  // e.g. a review3 file (crumb cap 5,000 m²) against today's 1,000 m² parameters
+  assert.deepEqual(review._provenance.params, PARAMS, "review file computed with other parameters: re-run the dry pass");
   const client = new pg.Client(pgConfig());
   client.on("notice", (n) => console.log(n.message));
   await client.connect();

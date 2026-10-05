@@ -40,7 +40,10 @@ export const PARAMS = Object.freeze({
   hole_max_m2: 250000,
   crumb_min_m2: 1000,    // parts below clamp(crumb_share x A, crumb_min, crumb_max) are dropped
   crumb_share: 0.005,    //   (never the largest, never one holding a descendant's ground,
-  crumb_max_m2: 5000,    //    none at all if together they exceed crumb_cap_share of A)
+  crumb_max_m2: 1000,    //    none at all if together they exceed crumb_cap_share of A). Owner
+                         //    2026-10-04, "Keep parcels over 0.1 ha" (5,000 m² dropped 636 real
+                         //    parcels in 285 Einzellagen): with min = max the floor is 1,000 m²
+                         //    for every place, so every part of 0.1 ha or more survives.
   crumb_cap_share: 0.02,
   noop_share: 0.005,     // moved < 0.5 % with the same parts and holes: the input comes back byte for byte
   buffer_style: "join=mitre mitre_limit=3",

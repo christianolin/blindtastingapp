@@ -3,7 +3,7 @@ import test from "node:test";
 import {
   BUILDING_WINDOW, REVISION_SUFFIX, ROLLBACK_RUNNER, WAVES, flagsOf, inScope, rejectPath, renderPromoteSql,
   renderRejectReleaseSql, renderReport, renderRevertSql, renderUnstageSql, renderedPaths, revealDiff, revealOf,
-  sittingGate, summarize, waveOf, wavesFor,
+  approvalLine, paramReach, sittingGate, summarize, waveOf, wavesFor,
 } from "./footprint-pass-lib.mjs";
 
 test("waves run worst first: Mittelrhein, then the rest of Germany, then the other countries", () => {
@@ -140,4 +140,29 @@ test("the rollback files name their runner, and a Gate B rejection marks only a 
     "scripts/wine-map-sources/footprints/footprints_germany_mittelrhein_reject_20261005t101500z.sql");
   assert.throws(() => rejectPath("germany.mittelrhein", "latest"), /not a release version/);
   assert.throws(() => renderRejectReleaseSql(review, "x'; drop table y; --"), /not a release version/);
+});
+
+test("closure re-run after the crumb cap change (5,000 -> 1,000 m², owner 2026-10-04): which places it reaches", () => {
+  const was = { version: "fp-1", crumb_min_m2: 1000, crumb_share: 0.005, crumb_max_m2: 5000 };
+  const now = { ...was, crumb_max_m2: 1000 };
+  assert.equal(paramReach(was, was, { crumb_floor_m2: 3000 }), null, "same parameters: nothing to follow");
+  assert.deepEqual(paramReach(was, now, { crumb_floor_m2: 5000 }), { from: 5000, to: 1000 });
+  assert.deepEqual(paramReach(was, now, { crumb_floor_m2: 2603.4 }), { from: 2603.4, to: 1000 });
+  assert.deepEqual(paramReach(was, now, { crumb_floor_m2: 1000 }), { from: 1000, to: 1000 }, "a small place's floor was 1,000 already: seeded");
+  assert.deepEqual(paramReach(was, now, {}), { from: null, to: null }, "no prior floor: recomputed");
+  // raising a bound past a clamped floor cannot be told from the record
+  assert.deepEqual(paramReach(was, { ...was, crumb_max_m2: 8000 }, { crumb_floor_m2: 5000 }), { from: 5000, to: null });
+  assert.deepEqual(paramReach(was, { ...was, crumb_max_m2: 8000 }, { crumb_floor_m2: 3000 }), { from: 3000, to: 3000 });
+  assert.deepEqual(paramReach(now, was, { crumb_floor_m2: 1000 }), { from: 1000, to: null }, "back to 5,000 from a constant floor: recomputed");
+  assert.throws(() => paramReach(was, { ...was, gap_m: 25 }, { crumb_floor_m2: 1000 }), /full --dry/);
+});
+
+test("the promote's approval comment stays on one line", () => {
+  const NL = String.fromCharCode(10);
+  const CR = String.fromCharCode(13);
+  assert.equal(approvalLine(null), "(none)");
+  assert.equal(approvalLine(`a${NL}b`), "a b");
+  assert.equal(approvalLine({ text: `owner: "Yes, go ahead"${CR}${NL}--x` }), 'owner: "Yes, go ahead" --x');
+  const sql = renderPromoteSql({ ...review, _provenance: { ...review._provenance, owner_approval: { text: `ok${NL}drop table x;` } } });
+  assert.ok(!sql.includes(`${NL}drop table x;`));
 });

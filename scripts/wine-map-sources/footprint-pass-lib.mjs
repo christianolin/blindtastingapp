@@ -31,6 +31,43 @@ export function countryOf(key) {
   return key.split(".")[0];
 }
 
+/** The parameters a closure re-run can follow from a prior run: the crumb bounds only. */
+export const CLOSURE_PARAMS = Object.freeze(["crumb_min_m2", "crumb_max_m2"]);
+
+/**
+ * What a parameter change does to one place, from its prior record (closure re-run).
+ * The crumb floor is clamp(crumb_share x A, crumb_min, crumb_max), and the floor is
+ * the only way those two parameters enter the step: the prior floor tells where
+ * crumb_share x A sat (exactly when strictly inside the prior bounds, only "at or
+ * beyond" when on a bound). Returns null when no parameter differs, else
+ * { from, to }: to is the new floor, or null when the record cannot tell it (the
+ * place is recomputed). The place's output can differ only when to !== from.
+ * Throws when any other parameter changed: that needs a full --dry run.
+ */
+export function paramReach(priorParams, params, metrics) {
+  const changed = Object.keys({ ...priorParams, ...params })
+    .filter((k) => JSON.stringify(priorParams?.[k]) !== JSON.stringify(params[k]));
+  if (!changed.length) return null;
+  const other = changed.filter((k) => !CLOSURE_PARAMS.includes(k));
+  if (other.length) throw new Error(`a closure re-run follows only ${CLOSURE_PARAMS.join(", ")}; ${other.join(", ")} changed: run a full --dry`);
+  const from = Number(metrics?.crumb_floor_m2);
+  if (metrics?.crumb_floor_m2 == null || !Number.isFinite(from)) return { from: null, to: null };
+  const [lo, hi, nlo, nhi] = [priorParams.crumb_min_m2, priorParams.crumb_max_m2, params.crumb_min_m2, params.crumb_max_m2].map(Number);
+  const clamp = (x) => Math.min(Math.max(x, nlo), nhi);
+  let to = null;
+  if (from > lo && from < hi) to = clamp(from); // crumb_share x A = from
+  else if (lo < hi && from === hi) to = nhi <= hi ? clamp(hi) : null; // crumb_share x A >= hi
+  else if (lo < hi && from === lo) to = nlo >= lo ? clamp(lo) : null; // crumb_share x A <= lo
+  else if (nlo === nhi) to = nlo; // the new floor is one value for every place
+  return { from, to };
+}
+
+/** The owner approval as one line for a SQL comment (a string, or { text, ... }): a line break would end the comment. */
+export function approvalLine(a) {
+  if (!a) return "(none)";
+  return String(typeof a === "string" ? a : a.text ?? JSON.stringify(a)).replace(/[\r\n\u2028\u2029]+/g, " ");
+}
+
 /** Sitting gate for --stage (built like usa-stage-lib's sittingGate). Returns the refusals. */
 export function sittingGate(f) {
   const r = [];
@@ -192,7 +229,7 @@ function expectations(review) {
 function header(kind, review, runner = null) {
   return `-- Footprint cleanup ${FOOTPRINT_VERSION}, wave ${review._provenance.wave}: ${kind}.
 -- RENDERED by scripts/wine-map-sources/footprint-pass.mjs --render-sql from the
--- approved review file — do not hand-edit. Approval: ${review._provenance.owner_approval ?? "(none)"}.
+-- approved review file — do not hand-edit. Approval: ${approvalLine(review._provenance.owner_approval)}.
 ${runner ? `-- Run with ${runner}\n` : ""}`;
 }
 
