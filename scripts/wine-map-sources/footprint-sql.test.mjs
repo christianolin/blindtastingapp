@@ -12,8 +12,9 @@ import assert from "node:assert/strict";
 import { readFile, readdir } from "node:fs/promises";
 import test from "node:test";
 import {
-  CONTEXT_SQL, CORE_COLUMNS, CORE_SQL, FOOTPRINT_VERSION, MIGRATION_A, PARAMS, independentFailuresSql, ladderReason, metricsOf,
-  renderMigrationA, renderTriggerRehearsal, renderWrapperRehearsal, rungs,
+  CONTEXT_SQL, CORE_COLUMNS, CORE_SQL, FOOTPRINT_VERSION, MIGRATION_A, PARAMS, WATER_DOC, WATER_ROWS, WATER_ROWS_PARAM, WATER_TABLE,
+  contextSql, independentFailuresSql, ladderReason, metricsOf, renderMigrationA, renderTriggerRehearsal, renderWrapperRehearsal, rungs,
+  waterRowsNear,
 } from "./footprint-sql.mjs";
 import {
   bboxesMeet, cleanGeomCte, createPending, generationAfterCleanup, methodAfterCleanup, methodAfterCleanupSql,
@@ -139,7 +140,37 @@ test("Migration A locks EXECUTE to the owner and refuses unstamped writes", () =
   assert.match(sql, /errcode = '23514'/);
   assert.match(sql, /footprint-cleanup\.mjs/);
   assert.ok(sql.includes(CORE_SQL), "the core function body is CORE_SQL verbatim");
-  assert.doesNotMatch(sql, /\binsert into\b|\bdelete from\b|\bupdate public\.wine/i, "Migration A changes no data");
+  // it changes no existing data: its only writes load its own new sea table
+  const writes = sql.split("\n").filter((l) => /\binsert into\b|\bdelete from\b|\bupdate public\.|\btruncate\b/i.test(l));
+  assert.equal(writes.length, WATER_ROWS.length);
+  for (const l of writes) {
+    assert.match(l, /^insert into public\.wine_footprint_water \(id, aoi, geom\) values \(\d+, '(europe|usa)', '[0-9a-f]+'::extensions\.geometry\) on conflict \(id\) do update set aoi = excluded\.aoi, geom = excluded\.geom;$/);
+  }
+  assert.match(sql, /revoke all on table public\.wine_footprint_water from public, anon, authenticated, service_role;/);
+  assert.match(sql, /alter table public\.wine_footprint_water enable row level security;/);
+});
+
+test("keep water out: the parameters, the sea pieces and the context", () => {
+  assert.equal(PARAMS.water_reach_m, 3000);
+  assert.equal(PARAMS.coast_reach_m, 300);
+  assert.equal(PARAMS.coast_band_m, 15000);
+  assert.equal(WATER_DOC._provenance.ne_commit, "ca96624a56bd078437bca8184e78163e5039ad19");
+  assert.ok(WATER_ROWS.length > 50, "the sea pieces are committed");
+  assert.deepEqual(WATER_ROWS.map((r) => r.id), WATER_ROWS.map((_, k) => k + 1));
+  for (const r of WATER_ROWS) assert.match(r.hex, /^0103000020e6100000/, "a 2D SRID-4326 polygon (the column type)");
+  // Porto Ercole (Maremma) has sea near it; the Pfalz has none (no German place gets water in its context)
+  assert.ok(waterRowsNear([11.19, 42.37, 11.22, 42.40]).length > 0);
+  assert.equal(waterRowsNear([7.9, 49.1, 8.1, 49.3]).length, 0);
+  assert.ok(CONTEXT_SQL.includes("from (select w.geom g from public.wine_footprint_water w) w"));
+  assert.ok(contextSql({ waterRows: WATER_ROWS_PARAM }).includes("jsonb_array_elements_text($4::jsonb)"));
+  assert.equal(WATER_TABLE, "public.wine_footprint_water");
+  // the rule: open pieces of the closing that are coastal, or dam a basin within the sea band, are left out
+  assert.ok(CORE_SQL.includes("st_dwithin(f.geom, w.sea, prm.wr)"));
+  assert.ok(CORE_SQL.includes("st_dwithin(f.geom, w.outc, prm.cr) and st_dwithin(f.geom, w.sea, prm.cb)"));
+  assert.ok(CORE_SQL.includes("(coalesce(st_dwithin(f.geom, nh.h, 0.01), false) and st_dwithin(f.geom, w.sea, prm.cb))"));
+  assert.equal((CORE_SQL.match(/where w\.sea is not null and st_dwithin\(c\.g, w\.sea, prm\.cb\)/g) ?? []).length, 3,
+    "every keep-water-out lateral is empty far from the sea");
+  assert.ok(CORE_SQL.includes("case when not coalesce(bool_or(z.wet), false) then clo0.g"), "no wet piece: the closing exactly as before");
 });
 
 // Every INSERT into wine_place_boundaries in the pipeline goes through the step.
@@ -181,8 +212,8 @@ test("geometry fixtures (read-only, FOOTPRINT_DB=1)", { skip: !DB && "set FOOTPR
     const g = async (wkt) => (await c.query(
       // on the 6-decimal grid, as stored boundaries are
       "select encode(st_asewkb(st_multi(st_reduceprecision(st_transform(st_setsrid(st_geomfromtext($1), 32632), 4326), 0.000001))), 'hex') h", [wkt])).rows[0].h;
-    const core = async (raw, { blk = null, par = null, prot = null, params = PARAMS } = {}) =>
-      (await c.query(CORE_SQL, [raw, blk, par, prot, JSON.stringify(params)])).rows[0];
+    const core = async (raw, { blk = null, par = null, prot = null, params = PARAMS, sea = null, outside = null } = {}) =>
+      (await c.query(CORE_SQL, [raw, blk, par, prot, JSON.stringify(params), sea, outside])).rows[0];
     const hexOf = async (geom) => (await c.query("select encode(st_asewkb($1::geometry), 'hex') h", [geom])).rows[0].h;
     const area = async (geom) => Number((await c.query("select st_area(st_transform($1::geometry, 32632)) a", [geom])).rows[0].a);
     const delta = (r) => r.area_m2_after / r.area_m2_before - 1;
@@ -278,6 +309,78 @@ test("geometry fixtures (read-only, FOOTPRINT_DB=1)", { skip: !DB && "set FOOTPR
       assert.equal(r.protected_lost_m2, 0);
     });
 
+    // keep water out (owner 2026-10-03, "Keep water out (Recommended)"). The sea and the outside of the
+    // national outline are gates only, so a coarse sea polygon that overlaps the land (as 1:50m does) is fine.
+    const overlap = async (geom, region) => Number((await c.query(
+      "select coalesce(st_area(st_intersection(st_transform($1::geometry, 32632), st_transform($2::geometry, 32632))), 0) a", [geom, region])).rows[0].a);
+
+    await t.test("keep water out: a marina between jetties 15 m apart stays open to the sea", async () => {
+      // a quay with four 12 m jetties (too wide to be opened as arms) and three 15 m x 100 m basins
+      const raw = await g(MP(sq(0, 0, 300, 100), sq(0, 100, 12, 100), sq(27, 100, 12, 100), sq(54, 100, 12, 100), sq(81, 100, 12, 100)));
+      const basins = await g(MP(sq(12, 100, 15, 100), sq(39, 100, 15, 100), sq(66, 100, 15, 100)));
+      const sea = await g(MP(sq(-1000, 100, 3000, 2000)));
+      const dry = await core(raw);
+      assert.ok(await overlap(dry.clean4, basins) > 4400, "without the sea the closing fills the basins (the Porto Ercole fault)");
+      assert.equal(dry.water_pieces, 0);
+      const wet = await core(raw, { sea });
+      assert.ok(await overlap(wet.clean4, basins) < 1, `basin water filled: ${await overlap(wet.clean4, basins)} m²`);
+      assert.ok(wet.water_pieces >= 1 && wet.water_left_m2 > 4400, `water left ${wet.water_left_m2} m² in ${wet.water_pieces}`);
+      assert.equal(wet.unchanged, true, "nothing else to clean: the input comes back byte for byte");
+      assert.equal(await hexOf(wet.clean4), raw);
+    });
+
+    await t.test("keep water out: a road gap between two parcels still closes inland; near the sea it stays open", async () => {
+      const raw = await g(MP(sq(0, 0, 100), sq(108, 0, 100)));
+      const inland = await core(raw);
+      assert.equal(inland.parts_after, 1, "the 8 m road closes");
+      const far = await core(raw, { sea: await g(MP(sq(0, 5100, 1000))) });
+      assert.equal(await hexOf(far.clean4), await hexOf(inland.clean4), "sea 5 km away: byte for byte as with no sea");
+      assert.equal(far.water_pieces, 0);
+      const coast = await core(raw, { sea: await g(MP(sq(0, 1100, 1000))) });
+      assert.equal(coast.parts_after, 2, "1 km from the 1:50m sea the gap is taken for water: the accepted cost");
+      assert.ok(coast.water_pieces >= 1);
+    });
+
+    await t.test("keep water out: the national outline's shore gates within the sea band only", async () => {
+      const raw = await g(MP(sq(0, 0, 100), sq(108, 0, 100)));
+      const sea = await g(MP(sq(0, 8200, 1000))); // 8 km away: beyond water_reach_m, inside coast_band_m
+      const shore = await core(raw, { sea, outside: await g(MP(sq(-1000, 150, 3000, 500))) });
+      assert.equal(shore.parts_after, 2, "50 m from outside the outline: coastal");
+      const inland = await core(raw, { sea, outside: await g(MP(sq(-1000, 1100, 3000, 500))) });
+      assert.equal(inland.parts_after, 1, "1 km from it: land, the gap closes");
+      const noSea = await core(raw, { outside: await g(MP(sq(-1000, 150, 3000, 500))) });
+      assert.equal(noSea.parts_after, 1, "no sea within the band (a land border, an inland lake): no gate");
+    });
+
+    await t.test("keep water out: within the sea band the closing never dams a bay into a hole", async () => {
+      // a 60 m x 60 m bay behind a 15 m mouth (Long Island's creeks): beyond both reaches, inside the band
+      const raw = await g(MP(sq(0, 0, 160, 50), sq(0, 50, 50, 100), sq(110, 50, 50, 100), sq(0, 150, 50, 30), sq(65, 150, 95, 30)));
+      const bay = await g(MP(sq(50, 50, 60, 100)));
+      const inland = await core(raw);
+      assert.equal(inland.holes_after, 1, "inland the 15 m mouth closes and the bay becomes a hole (as before)");
+      const band = await core(raw, { sea: await g(MP(sq(0, 8200, 1000))) });
+      assert.equal(band.holes_after, 0, "8 km from the sea: the mouth stays open");
+      assert.ok(band.water_pieces >= 1);
+      assert.ok(await overlap(band.clean4, bay) < 1);
+      const far = await core(raw, { sea: await g(MP(sq(0, 20300, 1000))) });
+      assert.equal(await hexOf(far.clean4), await hexOf(inland.clean4), "beyond the band: exactly as before");
+    });
+
+    await t.test("keep water out: an inland lake edge closes as before; an enclosed hole by the sea is filled", async () => {
+      // two prongs 15 m apart around a lake inlet (no water data for lakes: they are land to the rule)
+      const raw = await g(MP(sq(0, 0, 215, 100), sq(0, 100, 100, 200), sq(115, 100, 100, 200)));
+      const inlet = await g(MP(sq(100, 100, 15, 200)));
+      const none = await core(raw);
+      assert.ok(await overlap(none.clean4, inlet) > 2900, "the 15 m inlet closes");
+      const far = await core(raw, { sea: await g(MP(sq(0, 20300, 1000))) });
+      assert.equal(await hexOf(far.clean4), await hexOf(none.clean4), "sea 20 km away: exactly as before");
+      // a 20 m hole (a pond, a yard) in ground right on the shore is the place's own: still filled
+      const pond = await g(MP(holed(sq(0, 0, 400), ring(50, 50, 20))));
+      const shore = await core(pond, { sea: await g(MP(sq(-1000, 400, 3000, 1000))) });
+      assert.equal(shore.holes_after, 0);
+      assert.equal(shore.water_pieces, 0);
+    });
+
     await t.test("idempotent: cleaning the output again changes nothing", async () => {
       const raw = await g(MP(sq(0, 0, 100), sq(104, 0, 100), sq(208, 0, 100), holed(sq(0, 300, 300), ring(100, 400, 10))));
       const once = await core(raw);
@@ -322,7 +425,11 @@ test("F4: Migration A qualifies its geometry types; the rehearsals share the wra
   const fnBody = sql.slice(sql.indexOf("as $fn$\ndeclare"), sql.indexOf("$fn$;\n\ncreate or replace function public.wine_place_boundaries_require_cleanup"));
   const rehearsal = renderWrapperRehearsal({ rawHex: "00", placeId: "11111111-1111-1111-1111-111111111111" });
   // every wrapper line but the two core calls and the return appears in the rehearsal, in order
-  const lines = fnBody.split("\n").slice(1).filter((l) => l.trim() && !l.includes("wine_footprint_clean_core(") && !l.includes("return query"));
+  // (the context reads the sea from the table there, from $4 = the committed pieces here)
+  const lines = fnBody.split("\n").slice(1).filter((l) => l.trim() && !l.includes("wine_footprint_clean_core(") && !l.includes("return query")
+    && !l.includes(WATER_TABLE) && !l.includes("into v_ctx using"));
+  assert.ok(rehearsal.includes(WATER_ROWS_PARAM), "the rehearsal's context reads the committed sea pieces");
+  assert.ok(rehearsal.includes("into v_ctx using p_place_id, p_raw, v_pending, p_water;"));
   let at = 0;
   for (const l of lines) {
     const i = rehearsal.indexOf(l, at);
@@ -353,7 +460,7 @@ test("F3: the multi-place Germany builders run the batch guard (raws pending, in
 const MECK = "germany.pfalz.mittelhaardt-dt-weinstrasse.hofstueck.meckenheim-";
 test("review fixes against live shapes (read-only, FOOTPRINT_DB=1)", { skip: !DB && "set FOOTPRINT_DB=1" }, async (t) => {
   const { withReadOnly } = await import("./read-only-client.mjs");
-  const { cleanFootprint } = await import("./footprint-cleanup.mjs");
+  const { cleanFootprint, readContext } = await import("./footprint-cleanup.mjs");
   await withReadOnly(async (c) => {
     await c.query("set local search_path = public, extensions");
     const place = async (key) => (await c.query(
@@ -367,20 +474,22 @@ test("review fixes against live shapes (read-only, FOOTPRINT_DB=1)", { skip: !DB
     await t.test("F2: a pending neighbour still blocks with its stored row", async () => {
       // Spielberg pending as a tiny square: its whole stored row must still be in Neuberg's blockers
       const tiny = (await c.query("select encode(st_asewkb(st_multi(st_expand(st_centroid($1::geometry), 0.0001))), 'hex') h", [spielberg.hex])).rows[0].h;
-      const ctx = (await c.query(CONTEXT_SQL, [neuberg.id, neuberg.hex, JSON.stringify({ [spielberg.id]: tiny })])).rows[0];
+      const ctx = await readContext(c, { placeId: neuberg.id, raw: neuberg.hex, pendingJson: JSON.stringify({ [spielberg.id]: tiny }) });
       const r = (await c.query("select st_area(st_difference($1::geometry, $2::geometry)::geography) left_out", [spielberg.hex, ctx.blockers])).rows[0];
       assert.ok(Number(r.left_out) < 1, `Spielberg's stored ground left unblocked: ${r.left_out} m²`);
     });
 
     await t.test("F3: a not-yet-written neighbour's raw, passed as pending, blocks the closing", async () => {
-      // far from every boundary (North Sea), as two countries (tier 0: no containment parent): P = two 100 m
-      // squares 15 m apart; Q = a strip in that gap, its raw not written yet
+      // far from every boundary and from the sea (inland Bohemia: no wine place, no water in the context),
+      // as two countries (tier 0: no containment parent): P = two 100 m squares 15 m apart; Q = a strip in
+      // that gap, its raw not written yet. (It sat in the North Sea before keep-water-out, which now rightly
+      // keeps that 15 m of sea open.)
       const france = await place("france");
       const germany = await place("germany");
       const at = (wkt) => `st_reduceprecision(st_multi(st_transform(st_setsrid(st_geomfromtext('${wkt}'), 32632), 4326)), 0.000001)`;
       const geo = (await c.query(`select
-          encode(st_asewkb(${at("MULTIPOLYGON(((300000 6100000,300100 6100000,300100 6100100,300000 6100100,300000 6100000)),((300115 6100000,300215 6100000,300215 6100100,300115 6100100,300115 6100000)))")}), 'hex') p,
-          encode(st_asewkb(${at("MULTIPOLYGON(((300101 6099950,300114 6099950,300114 6100150,300101 6100150,300101 6099950)))")}), 'hex') q`)).rows[0];
+          encode(st_asewkb(${at("MULTIPOLYGON(((850000 5500000,850100 5500000,850100 5500100,850000 5500100,850000 5500000)),((850115 5500000,850215 5500000,850215 5500100,850115 5500100,850115 5500000)))")}), 'hex') p,
+          encode(st_asewkb(${at("MULTIPOLYGON(((850101 5499950,850114 5499950,850114 5500150,850101 5500150,850101 5499950)))")}), 'hex') q`)).rows[0];
       const onQ = async (pending) => {
         const res = await cleanFootprint(c, { raw: geo.p, placeId: france.id, pending, via: "inline" });
         return Number((await c.query("select st_area(st_intersection($1::geometry, $2::geometry)::geography) a", [res.hex, geo.q])).rows[0].a);
@@ -441,7 +550,7 @@ test("review fixes against live shapes (read-only, FOOTPRINT_DB=1)", { skip: !DB
 
     await t.test("F4: the core's result columns are exactly the declared types (a SQL function refuses a mismatch)", async () => {
       const raw = (await c.query("select encode(st_asewkb(st_multi(st_expand(st_setsrid(st_point(2.5, 56.5), 4326), 0.001))), 'hex') h")).rows[0].h;
-      const res = await c.query(CORE_SQL, [raw, null, null, null, JSON.stringify(PARAMS)]);
+      const res = await c.query(CORE_SQL, [raw, null, null, null, JSON.stringify(PARAMS), null, null]);
       const types = new Map((await c.query("select oid::int oid, format_type(oid, null) t from pg_type where oid = any($1::oid[])",
         [res.fields.map((f) => f.dataTypeID)])).rows.map((x) => [x.oid, x.t]));
       const got = res.fields.map((f) => `${f.name} ${types.get(f.dataTypeID)}`);

@@ -15,8 +15,8 @@
 // one-off runner (footprint-pass.mjs --dry) does not need it: cleanFootprint()
 // runs the same SQL inline in a read-only transaction.
 import {
-  CONTEXT_SQL, CORE_SQL, FOOTPRINT_VERSION, PARAMS, PROTECTED_SQL, STAMP_SQL, independentFailuresSql, ladderReason, metricsOf,
-  rungs,
+  CONTEXT_SQL, CORE_SQL, FOOTPRINT_VERSION, PARAMS, PROTECTED_SQL, STAMP_SQL, WATER_ROWS_PARAM, WATER_TABLE, contextSql,
+  independentFailuresSql, ladderReason, metricsOf, rungs, waterRowsNear,
 } from "./footprint-sql.mjs";
 
 /** The raw input every GeoJSON builder used to write: Multi(CollectionExtract(MakeValid(SetSRID(GeoJSON))). */
@@ -108,6 +108,26 @@ export function bboxesMeet(a, b, pad = 0) {
   return a[0] - pad <= b[2] && b[0] - pad <= a[2] && a[1] - pad <= b[3] && b[1] - pad <= a[3];
 }
 
+/** Whether Migration A's sea table exists on this database. */
+export async function waterTableLive(client) {
+  const { rows } = await client.query(`select to_regclass('${WATER_TABLE}') is not null live`);
+  return rows[0].live === true;
+}
+
+/**
+ * The context row of one write (CONTEXT_SQL): the sea from Migration A's table when it
+ * exists, else (a read-only rehearsal before it) the committed pieces near the raw, the
+ * very rows the migration loads.
+ */
+export async function readContext(client, { placeId, raw, pendingJson }) {
+  if (await waterTableLive(client)) return (await client.query(CONTEXT_SQL, [placeId, raw, pendingJson])).rows[0];
+  const bb = (await client.query(
+    `select extensions.ST_XMin(b) x0, extensions.ST_YMin(b) y0, extensions.ST_XMax(b) x1, extensions.ST_YMax(b) y1
+       from (select extensions.Box3D($1::extensions.geometry) b) z`, [raw])).rows[0];
+  const water = waterRowsNear([bb.x0, bb.y0, bb.x1, bb.y1].map(Number));
+  return (await client.query(contextSql({ waterRows: WATER_ROWS_PARAM }), [placeId, raw, pendingJson, JSON.stringify(water)])).rows[0];
+}
+
 /** Whether Migration A is live on this database. */
 export async function footprintStepLive(client) {
   const { rows } = await client.query(
@@ -136,11 +156,12 @@ export async function cleanFootprint(client, { raw, placeId, pending = {}, param
     ({ hex, cleanup } = rows[0]);
   } else {
     await client.query("set local search_path = public, extensions");
-    const ctx = (await client.query(CONTEXT_SQL, [placeId, raw, pendingJson])).rows[0];
+    const ctx = await readContext(client, { placeId, raw, pendingJson });
     if (!ctx?.k) throw new Error(`cleanFootprint: no wine_places row ${placeId}`);
     context = {
       tier: ctx.tier, key: ctx.k, partners: ctx.partner_keys, blockers: ctx.blocker_keys, parent: ctx.parent_key,
       blockersHex: ctx.blockers ?? null, parentHex: ctx.parent ?? null,
+      seaHex: ctx.sea ?? null, outsideHex: ctx.outside ?? null,
     };
     let r;
     let prot = null;
@@ -151,10 +172,10 @@ export async function cleanFootprint(client, { raw, placeId, pending = {}, param
       rungName = name;
       tryParams = p;
       prot = null;
-      r = (await client.query(CORE_SQL, [raw, ctx.blockers, ctx.parent, null, JSON.stringify(p)])).rows[0];
+      r = (await client.query(CORE_SQL, [raw, ctx.blockers, ctx.parent, null, JSON.stringify(p), ctx.sea, ctx.outside])).rows[0];
       if (!r.unchanged) {
         prot = (await client.query(PROTECTED_SQL, [placeId, raw, r.clean4, pendingJson])).rows[0]?.prot ?? null;
-        if (prot) r = (await client.query(CORE_SQL, [raw, ctx.blockers, ctx.parent, prot, JSON.stringify(p)])).rows[0];
+        if (prot) r = (await client.query(CORE_SQL, [raw, ctx.blockers, ctx.parent, prot, JSON.stringify(p), ctx.sea, ctx.outside])).rows[0];
       }
       reason = ladderReason(r, p);
       if (reason === null) break;
@@ -165,7 +186,7 @@ export async function cleanFootprint(client, { raw, placeId, pending = {}, param
       version: FOOTPRINT_VERSION, params: tryParams, rung: reason === null ? rungName : "none", status,
       input_boundary_id: null, partners: ctx.partner_keys, parent_key: ctx.parent_key, metrics: metricsOf(r),
     };
-    const s = (await client.query(STAMP_SQL, [raw, out, ctx.blockers, ctx.parent, prot, JSON.stringify(meta)])).rows[0];
+    const s = (await client.query(STAMP_SQL, [raw, out, ctx.blockers, ctx.parent, prot, JSON.stringify(meta), ctx.sea, ctx.outside])).rows[0];
     hex = s.out_hex;
     cleanup = s.stamp;
   }

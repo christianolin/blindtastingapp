@@ -2068,6 +2068,27 @@ a raw subquery, regardless of which two tables look involved at a glance.
   the trigger body are rehearsed read-only (`renderWrapperRehearsal` /
   `renderTriggerRehearsal`, FOOTPRINT_DB=1 tests); applying Migration A in a
   rolled-back transaction is still DDL and needs the owner's go-ahead.
+  (7) **Keep water out** (owner 2026-10-03, "Keep water out (Recommended)":
+  "Never fill across water: gap-closing only bridges land"; the trigger was
+  Porto Ercole's marina, filled between jetties under 20 m apart). Each
+  connected piece of the closing's new ground is left out when it is OPEN
+  (not inside a hole of the raw: an enclosed pond or yard is the place's own
+  and still filled) and COASTAL: within 3 km of the sea, or within 300 m of
+  the outside of the place's national outline (the COUNTRY's stored row,
+  ~150 m shore) while within 15 km of the sea; and within those 15 km a
+  piece that DAMS a basin (borders a hole the closing made) is left out too
+  (we cannot tell a bay from a field there: Long Island's and San Francisco
+  Bay's creeks were dammed 3+ km from the coarse sea). "The sea" is
+  `public.wine_footprint_water`, Natural Earth 1:50m (lakes are land),
+  loaded by Migration A from `data/wine-map/footprint-water-ne50m.json`
+  (`build-footprint-water.mjs`, read-only, from the NE copy cached for the
+  USA base). No finer water data exists in the repo or the database: inland
+  lakes and rivers are land to this rule, and near the sea a road gap is
+  taken for water too (owner: "a few coastal outlines stay a bit more
+  jagged"). Far from the sea the context carries no water and the step is
+  byte for byte what it was (30 German places recomputed: all equal). Before
+  Migration A, `readContext` (`footprint-cleanup.mjs`) passes the committed
+  pieces as `$4` instead of the table.
 - World Wine Map Phase 3A adds the four-axis place model and the France region
   import machinery. Classification facts live as flat columns on `wine_places`
   (`is_appellation`, `appellation_system`, `appellation_level`), legal

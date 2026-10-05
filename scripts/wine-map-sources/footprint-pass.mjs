@@ -62,10 +62,10 @@ import pg from "pg";
 import { pgConfig, releaseVersion } from "../wine-map-tiles/lib.mjs";
 import { withReadOnly } from "./read-only-client.mjs";
 import { refreshNeighbourCache } from "./neighbour-cache.mjs";
-import { CONTEXT_SQL, FOOTPRINT_VERSION, MIGRATION_A_VERSION, PARAMS } from "./footprint-sql.mjs";
+import { FOOTPRINT_VERSION, MIGRATION_A_VERSION, PARAMS } from "./footprint-sql.mjs";
 import {
   EINZELLAGE_CLEANED_NOTE, cleanFootprint, cleanGeomCte, createPending, footprintStepLive, methodAfterCleanupSql,
-  orderBatch,
+  orderBatch, readContext,
 } from "./footprint-cleanup.mjs";
 import {
   REVISION_SUFFIX, areaDelta, flagsOf, inScope, paramReach, rejectPath, renderPromoteSql, renderRejectReleaseSql, renderReport,
@@ -176,7 +176,7 @@ async function processPlace(c, { place, wave, pending, via, geojsonDir, survey }
     let blk = result.context?.blockersHex ?? null;
     let par = result.context?.parentHex ?? null;
     if (via === "function") {
-      const ctx = (await c.query(CONTEXT_SQL, [place.id, raw.hex, JSON.stringify(pending.near(place.bbox))])).rows[0];
+      const ctx = await readContext(c, { placeId: place.id, raw: raw.hex, pendingJson: JSON.stringify(pending.near(place.bbox)) });
       blk = ctx.blockers;
       par = ctx.parent;
     }
