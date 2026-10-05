@@ -43,6 +43,19 @@
 //     node scripts/wine-map-sources/footprint-pass.mjs --dry [--wave all|<scope>] [--keys k1,k2]
 //          [--review-dir data/wine-map/review] [--geojson-dir .superpowers/footprints]
 //          [--report <file>] [--batch 40] [--pause-ms 150] [--timeout-ms 90000] [--survey <survey.json>]
+//          [--via inline|function]
+//
+//   The dry run computes each place INLINE by default (cleanFootprint via "inline": the
+//   very CONTEXT_SQL / CORE_SQL / PROTECTED_SQL / STAMP_SQL texts the live wrapper
+//   EXECUTEs, run in the read-only transaction). Through the function a changed place
+//   paid for its context twice, once inside public.wine_footprint_clean and once more
+//   (readContext) for its GeoJSON preview's blockers and parent, and the context (its
+//   50 m geography blocker test) is most of a big place's time (perf 2026-10-05:
+//   Maremma ~50 s of ~67 s; the keep-water-out rule itself is under 1 s of it). Both
+//   paths give the same bytes (output and stamp, compared on 15 places), and --stage
+//   recomputes every changed place through the live function and asserts its output
+//   sha256 equals the review's. --via function keeps the old path (only when the live
+//   step is this module's: footprintStepState).
 //
 //   --stage --review <file>: AT A SITTING ONLY (main session, after owner approval).
 //   Refuses a review that is not one full, committed --dry run (codeRefusals), and
@@ -179,7 +192,12 @@ async function loadCatalogue(timeoutMs) {
   await withReadOnly(async (c) => {
     catalogue = (await c.query(CATALOGUE_SQL)).rows.map((r) => ({ ...r, area: Number(r.area), bbox: [r.x0, r.y0, r.x1, r.y1].map(Number) }));
     versions = (await c.query("select extensions.postgis_lib_version() postgis, extensions.postgis_geos_version() geos")).rows[0];
-    via = (await footprintStepLive(c)) ? "function" : "inline";
+    const live = await footprintStepLive(c);
+    const asked = arg("via", "inline");
+    assert.ok(asked === "inline" || asked === "function", `--via ${asked}: inline or function`);
+    // inline by default: the context is computed once per place (see the header)
+    via = asked === "function" && live ? "function" : "inline";
+    if (asked === "function" && !live) console.log("WARNING: --via function, but the live step is not this module's (footprintStepState): computing inline");
   }, { statementTimeoutMs: timeoutMs });
   console.log(`catalogue: ${catalogue.length} places with a current VALIDATED boundary; step via ${via}`);
   return { catalogue, versions, via };
