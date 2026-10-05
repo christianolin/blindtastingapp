@@ -166,3 +166,62 @@ test("the promote's approval comment stays on one line", () => {
   const sql = renderPromoteSql({ ...review, _provenance: { ...review._provenance, owner_approval: { text: `ok${NL}drop table x;` } } });
   assert.ok(!sql.includes(`${NL}drop table x;`));
 });
+
+test("the closure's reach covers the mitred closing: mitre_limit x gap_m / 2, plus slack", async () => {
+  const { cleanedReachM } = await import("./footprint-pass-lib.mjs");
+  assert.equal(cleanedReachM(), 31, "fp-1: join=mitre mitre_limit=3, gap 20 m -> 30 m + 1 m");
+  assert.ok(cleanedReachM() > 12, "the old fixed 12 m fell short of a mitred corner");
+  assert.equal(cleanedReachM({ gap_m: 20, buffer_style: "join=round" }), 11);
+  assert.equal(cleanedReachM({ gap_m: 20, buffer_style: "join=mitre" }), 51, "PostGIS's default mitre limit is 5");
+});
+
+test("--stage refuses a review that is not one full, committed run (seeded records from other code)", async () => {
+  const { codeRefusals } = await import("./footprint-pass-lib.mjs");
+  const c = "851c21c5601662b5d19fde11b9419b04e99dfab2";
+  const rec = (key, commit = c) => ({ key, computed_commit: commit, changed: true });
+  const full = { _provenance: { code: { commit: c, dirty: [] } }, places: [rec("a"), rec("b")] };
+  assert.deepEqual(codeRefusals(full), []);
+  assert.match(codeRefusals({ _provenance: {}, places: [] })[0], /no code commit/);
+  const seeded = { _provenance: { code: { commit: c, dirty: [] }, closure: { from: "review3" } },
+    places: [rec("a"), rec("germany.mosel.x.wiltingen-hoelle", "ad3d0f2aaaaaaaa"), rec("c", null)] };
+  const r = codeRefusals(seeded).join("\n");
+  assert.match(r, /closure re-run/);
+  assert.match(r, /2 record\(s\) were not computed by this run's code 851c21c \(from ad3d0f2, \(none\), e\.g\. germany\.mosel\.x\.wiltingen-hoelle\)/);
+  assert.match(codeRefusals({ ...full, _provenance: { code: { commit: c, dirty: ["scripts/wine-map-sources/footprint-sql.mjs"] } } })[0], /not committed/);
+  assert.match(codeRefusals({ ...full, _provenance: { ...full._provenance, partial: { keys: ["a"], limit: null } } })[0], /--keys/);
+  assert.deepEqual(codeRefusals({ ...full, _provenance: { ...full._provenance, partial: { keys: null, limit: null, wave: "germany.pfalz" } } }), []);
+});
+
+test("the report names the code a run was computed by", () => {
+  const md = renderReport({ provenance: { generated_at: "t", via: "inline", waves: ["france"], postgis: "3.3.7", geos: "3.14",
+    code: { commit: "abc1234", branch: "map-footprints", dirty: [] } }, records: [] });
+  assert.match(md, /Code: map-footprints @ abc1234; a full run/);
+});
+
+test("closure F2 measures given-up ground exactly: no grid, no lost_m2 floor (the 8 stale seeds of review4)", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const src = (await readFile(new URL("./footprint-pass.mjs", import.meta.url), "utf8")).replace(/\r\n/g, "\n");
+  const lost = /const LOST_SQL = `([\s\S]*?)`;/.exec(src)[1];
+  // a gridded ST_Difference (gridSize 1e-6) collapsed the sub-grid slivers along each
+  // stale seed's shared edge: empty for 4 of the 8, 57-187 m away for the other 4
+  assert.match(lost, /ST_Difference\(b\.display_geometry, \$2::extensions\.geometry\)/);
+  const reach = /const REACH_SQL = `([\s\S]*?)`;/.exec(src)[1];
+  assert.match(reach, /\$\{REACH_M\}/);
+  assert.doesNotMatch(reach, /geography, 12\)/);
+  const f2 = /\/\/ F2: ground a prior output gave up[\s\S]*?closure start/.exec(src)[0];
+  assert.doesNotMatch(f2, /metrics?.lost_m2/);
+  assert.match(f2, /LOST_SQL/);
+});
+
+test("a statement timeout is retried once, first in a new transaction with SLOW_FACTOR x the timeout", async () => {
+  const { retryOnTimeout, SLOW_FACTOR } = await import("./footprint-pass-lib.mjs");
+  const slow = new Set();
+  const lines = [];
+  const log = (x) => lines.push(x);
+  assert.equal(retryOnTimeout({ code: "57014" }, 7, slow, "united-states.california.north-coast", 90000, log), true);
+  assert.ok(slow.has(7));
+  assert.match(lines[0], /360 s statement timeout/);
+  assert.equal(SLOW_FACTOR, 4);
+  assert.equal(retryOnTimeout({ code: "57014" }, 7, slow, "x", 90000, log), false, "only once: then it is an error record");
+  assert.equal(retryOnTimeout({ code: "XX000" }, 8, slow, "x", 90000, log), false, "any other error is recorded at once");
+});

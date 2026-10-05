@@ -2068,7 +2068,20 @@ a raw subquery, regardless of which two tables look involved at a glance.
   the trigger body are rehearsed read-only (`renderWrapperRehearsal` /
   `renderTriggerRehearsal`, FOOTPRINT_DB=1 tests); applying Migration A in a
   rolled-back transaction is still DDL and needs the owner's go-ahead.
-  (7) **Keep water out** (owner 2026-10-03, "Keep water out (Recommended)":
+  (7) Only a FULL `--dry` run is stageable. `--closure-from` is a preview: it
+  seeds every unreached place's prior record, and a prior record carries what
+  the code that computed it produced — 8 records seeded through two closure
+  re-runs from the run before cded7a3 no longer matched (sub-m²), and
+  `--stage`'s per-place sha assert would have refused 5 German waves
+  mid-transaction. Every record carries `computed_commit` and the review
+  `_provenance.code` (commit, branch, uncommitted files under `scripts/`);
+  `--stage` refuses (`codeRefusals`) a closure, a `--keys`/`--limit` run, an
+  uncommitted run, or any record another commit computed. (8) A run's GeoJSON
+  `before`/`after` must read back to their sha256 (`EXACT_GJ_SQL`): 6
+  decimals when exact, else shortest round-trip digits, else an `ewkb`
+  property every reader takes first (Entre-deux-Mers' output has a vertex at
+  longitude -0.0, which GeoJSON writes as 0).
+  (9) **Keep water out** (owner 2026-10-03, "Keep water out (Recommended)":
   "Never fill across water: gap-closing only bridges land"; the trigger was
   Porto Ercole's marina, filled between jetties under 20 m apart). Each
   connected piece of the closing's new ground is left out when it is OPEN
