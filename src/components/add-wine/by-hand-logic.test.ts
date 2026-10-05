@@ -3,7 +3,7 @@ import { emptyDraft } from "../../lib/wine-identity/complete";
 import type { WineIdentityDraft } from "../../lib/wine-identity/types";
 import { sheetMatrix } from "./matrix";
 import {
-  NO_GI_HINT, applyProducerRegion, blendScoredLine, byHandHeader, commonGrapesHeading, fieldChip, grapeSuggestionNote, pickProducerAdoption, regionFirstLabel, regionGrapeChipIds,
+  NO_GI_HINT, applyProducerRegion, blendScoredLine, byHandHeader, commonGrapesHeading, dosageChip, fieldChip, grapeSuggestionNote, pickProducerAdoption, regionFirstLabel, regionGrapeChipIds,
 } from "./by-hand-logic";
 
 const ctx = { attempted: false, focusField: null, readAttempted: false, producerRegionName: null } as const;
@@ -276,4 +276,16 @@ describe("commonGrapesHeading and regionGrapeChipIds (owner report 2026-09-15, L
     expect(regionGrapeChipIds([...ids, "mystery"], { ...colours, mystery: null }, "WHITE", "STILL")).toEqual(["chard", "chenin", "sb", "mystery"]));
   it("caps at five even when the shortlist is longer", () =>
     expect(regionGrapeChipIds(["a", "b", "c", "d", "e", "f"], {}, null, null)).toEqual(["a", "b", "c", "d", "e"]));
+});
+
+describe("dosageChip (review, 2026-10-03)", () => {
+  const cava = (o: Partial<WineIdentityDraft> = {}): WineIdentityDraft => ({ ...emptyDraft(), style: "SPARKLING", ...o });
+  it("a read dosage says so, a picked one does not", () => {
+    expect(dosageChip(cava({ dosageId: "bn", provenance: { dosage: "label" } }), { readAttempted: true })).toBe("read from the label");
+    expect(dosageChip(cava({ dosageId: "bn", provenance: { dosage: "manual" } }), { readAttempted: true })).toBeNull();
+  });
+  it("a read that found no dosage says it did not read one; by hand it says nothing", () => {
+    expect(dosageChip(cava(), { readAttempted: true })).toBe("did not read");
+    expect(dosageChip(cava(), { readAttempted: false })).toBeNull();
+  });
 });

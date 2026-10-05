@@ -33,3 +33,33 @@ describe("readDisplay (spec A.5)", () => {
   it("leaves out parts with no value", () =>
     expect(readDisplay(emptyDraft(), { producer: null, appellation: null, region: "Bourgogne", country: "France", primaryGrape: null })).toEqual({ title: "", meta: "Bourgogne · France", newProducer: false }));
 });
+
+describe("readDisplay and the dosage (review, 2026-10-03)", () => {
+  const cava: WineIdentityDraft = {
+    ...emptyDraft(),
+    producer: { kind: "existing", id: "mp", name: "Miquel Pons" },
+    colour: "WHITE",
+    style: "SPARKLING",
+    vintage: { kind: "NV", year: null, tawnyYears: null, read: true },
+  };
+  const names = { producer: "Miquel Pons", appellation: "Cava DO", region: "Cava", country: "Spain", primaryGrape: "Macabeo" };
+
+  it("a Brut Nature read and a Semi-sec read never look alike", () => {
+    const bn = readDisplay({ ...cava, dosageId: "bn" }, { ...names, dosage: "Brut Nature" });
+    const ds = readDisplay({ ...cava, dosageId: "ds" }, { ...names, dosage: "Demi-Sec" });
+    expect(bn.title).toBe("Miquel Pons, Cava Brut Nature NV");
+    expect(ds.title).toBe("Miquel Pons, Cava Demi-Sec NV");
+    expect(bn.meta).toBe("Cava DO · Cava · Spain · Macabeo");
+  });
+
+  it("a sparkling read whose dosage did not resolve says so first", () => {
+    const r = readDisplay(cava, { ...names, dosage: null });
+    expect([r.title, r.meta]).toEqual(["Miquel Pons, Cava NV", "No dosage read · Cava DO · Cava · Spain · Macabeo"]);
+  });
+
+  it("a still wine, or a caller that passes no dosage, shows none", () => {
+    expect(readDisplay({ ...cava, style: "STILL" }, { ...names, dosage: null }).meta).toBe("Cava DO · Cava · Spain · Macabeo");
+    expect(readDisplay(cava, names).title).toBe("Miquel Pons, Cava NV");
+    expect(readDisplay(cava, names).meta).toBe("Cava DO · Cava · Spain · Macabeo");
+  });
+});

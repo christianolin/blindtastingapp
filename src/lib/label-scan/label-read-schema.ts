@@ -28,7 +28,8 @@ export const LabelReadSchema = z.object({
   ),
   // (pre)
   wineName: z.string().nullable().describe(
-    "The cuvée / special bottling name — not the producer, not the appellation — or null.",
+    "The cuvée / special bottling name — not the producer, not the appellation, " +
+      "never a sparkling dosage term (Brut, Brut Nature, Semi Seco…) — or null.",
   ),
   // (pre) plus D1's official-name instruction; owner approval 1d (2026-09-13): an
   // official regional origin printed without a designation term (L1 #4)
@@ -66,9 +67,16 @@ export const LabelReadSchema = z.object({
   designation: z.string().nullable().describe(
     "The label's legal quality, ageing or style term, in its canonical form: " +
       '"Gran Reserva", "Reserva", "Crianza", "Riserva", "Kabinett", "Spätlese", "Auslese", "Grosses Gewächs (GG)", ' +
-      '"Grand Cru", "Premier Cru", "Brut", "Brut Nature", "Extra Dry", "Vintage Port", "Late Bottled Vintage (LBV)", ' +
+      '"Grand Cru", "Premier Cru", "Vintage Port", "Late Bottled Vintage (LBV)", ' +
       '"Colheita", "Fino", "Amontillado"… Return the term itself, not a sentence. ' +
-      "Null when the label carries none. Do NOT put grape names or fantasy names here.",
+      "Null when the label carries none. Do NOT put grape names or fantasy names here, " +
+      "and not a sparkling wine's dosage: that goes in dosage.",
+  ),
+  // Owner, 2026-10-03: a sparkling wine's dosage has its own field, beside the designation.
+  dosage: z.string().nullable().describe(
+    "Sparkling wines only: the dosage (sweetness) term as printed — " +
+      '"Brut Nature", "Extra Brut", "Brut", "Extra Dry", "Sec", "Demi-Sec", "Doux", or a local form ' +
+      '("Semi Seco", "Pas Dosé", "Dosaggio Zero"). Null for any other wine, and when none is printed.',
   ),
   // (pre), tawny example added
   vintageKind: z.enum(["YEAR", "NV", "TAWNY"]).describe(
@@ -247,6 +255,7 @@ export function coerceLabelRead(raw: unknown): LabelRead {
     region: text(r.region),
     country: text(r.country),
     designation: text(r.designation),
+    dosage: text(r.dosage),
     vintageKind,
     vintageYear,
     vintageTawnyYears,
@@ -272,6 +281,7 @@ export function coerceLabelRead(raw: unknown): LabelRead {
     region: null,
     country: null,
     designation: null,
+    dosage: null,
     vintageYear: null,
     vintageTawnyYears: null,
     vintageRead: false,

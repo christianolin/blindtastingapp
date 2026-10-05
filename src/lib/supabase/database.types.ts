@@ -1343,6 +1343,8 @@ export type Database = {
           secondary_grape_id: string | null;
           producer_id: string;
           type_designation_id: string | null;
+          /** 20261003101000: a "Sparkling Dosage" type_designations row; null unless SPARKLING. */
+          dosage_designation_id: string | null;
           vintage_kind: VintageKind;
           vintage_year: number | null;
           vintage_tawny_years: number | null;
@@ -1376,6 +1378,7 @@ export type Database = {
           secondary_grape_id?: string | null;
           producer_id: string;
           type_designation_id?: string | null;
+          dosage_designation_id?: string | null;
           vintage_kind: VintageKind;
           vintage_year?: number | null;
           vintage_tawny_years?: number | null;
@@ -2087,6 +2090,72 @@ export type Database = {
       find_or_create_producer: {
         Args: { p_name: string; p_region_id?: string | null };
         Returns: string;
+      };
+      // 20261003100000 (catalog dedupe): "Already in the catalog?" candidates —
+      // SECURITY INVOKER, never a blind_pending or merged row.
+      catalog_wine_near_matches: {
+        Args: {
+          p_producer_id: string | null;
+          p_producer_name: string | null;
+          p_region_id: string | null;
+          p_wine_name: string | null;
+          p_limit?: number;
+        };
+        Returns: {
+          id: string;
+          producer_id: string;
+          producer_name: string;
+          wine_name: string | null;
+          vintage_kind: VintageKind;
+          vintage_year: number | null;
+          vintage_tawny_years: number | null;
+          colour: WineColour;
+          style: WineStyle;
+          country_id: string;
+          region_id: string;
+          appellation_id: string;
+          appellation_name: string | null;
+          primary_grape_id: string;
+          primary_grape_name: string | null;
+          created_at: string;
+          producer_strength: number;
+          name_score: number;
+          dosage_designation_id: string | null;
+          dosage_name: string | null;
+        }[];
+      };
+      // 20261003100000: "Did you mean …?" before a new producer is created.
+      similar_producers: {
+        Args: { p_name: string; p_region_id: string | null; p_limit?: number };
+        Returns: {
+          id: string;
+          name: string;
+          region_id: string | null;
+          region_name: string | null;
+          in_region: boolean;
+          wine_count: number;
+          score: number;
+        }[];
+      };
+      // 20261003100000: public catalog wines the caller's circle (shared
+      // tastings, friends, themselves) added in the last p_hours, by the same
+      // token rule as search_catalog_wines. Never a blind_pending row.
+      recent_circle_catalog_wines: {
+        Args: { p_query: string; p_hours?: number; p_limit?: number };
+        Returns: {
+          id: string;
+          wine_name: string;
+          producer: string;
+          appellation: string;
+          region: string;
+          country: string;
+          colour: string;
+          style: string;
+          vintage_kind: string;
+          vintage_year: number | null;
+          vintage_tawny_years: number | null;
+          created_at: string;
+        }[];
       };
       // 20260912102000 (spec §E.3): the adder check, and every glass with no
       // answer key yet with its list-order number and only its missing field

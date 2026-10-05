@@ -98,12 +98,17 @@ async function displayNames(draft: WineIdentityDraft, lookup: RefLookup): Promis
     : null;
   // The draft comes back normalised, so its first blend row is the primary grape.
   const primaryGrape = draft.blend[0]?.grape;
+  // The dosage resolved to one of the seven rows (resolve.ts step 8b), or none.
+  const dosage = draft.dosageId
+    ? (await lookup.typeDesignations()).find((row) => row.id === draft.dosageId) ?? null
+    : null;
   return {
     producer: draft.producer?.name ?? null,
     appellation: appellation?.name ?? null,
     region: region?.name ?? null,
     country: country?.name ?? null,
     primaryGrape: primaryGrape?.kind === "existing" ? primaryGrape.name : null,
+    dosage: dosage?.name ?? null,
   };
 }
 

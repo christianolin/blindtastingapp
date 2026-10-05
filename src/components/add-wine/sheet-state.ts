@@ -16,6 +16,7 @@
 // Pure: no Supabase and no browser API, and every runtime import is relative
 // (vitest has no `@/` alias). Unit-tested in sheet-state.test.ts.
 import type { LabelPhotoRead } from "@/app/scan/actions";
+import type { NearMatches } from "@/lib/wine-identity/near-match";
 import type { WineFieldKey, WineIdentityDraft } from "@/lib/wine-identity/types";
 import { missingWineFields } from "../../lib/wine-identity/complete";
 import { describeUnread, readDisplay } from "../../lib/wine-identity/describe";
@@ -134,6 +135,31 @@ export type SheetState = {
       glass's list-order number, known once the edit form has loaded it, or
       null when `options.swap` opened straight into swap mode before it did. */
   swap: { wineId: string; glass: number | null } | null;
+  /** Catalog dedupe (owner, 2026-10-03): "Already in the catalog?" — an add
+      that would create a new catalog wine found close matches first. Shown over
+      the view it was started from, which stays mounted; the add waits until the
+      person picks a match, another vintage of it, a suggested producer, or "Add
+      as a new wine". Any step that moves the sheet (a new `flow`), changes the
+      view or closes it drops the prompt, and nothing is written (`sheetReducer`). */
+  nearMatch: NearMatchPrompt | null;
+};
+
+/** What "Already in the catalog?" holds while it is up: the identity add it
+    paused, as the adds hook started it, and what the server found. */
+export type NearMatchPrompt = {
+  source: Extract<AddSource, { kind: "identity" }>;
+  /** The chooser title the add carried, if any. */
+  title?: string;
+  byHand: boolean;
+  scanNext: boolean;
+  /** The bottle in hand when the add started (`addTargetId`), so "Did you mean
+      …?" can open its form for a check. */
+  itemId?: string | null;
+  /** Set when the paused save is a flight glass's (Fix, Edit, finishing an
+      incomplete glass): every choice then saves THAT glass (`saveFlightGlass`)
+      instead of adding a new one. */
+  glass?: { wineId: string } | null;
+  matches: NearMatches;
 };
 
 /** Plan amendment 23: what an action that waits on the server started with —
@@ -275,7 +301,13 @@ export type SheetAction =
   /** BT-L3 (S4c): the swap start view's back/close — clears `swap` and returns
       to the edit form it parked, or lands home by the landing rule (opening
       the oldest waiting read, if there is one) when there is none. */
-  | { type: "swapCancelled" };
+  | { type: "swapCancelled" }
+  /** Catalog dedupe: the near-match check came back with something to ask.
+      Shown only while its ticket is current; a stale one is dropped, and the
+      add it paused is not made. */
+  | { type: "nearMatchFound"; prompt: NearMatchPrompt; ticket: ReplyTicket }
+  /** Catalog dedupe: the prompt goes — Back, or a choice the adds hook now runs. */
+  | { type: "nearMatchClosed" };
 
 // ---------------------------------------------------------------------------
 // Internals
@@ -643,6 +675,7 @@ export function initialSheetState(p: {
     flow: 0,
     parkedByHand: [],
     swap: p.options.swap ? { wineId: p.options.swap.wineId, glass: null } : null,
+    nearMatch: null,
   };
 }
 
@@ -652,7 +685,12 @@ export function sheetReducer(s: SheetState, a: SheetAction): SheetState {
   const settled = settle(s, next, a);
   // Amendment 23: a user step that moves or closes the sheet starts a new flow
   // (a nested step, like Discard's ←, has already counted it).
-  return movesSheet(s, settled, a) && settled.flow === s.flow ? { ...settled, flow: s.flow + 1 } : settled;
+  const flowed = movesSheet(s, settled, a) && settled.flow === s.flow ? { ...settled, flow: s.flow + 1 } : settled;
+  // Catalog dedupe: the near-match prompt belongs to the view and flow it was
+  // raised on; moving on drops it, and the add it paused.
+  return flowed.nearMatch !== null && (flowed.flow !== s.flow || flowed.view !== s.view || flowed.closing)
+    ? { ...flowed, nearMatch: null }
+    : flowed;
 }
 
 /** Amendment 23: the user's steps that move or close the sheet whenever they change it. */
@@ -732,6 +770,10 @@ export function sessionToReopen(s: SheetState, origin: ByHandSession["origin"]):
 
 function step(s: SheetState, a: SheetAction): SheetState {
   switch (a.type) {
+    case "nearMatchFound":
+      return replyIsCurrent(s, a.ticket) ? { ...s, nearMatch: a.prompt } : s;
+    case "nearMatchClosed":
+      return s.nearMatch === null ? s : { ...s, nearMatch: null };
     case "canScanResolved": {
       if (s.view === "resolving") return { ...s, canScan: a.canScan, view: startViewFor(s.start, a.canScan) };
       if (s.canScan === a.canScan) return s;

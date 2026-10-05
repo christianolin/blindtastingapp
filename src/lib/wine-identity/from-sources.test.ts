@@ -5,9 +5,30 @@ import { draftFromAnswerKey, draftFromCatalogWine, parseStoredDraft, type Catalo
 const wine: CatalogWineSource = {
   id: "c1", producer: { id: "p", name: "Vietti" }, wineName: "Castiglione", vintageKind: "YEAR", vintageYear: 2017, vintageTawnyYears: null,
   colour: "RED", style: "STILL", countryId: "it", regionId: "pie", appellationId: "barolo", typeDesignationId: null,
-  alcohol: 14.5, description: null, imageUrl: null, grapes: [{ id: "neb", name: "Nebbiolo", percentage: null }],
+  alcohol: 14.5, description: null, imageUrl: null, dosageId: null, grapes: [{ id: "neb", name: "Nebbiolo", percentage: null }],
 };
 describe("draft sources", () => {
+  it("a sparkling catalog wine brings its dosage, marked catalog-match", () => {
+    const d = draftFromCatalogWine({ ...wine, colour: "WHITE", style: "SPARKLING", dosageId: "d-nature" });
+    expect(d.dosageId).toBe("d-nature");
+    expect(d.provenance.dosage).toBe("catalog-match");
+  });
+  it("a glass linked to a sparkling catalog wine keeps that wine's dosage, so an Edit stays on it", () => {
+    const d = draftFromAnswerKey({ countryId: "es", regionId: "cava", appellationId: "cava-do", producer: { id: "p", name: "Forns Raventós" },
+      typeDesignationId: "t-gran-reserva", vintageKind: "YEAR", vintageYear: 2019, vintageTawnyYears: null, imageUrl: null,
+      primaryGrape: { id: "xar", name: "Xarel·lo" }, secondaryGrape: null,
+      catalog: { wineName: "Nodal", colour: "WHITE", style: "SPARKLING", description: null, alcohol: null, grapes: [], dosageId: "d-nature" } });
+    expect(d.dosageId).toBe("d-nature");
+    expect(d.typeDesignationId).toBe("t-gran-reserva");
+  });
+  it("a stored draft without a dosage parses, and a malformed dosage is refused", () => {
+    const { dosageId: _omitted, ...older } = emptyDraft();
+    void _omitted;
+    const parsed = parseStoredDraft(older);
+    expect(parsed).not.toBeNull();
+    expect(parsed!.dosageId).toBeNull();
+    expect(parseStoredDraft({ ...emptyDraft(), dosageId: 3 })).toBeNull();
+  });
   it("a catalog wine is complete and marked catalog-match", () => {
     const d = draftFromCatalogWine(wine);
     expect(missingWineFields(d)).toEqual([]);

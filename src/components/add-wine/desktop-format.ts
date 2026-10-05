@@ -7,6 +7,7 @@
 // No React, no Supabase, and only relative runtime imports (vitest has no
 // `@/` alias). Unit-tested in desktop-format.test.ts.
 import { vintageLabel as draftVintageLabel } from "../../lib/wine-identity/describe";
+import { effectiveDosageId } from "../../lib/wine-identity/dosage";
 import { foldName } from "../../lib/wine-identity/fold";
 import type { WineIdentityDraft } from "../../lib/wine-identity/types";
 import { starLabel } from "./format";
@@ -24,6 +25,8 @@ export type CatalogRowIdentity = {
   wineName: string | null;
   appellationId: string;
   vintageLabel: string;
+  /** The sparkling dosage; undefined when the row did not say (then not compared). */
+  dosageId?: string | null;
 };
 
 export type DesktopRow = {
@@ -58,6 +61,7 @@ function identityOf(row: CatalogRowIdentity): CatalogRowIdentity {
     wineName: row.wineName,
     appellationId: row.appellationId,
     vintageLabel: row.vintageLabel,
+    ...(row.dosageId === undefined ? {} : { dosageId: row.dosageId }),
   };
 }
 
@@ -163,14 +167,18 @@ function capitalize(s: string): string {
  * Anything the draft cannot compare — no draft (typed text only), a pending or
  * different producer, the same vintage, a vintage not known yet — reads
  * "Already in the catalog · {vintage}". A draft with no appellation yet
- * compares by name alone; wine names compare folded.
+ * compares by name alone; wine names compare folded. A sparkling draft that has a
+ * dosage is another wine than a row with another dosage, or none (20261003101000);
+ * a draft with no dosage yet compares without it.
  */
 export function catalogRowMeta(row: CatalogRowIdentity, draft: WineIdentityDraft | null): string {
   const producer = draft?.producer;
   if (draft && producer?.kind === "existing" && producer.id === row.producerId) {
     const sameName = foldName(draft.wineName ?? "") === foldName(row.wineName ?? "");
     const sameAppellation = draft.appellationId === null || draft.appellationId === row.appellationId;
-    if (!sameName || !sameAppellation) return `${IN_CATALOG} · different wine`;
+    const draftDosage = effectiveDosageId(draft.style, draft.dosageId);
+    const sameDosage = draftDosage === null || row.dosageId === undefined || (row.dosageId ?? null) === draftDosage;
+    if (!sameName || !sameAppellation || !sameDosage) return `${IN_CATALOG} · different wine`;
     const drafted = draftVintageLabel(draft.vintage);
     if (drafted && drafted !== row.vintageLabel) return `${IN_CATALOG} · different vintage`;
   }

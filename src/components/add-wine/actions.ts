@@ -17,12 +17,15 @@ import { createClient } from "@/lib/supabase/server";
 import type { VintageKind } from "@/lib/supabase/database.types";
 import { glassSwapRefusal } from "@/lib/flight-glass-rules";
 import { readDisplay, vintageLabel } from "@/lib/wine-identity/describe";
+import { dosageSearchTerms } from "@/lib/wine-identity/dosage";
 import { draftFromCatalogWine, parseStoredDraft } from "@/lib/wine-identity/from-sources";
 import {
   pickGrapeSuggestion,
   type CatalogGrapeCount,
   type PlaceGrape,
 } from "@/lib/wine-identity/grape-suggestion";
+import type { NearMatches } from "@/lib/wine-identity/near-match";
+import { loadNearMatches } from "@/lib/wine-identity/server/near-match";
 import {
   prepareCompleteWine,
   upsertCatalogWine,
@@ -30,7 +33,9 @@ import {
 } from "@/lib/wine-identity/server/write";
 import type { WineFieldKey, WineIdentityDraft } from "@/lib/wine-identity/types";
 import { catalogWineTitle, fetchCatalogWine } from "@/lib/wset/queries";
+import { DOSAGE_EMBED } from "@/lib/wset/wine-title";
 import { addedVia } from "./added-via";
+import { recentFirst } from "./recent-first";
 import { callerKnowsWine, searchShowsCatalogWine } from "./flight-knowledge";
 import { windowContains } from "./row-format";
 import type {
@@ -193,7 +198,8 @@ function queryTokens(query: string): string[] {
 // title, the thumbnail, the blind-pending gate and the match text.
 const WINE_EMBED =
   "id, wine_name, image_url, blind_pending, created_by, vintage_kind, vintage_year, vintage_tawny_years, " +
-  "producer:producers(name), appellation:appellations(name), region:regions(name), country:countries(name)";
+  "producer:producers(name), appellation:appellations(name), region:regions(name), country:countries(name), " +
+  DOSAGE_EMBED;
 
 type EmbeddedWine = {
   id: string;
@@ -208,6 +214,7 @@ type EmbeddedWine = {
   appellation: unknown;
   region: unknown;
   country: unknown;
+  dosage?: unknown;
 };
 
 // The types file carries no relationship metadata, so an embed comes back
@@ -233,11 +240,13 @@ function embeddedTitle(w: EmbeddedWine): string {
     vintageYear: w.vintage_year,
     vintageTawnyYears: w.vintage_tawny_years,
     appellationName: relName(w.appellation),
+    dosageName: relName(w.dosage),
   });
 }
 
 // The same searchable text the RPC builds (minus the grape names — those
-// are a separate join and the RPC treats them as an additive extra).
+// are a separate join and the RPC treats them as an additive extra), with the
+// dosage and its local spellings, as search_catalog_wines has them (20261003101200).
 function embeddedSearchText(w: EmbeddedWine): string {
   return searchNorm(
     [
@@ -247,6 +256,7 @@ function embeddedSearchText(w: EmbeddedWine): string {
       relName(w.region),
       relName(w.country),
       w.vintage_year == null ? null : String(w.vintage_year),
+      ...dosageSearchTerms(relName(w.dosage)),
     ]
       .filter(Boolean)
       .join(" "),
@@ -280,6 +290,8 @@ type CatalogIdentityRow = {
   vintage_kind: VintageKind;
   vintage_year: number | null;
   vintage_tawny_years: number | null;
+  dosage_designation_id: string | null;
+  dosage: unknown;
 };
 
 /** The columns behind every catalog and tasted row (spec §C.1): the RPC returns
@@ -292,7 +304,8 @@ async function catalogIdentities(supabase: Db, ids: readonly string[]): Promise<
       .from("catalog_wines")
       .select(
         "id, blind_pending, created_by, image_url, primary_grape_id, producer_id, wine_name, appellation_id, " +
-          "vintage_kind, vintage_year, vintage_tawny_years",
+          "vintage_kind, vintage_year, vintage_tawny_years, dosage_designation_id, " +
+          DOSAGE_EMBED,
       )
       .in("id", ids.slice(from, from + ID_CHUNK));
     if (error) {
@@ -316,7 +329,38 @@ function identityFields(w: CatalogIdentityRow) {
       tawnyYears: w.vintage_tawny_years,
       read: false,
     }),
+    dosageId: w.dosage_designation_id,
   };
+}
+
+/** "Added in the last day" for the search's circle ranking. */
+const RECENT_HOURS = 24;
+
+/**
+ * "Already in the catalog?" (catalog dedupe, owner 2026-10-03): before an add
+ * that would create a new catalog wine, the close matches the caller may read —
+ * never a hidden (blind_pending) or merged wine — and, for a producer that is a
+ * new name, the existing producers it may mean. Null when there is nothing to
+ * ask, and on any failure: the check is advice, so it never blocks an add.
+ */
+export async function checkNearMatches(draft: unknown): Promise<NearMatches | null> {
+  const parsed = parseStoredDraft(draft);
+  if (parsed === null) return null;
+  const supabase = await createClient();
+  const user = await currentUser(supabase);
+  if (!user) return null;
+  const producer = parsed.producer;
+  const safe = {
+    ...parsed,
+    producer: producer?.kind === "existing" && !UUID.test(producer.id) ? { kind: "pending" as const, name: producer.name } : producer,
+    regionId: parsed.regionId !== null && UUID.test(parsed.regionId) ? parsed.regionId : null,
+  };
+  try {
+    return await loadNearMatches(supabase, safe);
+  } catch (error) {
+    console.error("checkNearMatches failed", { message: error instanceof Error ? error.message : String(error) });
+    return null;
+  }
 }
 
 export async function searchAddWine(
@@ -332,8 +376,13 @@ export async function searchAddWine(
   if (!user) return EMPTY;
   const tastingId = typeof opts?.tastingId === "string" ? opts.tastingId : null;
 
-  const [hits, lots, notes, flightIds] = await Promise.all([
+  const [hits, recent, lots, notes, flightIds] = await Promise.all([
     supabase.rpc("search_catalog_wines", { p_query: q, p_limit: 20 }),
+    // Catalog dedupe (owner, 2026-10-03): what the caller's circle added in the
+    // last day ranks first, so the second person at a tasting finds the first
+    // person's entry. Never a blind_pending row (20261003100000); a failed read
+    // just leaves the page as it was.
+    supabase.rpc("recent_circle_catalog_wines", { p_query: q, p_hours: RECENT_HOURS, p_limit: 10 }),
     supabase
       .from("cellar_lots")
       .select(
@@ -408,7 +457,8 @@ export async function searchAddWine(
   }
 
   // --- one catalog_wines read fills every catalog and tasted row ---
-  const rows = hits.data ?? [];
+  if (recent.error) console.error("add-wine search: recent circle wines failed", { message: recent.error.message });
+  const rows = recentFirst(recent.error ? [] : (recent.data ?? []), hits.data ?? []);
   const hitIds = rows.map((r) => r.id);
   const ids = [...new Set([...hitIds, ...tastedHits.map((t) => t.catalogWineId)])];
   if (ids.length === 0) return { cellar, catalog: [], tasted: [] };
@@ -462,6 +512,7 @@ export async function searchAddWine(
           vintageYear: r.vintage_year,
           vintageTawnyYears: r.vintage_tawny_years,
           appellationName: r.appellation || null,
+          dosageName: relName(w.dosage),
         }),
         subtitle,
         imageUrl: w.image_url,
@@ -678,8 +729,8 @@ export async function loadCatalogWineDraft(catalogWineId: string): Promise<WineI
       .from("catalog_wines")
       .select(
         "id, producer_id, wine_name, vintage_kind, vintage_year, vintage_tawny_years, colour, style, " +
-          "country_id, region_id, appellation_id, type_designation_id, alcohol_percent, description, " +
-          "image_url, primary_grape_id, secondary_grape_id",
+          "country_id, region_id, appellation_id, type_designation_id, dosage_designation_id, alcohol_percent, " +
+          "description, image_url, primary_grape_id, secondary_grape_id",
       )
       .eq("id", catalogWineId)
       // `merged_into` is not in the hand-written types, so the untyped filter.
@@ -693,6 +744,7 @@ export async function loadCatalogWineDraft(catalogWineId: string): Promise<WineI
       colour: Parameters<typeof draftFromCatalogWine>[0]["colour"];
       style: Parameters<typeof draftFromCatalogWine>[0]["style"];
       country_id: string; region_id: string; appellation_id: string; type_designation_id: string | null;
+      dosage_designation_id: string | null;
       alcohol_percent: number | string | null; description: string | null; image_url: string | null;
       primary_grape_id: string; secondary_grape_id: string | null;
     };
@@ -731,6 +783,7 @@ export async function loadCatalogWineDraft(catalogWineId: string): Promise<WineI
       regionId: w.region_id,
       appellationId: w.appellation_id,
       typeDesignationId: w.type_designation_id,
+      dosageId: w.dosage_designation_id,
       alcohol: w.alcohol_percent === null ? null : Number(w.alcohol_percent),
       description: w.description,
       imageUrl: w.image_url,

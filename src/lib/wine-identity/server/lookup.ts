@@ -201,11 +201,13 @@ export function serverLookup(supabase: SupabaseClient<Database>): RefLookup {
       memo("typeDesignations", async () => {
         const { data, error } = await supabase
           .from("type_designations")
-          .select("id, name, country_id")
+          .select("id, name, country_id, category")
           .eq("is_active", true)
           .order("sort_order");
         check(error, "typeDesignations");
-        return (data ?? []).map((row) => ({ id: row.id, name: row.name, countryId: row.country_id }));
+        return (data ?? []).map((row) => ({
+          id: row.id, name: row.name, countryId: row.country_id, category: row.category,
+        }));
       }),
 
     // Resolver step 7.6 (owner fix B, 2026-09-19): the producer's catalog wines as

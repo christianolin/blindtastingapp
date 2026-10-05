@@ -1,6 +1,7 @@
 // The one definition of a complete wine (D2, spec §B.3). No "is it complete"
 // logic may exist outside src/lib/wine-identity/. Pure: relative imports only.
 import { orderedBlend } from "../wine-blend";
+import { effectiveDosageId } from "./dosage";
 import { foldName } from "./fold";
 import type {
   BlendRow, CompleteVintage, CompleteWine, RefChoice, UnidentifiedWine,
@@ -40,6 +41,7 @@ export function emptyDraft(): WineIdentityDraft {
     appellationId: null,
     blend: [],
     typeDesignationId: null,
+    dosageId: null,
     alcohol: null,
     description: null,
     imageUrl: null,
@@ -115,11 +117,16 @@ function normaliseBlend(rows: BlendRow[]): BlendRow[] {
 
 export function normaliseDraft(draft: WineIdentityDraft): WineIdentityDraft {
   const vintage = normaliseVintage(draft.vintage);
+  const style = vintage.kind === "TAWNY" ? "FORTIFIED" : draft.style;
+  // A dosage stays while the style is still open; a wine set to anything but sparkling
+  // has none. Older stored drafts carry no dosage at all.
+  const dosageId = style !== null && style !== "SPARKLING" ? null : blankToNull(draft.dosageId ?? null);
   return {
     ...draft,
     wineName: blankToNull(draft.wineName),
     vintage,
-    style: vintage.kind === "TAWNY" ? "FORTIFIED" : draft.style,
+    style,
+    dosageId,
     blend: normaliseBlend(draft.blend),
     alcohol: normaliseAlcohol(draft.alcohol),
     description: blankToNull(draft.description),
@@ -198,6 +205,7 @@ export function toCompleteWine(
       primaryGrape,
       secondaryGrape: d.blend[1]?.grape ?? null,
       typeDesignationId: blankToNull(d.typeDesignationId),
+      dosageId: effectiveDosageId(style, d.dosageId),
       alcohol: d.alcohol,
       description: d.description,
       imageUrl: blankToNull(d.imageUrl),
@@ -229,6 +237,7 @@ export function toUnidentifiedWine(
       primaryGrape,
       secondaryGrape: d.blend[1]?.grape ?? null,
       typeDesignationId: blankToNull(d.typeDesignationId),
+      dosageId: effectiveDosageId(values.style, d.dosageId),
       alcohol: d.alcohol,
       description: d.description,
       imageUrl: blankToNull(d.imageUrl),

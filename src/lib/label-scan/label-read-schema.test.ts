@@ -25,7 +25,7 @@ describe("the reader's instructions (owner approval 1, 2026-09-13)", () => {
     const { schema } = zodOutputFormat(LabelReadSchema) as unknown as { schema: { properties: Record<string, unknown>; required: string[] } };
     const fields = [
       "isWineLabel", "producer", "wineName", "appellation", "noGeographicIndication", "region", "country", "designation",
-      "vintageKind", "vintageYear", "vintageTawnyYears", "vintageRead", "colour", "style", "grapes", "alcoholPercent",
+      "dosage", "vintageKind", "vintageYear", "vintageTawnyYears", "vintageRead", "colour", "style", "grapes", "alcoholPercent",
       "description", "confidence", "rawText",
     ];
     expect([Object.keys(schema.properties), schema.required]).toEqual([fields, fields]);
@@ -44,6 +44,16 @@ describe("the reader's instructions (owner approval 1, 2026-09-13)", () => {
     expect(examples).toEqual(expect.arrayContaining(["Vintage Port", "Late Bottled Vintage (LBV)", "Grosses Gewächs (GG)"]));
     expect(examples.filter((example) => !names.has(foldName(example)))).toEqual([]);
     for (const gone of ["Gran Selezione", "VORS", "Vintage", "LBV", "Grosses Gewächs"]) expect(examples).not.toContain(gone);
+  });
+
+  it("(f) a sparkling dosage has its own field, and is never a designation or a wine name (owner, 2026-10-03)", () => {
+    const examples = [...described("designation").matchAll(/"([^"]+)"/g)].map((m) => m[1]);
+    for (const dosage of ["Brut", "Brut Nature", "Extra Dry"]) expect(examples).not.toContain(dosage);
+    expect(described("designation")).toContain("not a sparkling wine's dosage: that goes in dosage.");
+    expect(described("wineName")).toContain("never a sparkling dosage term");
+    expect(described("dosage")).toContain('"Semi Seco", "Pas Dosé", "Dosaggio Zero"');
+    expect(coerceLabelRead({ ...base(), dosage: "  Semi Seco " }).dosage).toBe("Semi Seco");
+    expect(coerceLabelRead({ ...base(), dosage: 3 }).dosage).toBeNull();
   });
 
   it("(c) the producer is the name the label presents as its brand, a bottler line only as a last resort (#2)", () => {
@@ -101,7 +111,7 @@ describe("coerceLabelRead review cases", () => {
     const b = base();
     expect(coerceLabelRead({ ...b, isWineLabel: false })).toEqual({
       ...b, isWineLabel: false, producer: null, wineName: null, appellation: null, noGeographicIndication: false,
-      region: null, country: null, designation: null, vintageYear: null, vintageTawnyYears: null, vintageRead: false,
+      region: null, country: null, designation: null, dosage: null, vintageYear: null, vintageTawnyYears: null, vintageRead: false,
       colour: null, style: null, grapes: [], alcoholPercent: null, description: null, confidence: "low",
     });
   });

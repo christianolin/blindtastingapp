@@ -3,6 +3,7 @@
 // from raw strings with a fixed month table — never a locale-aware date
 // formatter, whose short-month spelling ("Sept" vs "Sep") differs by ICU
 // version.
+import { withDosage } from "../wset/wine-title";
 import type { BottleLot, BottleWine, VintageKind, WineColour } from "./types";
 
 export const MONTHS_SHORT: readonly string[] = [
@@ -73,7 +74,7 @@ export function bottleTitle(
   opts?: { dropVintage?: boolean },
 ): string {
   if (isUntitled(w)) return "Untitled wine";
-  const base = baseName(w);
+  const base = withDosage(baseName(w), w.dosage);
   const vintage = opts?.dropVintage ? "" : vintageLabel(w);
   return `${base} ${vintage}`.trim();
 }

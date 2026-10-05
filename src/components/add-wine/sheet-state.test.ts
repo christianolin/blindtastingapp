@@ -2621,3 +2621,51 @@ describe("itemRowCopy: a scan quota refusal", () => {
     }
   });
 });
+
+describe("near-match prompt (catalog dedupe, 2026-10-03)", () => {
+  const complete = { ...partial.draft, vintage: { kind: "YEAR" as const, year: 2019, tawnyYears: null, read: false } };
+  const prompt = {
+    source: { kind: "identity" as const, draft: complete, via: "byhand" as const, readId: null },
+    byHand: true,
+    scanNext: false,
+    matches: { wines: [], producers: [{ id: "p2", name: "Cigliuti Renato", regionName: "Piedmont", inRegion: true, wineCount: 3 }] },
+  };
+  const onForm = () =>
+    run(initialSheetState({ destination: { kind: "catalog" }, options: {}, canScan: false }),
+      { type: "openByHand", origin: { kind: "new" }, draft: complete, focusField: null });
+
+  it("starts with no prompt", () => {
+    expect(initialSheetState({ destination: flight, options: {}, canScan: true }).nearMatch).toBeNull();
+  });
+  it("shows the prompt over the view while its ticket is current, and Back drops it without moving", () => {
+    let s = onForm();
+    s = reduceSheet(s, { type: "nearMatchFound", prompt, ticket: ticketFor(s) });
+    expect([s.view, s.nearMatch?.matches.producers[0].name]).toEqual(["byhand", "Cigliuti Renato"]);
+    const before = s.flow;
+    s = reduceSheet(s, { type: "nearMatchClosed" });
+    expect([s.view, s.nearMatch, s.flow]).toEqual(["byhand", null, before]);
+  });
+  it("drops a stale reply: the person moved on while the check ran", () => {
+    let s = onForm();
+    const ticket = ticketFor(s);
+    s = reduceSheet(s, { type: "back" });
+    s = reduceSheet(s, { type: "nearMatchFound", prompt, ticket });
+    expect(s.nearMatch).toBeNull();
+  });
+  it("any step that moves the sheet drops the prompt", () => {
+    let s = onForm();
+    s = reduceSheet(s, { type: "nearMatchFound", prompt, ticket: ticketFor(s) });
+    s = reduceSheet(s, { type: "back" });
+    expect(s.nearMatch).toBeNull();
+    s = onForm();
+    s = reduceSheet(s, { type: "nearMatchFound", prompt, ticket: ticketFor(s) });
+    s = reduceSheet(s, { type: "requestClose" });
+    expect(s.nearMatch).toBeNull();
+  });
+  it("a background step keeps it", () => {
+    let s = onForm();
+    s = reduceSheet(s, { type: "nearMatchFound", prompt, ticket: ticketFor(s) });
+    s = reduceSheet(s, { type: "error", error: null });
+    expect(s.nearMatch).not.toBeNull();
+  });
+});

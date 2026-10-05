@@ -4,6 +4,7 @@
 // so vitest (node, no `@/` alias) can load it directly.
 import { colourWord, fmtAvg } from "../../lib/cellar/format";
 import type { WineColour, WineStyle } from "../../lib/cellar/types";
+import { dosageSearchTerms } from "../../lib/wine-identity/dosage";
 
 export type CatalogRow = {
   id: string;
@@ -19,6 +20,9 @@ export type CatalogRow = {
   appellation: string | null;
   grapes: string[];
   designation: string | null;
+  /** A sparkling wine's dosage ("Brut Nature"): already in `name` and `title`;
+      kept here so the search also finds it by a local spelling ("semi seco"). */
+  dosage?: string | null;
   vintage: string;
   imageUrl: string | null;
   avgScore: number | null;
@@ -96,7 +100,7 @@ export function matchesCatalogSearch(row: CatalogRow, needle: string): boolean {
   const n = fold(needle);
   if (!n) return true;
   const hay = fold(
-    [row.title, row.producer, row.appellation, row.region, row.country, ...row.grapes]
+    [row.title, row.producer, row.appellation, row.region, row.country, ...row.grapes, ...dosageSearchTerms(row.dosage)]
       .filter(Boolean)
       .join(" "),
   );
