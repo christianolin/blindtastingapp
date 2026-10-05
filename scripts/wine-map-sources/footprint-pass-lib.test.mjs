@@ -212,3 +212,16 @@ test("closure F2 measures given-up ground exactly: no grid, no lost_m2 floor (th
   assert.doesNotMatch(f2, /metrics?.lost_m2/);
   assert.match(f2, /LOST_SQL/);
 });
+
+test("a statement timeout is retried once, first in a new transaction with SLOW_FACTOR x the timeout", async () => {
+  const { retryOnTimeout, SLOW_FACTOR } = await import("./footprint-pass-lib.mjs");
+  const slow = new Set();
+  const lines = [];
+  const log = (x) => lines.push(x);
+  assert.equal(retryOnTimeout({ code: "57014" }, 7, slow, "united-states.california.north-coast", 90000, log), true);
+  assert.ok(slow.has(7));
+  assert.match(lines[0], /360 s statement timeout/);
+  assert.equal(SLOW_FACTOR, 4);
+  assert.equal(retryOnTimeout({ code: "57014" }, 7, slow, "x", 90000, log), false, "only once: then it is an error record");
+  assert.equal(retryOnTimeout({ code: "XX000" }, 8, slow, "x", 90000, log), false, "any other error is recorded at once");
+});

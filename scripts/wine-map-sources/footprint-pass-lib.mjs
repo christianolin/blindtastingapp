@@ -62,6 +62,24 @@ export function paramReach(priorParams, params, metrics) {
   return { from, to };
 }
 
+/** A place that hit the statement timeout is retried once, first in a fresh transaction, with this x the timeout. */
+export const SLOW_FACTOR = 4;
+
+/**
+ * Whether to retry place `j` after `error`: a statement timeout (57014), the first
+ * time only. The aborted transaction rolls back; the next batch starts AT the place,
+ * with SLOW_FACTOR x the timeout for that whole batch. Nothing it computed
+ * reached the pending map, so the retry sees exactly what the first attempt saw.
+ * (run5, 2026-10-05: United States North Coast, 80 s in run4, hit the 90 s timeout
+ * once under load and became an error record in an otherwise clean full run.)
+ */
+export function retryOnTimeout(error, j, slow, key, timeoutMs, log = console.log) {
+  if (error?.code !== "57014" || slow.has(j)) return false;
+  slow.add(j);
+  log(`  TIMEOUT ${key}: retrying it first in a new transaction with a ${(SLOW_FACTOR * timeoutMs) / 1000} s statement timeout`);
+  return true;
+}
+
 /**
  * How far (m) a place's cleaned shape can reach beyond its raw input, outside its
  * outer rings (hole filling is the other reach): the closing dilates by gap_m / 2

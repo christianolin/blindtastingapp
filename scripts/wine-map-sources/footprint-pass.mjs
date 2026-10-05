@@ -77,8 +77,8 @@ import {
   orderBatch,
 } from "./footprint-cleanup.mjs";
 import {
-  REVISION_SUFFIX, areaDelta, cleanedReachM, codeRefusals, flagsOf, inScope, paramReach, rejectPath, renderPromoteSql,
-  renderRejectReleaseSql, renderReport, renderRevertSql, renderUnstageSql, renderedPaths, revealDiff, sittingGate, wavesFor,
+  REVISION_SUFFIX, SLOW_FACTOR, areaDelta, cleanedReachM, codeRefusals, flagsOf, inScope, paramReach, rejectPath, renderPromoteSql,
+  renderRejectReleaseSql, renderReport, renderRevertSql, renderUnstageSql, renderedPaths, retryOnTimeout, revealDiff, sittingGate, wavesFor,
 } from "./footprint-pass-lib.mjs";
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
@@ -301,6 +301,7 @@ async function dryRun() {
   const records = [];
   const perWave = new Map();
   const order = globalOrder(catalogue, waves, (p) => !keys || keys.has(p.key));
+  const slow = new Set(); // places retried, first in a new batch, with SLOW_FACTOR x the timeout (retryOnTimeout)
   let i = 0;
   while (i < order.length && records.length < limit) {
     i = await withReadOnly(async (c) => {
@@ -315,6 +316,7 @@ async function dryRun() {
           records.push(out.rec);
           perWave.get(wave).push(out.rec);
         } catch (error) {
+          if (retryOnTimeout(error, j, slow, place.key, timeoutMs)) return j;
           const rec = { key: place.key, place_id: place.id, tier: place.tier, kind: place.kind, wave, computed_commit: code.commit, current_boundary_id: place.boundary_id,
             current_revision: place.revision, current_sha256: place.sha, method: place.method,
             status: `error:${error.code ?? "?"}`, error: String(error.message).slice(0, 300), changed: false };
@@ -326,7 +328,7 @@ async function dryRun() {
         await sleep(pauseMs);
       }
       return j;
-    }, { statementTimeoutMs: timeoutMs });
+    }, { statementTimeoutMs: slow.has(i) ? SLOW_FACTOR * timeoutMs : timeoutMs });
     console.log(`  ${i}/${order.length} (${Math.round((Date.now() - t0) / 1000)} s)`);
   }
 
@@ -493,6 +495,7 @@ async function closureRun() {
   const records = new Map();
   const moved = [];
   const seedFailed = [];
+  const slow = new Set();
   let i = 0;
   while (i < order.length) {
     i = await withReadOnly(async (c) => {
@@ -521,6 +524,7 @@ async function closureRun() {
         try {
           out = await processPlace(c, { place, wave, pending, via, geojsonDir, survey: null, code });
         } catch (error) {
+          if (retryOnTimeout(error, j, slow, place.key, timeoutMs)) return j;
           records.set(place.key, { key: place.key, place_id: place.id, wave, computed_commit: code.commit, status: `error:${error.code ?? "?"}`,
             error: String(error.message).slice(0, 300), changed: false, current_boundary_id: place.boundary_id, current_sha256: place.sha });
           console.log(`  ERROR ${place.key}: ${String(error.message).slice(0, 200)}`);
@@ -560,7 +564,7 @@ async function closureRun() {
         await sleep(pauseMs);
       }
       return j;
-    }, { statementTimeoutMs: timeoutMs });
+    }, { statementTimeoutMs: slow.has(i) ? SLOW_FACTOR * timeoutMs : timeoutMs });
     console.log(`  walked ${i}/${order.length}; computed ${records.size}, moved ${moved.length} (${Math.round((Date.now() - t0) / 1000)} s)`);
   }
 
