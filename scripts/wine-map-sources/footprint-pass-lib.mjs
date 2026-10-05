@@ -62,6 +62,51 @@ export function paramReach(priorParams, params, metrics) {
   return { from, to };
 }
 
+/**
+ * How far (m) a place's cleaned shape can reach beyond its raw input, outside its
+ * outer rings (hole filling is the other reach): the closing dilates by gap_m / 2
+ * with mitre joins, whose tip lies at most mitre_limit x the radius from the raw
+ * (a longer mitre is clipped), and the closing lies inside that dilation; opening
+ * arms, dropping crumbs and the constraint only remove ground. The closure
+ * re-run's reach (footprint-pass.mjs REACH_SQL) uses this bound; the fixed 12 m it
+ * used before is short of a mitred corner's reach.
+ */
+export function cleanedReachM(params = PARAMS) {
+  const style = String(params.buffer_style ?? "");
+  const join = /join=(\w+)/.exec(style)?.[1] ?? "round";
+  const mitre = Number(/mitre_limit=([0-9.]+)/.exec(style)?.[1] ?? 5); // PostGIS's default mitre limit
+  const k = join === "mitre" ? Math.max(1, mitre) : 1; // round / bevel joins stay within the radius
+  return k * (Number(params.gap_m) / 2) + 1; // + 1 m slack: denoise (1 cm), the grid (~0.1 m)
+}
+
+/**
+ * The code a review file was computed with: refusals for --stage. Only a review
+ * whose every record was computed by the run's own commit, from a committed tree,
+ * is stageable, i.e. a full --dry run. A closure re-run seeds every unreached
+ * place's PRIOR record, which carries what the prior code computed: review
+ * 2026-10-05 found 8 records seeded through two closure re-runs from the run
+ * before cded7a3 that no longer matched (sub-m²), and --stage's per-place sha
+ * assert would have refused 5 German waves mid-transaction. A closure re-run is
+ * a preview.
+ */
+export function codeRefusals(review) {
+  const code = review?._provenance?.code;
+  if (!code?.commit) return ["the review file records no code commit (_provenance.code): re-run a full --dry"];
+  const r = [];
+  if (code.dirty?.length) {
+    r.push(`the run's code was not committed (${code.dirty.length} modified file(s), e.g. ${code.dirty[0]}): commit, then re-run a full --dry`);
+  }
+  if (review._provenance.closure) r.push("a closure re-run (_provenance.closure) is a preview: stage from a full --dry run");
+  const part = review._provenance.partial;
+  if (part?.keys || part?.limit != null) r.push("a --keys / --limit run computed without the places before it: stage from a full --dry run");
+  const other = (review.places ?? []).filter((p) => p.computed_commit !== code.commit);
+  if (other.length) {
+    const commits = [...new Set(other.map((p) => String(p.computed_commit ?? "(none)").slice(0, 7)))];
+    r.push(`${other.length} record(s) were not computed by this run's code ${code.commit.slice(0, 7)} (from ${commits.join(", ")}, e.g. ${other[0].key}): only a full --dry run is stageable`);
+  }
+  return r;
+}
+
 /** The owner approval as one line for a SQL comment (a string, or { text, ... }): a line break would end the comment. */
 export function approvalLine(a) {
   if (!a) return "(none)";
@@ -169,6 +214,9 @@ export function renderReport({ provenance, records }) {
   L.push(`Generated ${provenance.generated_at} by \`footprint-pass.mjs --dry\` (${provenance.via}). Read-only: nothing was written to the database or Storage, nothing was dispatched.`, "");
   L.push(`- Waves (worst first): ${provenance.waves.join(" → ")}`);
   L.push(`- PostGIS ${provenance.postgis}, GEOS ${provenance.geos}`);
+  if (provenance.code) {
+    L.push(`- Code: ${provenance.code.branch ?? "?"} @ ${provenance.code.commit}${provenance.code.dirty?.length ? ` (UNCOMMITTED changes: ${provenance.code.dirty.join(", ")})` : ""}; ${provenance.closure ? "a closure re-run (seeded records keep the commit that computed them): a preview, --stage refuses it" : "a full run: every record computed by this commit"}`);
+  }
   L.push(`- Places read: ${all.length}; **changed: ${changed.length}**; unchanged: ${all.filter((r) => !r.changed && r.status === "unchanged").length}; skipped: ${all.filter((r) => r.status?.startsWith("skipped")).length}; errors: ${all.filter((r) => r.status?.startsWith("error")).length}`);
   const d = changed.map((r) => areaDelta(r.metrics)).filter((x) => x !== null);
   L.push(`- Area change on changed places: p50 ${pct(q(d, 0.5))}, p90 ${pct(q(d, 0.9))}, p99 ${pct(q(d, 0.99))}, max ${pct(d.length ? Math.max(...d) : null)}, min ${pct(d.length ? Math.min(...d) : null)}`);

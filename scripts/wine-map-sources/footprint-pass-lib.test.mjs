@@ -166,3 +166,34 @@ test("the promote's approval comment stays on one line", () => {
   const sql = renderPromoteSql({ ...review, _provenance: { ...review._provenance, owner_approval: { text: `ok${NL}drop table x;` } } });
   assert.ok(!sql.includes(`${NL}drop table x;`));
 });
+
+test("the closure's reach covers the mitred closing: mitre_limit x gap_m / 2, plus slack", async () => {
+  const { cleanedReachM } = await import("./footprint-pass-lib.mjs");
+  assert.equal(cleanedReachM(), 31, "fp-1: join=mitre mitre_limit=3, gap 20 m -> 30 m + 1 m");
+  assert.ok(cleanedReachM() > 12, "the old fixed 12 m fell short of a mitred corner");
+  assert.equal(cleanedReachM({ gap_m: 20, buffer_style: "join=round" }), 11);
+  assert.equal(cleanedReachM({ gap_m: 20, buffer_style: "join=mitre" }), 51, "PostGIS's default mitre limit is 5");
+});
+
+test("--stage refuses a review that is not one full, committed run (seeded records from other code)", async () => {
+  const { codeRefusals } = await import("./footprint-pass-lib.mjs");
+  const c = "851c21c5601662b5d19fde11b9419b04e99dfab2";
+  const rec = (key, commit = c) => ({ key, computed_commit: commit, changed: true });
+  const full = { _provenance: { code: { commit: c, dirty: [] } }, places: [rec("a"), rec("b")] };
+  assert.deepEqual(codeRefusals(full), []);
+  assert.match(codeRefusals({ _provenance: {}, places: [] })[0], /no code commit/);
+  const seeded = { _provenance: { code: { commit: c, dirty: [] }, closure: { from: "review3" } },
+    places: [rec("a"), rec("germany.mosel.x.wiltingen-hoelle", "ad3d0f2aaaaaaaa"), rec("c", null)] };
+  const r = codeRefusals(seeded).join("\n");
+  assert.match(r, /closure re-run/);
+  assert.match(r, /2 record\(s\) were not computed by this run's code 851c21c \(from ad3d0f2, \(none\), e\.g\. germany\.mosel\.x\.wiltingen-hoelle\)/);
+  assert.match(codeRefusals({ ...full, _provenance: { code: { commit: c, dirty: ["scripts/wine-map-sources/footprint-sql.mjs"] } } })[0], /not committed/);
+  assert.match(codeRefusals({ ...full, _provenance: { ...full._provenance, partial: { keys: ["a"], limit: null } } })[0], /--keys/);
+  assert.deepEqual(codeRefusals({ ...full, _provenance: { ...full._provenance, partial: { keys: null, limit: null, wave: "germany.pfalz" } } }), []);
+});
+
+test("the report names the code a run was computed by", () => {
+  const md = renderReport({ provenance: { generated_at: "t", via: "inline", waves: ["france"], postgis: "3.3.7", geos: "3.14",
+    code: { commit: "abc1234", branch: "map-footprints", dirty: [] } }, records: [] });
+  assert.match(md, /Code: map-footprints @ abc1234; a full run/);
+});

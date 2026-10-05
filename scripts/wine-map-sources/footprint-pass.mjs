@@ -16,30 +16,37 @@
 //   place whose current row is itself a cleanup re-cleans from its recorded input
 //   (idempotence by provenance).
 //
-//   --closure-from <prior review dir> --seed-geojson <prior geojson dir>: re-run
-//   only the places a change can reach (after a fix to the step), in the same global
+//   --closure-from <prior review dir> --seed-geojson <prior geojson dir>: A PREVIEW,
+//   never stageable (--stage refuses any review whose records were not all computed
+//   by its own committed run: codeRefusals; only a full --dry run is staged). Re-runs
+//   only the places a change can reach, in the same global
 //   order, seeding every other place's prior output as pending (each seed must
-//   round-trip to its recorded sha256, else it is recomputed). Starts from
+//   round-trip to its recorded sha256, else it is recomputed); a seeded record keeps
+//   the commit that computed it (computed_commit). It follows parameter changes and
+//   its own moves, never a code change's reach. Starts from
 //   --keys plus the prior run's re-derived parents plus every place whose cleaned
-//   reach (12 m, or inside its outer rings) touches ground a neighbour's prior
-//   cleanup gave up, plus (when the prior run's parameters differ: only the crumb
+//   reach (cleanedReachM: 31 m for the mitred closing, or inside its outer rings)
+//   touches ground any changed neighbour's prior cleanup gave up, plus (when the prior run's parameters differ: only the crumb
 //   bounds may, footprint-pass-lib.mjs paramReach) every place whose crumb floor
 //   moves; a seeded record then carries the new parameters in its stamp and a
 //   "carried" note (its floor, hence its output and stamp, is the same under both);
 //   a recomputed place whose output moved adds the same-tier
-//   places after it its change can reach, and its ancestors that lost ground.
+//   places after it its change can reach, its descendants after it, and its
+//   ancestors whose step moved anything.
 //   Writes the merged review files (prior records, recomputed ones replaced),
 //   the recomputed GeoJSON (deleting a stale one), the report, and closure.json.
-//   Outputs: one review JSON per wave (owner approval goes into its _provenance),
+//   Outputs: one review JSON per wave (owner approval goes into its _provenance;
+//   _provenance.code and every record's computed_commit name the code),
 //   <geojson-dir>/<key>.geojson for every changed place (before, after, blockers,
-//   parent), and a markdown report (per country, refusals, flags, reveal flips).
+//   parent; before and after read back to their sha256: EXACT_GJ_SQL), and a markdown report (per country, refusals, flags, reveal flips).
 //
 //     node scripts/wine-map-sources/footprint-pass.mjs --dry [--wave all|<scope>] [--keys k1,k2]
 //          [--review-dir data/wine-map/review] [--geojson-dir .superpowers/footprints]
 //          [--report <file>] [--batch 40] [--pause-ms 150] [--timeout-ms 90000] [--survey <survey.json>]
 //
 //   --stage --review <file>: AT A SITTING ONLY (main session, after owner approval).
-//   Refuses unless the sitting gate passes (owner approval recorded, Migration A
+//   Refuses a review that is not one full, committed --dry run (codeRefusals), and
+//   unless the sitting gate passes (owner approval recorded, Migration A
 //   live, no DRAFT boundary anywhere, no tiles release BUILDING in the last hour,
 //   the previous wave promoted, every input row still current with its recorded
 //   sha). Then recomputes every changed place through public.wine_footprint_clean
@@ -56,8 +63,10 @@
 //   wave's draft tiles release: the rollback file that marks it FAILED, so no
 //   promote.mjs (bare or by version) can ship it after the DB revert.
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import { copyFile, mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import pg from "pg";
 import { pgConfig, releaseVersion } from "../wine-map-tiles/lib.mjs";
 import { withReadOnly } from "./read-only-client.mjs";
@@ -68,9 +77,24 @@ import {
   orderBatch,
 } from "./footprint-cleanup.mjs";
 import {
-  REVISION_SUFFIX, areaDelta, flagsOf, inScope, paramReach, rejectPath, renderPromoteSql, renderRejectReleaseSql, renderReport,
-  renderRevertSql, renderUnstageSql, renderedPaths, revealDiff, sittingGate, wavesFor,
+  REVISION_SUFFIX, areaDelta, cleanedReachM, codeRefusals, flagsOf, inScope, paramReach, rejectPath, renderPromoteSql,
+  renderRejectReleaseSql, renderReport, renderRevertSql, renderUnstageSql, renderedPaths, revealDiff, sittingGate, wavesFor,
 } from "./footprint-pass-lib.mjs";
+
+const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
+
+/**
+ * The code a run computes with: the commit, and any uncommitted change under scripts/
+ * (the step, the pass and what they import). Every computed record carries the
+ * commit (computed_commit); --stage refuses a review whose records were not all
+ * computed by its own, committed run (codeRefusals).
+ */
+function codeOf() {
+  const git = (...a) => execFileSync("git", a, { cwd: REPO, encoding: "utf8" });
+  // porcelain lines are "XY path": never trim the output, or the first line loses a column
+  const dirty = git("status", "--porcelain", "--", "scripts").split(/\r?\n/).filter(Boolean).map((l) => l.slice(3));
+  return { commit: git("rev-parse", "HEAD").trim(), branch: git("rev-parse", "--abbrev-ref", "HEAD").trim(), dirty };
+}
 
 function arg(name, fallback = null) {
   const i = process.argv.indexOf(`--${name}`);
@@ -110,6 +134,30 @@ select case when $1::extensions.geometry is null then null else
                       extensions.ST_YMax(extensions.Box2D($2::extensions.geometry)) - extensions.ST_YMin(extensions.Box2D($2::extensions.geometry)), 0.002))), 6) end gj`;
 
 /**
+ * The GeoJSON a run writes for a before / after shape, exact: it must read back
+ * (ST_GeomFromGeoJSON, SRID 4326) to the very bytes whose sha256 the review records.
+ * 6 decimals when that round-trips (every shape on the 1e-6° grid); else the
+ * shortest round-trip digits (maxdecimaldigits 20: Entre-deux-Mers' stored row carries
+ * off-grid vertices). When even that fails, `ewkb` (hex) is returned too and every
+ * reader takes it first: Entre-deux-Mers' output has a vertex at longitude -0.0 on
+ * the Greenwich meridian, which GeoJSON writes as 0 (one sign bit apart), so its
+ * file never matched its sha at any precision.
+ */
+const EXACT_GJ_SQL = `
+with z as (select $1::extensions.geometry g),
+c as (select g, extensions.ST_AsEWKB(g) b, extensions.ST_AsGeoJSON(g, 6) g6, extensions.ST_AsGeoJSON(g, 20) g20 from z),
+k as (select *, extensions.ST_AsEWKB(extensions.ST_SetSRID(extensions.ST_GeomFromGeoJSON(g6), 4326)) = b ok6,
+             extensions.ST_AsEWKB(extensions.ST_SetSRID(extensions.ST_GeomFromGeoJSON(g20), 4326)) = b ok20 from c)
+select case when ok6 then g6 else g20 end gj, (ok6 or ok20) exact, case when ok6 or ok20 then null else encode(b, 'hex') end ewkb,
+       encode(sha256(b), 'hex') sha
+  from k`;
+
+async function exactGeoJson(c, hex) {
+  const r = (await c.query(EXACT_GJ_SQL, [hex])).rows[0];
+  return { geometry: JSON.parse(r.gj), ewkb: r.ewkb, sha: r.sha };
+}
+
+/**
  * The raw input of a place: its stored current row, never a re-derivation (F1/F7);
  * a row that is itself a cleanup re-cleans from its recorded input (idempotence by
  * provenance).
@@ -146,10 +194,10 @@ function globalOrder(catalogue, waves, keep = () => true) {
 }
 
 /** One place through the step: its record (and its GeoJSON when it changed). Throws on a database error. */
-async function processPlace(c, { place, wave, pending, via, geojsonDir, survey }) {
+async function processPlace(c, { place, wave, pending, via, geojsonDir, survey, code }) {
   const started = Date.now();
   const rec = {
-    key: place.key, place_id: place.id, tier: place.tier, kind: place.kind, wave,
+    key: place.key, place_id: place.id, tier: place.tier, kind: place.kind, wave, computed_commit: code.commit,
     current_boundary_id: place.boundary_id, current_revision: place.revision, current_sha256: place.sha,
     method: place.method, score_before: survey?.get(place.key) ?? null,
   };
@@ -183,12 +231,18 @@ async function processPlace(c, { place, wave, pending, via, geojsonDir, survey }
     const blkGj = (await c.query(CLIP_SQL, [blk, before.hex])).rows[0].gj;
     const parGj = (await c.query(CLIP_SQL, [par, before.hex])).rows[0].gj;
     const feature = (role, gj, props = {}) => (gj ? { type: "Feature", properties: { role, ...props }, geometry: JSON.parse(gj) } : null);
+    // before / after exact (EXACT_GJ_SQL): each reads back to the sha256 it carries
+    const exact = async (hex, sha, role) => {
+      const x = await exactGeoJson(c, hex);
+      assert.equal(x.sha, sha, `${place.key}: ${role} sha ${x.sha} vs ${sha}`);
+      return { type: "Feature", properties: { role, sha256: sha, ...(x.ewkb ? { ewkb: x.ewkb } : {}) }, geometry: x.geometry };
+    };
     const fc = {
       type: "FeatureCollection",
       properties: { key: place.key, status: cu.status, rung: cu.rung, metrics: cu.metrics, parent: rec.parent, blockers: cu.context?.blocker_keys ?? null },
       features: [
-        feature("before", before.gj, { sha256: place.sha }),
-        feature("after", after.gj, { sha256: cu.output_sha256 }),
+        await exact(before.hex, place.sha, "before"),
+        await exact(result.hex, cu.output_sha256, "after"),
         feature("blockers", blkGj),
         feature("parent", parGj, { key: rec.parent }),
       ].filter(Boolean),
@@ -239,6 +293,8 @@ async function dryRun() {
   await mkdir(geojsonDir, { recursive: true });
   await mkdir(reviewDir, { recursive: true });
   const t0 = Date.now();
+  const code = codeOf();
+  if (code.dirty.length) console.log(`WARNING: uncommitted changes under scripts/ (${code.dirty.join(", ")}): --stage will refuse this run`);
   const { catalogue, versions, via } = await loadCatalogue(timeoutMs);
 
   const pending = createPending();
@@ -254,12 +310,12 @@ async function dryRun() {
         const { place, wave } = order[j];
         if (!perWave.has(wave)) perWave.set(wave, []);
         try {
-          const out = await processPlace(c, { place, wave, pending, via, geojsonDir, survey });
+          const out = await processPlace(c, { place, wave, pending, via, geojsonDir, survey, code });
           if (out.rec.changed) pending.map.set(place.id, { hex: out.hex, bbox: out.bbox });
           records.push(out.rec);
           perWave.get(wave).push(out.rec);
         } catch (error) {
-          const rec = { key: place.key, place_id: place.id, tier: place.tier, kind: place.kind, wave, current_boundary_id: place.boundary_id,
+          const rec = { key: place.key, place_id: place.id, tier: place.tier, kind: place.kind, wave, computed_commit: code.commit, current_boundary_id: place.boundary_id,
             current_revision: place.revision, current_sha256: place.sha, method: place.method,
             status: `error:${error.code ?? "?"}`, error: String(error.message).slice(0, 300), changed: false };
           records.push(rec);
@@ -275,8 +331,9 @@ async function dryRun() {
   }
 
   const provenance = {
-    generated_at: new Date().toISOString(), version: FOOTPRINT_VERSION, params: PARAMS, via,
+    generated_at: new Date().toISOString(), version: FOOTPRINT_VERSION, params: PARAMS, via, code,
     postgis: versions.postgis, geos: versions.geos, waves: [...perWave.keys()], elapsed_s: Math.round((Date.now() - t0) / 1000),
+    ...(keys || Number.isFinite(limit) || arg("wave", "all") !== "all" ? { partial: { keys: keys ? [...keys] : null, limit: Number.isFinite(limit) ? limit : null, wave: arg("wave", "all") } } : {}),
   };
   await writeOutputs({ reviewDir, perWave, provenance, reportPath, records });
   console.log(`DONE dry: ${records.length} places, ${records.filter((r) => r.changed).length} changed, ${Math.round((Date.now() - t0) / 1000)} s; nothing written`);
@@ -284,46 +341,75 @@ async function dryRun() {
 
 // ---------------------------------------------------------------- closure re-run
 
-/** Hex EWKB of a prior run's "after" (6-decimal GeoJSON on the 1e-6° grid: it round-trips byte for byte). */
+/**
+ * Hex EWKB of a prior run's "after": its exact GeoJSON (EXACT_GJ_SQL), or its ewkb
+ * property when the run wrote one ($2). The caller compares the sha to the record.
+ */
 const SEED_SQL = `
 select encode(extensions.ST_AsEWKB(g), 'hex') hex, encode(sha256(extensions.ST_AsEWKB(g)), 'hex') sha,
        extensions.ST_XMin(extensions.Box3D(g)) x0, extensions.ST_YMin(extensions.Box3D(g)) y0,
        extensions.ST_XMax(extensions.Box3D(g)) x1, extensions.ST_YMax(extensions.Box3D(g)) y1
-  from (select extensions.ST_SetSRID(extensions.ST_GeomFromGeoJSON($1), 4326) g) z`;
+  from (select coalesce(extensions.ST_GeomFromEWKB(decode($2::text, 'hex')),
+                        extensions.ST_SetSRID(extensions.ST_GeomFromGeoJSON($1), 4326)) g) z`;
 
-/** The region a place's output moved by: (a ∆ b) as hex, or null when empty. */
+/**
+ * The region a place's output moved by: (a ∆ b), exact (no grid: a sub-grid move
+ * still moves a blocker), as hex. When the overlay leaves nothing although the
+ * bytes differ, both shapes whole: the walk never drops a move.
+ */
 const MOVED_SQL = `
+select case when not extensions.ST_IsEmpty(d) then encode(extensions.ST_AsEWKB(d), 'hex')
+            when extensions.ST_AsEWKB($1::extensions.geometry) = extensions.ST_AsEWKB($2::extensions.geometry) then null
+            else encode(extensions.ST_AsEWKB(extensions.ST_Collect($1::extensions.geometry, $2::extensions.geometry)), 'hex') end hex
+  from (select extensions.ST_CollectionExtract(extensions.ST_SymDifference($1::extensions.geometry, $2::extensions.geometry), 3) d) z`;
+
+/** Ground a prior output gave up: stored − after, exact (no grid, no area floor), as hex, or null. */
+const LOST_SQL = `
 select case when extensions.ST_IsEmpty(d) then null else encode(extensions.ST_AsEWKB(d), 'hex') end hex
-  from (select extensions.ST_CollectionExtract(extensions.ST_SymDifference($1::extensions.geometry, $2::extensions.geometry, ${PARAMS.grid_deg}), 3) d) z`;
+  from (select extensions.ST_CollectionExtract(extensions.ST_Difference(b.display_geometry, $2::extensions.geometry), 3) d
+          from public.wine_place_boundaries b where b.id = $1) z`;
+
+const REACH_M = cleanedReachM(PARAMS);
 
 /**
  * Same-tier places (no partner edge) whose cleaned reach could touch `region`:
- * within 12 m of the region (the closing radius is 10 m) or the region inside one
- * of their parts' outer rings (hole filling).
+ * within REACH_M of the region (cleanedReachM: the mitred closing's reach, 31 m
+ * for fp-1; the 12 m used before fell short of it) or the region inside one of
+ * their parts' outer rings (hole filling). Measured from each place's raw input:
+ * its stored row, or the recorded input of a current fp-1 row (rawInput).
  */
 const REACH_SQL = `
 with l as (select $1::extensions.geometry g)
 select p.canonical_key k
   from l, public.wine_place_boundaries yb join public.wine_places p on p.id = yb.wine_place_id
+  left join public.wine_place_boundaries ib
+    on ib.id = (yb.generation_parameters->'cleanup'->>'input_boundary_id')::uuid and ib.wine_place_id = yb.wine_place_id
+  cross join lateral (select coalesce(ib.display_geometry, yb.display_geometry) g) rg
  where yb.is_current and yb.quality_status = 'VALIDATED' and p.display_tier = $2 and p.id <> $3::uuid
-   and yb.display_geometry && extensions.ST_Expand(l.g, 0.0005)
+   and rg.g && extensions.ST_Expand(l.g, 0.002)
    and not exists (select 1 from public.wine_place_relationships r
                     where r.relationship_type::text in ('DUAL_LABEL', 'OVERLAPS', 'REPLACES_WITHIN')
                       and ((r.source_place_id = p.id and r.target_place_id = $3::uuid) or (r.source_place_id = $3::uuid and r.target_place_id = p.id)))
-   and (extensions.ST_DWithin(l.g::extensions.geography, yb.display_geometry::extensions.geography, 12)
+   and (extensions.ST_DWithin(l.g::extensions.geography, rg.g::extensions.geography, ${REACH_M})
         or extensions.ST_Intersects(l.g, (select extensions.ST_Collect(extensions.ST_MakePolygon(extensions.ST_ExteriorRing(d.geom)))
-                                            from extensions.ST_Dump(yb.display_geometry) d)))`;
+                                            from extensions.ST_Dump(rg.g) d)))`;
 
 async function readPrior(dir) {
   const prior = new Map();
+  const commits = new Set();
   let params = null;
   for (const name of (await readdir(dir)).filter((n) => n.startsWith("footprints-") && n.endsWith(".json"))) {
     const file = JSON.parse(await readFile(path.join(dir, name), "utf8"));
     assert.ok(!params || JSON.stringify(params) === JSON.stringify(file._provenance.params), `${name}: the prior run's files disagree on params`);
     params = file._provenance.params;
-    for (const rec of file.places) prior.set(rec.key, rec);
+    for (const rec of file.places) {
+      // a record from before computed_commit existed: the file's code, else unknown
+      const r = rec.computed_commit ? rec : { ...rec, computed_commit: file._provenance.code?.commit ?? null };
+      prior.set(rec.key, r);
+      commits.add(r.computed_commit);
+    }
   }
-  return { prior, params };
+  return { prior, params, commits };
 }
 
 async function closureRun() {
@@ -335,15 +421,34 @@ async function closureRun() {
   await mkdir(geojsonDir, { recursive: true });
   await mkdir(reviewDir, { recursive: true });
   const t0 = Date.now();
-  const { prior, params: priorParams } = await readPrior(priorDir);
+  const { prior, params: priorParams, commits: priorCommits } = await readPrior(priorDir);
   const paramsChanged = JSON.stringify(priorParams) !== JSON.stringify(PARAMS);
+  const code = codeOf();
+  // A closure follows the reach of a parameter change and of the moves it makes itself;
+  // it cannot know the reach of a code change. Its review file is a preview either way:
+  // every seeded record keeps the commit that computed it, and --stage refuses any
+  // review that is not one full --dry run (codeRefusals).
+  const otherCode = [...priorCommits].filter((x) => x !== code.commit);
+  if (otherCode.length) {
+    console.log(`WARNING: the prior run was computed by other code (${otherCode.map((x) => String(x).slice(0, 7)).join(", ")}); `
+      + "this closure is a preview of the change, not a stageable run: stage from a full --dry");
+  }
   const { catalogue, versions, via } = await loadCatalogue(timeoutMs);
   const order = globalOrder(catalogue, wavesFor("all"));
   const index = new Map(order.map((o, i) => [o.place.key, i]));
   const byId = new Map(catalogue.map((p) => [p.id, p]));
-  const seedOf = async (key) => {
+  const children = new Map();
+  for (const p of catalogue) {
+    if (!children.has(p.primary_parent_id)) children.set(p.primary_parent_id, []);
+    children.get(p.primary_parent_id).push(p);
+  }
+  const seedFeature = async (key) => {
     const fc = JSON.parse(await readFile(path.join(seedDir, `${key}.geojson`), "utf8"));
-    return fc.features.find((f) => f.properties.role === "after").geometry;
+    return fc.features.find((f) => f.properties.role === "after");
+  };
+  const seedOf = async (c, key) => {
+    const f = await seedFeature(key);
+    return (await c.query(SEED_SQL, [JSON.stringify(f.geometry), f.properties.ewkb ?? null])).rows[0];
   };
 
   // the starting set
@@ -364,18 +469,16 @@ async function closureRun() {
       if (r.to !== r.from) add(place.key, `crumb floor ${r.from ?? "?"} -> ${r.to ?? "?"} m²`);
     }
   }
-  // F2: ground a prior output gave up now blocks every same-tier place after it that could reach it
+  // F2: ground a prior output gave up now blocks every same-tier place after it that could reach it.
+  // Every changed prior output, whatever its lost_m2 says: that metric is rounded to 0.01 m²
+  // and a sub-grid sliver of given-up ground still blocks (cded7a3).
   await withReadOnly(async (c) => {
     await c.query("set local search_path = public, extensions");
     for (const { place } of order) {
       const p = prior.get(place.key);
-      if (!p?.changed || p.rederived || !(Number(p.metrics?.lost_m2) > 0)) continue;
-      const after = await seedOf(place.key);
-      const lost = (await c.query(
-        `select case when extensions.ST_IsEmpty(d) then null else encode(extensions.ST_AsEWKB(d), 'hex') end hex
-           from (select extensions.ST_CollectionExtract(extensions.ST_Difference(b.display_geometry,
-                   extensions.ST_SetSRID(extensions.ST_GeomFromGeoJSON($2), 4326), ${PARAMS.grid_deg}), 3) d
-                   from public.wine_place_boundaries b where b.id = $1) z`, [place.boundary_id, JSON.stringify(after)])).rows[0]?.hex;
+      if (!p?.changed || p.rederived) continue;
+      const after = await seedOf(c, place.key);
+      const lost = (await c.query(LOST_SQL, [place.boundary_id, after.hex])).rows[0]?.hex;
       if (!lost) continue;
       for (const { k } of (await c.query(REACH_SQL, [lost, place.tier, place.id])).rows) {
         if (index.get(k) > index.get(place.key)) add(k, `reaches ground ${place.key} gave up (F2)`);
@@ -400,7 +503,7 @@ async function closureRun() {
         const p = prior.get(place.key);
         if (!todo.has(place.key)) {
           if (p?.changed) {
-            const s = (await c.query(SEED_SQL, [JSON.stringify(await seedOf(place.key))])).rows[0];
+            const s = await seedOf(c, place.key);
             if (s.sha === p.output_sha256) {
               pending.map.set(place.id, { hex: s.hex, bbox: [s.x0, s.y0, s.x1, s.y1].map(Number) });
               await copyFile(path.join(seedDir, `${place.key}.geojson`), path.join(geojsonDir, `${place.key}.geojson`));
@@ -415,9 +518,9 @@ async function closureRun() {
         computed += 1;
         let out;
         try {
-          out = await processPlace(c, { place, wave, pending, via, geojsonDir, survey: null });
+          out = await processPlace(c, { place, wave, pending, via, geojsonDir, survey: null, code });
         } catch (error) {
-          records.set(place.key, { key: place.key, place_id: place.id, wave, status: `error:${error.code ?? "?"}`,
+          records.set(place.key, { key: place.key, place_id: place.id, wave, computed_commit: code.commit, status: `error:${error.code ?? "?"}`,
             error: String(error.message).slice(0, 300), changed: false, current_boundary_id: place.boundary_id, current_sha256: place.sha });
           console.log(`  ERROR ${place.key}: ${String(error.message).slice(0, 200)}`);
           return j + 1;
@@ -429,9 +532,10 @@ async function closureRun() {
         const priorSha = p?.output_sha256 ?? place.sha;
         if (out.rec.output_sha256 !== priorSha) {
           moved.push({ key: place.key, prior_sha256: priorSha, sha256: out.rec.output_sha256, prior_changed: !!p?.changed, changed: out.rec.changed });
-          // what this place's move can reach: same-tier places after it, ancestors that lost ground
+          // what this place's move can reach: same-tier places after it, its descendants after
+          // it (their containment parent moved), and ancestors whose step did anything
           const priorHex = p?.changed
-            ? (await c.query(SEED_SQL, [JSON.stringify(await seedOf(place.key))])).rows[0].hex
+            ? (await seedOf(c, place.key)).hex
             : (await c.query(BOUNDARY_SQL, [place.boundary_id])).rows[0].hex;
           const nowHex = out.hex ?? (await c.query(BOUNDARY_SQL, [place.boundary_id])).rows[0].hex;
           const region = (await c.query(MOVED_SQL, [priorHex, nowHex])).rows[0].hex;
@@ -440,9 +544,16 @@ async function closureRun() {
               if (index.get(k) > j) add(k, `reaches the move of ${place.key}`);
             }
           }
+          // an ancestor resolves protected ground only when its step moved anything (r not
+          // unchanged); its final lost_m2 can read 0 once protection restored the ground
           for (let a = byId.get(place.primary_parent_id); a; a = byId.get(a.primary_parent_id)) {
             const pa = prior.get(a.key);
-            if (!pa || Number(pa.metrics?.lost_m2) > 0) add(a.key, `ancestor of the move of ${place.key}`);
+            if (!pa || pa.status !== "unchanged" || Number(pa.metrics?.lost_m2) > 0) add(a.key, `ancestor of the move of ${place.key}`);
+          }
+          const stack = [...(children.get(place.id) ?? [])];
+          for (let d = stack.pop(); d; d = stack.pop()) {
+            if (index.get(d.key) > j) add(d.key, `descendant of the move of ${place.key}`);
+            stack.push(...(children.get(d.id) ?? []));
           }
         }
         await sleep(pauseMs);
@@ -473,9 +584,10 @@ async function closureRun() {
     all.push(rec);
   }
   const provenance = {
-    generated_at: new Date().toISOString(), version: FOOTPRINT_VERSION, params: PARAMS, via,
+    generated_at: new Date().toISOString(), version: FOOTPRINT_VERSION, params: PARAMS, via, code,
     postgis: versions.postgis, geos: versions.geos, waves: [...perWave.keys()], elapsed_s: Math.round((Date.now() - t0) / 1000),
-    closure: { from: priorDir, computed: records.size, moved: moved.length,
+    closure: { from: priorDir, computed: records.size, moved: moved.length, prior_commits: [...priorCommits],
+      note: "a preview: seeded records keep the commit that computed them; --stage refuses this file (codeRefusals)",
       params_changed: paramsChanged ? Object.keys(PARAMS).filter((k) => JSON.stringify(priorParams[k]) !== JSON.stringify(PARAMS[k]))
         .map((k) => ({ param: k, from: priorParams[k], to: PARAMS[k] })) : [] },
   };
@@ -541,6 +653,13 @@ async function stage() {
   assert.equal(review._provenance.version, FOOTPRINT_VERSION, "review file of another version");
   // e.g. a review3 file (crumb cap 5,000 m²) against today's 1,000 m² parameters
   assert.deepEqual(review._provenance.params, PARAMS, "review file computed with other parameters: re-run the dry pass");
+  // only one full --dry run is stageable: every record computed by its own, committed code
+  const codeRefused = codeRefusals(review);
+  if (codeRefused.length) {
+    console.log("REFUSED:\n- " + codeRefused.join("\n- "));
+    process.exitCode = 1;
+    return;
+  }
   const client = new pg.Client(pgConfig());
   client.on("notice", (n) => console.log(n.message));
   await client.connect();
