@@ -20,17 +20,40 @@ test("waves run worst first: Mittelrhein, then the rest of Germany, then the oth
 
 const okFacts = {
   ownerApproval: "owner 2026-10-05: approved previews", migrationVersion: "20261004090000", migrationRecorded: true,
+  waterMigrationVersion: "20261004100000", waterMigrationRecorded: true, stepProblems: [],
   functionLive: true, draftBoundaries: 0, buildingReleases: 0, priorPromote: null, priorPromoted: true, staleInputs: 0, changed: 3,
 };
 
-test("the sitting gate passes only with approval, Migration A live, no DRAFTs, no tiles run, fresh inputs", () => {
+test("the sitting gate passes only with approval, Migrations A and W live, no DRAFTs, no tiles run, fresh inputs", () => {
   assert.deepEqual(sittingGate(okFacts), []);
-  const refusals = sittingGate({ ...okFacts, ownerApproval: null, migrationRecorded: false, functionLive: false, draftBoundaries: 2,
-    buildingReleases: 1, priorPromote: "x", priorPromoted: false, staleInputs: 4, changed: 0 });
-  assert.equal(refusals.length, 8);
+  const refusals = sittingGate({ ...okFacts, ownerApproval: null, migrationRecorded: false, waterMigrationRecorded: false, functionLive: false,
+    draftBoundaries: 2, buildingReleases: 1, priorPromote: "x", priorPromoted: false, staleInputs: 4, changed: 0 });
+  assert.equal(refusals.length, 9);
   assert.match(refusals.join("\n"), /owner approval/);
+  assert.match(refusals.join("\n"), /Migration W 20261004100000 \(keep water out\) is not recorded live/);
   assert.match(refusals.join("\n"), /DRAFT/);
   assert.match(refusals.join("\n"), /BUILDING/);
+});
+
+test("the sitting gate refuses a live step that is not the module's (review 2026-10-05: Migration A applied, W not)", () => {
+  // track A applied Migration A first: the wrapper exists, so `functionLive` alone used to pass
+  const aOnly = ["the 7-argument wine_footprint_clean_core does not exist live: Migration W is not applied (the live step is Migration A's, without the sea)",
+    "public.wine_footprint_water does not exist live: Migration W is not applied"];
+  assert.deepEqual(sittingGate({ ...okFacts, waterMigrationRecorded: false, stepProblems: aOnly }).slice(1), aOnly);
+  assert.match(sittingGate({ ...okFacts, stepProblems: undefined })[0], /not checked against the module/, "a gate without the check refuses");
+  assert.deepEqual(sittingGate({ ...okFacts, functionLive: false, stepProblems: aOnly }), ["public.wine_footprint_clean does not exist live"]);
+});
+
+test("a run's code includes the sea data file and both migrations (review 2026-10-05)", async () => {
+  const { CODE_PATHS } = await import("./footprint-pass-lib.mjs");
+  assert.deepEqual([...CODE_PATHS], ["scripts", "data/wine-map/footprint-water-ne50m.json",
+    "supabase/migrations/20261004090000_wine_footprint_clean.sql", "supabase/migrations/20261004100000_wine_footprint_water.sql"]);
+  const { readFile } = await import("node:fs/promises");
+  const pass = (await readFile(new URL("./footprint-pass.mjs", import.meta.url), "utf8")).replace(/\r\n/g, "\n");
+  assert.match(pass, /git\("status", "--porcelain", "--", \.\.\.CODE_PATHS\)/);
+  assert.equal((pass.match(/water: WATER_PROVENANCE,/g) ?? []).length, 2, "the dry run and the closure record the sea");
+  assert.match(pass, /codeRefusals\(review, \{ water: WATER_PROVENANCE \}\)/);
+  assert.match(pass, /assertStampParams\(r\.cleanup, PARAMS, p\.key\)/, "--stage checks each staged stamp's params");
 });
 
 test("flags: parent conflict over 2 % outside, overlap without an edge over 1 %", () => {
@@ -190,6 +213,22 @@ test("--stage refuses a review that is not one full, committed run (seeded recor
   assert.match(codeRefusals({ ...full, _provenance: { code: { commit: c, dirty: ["scripts/wine-map-sources/footprint-sql.mjs"] } } })[0], /not committed/);
   assert.match(codeRefusals({ ...full, _provenance: { ...full._provenance, partial: { keys: ["a"], limit: null } } })[0], /--keys/);
   assert.deepEqual(codeRefusals({ ...full, _provenance: { ...full._provenance, partial: { keys: null, limit: null, wave: "germany.pfalz" } } }), []);
+});
+
+test("--stage refuses a review computed with other sea rows than the committed file's (review 2026-10-05)", async () => {
+  const { codeRefusals } = await import("./footprint-pass-lib.mjs");
+  const { WATER_PROVENANCE } = await import("./footprint-sql.mjs");
+  const c = "851c21c5601662b5d19fde11b9419b04e99dfab2";
+  const review = (water) => ({ _provenance: { code: { commit: c, dirty: [] }, ...(water ? { water } : {}) }, places: [{ key: "a", computed_commit: c }] });
+  assert.deepEqual(codeRefusals(review(WATER_PROVENANCE), { water: WATER_PROVENANCE }), []);
+  assert.match(codeRefusals(review(null), { water: WATER_PROVENANCE })[0], /sea rows \(not recorded\) are not the committed data\/wine-map\/footprint-water-ne50m\.json rows/);
+  assert.match(codeRefusals(review({ ...WATER_PROVENANCE, rows_sha256: "0".repeat(64) }), { water: WATER_PROVENANCE })[0], /sea rows 000000000000 are not/);
+  // same rows, another data file (e.g. another coverage box): refused too
+  const otherFile = codeRefusals(review({ ...WATER_PROVENANCE, file_sha256: "1".repeat(64) }), { water: WATER_PROVENANCE });
+  assert.equal(otherFile.length, 1);
+  assert.match(otherFile[0], /sea file 111111111111 is not the committed data\/wine-map\/footprint-water-ne50m\.json/);
+  assert.match(WATER_PROVENANCE.file_sha256, /^[0-9a-f]{64}$/);
+  assert.deepEqual(codeRefusals(review(null)), [], "without the module's sea (a caller that does not check) nothing changes");
 });
 
 test("the report names the code a run was computed by", () => {

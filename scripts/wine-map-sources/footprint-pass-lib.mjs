@@ -3,7 +3,15 @@
 // footprint-pass.mjs is the database half. Design: scratchpad
 // footprints/design-final.md §5.4, §6, §7.
 import { firstDrawnZoom, revealPlan } from "../wine-map-tiles/lib.mjs";
-import { FOOTPRINT_VERSION, PARAMS, independentFailuresSql } from "./footprint-sql.mjs";
+import { FOOTPRINT_VERSION, MIGRATION_A, MIGRATION_W, PARAMS, WATER_FILE, independentFailuresSql } from "./footprint-sql.mjs";
+
+/**
+ * What a run's code is (footprint-pass.mjs codeOf: `git status --porcelain -- <these>`):
+ * the scripts, AND the sea data file (footprint-sql.mjs reads it at import, and before
+ * Migration W it decides which closing pieces are wet) and the two migrations
+ * (review 2026-10-05: an edited, uncommitted data file passed for a clean run).
+ */
+export const CODE_PATHS = Object.freeze(["scripts", WATER_FILE, MIGRATION_A, MIGRATION_W]);
 
 /** Waves, worst first (survey p90, 2026-10-03): Germany by region, then the rest by country. */
 export const WAVES = Object.freeze([
@@ -107,10 +115,22 @@ export function cleanedReachM(params = PARAMS) {
  * assert would have refused 5 German waves mid-transaction. A closure re-run is
  * a preview.
  */
-export function codeRefusals(review) {
+export function codeRefusals(review, { water = null } = {}) {
   const code = review?._provenance?.code;
   if (!code?.commit) return ["the review file records no code commit (_provenance.code): re-run a full --dry"];
   const r = [];
+  // the sea it computed with (review 2026-10-05): the module's rows, which --stage then finds live
+  if (water) {
+    const got = review._provenance.water?.rows_sha256 ?? null;
+    if (got !== water.rows_sha256) {
+      r.push(`the run's sea rows ${got ? got.slice(0, 12) : "(not recorded)"} are not the committed ${water.file} rows ${water.rows_sha256.slice(0, 12)}: re-run a full --dry`);
+    }
+    // and the data file itself (LF line ends): its coverage box decides which places are refused
+    const file = review._provenance.water?.file_sha256 ?? null;
+    if (file !== water.file_sha256) {
+      r.push(`the run's sea file ${file ? file.slice(0, 12) : "(not recorded)"} is not the committed ${water.file} ${water.file_sha256.slice(0, 12)}: re-run a full --dry`);
+    }
+  }
   if (code.dirty?.length) {
     r.push(`the run's code was not committed (${code.dirty.length} modified file(s), e.g. ${code.dirty[0]}): commit, then re-run a full --dry`);
   }
@@ -136,7 +156,10 @@ export function sittingGate(f) {
   const r = [];
   if (!f.ownerApproval) r.push("the review file carries no owner approval (_provenance.owner_approval)");
   if (!f.migrationRecorded) r.push(`Migration A ${f.migrationVersion} is not recorded live`);
+  if (!f.waterMigrationRecorded) r.push(`Migration W ${f.waterMigrationVersion} (keep water out) is not recorded live`);
+  // the live step must be this module's (review 2026-10-05): A alone runs the pre-water step
   if (!f.functionLive) r.push("public.wine_footprint_clean does not exist live");
+  else r.push(...(f.stepProblems ?? ["the live step was not checked against the module (stepProblems)"]));
   if (f.draftBoundaries > 0) r.push(`${f.draftBoundaries} DRAFT boundaries exist: someone is mid-batch (promote or unstage first)`);
   if (f.buildingReleases > 0) r.push(`${f.buildingReleases} release(s) BUILDING in the last hour: a tiles run is in flight`);
   if (f.priorPromote && !f.priorPromoted) r.push(`the previous wave's promote ${f.priorPromote} is not recorded live`);
@@ -232,6 +255,9 @@ export function renderReport({ provenance, records }) {
   L.push(`Generated ${provenance.generated_at} by \`footprint-pass.mjs --dry\` (${provenance.via}). Read-only: nothing was written to the database or Storage, nothing was dispatched.`, "");
   L.push(`- Waves (worst first): ${provenance.waves.join(" → ")}`);
   L.push(`- PostGIS ${provenance.postgis}, GEOS ${provenance.geos}`);
+  if (provenance.water) {
+    L.push(`- Sea: ${provenance.water.rows} pieces of ${provenance.water.file} (rows sha256 ${provenance.water.rows_sha256}, file sha256 ${provenance.water.file_sha256 ?? "?"}), covering ${provenance.water.coverage?.join(", ")}`);
+  }
   if (provenance.code) {
     L.push(`- Code: ${provenance.code.branch ?? "?"} @ ${provenance.code.commit}${provenance.code.dirty?.length ? ` (UNCOMMITTED changes: ${provenance.code.dirty.join(", ")})` : ""}; ${provenance.closure ? "a closure re-run (seeded records keep the commit that computed them): a preview, --stage refuses it" : "a full run: every record computed by this commit"}`);
   }

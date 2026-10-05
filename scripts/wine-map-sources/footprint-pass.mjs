@@ -46,11 +46,14 @@
 //
 //   --stage --review <file>: AT A SITTING ONLY (main session, after owner approval).
 //   Refuses a review that is not one full, committed --dry run (codeRefusals), and
-//   unless the sitting gate passes (owner approval recorded, Migration A
-//   live, no DRAFT boundary anywhere, no tiles release BUILDING in the last hour,
+//   unless the sitting gate passes (owner approval recorded, Migrations A AND W
+//   recorded live and the live step this module's own: function sources, 7-argument
+//   core and sea rows (footprintStepState); the review's sea rows the module's; no
+//   DRAFT boundary anywhere, no tiles release BUILDING in the last hour,
 //   the previous wave promoted, every input row still current with its recorded
 //   sha). Then recomputes every changed place through public.wine_footprint_clean
-//   in ONE transaction, asserts each output sha equals the approved one, inserts
+//   in ONE transaction, asserts each output sha equals the approved one and each
+//   stamp's params the module's for its rung (assertStampParams), inserts
 //   each as a DRAFT, NON-CURRENT row (revision <input>+fp1, same snapshot and
 //   source refs), commits, and ends with the neighbour-cache refresh. An
 //   unchanged place is never restaged.
@@ -71,28 +74,29 @@ import pg from "pg";
 import { pgConfig, releaseVersion } from "../wine-map-tiles/lib.mjs";
 import { withReadOnly } from "./read-only-client.mjs";
 import { refreshNeighbourCache } from "./neighbour-cache.mjs";
-import { FOOTPRINT_VERSION, MIGRATION_A_VERSION, PARAMS } from "./footprint-sql.mjs";
+import { FOOTPRINT_VERSION, MIGRATION_A_VERSION, MIGRATION_W_VERSION, PARAMS, WATER_PROVENANCE } from "./footprint-sql.mjs";
 import {
-  EINZELLAGE_CLEANED_NOTE, cleanFootprint, cleanGeomCte, createPending, footprintStepLive, methodAfterCleanupSql,
-  orderBatch, readContext,
+  EINZELLAGE_CLEANED_NOTE, assertStampParams, cleanFootprint, cleanGeomCte, createPending, footprintStepLive, footprintStepState,
+  methodAfterCleanupSql, orderBatch, readContext,
 } from "./footprint-cleanup.mjs";
 import {
-  REVISION_SUFFIX, SLOW_FACTOR, areaDelta, cleanedReachM, codeRefusals, flagsOf, inScope, paramReach, rejectPath, renderPromoteSql,
+  CODE_PATHS, REVISION_SUFFIX, SLOW_FACTOR, areaDelta, cleanedReachM, codeRefusals, flagsOf, inScope, paramReach, rejectPath, renderPromoteSql,
   renderRejectReleaseSql, renderReport, renderRevertSql, renderUnstageSql, renderedPaths, retryOnTimeout, revealDiff, sittingGate, wavesFor,
 } from "./footprint-pass-lib.mjs";
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 
 /**
- * The code a run computes with: the commit, and any uncommitted change under scripts/
- * (the step, the pass and what they import). Every computed record carries the
+ * The code a run computes with: the commit, and any uncommitted change under CODE_PATHS
+ * (scripts/: the step, the pass and what they import; the sea data file the step reads
+ * at import; Migrations A and W). Every computed record carries the
  * commit (computed_commit); --stage refuses a review whose records were not all
  * computed by its own, committed run (codeRefusals).
  */
 function codeOf() {
   const git = (...a) => execFileSync("git", a, { cwd: REPO, encoding: "utf8" });
   // porcelain lines are "XY path": never trim the output, or the first line loses a column
-  const dirty = git("status", "--porcelain", "--", "scripts").split(/\r?\n/).filter(Boolean).map((l) => l.slice(3));
+  const dirty = git("status", "--porcelain", "--", ...CODE_PATHS).split(/\r?\n/).filter(Boolean).map((l) => l.slice(3));
   return { commit: git("rev-parse", "HEAD").trim(), branch: git("rev-parse", "--abbrev-ref", "HEAD").trim(), dirty };
 }
 
@@ -294,7 +298,7 @@ async function dryRun() {
   await mkdir(reviewDir, { recursive: true });
   const t0 = Date.now();
   const code = codeOf();
-  if (code.dirty.length) console.log(`WARNING: uncommitted changes under scripts/ (${code.dirty.join(", ")}): --stage will refuse this run`);
+  if (code.dirty.length) console.log(`WARNING: uncommitted changes under ${CODE_PATHS.join(", ")} (${code.dirty.join(", ")}): --stage will refuse this run`);
   const { catalogue, versions, via } = await loadCatalogue(timeoutMs);
 
   const pending = createPending();
@@ -333,7 +337,7 @@ async function dryRun() {
   }
 
   const provenance = {
-    generated_at: new Date().toISOString(), version: FOOTPRINT_VERSION, params: PARAMS, via, code,
+    generated_at: new Date().toISOString(), version: FOOTPRINT_VERSION, params: PARAMS, via, code, water: WATER_PROVENANCE,
     postgis: versions.postgis, geos: versions.geos, waves: [...perWave.keys()], elapsed_s: Math.round((Date.now() - t0) / 1000),
     ...(keys || Number.isFinite(limit) || arg("wave", "all") !== "all" ? { partial: { keys: keys ? [...keys] : null, limit: Number.isFinite(limit) ? limit : null, wave: arg("wave", "all") } } : {}),
   };
@@ -589,7 +593,7 @@ async function closureRun() {
     all.push(rec);
   }
   const provenance = {
-    generated_at: new Date().toISOString(), version: FOOTPRINT_VERSION, params: PARAMS, via, code,
+    generated_at: new Date().toISOString(), version: FOOTPRINT_VERSION, params: PARAMS, via, code, water: WATER_PROVENANCE,
     postgis: versions.postgis, geos: versions.geos, waves: [...perWave.keys()], elapsed_s: Math.round((Date.now() - t0) / 1000),
     closure: { from: priorDir, computed: records.size, moved: moved.length, prior_commits: [...priorCommits],
       note: "a preview: seeded records keep the commit that computed them; --stage refuses this file (codeRefusals)",
@@ -608,6 +612,7 @@ async function readGateFacts(client, review) {
   const changed = review.places.filter((p) => p.changed);
   const prior = review._provenance.prior_promote ?? null;
   const recorded = async (v) => (await client.query("select 1 from supabase_migrations.schema_migrations where version = $1", [v])).rowCount > 0;
+  const step = await footprintStepState(client);
   let stale = 0;
   for (const p of changed) {
     const r = await one(`select count(*)::int n from public.wine_place_boundaries b
@@ -619,7 +624,11 @@ async function readGateFacts(client, review) {
     ownerApproval: review._provenance.owner_approval,
     migrationVersion: MIGRATION_A_VERSION,
     migrationRecorded: await recorded(MIGRATION_A_VERSION),
-    functionLive: await footprintStepLive(client),
+    waterMigrationVersion: MIGRATION_W_VERSION,
+    waterMigrationRecorded: await recorded(MIGRATION_W_VERSION),
+    // the live step must be this module's: sources, 7-argument core, sea rows (footprintStepState)
+    functionLive: step.live,
+    stepProblems: step.problems,
     draftBoundaries: (await one("select count(*)::int n from public.wine_place_boundaries where quality_status = 'DRAFT'")).n,
     buildingReleases: (await one("select count(*)::int n from public.wine_map_releases where status = 'BUILDING' and created_at > now() - interval '1 hour'")).n,
     priorPromote: prior,
@@ -646,7 +655,7 @@ select $2::uuid, b.source_snapshot_id, ${methodAfterCleanupSql("$4")}, 'DRAFT', 
        b.revision || '${REVISION_SUFFIX}', false, null
   from geom, public.wine_place_boundaries b
  where b.id = $7
-returning id, generation_parameters->'cleanup'->>'output_sha256' sha, encode(extensions.ST_AsEWKB(display_geometry), 'hex') hex,
+returning id, generation_parameters->'cleanup'->>'output_sha256' sha, generation_parameters->'cleanup' cleanup, encode(extensions.ST_AsEWKB(display_geometry), 'hex') hex,
           extensions.ST_XMin(extensions.Box2D(display_geometry)) x0, extensions.ST_YMin(extensions.Box2D(display_geometry)) y0,
           extensions.ST_XMax(extensions.Box2D(display_geometry)) x1, extensions.ST_YMax(extensions.Box2D(display_geometry)) y1`;
 };
@@ -659,7 +668,7 @@ async function stage() {
   // e.g. a review3 file (crumb cap 5,000 m²) against today's 1,000 m² parameters
   assert.deepEqual(review._provenance.params, PARAMS, "review file computed with other parameters: re-run the dry pass");
   // only one full --dry run is stageable: every record computed by its own, committed code
-  const codeRefused = codeRefusals(review);
+  const codeRefused = codeRefusals(review, { water: WATER_PROVENANCE });
   if (codeRefused.length) {
     console.log("REFUSED:\n- " + codeRefused.join("\n- "));
     process.exitCode = 1;
@@ -694,6 +703,8 @@ async function stage() {
         raw.hex, p.place_id, JSON.stringify(pending.near(place.bbox)), place.method, JSON.stringify(gp), p.input_boundary_id, p.current_boundary_id,
       ])).rows[0];
       assert.equal(r.sha, p.output_sha256, `${p.key}: output ${r.sha} differs from the approved ${p.output_sha256}`);
+      // the live function ran this module's parameters for the rung it chose (review 2026-10-05)
+      assertStampParams(r.cleanup, PARAMS, p.key);
       pending.map.set(p.place_id, { hex: r.hex, bbox: [r.x0, r.y0, r.x1, r.y1].map(Number) });
       staged += 1;
     }

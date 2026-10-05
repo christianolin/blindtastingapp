@@ -1,12 +1,16 @@
 // Footprint cleanup fp-1: the SQL. ONE definition of the step, used three ways:
-//   1. Migration A (renderMigrationA below; the committed migration must equal it,
+//   1. Migration W (renderMigrationW below; the committed migration must equal it,
 //      footprint-sql.test.mjs fails otherwise) installs it as
 //      public.wine_footprint_clean_core (CORE_SQL as a SQL function body) and
 //      public.wine_footprint_clean (plpgsql: context, ladder, stamp — it EXECUTEs
-//      the very same CONTEXT_SQL / PROTECTED_SQL / STAMP_SQL texts);
+//      the very same CONTEXT_SQL / PROTECTED_SQL / STAMP_SQL texts), over Migration A
+//      (MIGRATION_A: the pre-water step, the trigger and the grants, FROZEN by its
+//      sha256 because track A may apply it first; review 2026-10-05). A database runs
+//      this module's step only once A AND W are applied: footprint-cleanup.mjs
+//      footprintStepState compares the live function bodies and sea rows with these;
 //   2. every builder's INSERT calls public.wine_footprint_clean through
 //      footprint-cleanup.mjs's cleanGeomCte();
-//   3. before Migration A is live, footprint-cleanup.mjs's cleanFootprint() runs the
+//   3. before Migration W is live, footprint-cleanup.mjs's cleanFootprint() runs the
 //      same texts inline (a read-only transaction cannot create a function), so the
 //      dry run computes what the function will.
 // Design: scratchpad footprints/design-final.md (2026-10-04). Footprints are
@@ -49,7 +53,11 @@
 // water data finer than this in the repo or the database (2026-10-05): inland
 // lakes and rivers are land to this rule, exactly as before. Far from the sea
 // (every German place) no water is in the context and the step is byte for byte
-// what it was.
+// what it was. The sea covers the band WATER_COVERAGE (|lat| <= 57, every
+// longitude); a place whose box plus WATER_BOX_DEG leaves it is REFUSED
+// (water_covered, review 2026-10-05): outside the sea data the rule would switch
+// itself off with a stamp that reads like "no water nearby".
+import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 
 export const FOOTPRINT_VERSION = "fp-1";
@@ -86,42 +94,88 @@ export const PARAMS = Object.freeze({
   coast_band_m: 15000,   //     ... while within this of the 1:50m sea (a land border inland never counts)
 });
 
-/** The coarse sea the keep-water-out rule reads (Migration A loads it; build-footprint-water.mjs makes it). */
+/** The coarse sea the keep-water-out rule reads (Migration W loads it; build-footprint-water.mjs makes it). */
 export const WATER_TABLE = "public.wine_footprint_water";
 export const WATER_FILE = "data/wine-map/footprint-water-ne50m.json";
-// The context reads the sea within this of the raw's box (≥ coast_band_m everywhere we map: 0.25° of
-// longitude is 15.2 km at 57°N).
-const WATER_BOX_DEG = 0.25;
+// The context reads the sea within this of the raw's box (≥ coast_band_m everywhere the sea covers: 0.25°
+// of longitude is 15.2 km at 57°N, the edge of WATER_COVERAGE).
+export const WATER_BOX_DEG = 0.25;
 
-/** The committed sea pieces (build-footprint-water.mjs); Migration A loads them. */
-export const WATER_DOC = JSON.parse(readFileSync(new URL("../../data/wine-map/footprint-water-ne50m.json", import.meta.url), "utf8"));
-export const WATER_ROWS = Object.freeze(WATER_DOC.rows.map((r) => Object.freeze({ ...r, bbox: ewkbPolygonBbox(r.hex) })));
+/** The committed sea pieces (build-footprint-water.mjs); Migration W loads them. */
+const WATER_TEXT = readFileSync(new URL("../../data/wine-map/footprint-water-ne50m.json", import.meta.url), "utf8");
+export const WATER_DOC = JSON.parse(WATER_TEXT);
+export const WATER_ROWS = Object.freeze(WATER_DOC.rows.map((r) => Object.freeze({ ...r, bbox: ewkbBbox(r.hex) })));
+/** The band the sea covers, [x0, y0, x1, y1]: a place must lie in it with WATER_BOX_DEG to spare (water_covered). */
+export const WATER_COVERAGE = Object.freeze([...(WATER_DOC._provenance.coverage ?? [])]);
+if (WATER_COVERAGE.length !== 4 || WATER_COVERAGE.some((v) => !Number.isFinite(v))) throw new Error(`${WATER_FILE}: no coverage box`);
 
-/** The sea pieces whose box meets `bbox` ([x0, y0, x1, y1]) grown by `pad` degrees: a hex EWKB list. */
+/**
+ * The sea rows' fingerprint: sha256 over "<id>|<aoi>|<hex EWKB>" lines in id order. The live
+ * table hashes to it through WATER_ROWS_SHA256_SQL; a review records it (_provenance.water) and
+ * --stage compares the three (review 2026-10-05: the data file decides which closing pieces are
+ * wet, so a run, the module and the live table must agree on it).
+ */
+export const WATER_ROWS_SHA256 = createHash("sha256")
+  .update(WATER_ROWS.map((r) => `${r.id}|${r.aoi}|${r.hex}`).join("\n")).digest("hex");
+export const WATER_ROWS_SHA256_SQL = `select count(*)::int n, encode(sha256(convert_to(coalesce(string_agg(w.id::text || '|' || w.aoi || '|'
+    || encode(extensions.st_asewkb(w.geom), 'hex'), E'\\n' order by w.id), ''), 'UTF8')), 'hex') sha
+  from ${WATER_TABLE} w`;
+/** What a run records of the sea it computed with (_provenance.water). The file hash is over LF line ends. */
+export const WATER_PROVENANCE = Object.freeze({
+  file: WATER_FILE,
+  file_sha256: createHash("sha256").update(WATER_TEXT.replace(/\r\n/g, "\n")).digest("hex"),
+  rows: WATER_ROWS.length,
+  rows_sha256: WATER_ROWS_SHA256,
+  coverage: WATER_COVERAGE,
+});
+
+/** The sea pieces whose box meets `bbox` ([x0, y0, x1, y1]) grown by `pad` degrees: [{ id, hex }]. */
 export function waterRowsNear(bbox, pad = 0.3) {
   return WATER_ROWS.filter((r) => !bbox || (r.bbox[0] - pad <= bbox[2] && bbox[0] - pad <= r.bbox[2]
-    && r.bbox[1] - pad <= bbox[3] && bbox[1] - pad <= r.bbox[3])).map((r) => r.hex);
+    && r.bbox[1] - pad <= bbox[3] && bbox[1] - pad <= r.bbox[3])).map((r) => ({ id: r.id, hex: r.hex }));
 }
 
-/** The box of a hex EWKB polygon (little-endian, with or without SRID, 2D). */
-function ewkbPolygonBbox(hex) {
+/** Whether a place with box `bbox` lies in the sea's coverage with WATER_BOX_DEG to spare (CONTEXT_SQL's water_covered). */
+export function waterCovered(bbox) {
+  const [x0, y0, x1, y1] = WATER_COVERAGE;
+  return bbox[0] - WATER_BOX_DEG >= x0 && bbox[1] - WATER_BOX_DEG >= y0 && bbox[2] + WATER_BOX_DEG <= x1 && bbox[3] + WATER_BOX_DEG <= y1;
+}
+
+/** The box of a hex EWKB polygon or multipolygon (little-endian, with or without SRID, 2D). */
+export function ewkbBbox(hex) {
   const buf = Buffer.from(hex, "hex");
-  if (buf[0] !== 1) throw new Error("ewkbPolygonBbox: big-endian EWKB");
-  const type = buf.readUInt32LE(1);
-  if ((type & 0xff) !== 3) throw new Error(`ewkbPolygonBbox: not a polygon (${type})`);
-  let o = 5 + (type & 0x20000000 ? 4 : 0);
   const b = [Infinity, Infinity, -Infinity, -Infinity];
-  const rings = buf.readUInt32LE(o);
-  o += 4;
-  for (let k = 0; k < rings; k += 1) {
+  let o = 0;
+  const header = () => {
+    if (buf[o] !== 1) throw new Error("ewkbBbox: big-endian EWKB");
+    const type = buf.readUInt32LE(o + 1);
+    if (type & 0xc0000000) throw new Error(`ewkbBbox: not 2D (${type})`);
+    o += 5 + (type & 0x20000000 ? 4 : 0);
+    return type & 0xff;
+  };
+  const polygon = () => {
+    const rings = buf.readUInt32LE(o);
+    o += 4;
+    for (let k = 0; k < rings; k += 1) {
+      const n = buf.readUInt32LE(o);
+      o += 4;
+      for (let j = 0; j < n; j += 1, o += 16) {
+        const x = buf.readDoubleLE(o);
+        const y = buf.readDoubleLE(o + 8);
+        b[0] = Math.min(b[0], x); b[1] = Math.min(b[1], y); b[2] = Math.max(b[2], x); b[3] = Math.max(b[3], y);
+      }
+    }
+  };
+  const t = header();
+  if (t === 3) polygon();
+  else if (t === 6) {
     const n = buf.readUInt32LE(o);
     o += 4;
-    for (let j = 0; j < n; j += 1, o += 16) {
-      const x = buf.readDoubleLE(o);
-      const y = buf.readDoubleLE(o + 8);
-      b[0] = Math.min(b[0], x); b[1] = Math.min(b[1], y); b[2] = Math.max(b[2], x); b[3] = Math.max(b[3], y);
+    for (let k = 0; k < n; k += 1) {
+      if (header() !== 3) throw new Error("ewkbBbox: a multipolygon member is not a polygon");
+      polygon();
     }
-  }
+  } else throw new Error(`ewkbBbox: not a polygon or multipolygon (${t})`);
   return b;
 }
 
@@ -184,10 +238,12 @@ const STANDING_SHAPES = (box) => `  select b.wine_place_id id, b.display_geometr
  * (clipped to that box; null inland), and `outside`, the outside of the place's
  * national outline (the COUNTRY among itself and its ancestors, stored current row)
  * within 0.01° of the input, null unless there is sea. Both are read only as gates
- * (distances), never as ground.
- * `waterRows` is the SQL of the sea rows (column g): the table Migration A loads,
+ * (distances), never as ground. `sea` collects its pieces in id order (its stamp hash
+ * is then the same whichever way the rows were read). `water_covered`: the input's box
+ * plus WATER_BOX_DEG lies inside WATER_COVERAGE; the step refuses the place otherwise.
+ * `waterRows` is the SQL of the sea rows (columns id, g): the table Migration W loads,
  * or, for a read-only rehearsal before it exists, WATER_ROWS_PARAM ($4, the
- * committed pieces as a jsonb array of hex EWKB).
+ * committed pieces as a jsonb array of {id, hex}).
  */
 export function contextSql({ waterRows = WATER_ROWS_TABLE } = {}) {
   return `
@@ -225,10 +281,10 @@ par as (
      and coalesce(b.boundary_method::text, '') <> 'DERIVED_FROM_DESCENDANTS'
    order by anc.depth limit 1),
 wat as (
-  select st_clipbybox2d(w.g, st_expand($2::geometry, ${WATER_BOX_DEG})::box2d) g
+  select w.id, st_clipbybox2d(w.g, st_expand($2::geometry, ${WATER_BOX_DEG})::box2d) g
     from (${waterRows}) w
    where w.g && st_expand($2::geometry, ${WATER_BOX_DEG})),
-sea as (select st_collectionextract(st_collect(wat.g), 3) g from wat where not st_isempty(wat.g)),
+sea as (select st_collectionextract(st_collect(wat.g order by wat.id), 3) g from wat where not st_isempty(wat.g)),
 cty as (
   select b.display_geometry g
     from public.wine_places q join public.wine_place_boundaries b
@@ -247,16 +303,17 @@ select me.tier, me.k,
   (select par.k from par) parent_key,
   (select par.g from par) parent,
   (select sea.g from sea) sea,
-  (select case when st_isempty(outs.g) then null else outs.g end from outs) outside
+  (select case when st_isempty(outs.g) then null else outs.g end from outs) outside,
+  st_coveredby(st_expand($2::geometry, ${WATER_BOX_DEG}), st_makeenvelope(${WATER_COVERAGE.join(", ")}, 4326)) water_covered
 from me`;
 }
 
-/** The sea rows: the table Migration A loads. */
-const WATER_ROWS_TABLE = `select w.geom g from ${WATER_TABLE} w`;
-/** The same rows passed as $4 (jsonb array of hex EWKB): a read-only rehearsal before Migration A. */
-export const WATER_ROWS_PARAM = "select st_geomfromewkb(decode(x, 'hex')) g from jsonb_array_elements_text($4::jsonb) x";
+/** The sea rows: the table Migration W loads. */
+const WATER_ROWS_TABLE = `select w.id, w.geom g from ${WATER_TABLE} w`;
+/** The same rows passed as $4 (jsonb array of {id, hex}): a read-only rehearsal before Migration W. */
+export const WATER_ROWS_PARAM = "select (x->>'id')::int id, st_geomfromewkb(decode(x->>'hex', 'hex')) g from jsonb_array_elements($4::jsonb) x";
 
-/** The context as Migration A's wrapper runs it (the sea from the table). */
+/** The context as Migration W's wrapper runs it (the sea from the table). */
 export const CONTEXT_SQL = contextSql();
 
 /**
@@ -303,15 +360,36 @@ const CORE_OUT = [
 export const CORE_COLUMNS = Object.freeze(CORE_OUT.map(([name]) => name));
 
 /**
+ * The keys the step reads from its params ($5). A params jsonb that lacks any of them is
+ * REFUSED (the cast of `d` raises 22P02 "... params lack <keys>"), never read as NULL:
+ * a missing water key made every st_dwithin NULL, and bool_or ignores NULLs, so the
+ * keep-water-out rule switched itself off without an error (review 2026-10-05; e.g. a
+ * review3/review4 provenance's params passed to reproduce a run).
+ */
+export const CORE_PARAM_KEYS = Object.freeze([
+  "gap_m", "arm_m", "arm_keep_share", "hole_min_m2", "hole_share", "hole_max_m2", "crumb_min_m2", "crumb_share", "crumb_max_m2",
+  "crumb_cap_share", "noop_share", "buffer_style", "grid_deg", "water_reach_m", "coast_reach_m", "coast_band_m",
+]);
+
+/** The keys of CORE_PARAM_KEYS (plus the ladder's grow_max / shrink_max) `params` lacks. */
+export function missingParams(params) {
+  return [...CORE_PARAM_KEYS, "grow_max", "shrink_max"].filter((k) => params?.[k] === undefined || params[k] === null);
+}
+
+/**
  * The step itself. Pure: reads no table. $1 raw (4326), $2 blockers (4326 | null),
  * $3 containment parent (4326 | null), $4 protected descendant ground (4326 | null),
- * $5 params jsonb, $6 sea (4326 | null), $7 outside of the national outline
- * (4326 | null; both from CONTEXT_SQL, gates only). One row (CORE_COLUMNS). Areas in m² (local UTM; the grid-exact
- * checks in geography m²), rounded to 0.01.
+ * $5 params jsonb (every CORE_PARAM_KEYS key, else it raises), $6 sea (4326 | null),
+ * $7 outside of the national outline (4326 | null; both from CONTEXT_SQL, gates only).
+ * One row (CORE_COLUMNS). Areas in m² (local UTM; the grid-exact checks in geography m²),
+ * rounded to 0.01.
  */
 export const CORE_SQL = `
 with prm as (
-  select (p->>'gap_m')::float8 d, (p->>'arm_m')::float8 e, (p->>'arm_keep_share')::float8 ks,
+  select (case when p ?& array[${CORE_PARAM_KEYS.map((k) => `'${k}'`).join(", ")}] then p->>'gap_m'
+               else 'wine_footprint_clean_core: params lack ' || array_to_string(array(
+                 select k from unnest(array[${CORE_PARAM_KEYS.map((k) => `'${k}'`).join(", ")}]) k where not p ? k), ', ') end)::float8 d,
+         (p->>'arm_m')::float8 e, (p->>'arm_keep_share')::float8 ks,
          (p->>'hole_min_m2')::float8 hmin, (p->>'hole_share')::float8 hsh, (p->>'hole_max_m2')::float8 hmax,
          (p->>'crumb_min_m2')::float8 cmin, (p->>'crumb_share')::float8 csh, (p->>'crumb_max_m2')::float8 cmax,
          (p->>'crumb_cap_share')::float8 ccap, (p->>'noop_share')::float8 noop, p->>'buffer_style' sty,
@@ -608,7 +686,7 @@ const dq = (tag, body) => {
   return `$${tag}$${body}$${tag}$`;
 };
 
-/** How the wrapper calls the step: the installed SQL function (Migration A). */
+/** How the wrapper calls the step: the installed SQL function (Migration W). */
 const CORE_CALL_FUNCTION = (prot) => `select * into v_r from public.wine_footprint_clean_core(p_raw, v_ctx.blockers, v_ctx.parent, ${prot}, v_try, v_ctx.sea, v_ctx.outside);`;
 /** The same step run as its own text (the read-only rehearsal; no function exists yet). */
 const CORE_CALL_EXECUTE = (prot) => `execute ${dq("core", CORE_SQL)} into v_r using p_raw, v_ctx.blockers, v_ctx.parent, ${prot}::extensions.geometry, v_try, v_ctx.sea, v_ctx.outside;`;
@@ -638,9 +716,16 @@ begin
   if p_raw is null then
     raise exception 'wine_footprint_clean: no geometry for place %', p_place_id using errcode = '22004';
   end if;
+  if not (v_params ?& array[${[...CORE_PARAM_KEYS, "grow_max", "shrink_max"].map((k) => `'${k}'`).join(", ")}]) then
+    raise exception 'wine_footprint_clean: p_params lacks a key of %', v_params using errcode = '22023';
+  end if;
   execute ${dq("ctx", ctx.sql)} into v_ctx using ${ctx.using};
   if v_ctx.k is null then
     raise exception 'wine_footprint_clean: no wine_places row %', p_place_id using errcode = '23503';
+  end if;
+  if v_ctx.water_covered is not true then
+    raise exception 'wine_footprint_clean: place % (%) is outside the sea data (${WATER_COVERAGE.join(", ")} less ${WATER_BOX_DEG} deg): extend build-footprint-water.mjs and Migration W first',
+      v_ctx.k, p_place_id using errcode = '22023';
   end if;
   foreach v_rung in array array['full', 'close-only'] loop
     v_try := case when v_rung = 'full' then v_params else v_params || '{"arm_m": 0}'::jsonb end;
@@ -683,6 +768,15 @@ begin
 end`;
 }
 
+/**
+ * The live function sources (pg_proc.prosrc) Migration W installs: the core is CORE_SQL
+ * verbatim, the wrapper its rendered body between the newlines of `as $fn$ ... $fn$`.
+ * footprint-cleanup.mjs footprintStepState compares the live prosrc with these
+ * (line ends aside), so a database still on Migration A's pre-water step is never
+ * taken for this one.
+ */
+export const STEP_SOURCES = Object.freeze({ core: CORE_SQL, wrapper: `\n${wrapperBody(CORE_CALL_FUNCTION)}\n` });
+
 /** The require-cleanup trigger's plpgsql body (begin ... end), on the row variable `row`. */
 function triggerBody(row) {
   return `begin
@@ -704,17 +798,20 @@ end`;
  * (EXECUTEd as CORE_SQL instead of the not-yet-installed function), with its
  * arguments as literals. Raises NOTICE 'fp1-rehearsal <json>' with
  * {out_hex, cleanup}. $1-free: run it as a plain statement. The sea comes from the
- * committed pieces (`water`: a hex EWKB list, default every piece), passed as the
- * table Migration A loads would give it.
+ * committed pieces (`water`: [{id, hex}], default the pieces near the raw, or every
+ * piece when its box cannot be read), passed as the table Migration W loads would
+ * give it (the context filters them by box again).
  */
 export function renderWrapperRehearsal({ rawHex, placeId, pending = {}, params = null, water = null }) {
   const lit = (v) => `'${String(v).replaceAll("'", "''")}'`;
+  let near = null;
+  try { near = waterRowsNear(ewkbBbox(rawHex)); } catch { near = waterRowsNear(null); }
   const args = [
     `  p_raw extensions.geometry := ${lit(rawHex)}::extensions.geometry;`,
     `  p_place_id uuid := ${lit(placeId)}::uuid;`,
     `  p_pending jsonb := ${lit(JSON.stringify(pending))}::jsonb;`,
     `  p_params jsonb := ${params ? `${lit(JSON.stringify(params))}::jsonb` : "null"};`,
-    `  p_water jsonb := ${lit(JSON.stringify(water ?? WATER_ROWS.map((r) => r.hex)))}::jsonb;`,
+    `  p_water jsonb := ${lit(JSON.stringify(water ?? near))}::jsonb;`,
   ].join("\n");
   const body = wrapperBody(CORE_CALL_EXECUTE, { sql: contextSql({ waterRows: WATER_ROWS_PARAM }), using: "p_place_id, p_raw, v_pending, p_water" })
     .replace(/^declare\n/, `declare\n${args}\n`)
@@ -741,38 +838,77 @@ export function renderTriggerRehearsal({ geomHex, generationParameters }) {
 }
 
 /**
- * Migration A (design §5.1): the two functions, the trigger, the grants. Changes no
- * data. Rendered from this module; footprint-sql.test.mjs fails if the committed
- * migration drifts from it.
+ * Migration A (design §5.1), FROZEN: the pre-water step (5-argument core, the
+ * wrapper without a sea), the require-cleanup trigger and the grants, exactly as
+ * 851c21c rendered it and as track A (map-footprints) applies it. Never re-rendered:
+ * a version already recorded live is never re-run, so an edit of A in place would
+ * never reach a database that applied it first (review 2026-10-05). Its sha256 (line
+ * ends aside) is pinned; every later change of the step is a new migration (W).
  */
-export function renderMigrationA() {
+export const MIGRATION_A = "supabase/migrations/20261004090000_wine_footprint_clean.sql";
+export const MIGRATION_A_VERSION = "20261004090000";
+export const MIGRATION_A_SHA256 = "4be37028c383168fb05704b930c38637a440887829c0dc44b8317a31bb481cb8";
+
+/** Migration W: the sea, the 7-argument core and the water wrapper (renderMigrationW). Applied after A. */
+export const MIGRATION_W = "supabase/migrations/20261004100000_wine_footprint_water.sql";
+export const MIGRATION_W_VERSION = "20261004100000";
+
+const CORE_SIG = "public.wine_footprint_clean_core(extensions.geometry, extensions.geometry, extensions.geometry, extensions.geometry, jsonb, extensions.geometry, extensions.geometry)";
+const CORE_SIG_A = "public.wine_footprint_clean_core(extensions.geometry, extensions.geometry, extensions.geometry, extensions.geometry, jsonb)";
+const WRAPPER_SIG = "public.wine_footprint_clean(extensions.geometry, uuid, jsonb, jsonb)";
+export const STEP_SIGNATURES = Object.freeze({ core: CORE_SIG, coreA: CORE_SIG_A, wrapper: WRAPPER_SIG });
+
+/** md5 of a function source with its line ends normalised (a CRLF checkout applies \r\n bodies). */
+export const md5Lf = (s) => createHash("md5").update(String(s).replace(/\r\n/g, "\n")).digest("hex");
+
+/**
+ * Migration W (keep water out, owner 2026-10-03; review 2026-10-05): applied AFTER
+ * Migration A, never instead of it. Creates and loads the owner-only sea table,
+ * installs the 7-argument core, replaces the wrapper (same 4-argument signature:
+ * every builder's call is unchanged) and drops A's 5-argument core. The trigger and
+ * its grants stay A's. Changes no existing data. Rendered from this module;
+ * footprint-sql.test.mjs fails if the committed migration drifts from it.
+ */
+export function renderMigrationW() {
   const coreOut = CORE_OUT.map(([n, t]) => `${n} ${t}`).join(", ");
   const partnerList = PARTNER_TYPES.join(", ");
-  return `-- Footprint cleanup fp-1 (Migration A). RENDERED by
--- scripts/wine-map-sources/footprint-sql.mjs renderMigrationA() — do not hand-edit;
+  return `-- Footprint cleanup fp-1, keep water out (Migration W). RENDERED by
+-- scripts/wine-map-sources/footprint-sql.mjs renderMigrationW() — do not hand-edit;
 -- footprint-sql.test.mjs fails if this file and the module drift apart.
 --
--- Changes no existing data. Installs:
+-- Applied AFTER Migration A (${MIGRATION_A_VERSION}: the pre-water step, the
+-- require-cleanup trigger and its grants), never instead of it. Owner 2026-10-03,
+-- "Keep water out (Recommended)": "Never fill across water: gap-closing only
+-- bridges land." Changes no existing data. Installs:
 --   ${WATER_TABLE} (new, owner-only): the coarse sea the keep-water-out rule
 --     reads, ${WATER_ROWS.length} pieces from ${WATER_FILE}
---     (Natural Earth 1:50m, lakes are land; build-footprint-water.mjs);
+--     (Natural Earth 1:50m, lakes are land; build-footprint-water.mjs), covering
+--     ${WATER_COVERAGE.join(", ")} (lon/lat); rows sha256 ${WATER_ROWS_SHA256};
 --   public.wine_footprint_clean_core(raw, blockers, parent, protected, params, sea, outside)
---     the step itself (pure, STABLE, reads no table);
---   public.wine_footprint_clean(p_raw, p_place_id, p_pending, p_params)
---     resolves the context (same-tier blockers without a ${partnerList} edge,
---     the containment parent, the sea and the outside of the national outline,
---     lazily the protected descendant ground), runs the
---     ladder (full -> close-only -> unchanged) and returns (geom, cleanup stamp);
---   trigger wine_place_boundaries_require_cleanup: every INSERT, and every UPDATE
---     OF display_geometry, must carry generation_parameters.cleanup with version
---     '${FOOTPRINT_VERSION}' and output_sha256 = sha256(ST_AsEWKB(display_geometry)).
---     Status/is_current flips never touch display_geometry, so promotes and
---     reverts are unaffected; existing rows are untouched.
--- EXECUTE on all three functions is the owner's alone: revoked from PUBLIC, anon,
+--     the step itself (pure, STABLE, reads no table; refuses params missing a key);
+--     A's 5-argument core is dropped;
+--   public.wine_footprint_clean(p_raw, p_place_id, p_pending, p_params), replaced
+--     (same signature): resolves the context (same-tier blockers without a
+--     ${partnerList} edge, the containment parent, the sea and the outside of the
+--     national outline, lazily the protected descendant ground), REFUSES a place
+--     outside the sea's coverage, runs the ladder (full -> close-only -> unchanged)
+--     and returns (geom, cleanup stamp).
+-- EXECUTE on both functions is the owner's alone: revoked from PUBLIC, anon,
 -- authenticated AND service_role (Supabase's default privileges would otherwise
 -- grant a new function to service_role; the trap refresh_wine_place_neighbours
 -- and transfer_tasting_host document).
--- Builders call it through footprint-cleanup.mjs (cleanGeomCte / withCleanupStamp).
+-- footprint-cleanup.mjs footprintStepState checks the live function sources and sea
+-- rows against the module before any --stage (md5 ${md5Lf(STEP_SOURCES.wrapper)} wrapper,
+-- ${md5Lf(STEP_SOURCES.core)} core).
+
+do $pre$
+begin
+  if to_regprocedure('public.wine_place_boundaries_require_cleanup()') is null
+     or to_regprocedure('${WRAPPER_SIG}') is null then
+    raise exception 'Migration W needs Migration A (${MIGRATION_A_VERSION}) applied first';
+  end if;
+end
+$pre$;
 
 create table if not exists ${WATER_TABLE} (
   id integer primary key,
@@ -782,42 +918,28 @@ create table if not exists ${WATER_TABLE} (
 create index if not exists wine_footprint_water_geom_idx on ${WATER_TABLE} using gist (geom);
 alter table ${WATER_TABLE} enable row level security;
 revoke all on table ${WATER_TABLE} from public, anon, authenticated, service_role;
-comment on table ${WATER_TABLE} is 'Sea (lakes are land), Natural Earth 1:50m admin_0_countries_lakes, ne_commit ${WATER_DOC._provenance.ne_commit}: the gate of wine_footprint_clean''s keep-water-out rule (owner 2026-10-03). Loaded by Migration A from ${WATER_FILE}.';
+comment on table ${WATER_TABLE} is 'Sea (lakes are land), Natural Earth 1:50m admin_0_countries_lakes, ne_commit ${WATER_DOC._provenance.ne_commit}, covering ${WATER_COVERAGE.join(", ")}: the gate of wine_footprint_clean''s keep-water-out rule (owner 2026-10-03). Loaded by Migration W from ${WATER_FILE}.';
 ${WATER_ROWS.map((r) => `insert into ${WATER_TABLE} (id, aoi, geom) values (${r.id}, '${r.aoi}', '${r.hex}'::extensions.geometry) on conflict (id) do update set aoi = excluded.aoi, geom = excluded.geom;`).join("\n")}
 
-create or replace function public.wine_footprint_clean_core(
+create or replace function ${CORE_SIG.replace(/\(.*$/, "")}(
   p_raw extensions.geometry, p_blockers extensions.geometry, p_parent extensions.geometry,
   p_protected extensions.geometry, p_params jsonb, p_sea extensions.geometry, p_outside extensions.geometry)
 returns table (${coreOut})
 language sql stable
 set search_path = public, extensions
-as ${dq("core", CORE_SQL)};
+as ${dq("core", STEP_SOURCES.core)};
 
 create or replace function public.wine_footprint_clean(
   p_raw extensions.geometry, p_place_id uuid, p_pending jsonb default '{}'::jsonb, p_params jsonb default null)
 returns table (geom extensions.geometry, cleanup jsonb)
 language plpgsql stable security invoker
 set search_path = public, extensions
-as $fn$
-${wrapperBody(CORE_CALL_FUNCTION)}
-$fn$;
+as $fn$${STEP_SOURCES.wrapper}$fn$;
 
-create or replace function public.wine_place_boundaries_require_cleanup()
-returns trigger
-language plpgsql
-set search_path = public, extensions
-as $fn$
-${triggerBody("new")}
-$fn$;
+drop function if exists ${CORE_SIG_A};
 
-drop trigger if exists wine_place_boundaries_require_cleanup on public.wine_place_boundaries;
-create trigger wine_place_boundaries_require_cleanup
-  before insert or update of display_geometry on public.wine_place_boundaries
-  for each row execute function public.wine_place_boundaries_require_cleanup();
-
-revoke all on function public.wine_footprint_clean_core(extensions.geometry, extensions.geometry, extensions.geometry, extensions.geometry, jsonb, extensions.geometry, extensions.geometry) from public, anon, authenticated, service_role;
-revoke all on function public.wine_footprint_clean(extensions.geometry, uuid, jsonb, jsonb) from public, anon, authenticated, service_role;
-revoke all on function public.wine_place_boundaries_require_cleanup() from public, anon, authenticated, service_role;
+revoke all on function ${CORE_SIG} from public, anon, authenticated, service_role;
+revoke all on function ${WRAPPER_SIG} from public, anon, authenticated, service_role;
 
 do $check$
 begin
@@ -825,21 +947,23 @@ begin
      or exists (select 1 from ${WATER_TABLE} where not extensions.st_isvalid(geom)) then
     raise exception 'wine_footprint_water does not hold the ${WATER_ROWS.length} valid pieces of ${WATER_FILE}';
   end if;
-  if to_regprocedure('public.wine_footprint_clean(extensions.geometry, uuid, jsonb, jsonb)') is null then
-    raise exception 'wine_footprint_clean was not created';
+  if (${WATER_ROWS_SHA256_SQL.replace(/^select count\(\*\)::int n, /, "select ").replace(/\n/g, "\n      ")}) <> '${WATER_ROWS_SHA256}' then
+    raise exception 'wine_footprint_water rows do not hash to ${WATER_ROWS_SHA256}';
   end if;
-  if not exists (select 1 from pg_trigger where tgname = 'wine_place_boundaries_require_cleanup' and not tgisinternal) then
-    raise exception 'wine_place_boundaries_require_cleanup trigger was not created';
+  if to_regprocedure('${CORE_SIG}') is null or to_regprocedure('${CORE_SIG_A}') is not null then
+    raise exception 'wine_footprint_clean_core is not the 7-argument water core alone';
   end if;
-  if has_function_privilege('service_role', 'public.wine_footprint_clean(extensions.geometry, uuid, jsonb, jsonb)', 'execute')
-     or has_function_privilege('authenticated', 'public.wine_footprint_clean(extensions.geometry, uuid, jsonb, jsonb)', 'execute') then
+  if (select md5(replace(prosrc, E'\\r\\n', E'\\n')) from pg_proc where oid = '${WRAPPER_SIG}'::regprocedure) <> '${md5Lf(STEP_SOURCES.wrapper)}'
+     or (select md5(replace(prosrc, E'\\r\\n', E'\\n')) from pg_proc where oid = '${CORE_SIG}'::regprocedure) <> '${md5Lf(STEP_SOURCES.core)}' then
+    raise exception 'wine_footprint_clean or its core is not the rendered water step';
+  end if;
+  if has_function_privilege('service_role', '${WRAPPER_SIG}', 'execute')
+     or has_function_privilege('authenticated', '${WRAPPER_SIG}', 'execute')
+     or has_function_privilege('service_role', '${CORE_SIG}', 'execute')
+     or has_function_privilege('authenticated', '${CORE_SIG}', 'execute') then
     raise exception 'wine_footprint_clean is executable by a client role';
   end if;
 end
 $check$;
 `;
 }
-
-/** Migration A's file name. */
-export const MIGRATION_A = "supabase/migrations/20261004090000_wine_footprint_clean.sql";
-export const MIGRATION_A_VERSION = "20261004090000";

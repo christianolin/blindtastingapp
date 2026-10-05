@@ -1,6 +1,7 @@
 // Footprint cleanup fp-1. Two halves:
 //   * pure (always): parameters, ladder, ordering, pending, SQL fragments, the
-//     rendered Migration A against the committed file, every builder wired;
+//     frozen Migration A and the rendered Migration W against the committed files,
+//     every builder wired;
 //   * geometry fixtures (FOOTPRINT_DB=1): the pure step (CORE_SQL, which reads no
 //     table) run on synthetic shapes in ONE read-only transaction against the
 //     database in .env.local (withReadOnly: BEGIN READ ONLY, always rolled back):
@@ -11,14 +12,16 @@
 import assert from "node:assert/strict";
 import { readFile, readdir } from "node:fs/promises";
 import test from "node:test";
+import { createHash } from "node:crypto";
 import {
-  CONTEXT_SQL, CORE_COLUMNS, CORE_SQL, FOOTPRINT_VERSION, MIGRATION_A, PARAMS, WATER_DOC, WATER_ROWS, WATER_ROWS_PARAM, WATER_TABLE,
-  contextSql, independentFailuresSql, ladderReason, metricsOf, renderMigrationA, renderTriggerRehearsal, renderWrapperRehearsal, rungs,
-  waterRowsNear,
+  CONTEXT_SQL, CORE_COLUMNS, CORE_PARAM_KEYS, CORE_SQL, FOOTPRINT_VERSION, MIGRATION_A, MIGRATION_A_SHA256, MIGRATION_A_VERSION, MIGRATION_W,
+  MIGRATION_W_VERSION, PARAMS, STEP_SOURCES, WATER_COVERAGE, WATER_DOC, WATER_PROVENANCE, WATER_ROWS, WATER_ROWS_PARAM, WATER_ROWS_SHA256,
+  WATER_TABLE, contextSql, ewkbBbox, independentFailuresSql, ladderReason, md5Lf, metricsOf, missingParams, renderMigrationW,
+  renderTriggerRehearsal, renderWrapperRehearsal, rungs, waterCovered, waterRowsNear,
 } from "./footprint-sql.mjs";
 import {
-  bboxesMeet, cleanGeomCte, createPending, generationAfterCleanup, methodAfterCleanup, methodAfterCleanupSql,
-  orderBatch, rawFromGeoJson, withCleanupStamp, EINZELLAGE_CLEANED_NOTE,
+  assertStampParams, bboxesMeet, cleanGeomCte, createPending, generationAfterCleanup, methodAfterCleanup, methodAfterCleanupSql,
+  orderBatch, rawFromGeoJson, rungParams, stepProblems, withCleanupStamp, EINZELLAGE_CLEANED_NOTE,
 } from "./footprint-cleanup.mjs";
 
 // ---------------------------------------------------------------- pure
@@ -123,31 +126,132 @@ test("a cleaned MANUAL footprint becomes generalized; an as-is Einzellage note i
     { engine: "concave", cleanup: { status: "unchanged" } });
 });
 
-test("Migration A is rendered from the module (no drift)", async () => {
-  // line endings aside (core.autocrlf checkouts)
+test("Migration A is frozen: the pre-water step exactly as 851c21c rendered it (track A may apply it first)", async () => {
+  // review 2026-10-05: an edit of A in place never reaches a database that recorded its version
+  // already, so A never changes again; the water rule is Migration W. Line endings aside.
   const committed = (await readFile(MIGRATION_A, "utf8")).replace(/\r\n/g, "\n");
-  assert.equal(committed, renderMigrationA());
-});
-
-test("Migration A locks EXECUTE to the owner and refuses unstamped writes", () => {
-  const sql = renderMigrationA();
+  assert.equal(createHash("sha256").update(committed).digest("hex"), MIGRATION_A_SHA256);
+  assert.equal(MIGRATION_A_VERSION, "20261004090000");
+  assert.doesNotMatch(committed, /wine_footprint_water|p_sea/, "A knows nothing of the sea");
   for (const fn of ["wine_footprint_clean_core(", "wine_footprint_clean(", "wine_place_boundaries_require_cleanup("]) {
-    const line = sql.split(/\r?\n/).find((l) => l.startsWith(`revoke all on function public.${fn}`));
+    const line = committed.split("\n").find((l) => l.startsWith(`revoke all on function public.${fn}`));
     assert.ok(line, `no revoke for ${fn}`);
     assert.match(line, /from public, anon, authenticated, service_role;$/);
   }
-  assert.match(sql, /before insert or update of display_geometry on public\.wine_place_boundaries/);
-  assert.match(sql, /errcode = '23514'/);
-  assert.match(sql, /footprint-cleanup\.mjs/);
-  assert.ok(sql.includes(CORE_SQL), "the core function body is CORE_SQL verbatim");
+  assert.match(committed, /before insert or update of display_geometry on public\.wine_place_boundaries/);
+  assert.match(committed, /errcode = '23514'/);
+});
+
+test("Migration W is rendered from the module (no drift), a NEW version after A and before any promote", async () => {
+  const committed = (await readFile(MIGRATION_W, "utf8")).replace(/\r\n/g, "\n");
+  assert.equal(committed, renderMigrationW());
+  assert.equal(MIGRATION_W_VERSION, "20261004100000");
+  assert.ok(MIGRATION_W.startsWith(`supabase/migrations/${MIGRATION_W_VERSION}_`));
+  assert.ok(MIGRATION_W_VERSION > MIGRATION_A_VERSION && MIGRATION_W_VERSION < "20261005090000", "between A and the first wave's promote");
+  const names = (await readdir("supabase/migrations")).filter((n) => n.startsWith("2026100"));
+  assert.ok(names.includes(MIGRATION_W.split("/").pop()) && names.includes(MIGRATION_A.split("/").pop()));
+});
+
+test("Migration W loads the sea, swaps in the 7-argument core and the water wrapper, locks EXECUTE, checks itself", () => {
+  const sql = renderMigrationW();
+  assert.match(sql, /^do \$pre\$\n[\s\S]*Migration W needs Migration A \(20261004090000\) applied first/m, "refuses to run before A");
+  for (const fn of ["wine_footprint_clean_core(", "wine_footprint_clean("]) {
+    const line = sql.split("\n").find((l) => l.startsWith(`revoke all on function public.${fn}`));
+    assert.ok(line, `no revoke for ${fn}`);
+    assert.match(line, /from public, anon, authenticated, service_role;$/);
+  }
+  assert.match(sql, /^revoke all on function public\.wine_footprint_clean_core\([^)]*, jsonb, extensions\.geometry, extensions\.geometry\) from/m);
+  assert.match(sql, /^drop function if exists public\.wine_footprint_clean_core\(extensions\.geometry, extensions\.geometry, extensions\.geometry, extensions\.geometry, jsonb\);$/m,
+    "A's 5-argument core goes");
+  assert.doesNotMatch(sql, /create trigger|wine_place_boundaries_require_cleanup\(\)\s*returns/, "the trigger stays A's");
+  assert.ok(sql.includes(`as $core$${STEP_SOURCES.core}$core$;`), "the core function body is CORE_SQL verbatim");
+  assert.ok(sql.includes(`as $fn$${STEP_SOURCES.wrapper}$fn$;`), "the wrapper body is STEP_SOURCES.wrapper verbatim");
   // it changes no existing data: its only writes load its own new sea table
   const writes = sql.split("\n").filter((l) => /\binsert into\b|\bdelete from\b|\bupdate public\.|\btruncate\b/i.test(l));
   assert.equal(writes.length, WATER_ROWS.length);
   for (const l of writes) {
-    assert.match(l, /^insert into public\.wine_footprint_water \(id, aoi, geom\) values \(\d+, '(europe|usa)', '[0-9a-f]+'::extensions\.geometry\) on conflict \(id\) do update set aoi = excluded\.aoi, geom = excluded\.geom;$/);
+    assert.match(l, /^insert into public\.wine_footprint_water \(id, aoi, geom\) values \(\d+, '(europe|usa|world)', '[0-9a-f]+'::extensions\.geometry\) on conflict \(id\) do update set aoi = excluded\.aoi, geom = excluded\.geom;$/);
   }
   assert.match(sql, /revoke all on table public\.wine_footprint_water from public, anon, authenticated, service_role;/);
   assert.match(sql, /alter table public\.wine_footprint_water enable row level security;/);
+  // the same-transaction checks: the rows' hash, the sources' md5, the privileges
+  assert.ok(sql.includes(`<> '${WATER_ROWS_SHA256}' then`));
+  assert.ok(sql.includes(`<> '${md5Lf(STEP_SOURCES.wrapper)}'`) && sql.includes(`<> '${md5Lf(STEP_SOURCES.core)}' then`));
+  assert.match(sql, /has_function_privilege\('authenticated', 'public\.wine_footprint_clean_core\(/);
+});
+
+test("the live step is this module's only with the water sources, the 7-argument core and the committed sea rows", () => {
+  const ok = { wrapperSrc: STEP_SOURCES.wrapper, coreSrc: STEP_SOURCES.core, coreASrc: null, waterTable: true, waterSha: WATER_ROWS_SHA256, waterRows: WATER_ROWS.length };
+  assert.deepEqual(stepProblems(ok), { live: true, problems: [] });
+  assert.deepEqual(stepProblems({ ...ok, wrapperSrc: STEP_SOURCES.wrapper.replace(/\n/g, "\r\n"), coreSrc: STEP_SOURCES.core.replace(/\n/g, "\r\n") }).problems, [],
+    "a CRLF checkout's bodies are the same step");
+  assert.equal(stepProblems({ wrapperSrc: null }).live, false);
+  // track A applied Migration A first: its wrapper (no sea), its 5-argument core, no table
+  const aOnly = stepProblems({ wrapperSrc: "\ndeclare\n  -- A's wrapper\nbegin\nend\n", coreSrc: null, coreASrc: "select 1", waterTable: false });
+  assert.equal(aOnly.live, true);
+  assert.equal(aOnly.problems.length, 4, aOnly.problems.join("\n"));
+  assert.match(aOnly.problems.join("\n"), /7-argument wine_footprint_clean_core does not exist live/);
+  assert.match(aOnly.problems.join("\n"), /5-argument wine_footprint_clean_core still exists/);
+  assert.match(aOnly.problems.join("\n"), /not this module's wrapper/);
+  assert.match(aOnly.problems.join("\n"), /wine_footprint_water does not exist live/);
+  assert.match(stepProblems({ ...ok, waterSha: "f".repeat(64) }).problems[0], /holds 376 row\(s\) hashing to ffffffffffff, not the 376 committed rows/);
+  assert.match(stepProblems({ ...ok, coreSrc: STEP_SOURCES.core.replace("prm.wr", "prm.cb") }).problems[0], /not this module's CORE_SQL/);
+});
+
+test("a stamp must carry the run's own params for its rung (review 2026-10-05)", () => {
+  assert.deepEqual(rungParams(PARAMS, "full"), PARAMS);
+  assert.equal(rungParams(PARAMS, "close-only").arm_m, 0);
+  assert.equal(rungParams(PARAMS, "none").arm_m, 0, "a skipped place carries the last rung tried");
+  // jsonb reorders keys: the order never matters
+  const reordered = Object.fromEntries(Object.entries(PARAMS).reverse());
+  assertStampParams({ rung: "full", params: reordered }, PARAMS);
+  assertStampParams({ rung: "close-only", params: { ...PARAMS, arm_m: 0 } }, PARAMS);
+  // a live function on Migration A ran its built-in pre-water params
+  const { water_reach_m: _a, coast_reach_m: _b, coast_band_m: _c, ...preWater } = PARAMS;
+  assert.throws(() => assertStampParams({ rung: "full", params: preWater }, PARAMS, "porto-ercole"),
+    /stamp of porto-ercole: params differ from the run's \(rung full\) on coast_band_m, coast_reach_m, water_reach_m/);
+  assert.throws(() => assertStampParams({ rung: "full", params: { ...PARAMS, crumb_max_m2: 5000 } }, PARAMS), /on crumb_max_m2/);
+  assert.throws(() => assertStampParams({ rung: "close-only", params: PARAMS }, PARAMS), /on arm_m/);
+});
+
+test("params missing a key are refused, never read as NULL (review 2026-10-05)", () => {
+  const unused = ["version", "denoise_m", "grow_max", "shrink_max", "near_m", "protect_min_m2"];
+  assert.deepEqual([...CORE_PARAM_KEYS].sort(), Object.keys(PARAMS).filter((k) => !unused.includes(k)).sort(), "every key the core reads");
+  for (const k of CORE_PARAM_KEYS) assert.ok(CORE_SQL.includes(`'${k}'`), k);
+  assert.ok(CORE_SQL.includes(`p ?& array[${CORE_PARAM_KEYS.map((k) => `'${k}'`).join(", ")}] then p->>'gap_m'`));
+  assert.match(CORE_SQL, /'wine_footprint_clean_core: params lack ' \|\| array_to_string/);
+  assert.match(STEP_SOURCES.wrapper, /if not \(v_params \?& array\['gap_m', [^\]]*'coast_band_m', 'grow_max', 'shrink_max'\]\) then\n {4}raise exception 'wine_footprint_clean: p_params lacks a key of %'/);
+  assert.deepEqual(missingParams(PARAMS), []);
+  const { water_reach_m: _w, ...review4Params } = PARAMS;
+  assert.deepEqual(missingParams(review4Params), ["water_reach_m"]);
+});
+
+test("the sea covers every latitude where wine grows; outside it the step refuses (review 2026-10-05)", () => {
+  assert.deepEqual([...WATER_COVERAGE], [-180, -57, 180, 57]);
+  assert.deepEqual(Object.keys(WATER_DOC._provenance.aoi), ["europe", "usa", "world"]);
+  // europe and usa first, unchanged ids (the 2026-10-05 coastal recompute ran on them), then the rest of the band
+  assert.deepEqual([...new Set(WATER_ROWS.map((r) => r.aoi))], ["europe", "usa", "world"]);
+  assert.equal(WATER_ROWS.filter((r) => r.aoi !== "world").length, 70);
+  assert.equal(WATER_ROWS.findIndex((r) => r.aoi === "world"), 70);
+  // the places the review named now have sea near them: Santorini, Nemea, Cyprus, the Black Sea coast,
+  // Malagash and Annapolis (Nova Scotia), Hawaii, the southern hemisphere
+  const near = { santorini: [25.35, 36.35, 25.48, 36.47], nemea: [22.6, 37.75, 22.75, 37.88], cyprus: [32.8, 34.75, 33.0, 34.9],
+    blackSea: [27.8, 43.1, 28.0, 43.3], malagash: [-63.45, 45.75, -63.35, 45.82], annapolis: [-65.6, 44.7, -64.5, 45.1],
+    hawaii: [-156.4, 20.6, -156.2, 20.8], capeTown: [18.8, -34.0, 19.0, -33.8], marlborough: [173.6, -41.6, 174.1, -41.4] };
+  for (const [name, b] of Object.entries(near)) {
+    assert.ok(waterRowsNear(b, 0.25).length > 0, `${name}: no sea within reach`);
+    assert.equal(waterCovered(b), true, name);
+  }
+  // within the 15 km of a former box edge the sea now continues past it (22°E, -64°)
+  assert.ok(WATER_ROWS.some((r) => r.aoi === "world" && r.bbox[0] <= 22 && r.bbox[2] > 22.2 && r.bbox[1] < 40 && r.bbox[3] > 36));
+  assert.equal(waterCovered([10, 56.8, 10.1, 56.9]), false, "Skagen-ish: beyond 57°N less the reach");
+  assert.equal(waterCovered([179.9, -40, 180, -39]), false, "the antimeridian edge");
+  assert.equal(waterCovered([-124.71, 24.5423, 18.52038, 55.05869]), true, "the whole catalogue of 2026-10-05");
+  assert.match(CONTEXT_SQL, /st_coveredby\(st_expand\(\$2::geometry, 0\.25\), st_makeenvelope\(-180, -57, 180, 57, 4326\)\) water_covered/);
+  assert.match(STEP_SOURCES.wrapper, /if v_ctx\.water_covered is not true then\n {4}raise exception 'wine_footprint_clean: place % \(%\) is outside the sea data/);
+  assert.deepEqual(ewkbBbox(WATER_ROWS[0].hex), WATER_ROWS[0].bbox);
+  assert.deepEqual(WATER_PROVENANCE.rows_sha256, WATER_ROWS_SHA256);
+  assert.equal(WATER_PROVENANCE.rows, WATER_ROWS.length);
 });
 
 test("keep water out: the parameters, the sea pieces and the context", () => {
@@ -161,8 +265,9 @@ test("keep water out: the parameters, the sea pieces and the context", () => {
   // Porto Ercole (Maremma) has sea near it; the Pfalz has none (no German place gets water in its context)
   assert.ok(waterRowsNear([11.19, 42.37, 11.22, 42.40]).length > 0);
   assert.equal(waterRowsNear([7.9, 49.1, 8.1, 49.3]).length, 0);
-  assert.ok(CONTEXT_SQL.includes("from (select w.geom g from public.wine_footprint_water w) w"));
-  assert.ok(contextSql({ waterRows: WATER_ROWS_PARAM }).includes("jsonb_array_elements_text($4::jsonb)"));
+  assert.ok(CONTEXT_SQL.includes("from (select w.id, w.geom g from public.wine_footprint_water w) w"));
+  assert.ok(contextSql({ waterRows: WATER_ROWS_PARAM }).includes("jsonb_array_elements($4::jsonb)"));
+  assert.ok(CONTEXT_SQL.includes("st_collect(wat.g order by wat.id)"), "the sea's stamp hash never depends on the read order");
   assert.equal(WATER_TABLE, "public.wine_footprint_water");
   // the rule: open pieces of the closing that are coastal, or dam a basin within the sea band, are left out
   assert.ok(CORE_SQL.includes("st_dwithin(f.geom, w.sea, prm.wr)"));
@@ -417,12 +522,13 @@ test("F1/F7: the pass never re-derives a parent; every metric is against the sto
   assert.equal(sql.DERIVE_SQL, undefined);
 });
 
-test("F4: Migration A qualifies its geometry types; the rehearsals share the wrapper and trigger bytes", () => {
-  const sql = renderMigrationA();
+test("F4: Migration W qualifies its geometry types; the rehearsals share the wrapper and trigger bytes", () => {
+  const sql = renderMigrationW();
   assert.match(sql, /returns table \(clean4 extensions\.geometry, /);
-  const ddl = sql.split("\n").filter((l) => /^(returns|create|revoke|  p_)/.test(l)).join("\n");
+  const ddl = sql.split("\n").filter((l) => /^(returns|create|revoke|drop|  p_)/.test(l)).join("\n");
   assert.doesNotMatch(ddl, /(?<!extensions\.)\bgeometry\b/, "no unqualified geometry type in the DDL");
-  const fnBody = sql.slice(sql.indexOf("as $fn$\ndeclare"), sql.indexOf("$fn$;\n\ncreate or replace function public.wine_place_boundaries_require_cleanup"));
+  const fnBody = sql.slice(sql.indexOf("as $fn$\ndeclare"), sql.indexOf("$fn$;\n\ndrop function if exists public.wine_footprint_clean_core"));
+  assert.ok(fnBody.length > 1000, "the wrapper body was found");
   const rehearsal = renderWrapperRehearsal({ rawHex: "00", placeId: "11111111-1111-1111-1111-111111111111" });
   // every wrapper line but the two core calls and the return appears in the rehearsal, in order
   // (the context reads the sea from the table there, from $4 = the committed pieces here)
@@ -548,13 +654,65 @@ test("review fixes against live shapes (read-only, FOOTPRINT_DB=1)", { skip: !DB
       }
     });
 
+    await t.test("review 2026-10-05: params without a water key are refused, not read as NULL", async () => {
+      const raw = (await c.query("select encode(st_asewkb(st_multi(st_expand(st_setsrid(st_point(2.5, 56.5), 4326), 0.001))), 'hex') h")).rows[0].h;
+      const { water_reach_m: _w, ...review4Params } = PARAMS;
+      await c.query("savepoint nokey");
+      await assert.rejects(c.query(CORE_SQL, [raw, null, null, null, JSON.stringify(review4Params), null, null]),
+        (e) => e.code === "22P02" && /params lack water_reach_m/.test(e.message), "the core");
+      await c.query("rollback to savepoint nokey");
+      await assert.rejects(c.query(renderWrapperRehearsal({ rawHex: neuberg.hex, placeId: neuberg.id, params: review4Params })),
+        (e) => e.code === "22023" && /p_params lacks a key/.test(e.message), "the wrapper");
+      await c.query("rollback to savepoint nokey");
+      await assert.rejects(cleanFootprint(c, { raw, placeId: neuberg.id, params: review4Params, via: "inline" }), /params lack water_reach_m/);
+    });
+
+    await t.test("review 2026-10-05: the sea reaches past 22°E; a place outside the coverage is refused", async () => {
+      const france = await place("france");
+      const box = async (x, y) => (await c.query(
+        "select encode(st_asewkb(st_multi(st_expand(st_setsrid(st_point($1, $2), 4326), 0.005))), 'hex') h", [x, y])).rows[0].h;
+      // Santorini (25.4°E) and Malagash, Nova Scotia (-63.4°): there was no sea in reach before
+      for (const [x, y] of [[25.43, 36.4], [-63.4, 45.78]]) {
+        const ctx = await readContext(c, { placeId: france.id, raw: await box(x, y), pendingJson: "{}" });
+        assert.ok(ctx.sea, `no sea near ${x}, ${y}`);
+        assert.equal(ctx.water_covered, true);
+      }
+      const north = await box(10.5, 56.9);
+      const ctx = await readContext(c, { placeId: france.id, raw: north, pendingJson: "{}" });
+      assert.equal(ctx.water_covered, false);
+      await assert.rejects(cleanFootprint(c, { raw: north, placeId: france.id, via: "inline" }), (e) => e.code === "22023" && /outside the sea data/.test(e.message));
+      await c.query("savepoint cover");
+      await assert.rejects(c.query(renderWrapperRehearsal({ rawHex: north, placeId: france.id })),
+        (e) => e.code === "22023" && /place france \(.*\) is outside the sea data/.test(e.message));
+      await c.query("rollback to savepoint cover");
+    });
+
+    await t.test("review 2026-10-05: the live table's hash SQL reproduces WATER_ROWS_SHA256 over the committed rows", async () => {
+      const { WATER_ROWS_SHA256_SQL } = await import("./footprint-sql.mjs");
+      const asTable = `(select (x->>'id')::int id, x->>'aoi' aoi, (x->>'hex')::extensions.geometry(Polygon, 4326) geom from jsonb_array_elements($1::jsonb) x)`;
+      const sql = WATER_ROWS_SHA256_SQL.replace(`from ${WATER_TABLE} w`, `from ${asTable} w`);
+      assert.notEqual(sql, WATER_ROWS_SHA256_SQL);
+      const r = (await c.query(sql, [JSON.stringify(WATER_ROWS.map(({ id, aoi, hex }) => ({ id, aoi, hex })))])).rows[0];
+      assert.equal(r.n, WATER_ROWS.length);
+      assert.equal(r.sha, WATER_ROWS_SHA256);
+    });
+
+    await t.test("review 2026-10-05: the live step is judged against the module (nothing applied yet: inline)", async () => {
+      const { footprintStepFacts, footprintStepLive } = await import("./footprint-cleanup.mjs");
+      const facts = await footprintStepFacts(c);
+      const s = stepProblems(facts);
+      if (!facts.wrapperSrc) assert.equal(s.live, false, "no Migration A live");
+      assert.equal(await footprintStepLive(c), s.live && s.problems.length === 0);
+      if (facts.wrapperSrc && !facts.coreSrc) assert.match(s.problems.join("\n"), /Migration W is not applied/);
+    });
+
     await t.test("F4: the core's result columns are exactly the declared types (a SQL function refuses a mismatch)", async () => {
       const raw = (await c.query("select encode(st_asewkb(st_multi(st_expand(st_setsrid(st_point(2.5, 56.5), 4326), 0.001))), 'hex') h")).rows[0].h;
       const res = await c.query(CORE_SQL, [raw, null, null, null, JSON.stringify(PARAMS), null, null]);
       const types = new Map((await c.query("select oid::int oid, format_type(oid, null) t from pg_type where oid = any($1::oid[])",
         [res.fields.map((f) => f.dataTypeID)])).rows.map((x) => [x.oid, x.t]));
       const got = res.fields.map((f) => `${f.name} ${types.get(f.dataTypeID)}`);
-      const declared = renderMigrationA().match(/returns table \((clean4 [^)]*)\)/)[1].split(", ")
+      const declared = renderMigrationW().match(/returns table \((clean4 [^)]*)\)/)[1].split(", ")
         .map((s) => s.replace("extensions.geometry", "geometry"));
       assert.deepEqual(got, declared);
     });
