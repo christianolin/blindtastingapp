@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { invalidateReferenceOptions } from "@/lib/reference-options-tag";
 import type { Database } from "@/lib/supabase/database.types";
 import { isUnrevealedGlassRefusal, UNREVEALED_GLASS_EDIT } from "@/lib/catalog/rule1-guard";
 import type { ReferenceOption } from "@/components/reference-combobox";
@@ -96,6 +97,7 @@ export async function createCountry(name: string): Promise<ReferenceOption> {
       supabase.from("regions").insert({ country_id: country.id, name: NONE }).select("id, name").single(),
   );
   await ensureSelfNamedAppellation(supabase, noneRegion);
+  invalidateReferenceOptions();
   return country;
 }
 
@@ -117,6 +119,7 @@ export async function createGrape(name: string): Promise<ReferenceOption> {
     .select("id, name")
     .single();
   if (error) throw new Error(error.message);
+  invalidateReferenceOptions();
   return data;
 }
 
@@ -133,6 +136,7 @@ export async function createRegion(countryId: string, name: string): Promise<Ref
       supabase.from("regions").insert({ country_id: countryId, name: trimmed }).select("id, name").single(),
   );
   await ensureSelfNamedAppellation(supabase, region);
+  invalidateReferenceOptions();
   return region;
 }
 

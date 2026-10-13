@@ -1,6 +1,9 @@
 import { cache } from "react";
 import { cookies } from "next/headers";
+import { unstable_cache } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { REFERENCE_OPTIONS_TAG } from "@/lib/reference-options-tag";
 import {
   decodeStartResult,
   startResultCookieName,
@@ -19,11 +22,8 @@ import {
 // roughly twice.
 //
 // React's cache() memoises per request, so the second and third callers get
-// the first caller's promise. Nothing is cached ACROSS requests, which is
-// deliberate: countries, regions, appellations, producers and grapes can all
-// be created inline from the wine forms (see wine-identity-fields.tsx), and a
-// cross-request cache would hide a variety somebody just added. Cutting the
-// duplication is most of the win and carries none of that risk.
+// the first caller's promise. Nothing is cached ACROSS requests — with one
+// exception, getReferenceOptions below (egress cuts, 2026-10-13).
 //
 // Each getter selects a superset of the columns its callers need, so one
 // cached row can serve all of them.
@@ -89,17 +89,25 @@ export type ReferenceOptions = {
   grapes: { id: string; name: string }[];
 };
 
-/**
- * The lookup tables the guess form and the host's wine identities both need,
- * fetched once per request instead of twice.
- *
- * type_designations is deliberately NOT here: the guess form wants only active
- * ones in sort_order, while the host's identity lookup needs every row so an
- * answer referencing a retired designation still resolves to a name. Caching
- * one query for both would quietly change one of them.
- */
-export const getReferenceOptions = cache(async (): Promise<ReferenceOptions> => {
-  const supabase = await createClient();
+// The three reference lists, shared ACROSS requests and users for at most
+// REFERENCE_OPTIONS_TTL_S. Why: every AutoRefresh/RevealSync refresh of a
+// running tasting (every 6 s per participant, plus every guess and reveal)
+// re-read all ~400 regions, every grape and every country — tens of KB of
+// Supabase egress per refresh, per person, the same bytes every time. They are
+// readable by every signed-in user (`"reference read" … using (true)`), so one
+// copy serves everyone; it is read with the service-role client because a
+// cross-request cache cannot carry a user's cookies (every caller of
+// getReferenceOptions is a signed-in page). Inline creates (createCountry/
+// createRegion/createGrape, wine-identity/server/write.ts's grape insert)
+// expire it via invalidateReferenceOptions, so a variety somebody just added
+// shows up at once; any other writer is picked up within the TTL. A failed or
+// empty read throws, so it is never cached, and getReferenceOptions falls back
+// to the old per-request read as the viewer.
+export const REFERENCE_OPTIONS_TTL_S = 60;
+
+async function readReferenceOptions(
+  supabase: Awaited<ReturnType<typeof createClient>> | ReturnType<typeof createAdminClient>,
+): Promise<ReferenceOptions> {
   const [countries, regions, grapes] = await Promise.all([
     supabase.from("countries").select("id, name").order("name"),
     supabase.from("regions").select("id, name, country_id").order("name"),
@@ -110,6 +118,36 @@ export const getReferenceOptions = cache(async (): Promise<ReferenceOptions> => 
     regions: regions.data ?? [],
     grapes: grapes.data ?? [],
   };
+}
+
+const readSharedReferenceOptions = unstable_cache(
+  async (): Promise<ReferenceOptions> => {
+    const options = await readReferenceOptions(createAdminClient());
+    if (!options.countries.length || !options.regions.length || !options.grapes.length) {
+      throw new Error("reference options read came back empty");
+    }
+    return options;
+  },
+  ["tasting-reference-options-v1"],
+  { revalidate: REFERENCE_OPTIONS_TTL_S, tags: [REFERENCE_OPTIONS_TAG] },
+);
+
+/**
+ * The lookup tables the guess form and the host's wine identities both need,
+ * fetched once per request instead of twice, from the shared cache above.
+ *
+ * type_designations is deliberately NOT here: the guess form wants only active
+ * ones in sort_order, while the host's identity lookup needs every row so an
+ * answer referencing a retired designation still resolves to a name. Caching
+ * one query for both would quietly change one of them.
+ */
+export const getReferenceOptions = cache(async (): Promise<ReferenceOptions> => {
+  try {
+    return await readSharedReferenceOptions();
+  } catch (error) {
+    console.error("Reference options: the shared read failed; reading as the viewer", error);
+    return readReferenceOptions(await createClient());
+  }
 });
 
 /**

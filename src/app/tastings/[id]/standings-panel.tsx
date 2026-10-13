@@ -11,6 +11,7 @@ import {
   getTastingRow,
 } from "@/lib/tasting-request-cache";
 import { cn } from "@/lib/utils";
+import { StorageImg } from "@/components/storage-img";
 
 // Rank marks in the app's own palette — bordeaux for the winner, a gilt tint
 // for the rest of the podium. (This used to be metallic gold/silver/bronze
@@ -127,8 +128,8 @@ export async function StandingsPanel({ tastingId }: { tastingId: string }) {
                       )}
                     </span>
                     {row.avatarUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
+                      <StorageImg
+                        renderWidth={28}
                         src={row.avatarUrl}
                         alt=""
                         className="size-7 shrink-0 rounded-full object-cover ring-1 ring-border"
@@ -208,8 +209,8 @@ export async function StandingsPanel({ tastingId }: { tastingId: string }) {
                       </p>
                       <div className="flex items-center gap-2.5 px-2">
                         {profile?.avatar_url ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
+                          <StorageImg
+                            renderWidth={28}
                             src={profile.avatar_url}
                             alt=""
                             className="size-7 shrink-0 rounded-full object-cover ring-1 ring-border"
@@ -242,8 +243,8 @@ export async function StandingsPanel({ tastingId }: { tastingId: string }) {
                         className="flex items-center gap-2.5 px-2 py-1"
                       >
                         {profile?.avatar_url ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
+                          <StorageImg
+                            renderWidth={24}
                             src={profile.avatar_url}
                             alt=""
                             className="size-6 shrink-0 rounded-full object-cover opacity-70 ring-1 ring-border"

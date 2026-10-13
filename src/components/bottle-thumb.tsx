@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { StorageImg } from "@/components/storage-img";
 
 // The bottle photo at the start of a wine row: the cellar list, the catalog
 // list and the cellar history all use this one box, so a row looks the same
@@ -7,8 +8,9 @@ import { cn } from "@/lib/utils";
 // the same hatch fallback for a wine with no photo. The caller sets the size
 // (e.g. "h-14 w-10" in a laptop table, "h-12 w-9" in a phone card).
 //
-// Photos are full-size uploads, so the image is lazy and decoded off the main
-// thread: a long list only fetches the rows that scroll into view.
+// Photos are full-size uploads, so the image is fetched at the box's size
+// (StorageImg; every caller's box is at most 48 px wide), lazy, and decoded
+// off the main thread: a long list only fetches the rows that scroll into view.
 export function BottleThumb({
   src,
   className,
@@ -25,8 +27,14 @@ export function BottleThumb({
   }
   return (
     <span className={cn(box, "bg-card")}>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={src} alt="" loading="lazy" decoding="async" className="h-full w-full object-contain" />
+      <StorageImg
+        renderWidth={48}
+        src={src}
+        alt=""
+        loading="lazy"
+        decoding="async"
+        className="h-full w-full object-contain"
+      />
     </span>
   );
 }

@@ -293,7 +293,7 @@ export function CommunityList({
             {rows.map((r) => (
               <div key={r.id} className="flex flex-col gap-2 rounded-xl border border-border p-3">
                 <Link href={`/u/${r.id}`} className="flex min-h-11 items-start gap-3">
-                  <Avatar src={r.avatarUrl} name={r.name} className="size-11" />
+                  <Avatar src={r.avatarUrl} name={r.name} className="size-11" renderWidth={44} />
                   <span className="min-w-0 flex-1">
                     <span className="flex items-center gap-2">
                       <span className="truncate font-medium">{r.name}</span>
@@ -374,7 +374,7 @@ export function CommunityList({
                   <tr key={r.id} className="group border-b border-border last:border-0 hover:bg-muted/30">
                     <td className="px-4 py-3">
                       <Link href={`/u/${r.id}`} className="flex min-w-0 items-center gap-3">
-                        <Avatar src={r.avatarUrl} name={r.name} className="size-10" />
+                        <Avatar src={r.avatarUrl} name={r.name} className="size-10" renderWidth={40} />
                         <span className="min-w-0">
                           <span className="flex items-center gap-2">
                             <span className="truncate font-medium">{r.name}</span>

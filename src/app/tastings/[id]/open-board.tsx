@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { catalogWineTitle } from "@/lib/wset/queries";
 import { DOSAGE_EMBED } from "@/lib/wset/wine-title";
 import { NewNoteModal } from "@/components/new-note-modal";
+import { StorageImg } from "@/components/storage-img";
 
 type Row = {
   tastingWineId: string;
@@ -211,8 +212,8 @@ export function OpenBoard({
               ) : null}
             </div>
             {r.imageUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
+              <StorageImg
+                renderWidth={48}
                 src={r.imageUrl}
                 alt=""
                 className="h-16 w-12 shrink-0 rounded-md border border-border object-cover"

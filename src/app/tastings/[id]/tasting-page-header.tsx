@@ -13,6 +13,7 @@ import { getTastingPlace } from "@/app/tastings/new/place";
 import { lobbyEyebrowParts } from "@/lib/lobby-copy";
 import { glassesSoFarPhrase } from "@/lib/tasting-eyebrow";
 import { TastingSettingsButton } from "./tasting-settings-button";
+import { StorageImg } from "@/components/storage-img";
 
 // The thumbnail, eyebrow, name, description, the place line and the host's
 // "Tasting settings" entry (spec §3.3 items 1–2, BT-L2; moved and rebuilt
@@ -61,8 +62,8 @@ export async function TastingPageHeader({
     <div className="flex items-start justify-between gap-4">
       <div className="flex min-w-0 flex-1 items-start gap-4">
         {tasting.image_url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <StorageImg
+            renderWidth={80}
             src={tasting.image_url}
             alt=""
             className="size-16 shrink-0 rounded-xl border border-border object-cover sm:size-20"

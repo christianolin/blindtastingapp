@@ -2,6 +2,7 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { Database } from "@/lib/supabase/database.types";
+import { invalidateReferenceOptions } from "@/lib/reference-options-tag";
 
 import { blendNeedsReplace, storableBlend } from "../blend-sync";
 import { catalogWinePayload } from "../catalog-payload";
@@ -143,7 +144,10 @@ export async function findOrCreateGrapeFolded(supabase: Db, name: string): Promi
   if (found) return found;
 
   const { data, error } = await supabase.from("grapes").insert({ name: stored }).select("id").single();
-  if (!error && data) return data.id;
+  if (!error && data) {
+    invalidateReferenceOptions();
+    return data.id;
+  }
   if (error?.code === "23505") {
     const retried = await findGrapeFolded(supabase, stored, folded);
     if (retried) return retried;

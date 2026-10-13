@@ -43,10 +43,10 @@ export function ProfileHeader({
         // is display:none, so assistive technology meets one labelled ring.
         <>
           <ProfileRing level={level} liveUserId={liveUserId} size={90} className="mt-2 max-md:hidden">
-            <Avatar src={avatarUrl} name={name} size="lg" className="size-20 text-3xl" />
+            <Avatar src={avatarUrl} name={name} size="lg" className="size-20 text-3xl" renderWidth={80} />
           </ProfileRing>
           <ProfileRing level={level} liveUserId={liveUserId} size={74} className="mt-2 md:hidden">
-            <Avatar src={avatarUrl} name={name} size="lg" className="size-16 text-2xl" />
+            <Avatar src={avatarUrl} name={name} size="lg" className="size-16 text-2xl" renderWidth={64} />
           </ProfileRing>
         </>
       ) : (
@@ -55,6 +55,7 @@ export function ProfileHeader({
           name={name}
           size="lg"
           className="size-20 text-3xl max-md:size-16 max-md:text-2xl"
+          renderWidth={80}
         />
       )}
       <div className="min-w-0 flex-1">

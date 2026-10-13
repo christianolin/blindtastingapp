@@ -13,6 +13,7 @@ import { getBulkProfileSummaries } from "@/lib/profile-stats";
 import { bringsWineLine, participantsSummary, PARTICIPANTS_FOOTER } from "@/lib/lobby-copy";
 import { cn } from "@/lib/utils";
 import { isDeletedProfile } from "@/lib/account/delete-account";
+import { StorageImg } from "@/components/storage-img";
 
 // A roster row's frame: a link to the person's profile or, for a deleted
 // account, which has no profile to open (D16), the same layout in a plain
@@ -136,8 +137,8 @@ export async function ParticipantsCard({
                 >
                   <span className="flex min-w-0 items-center gap-3">
                     {profile?.avatar_url ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
+                      <StorageImg
+                        renderWidth={36}
                         src={profile.avatar_url}
                         alt=""
                         className="size-9 shrink-0 rounded-full object-cover ring-1 ring-border"

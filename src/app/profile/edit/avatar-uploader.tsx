@@ -6,6 +6,7 @@ import { ImageUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { WineGlassLoader } from "@/components/wine-glass-loader";
 import { createClient } from "@/lib/supabase/client";
+import { StorageImg } from "@/components/storage-img";
 
 export function AvatarUploader({
   userId,
@@ -65,8 +66,8 @@ export function AvatarUploader({
   return (
     <div className="flex flex-col items-center gap-3">
       {avatarUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
+        <StorageImg
+          renderWidth={96}
           src={avatarUrl}
           alt=""
           className="size-24 rounded-full object-cover ring-1 ring-border"

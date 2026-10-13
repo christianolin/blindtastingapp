@@ -4,6 +4,7 @@ import { ChevronDown, Wine } from "lucide-react";
 import { AnswerFacts } from "../answer-facts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/server";
+import { getReferenceOptions } from "@/lib/tasting-request-cache";
 import { eligibleForGlass, type EligibilityParticipant } from "@/lib/glass-eligibility";
 import { GUESS_READ_COLUMNS } from "@/lib/guess-columns";
 import { lookupAppellationAndProducerNames } from "@/lib/reference-lookup";
@@ -16,6 +17,7 @@ import { cn } from "@/lib/utils";
 import { CountryFlag } from "@/components/country-flag";
 import { LocalDateTime } from "@/components/local-date-time";
 import { viewerCanSeeStandings } from "../view-route";
+import { StorageImg } from "@/components/storage-img";
 
 const CATEGORY_MAX: Record<string, number> = {
   country: 2,
@@ -81,9 +83,9 @@ export default async function ResultsPage({
       .select("id, position, is_revealed, reveal_step, contributor_participant_id")
       .eq("tasting_id", tastingId)
       .order("position"),
-    supabase.from("countries").select("id, name"),
-    supabase.from("regions").select("id, name"),
-    supabase.from("grapes").select("id, name"),
+    getReferenceOptions().then((r) => ({ data: r.countries })),
+    getReferenceOptions().then((r) => ({ data: r.regions })),
+    getReferenceOptions().then((r) => ({ data: r.grapes })),
     supabase.from("type_designations").select("id, name"),
   ]);
 
@@ -320,8 +322,8 @@ export default async function ResultsPage({
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 p-6 sm:p-8">
       {tasting.image_url ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
+        <StorageImg
+          renderWidth={768}
           src={tasting.image_url}
           alt=""
           className="aspect-[3/1] w-full rounded-xl object-cover"
@@ -480,8 +482,8 @@ export default async function ResultsPage({
                 (answer.catalog_wine_id
                   ? catalogImageById.get(answer.catalog_wine_id as string)
                   : null) ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
+                  <StorageImg
+                    renderWidth={64}
                     src={
                       (answer.image_url as string | null) ??
                       (catalogImageById.get(

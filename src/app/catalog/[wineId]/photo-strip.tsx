@@ -12,6 +12,7 @@ import { STRIP_SHOWN, photoCaption, stripHeading } from "@/lib/catalog-photos/st
 import type { StripPhoto } from "@/lib/catalog-photos/types";
 import { TWO_TAP_WINDOW_MS, twoTapState } from "@/lib/console-copy";
 import { removeCatalogWinePhoto } from "../photo-actions";
+import { StorageImg } from "@/components/storage-img";
 
 // The wine page's "More photos" strip (scan photos spec §8.5): every photo of
 // the wine but the main one, newest first (`stripPhotos`, done by the page).
@@ -181,8 +182,8 @@ export function PhotoStrip({
                 </Button>
               </div>
 
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+              <StorageImg
+                renderWidth={768}
                 key={current.id}
                 src={current.url}
                 alt=""

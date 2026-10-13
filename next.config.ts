@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 import { manifestOverrideBuildError } from "./src/lib/wine-map/manifest-guard";
+import { storageRemotePatterns } from "./src/lib/images/storage-src";
 
 // The wine map's draft-manifest override must never reach a production build
 // (src/lib/wine-map/manifest-guard.ts): fail the build rather than ship a map
@@ -8,6 +9,21 @@ const manifestOverrideError = manifestOverrideBuildError(process.env);
 if (manifestOverrideError) throw new Error(manifestOverrideError);
 
 const nextConfig: NextConfig = {
+  // Photos from Supabase Storage go through the image optimizer (StorageImg,
+  // src/components/storage-img.tsx) so Supabase serves each original once per
+  // cache entry instead of on every view (Free-plan egress, 2026-10-13).
+  // Stored objects never change in place — wine photos are write-locked,
+  // tasting covers get fresh names, avatars carry a ?t= cache-buster — so a
+  // long TTL is safe. The size lists are kept short on purpose: every distinct
+  // (image, width) pair is one billed transformation on Vercel.
+  images: {
+    remotePatterns: storageRemotePatterns(process.env.NEXT_PUBLIC_SUPABASE_URL),
+    minimumCacheTTL: 2_678_400, // 31 days
+    imageSizes: [32, 48, 64, 96, 128, 256, 384],
+    deviceSizes: [640, 828, 1080, 1200, 1920],
+    qualities: [75],
+    formats: ["image/webp"],
+  },
   // Keep build and pipeline inputs out of the deployed server functions. The
   // development-only label-read fixture (src/lib/label-scan/fixture.ts) reads a
   // path built from process.cwd(), so file tracing packed the whole project into

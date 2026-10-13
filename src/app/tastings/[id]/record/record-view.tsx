@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { HatchThumb } from "@/components/overview/hatch-thumb";
 import { LocalDateTime } from "@/components/local-date-time";
 import { createClient } from "@/lib/supabase/server";
+import { getReferenceOptions } from "@/lib/tasting-request-cache";
 import {
   eligibleForGlass,
   joinedAfterReveal,
@@ -219,8 +220,8 @@ export async function RecordView({
   // full (CLAUDE.md); appellations and producers are looked up only for the
   // ids the record actually renders.
   const [{ data: regions }, { data: grapes }, referenceNames] = await Promise.all([
-    supabase.from("regions").select("id, name"),
-    supabase.from("grapes").select("id, name"),
+    getReferenceOptions().then((r) => ({ data: r.regions })),
+    getReferenceOptions().then((r) => ({ data: r.grapes })),
     lookupAppellationAndProducerNames({
       appellationIds: (answerRows ?? []).map((a) => a.appellation_id),
       producerIds: (answerRows ?? []).map((a) => a.producer_id),

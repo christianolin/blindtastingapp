@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Eyebrow } from "@/components/overview/eyebrow";
 import { SHARED_NOTES_COPY } from "@/lib/notes/shared-notes-view";
 import type { NoteReadSection } from "@/lib/notes/note-read";
+import { StorageImg } from "@/components/storage-img";
 
 export type NoteReadViewProps = {
   wineId: string;
@@ -40,8 +41,7 @@ export function NoteReadView({ wineId, wineTitle, author, tastedLine, badge, sco
             className="inline-flex min-h-11 items-center gap-2 font-medium text-foreground hover:underline md:pointer-fine:min-h-0"
           >
             {author.avatarUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={author.avatarUrl} alt="" className="size-6 rounded-full object-cover ring-1 ring-border" />
+              <StorageImg renderWidth={24} src={author.avatarUrl} alt="" className="size-6 rounded-full object-cover ring-1 ring-border" />
             ) : (
               <span aria-hidden className="flex size-6 items-center justify-center rounded-full bg-secondary text-[11px]">
                 {author.name.slice(0, 1).toUpperCase()}

@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { invalidateReferenceOptions } from "@/lib/reference-options-tag";
 import {
   createCountry as createCatalogCountry,
   createRegion as createCatalogRegion,
@@ -30,10 +31,12 @@ export async function createGrape(name: string) {
   const trimmed = name.trim();
   if (!trimmed) throw new Error("Name is required.");
   const supabase = await createClient();
-  return findOrCreate(
+  const grape = await findOrCreate(
     () => supabase.from("grapes").select("id, name").eq("name", trimmed).maybeSingle(),
     () => supabase.from("grapes").insert({ name: trimmed }).select("id, name").single(),
   );
+  invalidateReferenceOptions();
+  return grape;
 }
 
 /** A producer through `find_or_create_producer` (spec §B.7): a name that folds

@@ -84,6 +84,7 @@ export function CellarCard({ data }: { data: OverviewCellar }) {
                 >
                   <HatchThumb
                     src={tile.imageUrl}
+                    renderWidth={64}
                     width="100%"
                     height="100%"
                     className="rounded-none border-0"

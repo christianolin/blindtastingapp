@@ -49,6 +49,7 @@ import { RevealButton } from "./reveal-button";
 import { RevealControls } from "./reveal-controls";
 import { RevealView, type RevealStanding } from "./reveal-view";
 import { SemiBlindReveal, type SemiBlindRevealProps } from "./semi-blind-reveal";
+import { StorageImg } from "@/components/storage-img";
 
 // One aligned row per scored attribute — the correct value, the taster's
 // guess, and the points — so the score reads as an auditable result sheet
@@ -1345,8 +1346,8 @@ export async function PlayExperience({
                         (answer.catalog_wine_id
                           ? catalogImageById.get(answer.catalog_wine_id)
                           : null) ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
+                          <StorageImg
+                            renderWidth={64}
                             src={
                               answer.image_url ??
                               (catalogImageById.get(

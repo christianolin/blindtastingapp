@@ -36,6 +36,7 @@ import {
 } from "@/lib/lobby-copy";
 import { endTastingConfirm } from "@/lib/tasting-lifecycle-copy";
 import { TWO_TAP_WINDOW_MS, type TwoTapState } from "@/lib/console-copy";
+import { StorageImg } from "@/components/storage-img";
 
 const TITLE_CLASS =
   "truncate font-heading text-[20px] font-semibold leading-[1.05] text-foreground md:text-[27px]";
@@ -470,8 +471,8 @@ export function TastingSettingsSheet({
                   )}
                 >
                   {p.avatarUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
+                    <StorageImg
+                      renderWidth={36}
                       src={p.avatarUrl}
                       alt=""
                       className="size-9 shrink-0 rounded-full object-cover ring-1 ring-border"

@@ -10,6 +10,7 @@ import { fmtAvg, fmtScore, isLastOne, monthYear, plural, sizeLabel } from "@/lib
 import { rowLines, type RowLines } from "@/lib/cellar/cellar-rows";
 import type { BottleRow, GroupKey } from "@/lib/cellar/types";
 import { RowActions, type RowCallbacks, type Section } from "./row-actions";
+import { StorageImg } from "@/components/storage-img";
 
 // "1.5 L" from sizeLabel's "1.5 L magnum" — format.ts's SIZE_NAMES suffix
 // isn't exported, so the card's magnum meta line (which never wants the
@@ -86,8 +87,8 @@ function ImagePanel({
       )}
     >
       {row.wine.imageUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
+        <StorageImg
+          renderWidth={200}
           src={row.wine.imageUrl}
           alt=""
           loading="lazy"

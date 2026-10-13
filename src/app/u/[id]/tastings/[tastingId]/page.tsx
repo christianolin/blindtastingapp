@@ -3,11 +3,13 @@ import { notFound, redirect } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AppHeader } from "@/components/app-header";
 import { createClient } from "@/lib/supabase/server";
+import { getReferenceOptions } from "@/lib/tasting-request-cache";
 import { eligibleForGlass, type EligibilityParticipant } from "@/lib/glass-eligibility";
 import { GUESS_READ_COLUMNS } from "@/lib/guess-columns";
 import { lookupAppellationAndProducerNames } from "@/lib/reference-lookup";
 import { getSemiBlindRevealedPicks, type SemiBlindRevealedPick } from "@/lib/semi-blind-data";
 import { isDeletedProfile } from "@/lib/account/delete-account";
+import { StorageImg } from "@/components/storage-img";
 
 const CATEGORY_LABELS: Record<string, string> = {
   country: "Country",
@@ -93,9 +95,9 @@ export default async function ProfileTastingHistoryPage({
       .select("id, position, is_revealed, contributor_participant_id, revealed_at")
       .eq("tasting_id", tastingId)
       .order("position"),
-    supabase.from("countries").select("id, name"),
-    supabase.from("regions").select("id, name"),
-    supabase.from("grapes").select("id, name"),
+    getReferenceOptions().then((r) => ({ data: r.countries })),
+    getReferenceOptions().then((r) => ({ data: r.regions })),
+    getReferenceOptions().then((r) => ({ data: r.grapes })),
     supabase.from("type_designations").select("id, name"),
   ]);
 
@@ -242,8 +244,8 @@ export default async function ProfileTastingHistoryPage({
                 <div>
                   <h3 className="mb-1 text-sm font-medium">Answer</h3>
                   {answer?.image_url ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
+                    <StorageImg
+                      renderWidth={384}
                       src={answer.image_url}
                       alt=""
                       className="mb-2 max-h-64 rounded-lg object-cover"

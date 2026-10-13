@@ -37,6 +37,7 @@ import { LevelRing } from "@/components/levels/level-ring";
 import { useOwnLevel } from "@/components/levels/live-level-ring";
 import { ringLinkLabel } from "@/lib/levels/copy";
 import type { OwnLevel } from "@/lib/levels/types";
+import { StorageImg } from "@/components/storage-img";
 
 const ICONS: Record<string, ComponentType<{ className?: string }>> = {
   overview: LayoutDashboard,
@@ -482,8 +483,8 @@ function UserAvatar({
   className: string;
 }) {
   return user.avatarUrl ? (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
+    <StorageImg
+      renderWidth={32}
       src={user.avatarUrl}
       alt=""
       className={cn(

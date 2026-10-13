@@ -10,6 +10,7 @@ import {
   visibleNotes,
   type OthersNoteRow,
 } from "@/lib/notes/shared-notes-view";
+import { StorageImg } from "@/components/storage-img";
 
 /**
  * "Notes from others" on a wine's catalog page (sharing-defaults spec
@@ -39,8 +40,8 @@ export function OthersNotes({ rows, capped }: { rows: OthersNoteRow[]; capped: b
               className="flex min-h-11 shrink-0 items-center gap-2 rounded-md px-1.5 text-sm font-medium hover:bg-muted sm:w-44"
             >
               {row.author.avatarUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
+                <StorageImg
+                  renderWidth={32}
                   src={row.author.avatarUrl}
                   alt=""
                   className="size-8 shrink-0 rounded-full object-cover ring-1 ring-border"

@@ -36,6 +36,7 @@ import { LevelRing } from "@/components/levels/level-ring";
 import { useOwnLevel } from "@/components/levels/live-level-ring";
 import { ringLinkLabel } from "@/lib/levels/copy";
 import type { OwnLevel } from "@/lib/levels/types";
+import { StorageImg } from "@/components/storage-img";
 
 const ICONS: Record<string, ComponentType<{ className?: string }>> = {
   overview: LayoutDashboard,
@@ -92,8 +93,8 @@ export function MobileNav({
   };
 
   const drawerAvatar = avatarUrl ? (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
+    <StorageImg
+      renderWidth={32}
       src={avatarUrl}
       alt=""
       className="size-8 shrink-0 rounded-full object-cover ring-1 ring-primary-foreground/20"

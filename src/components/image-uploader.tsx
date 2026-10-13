@@ -7,6 +7,7 @@ import { WineGlassLoader } from "@/components/wine-glass-loader";
 import { ImageLightbox } from "@/components/image-lightbox";
 import { prepareUpload } from "@/lib/images/downscale";
 import { createClient } from "@/lib/supabase/client";
+import { StorageImg } from "@/components/storage-img";
 
 // Uploads directly to a Storage bucket from the browser (like
 // profile/edit/avatar-uploader.tsx) and exposes the resulting public URL as
@@ -108,8 +109,7 @@ export function ImageUploader({
           src={shown}
           className={`block overflow-hidden rounded-lg border border-border ${aspectClassName}`}
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={shown} alt="" className="size-full cursor-zoom-in object-cover" />
+          <StorageImg renderWidth={640} src={shown} alt="" className="size-full cursor-zoom-in object-cover" />
         </ImageLightbox>
       ) : null}
       <input

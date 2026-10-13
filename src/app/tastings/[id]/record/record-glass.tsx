@@ -6,6 +6,7 @@ import { CountryFlag } from "@/components/country-flag";
 import { HatchThumb } from "@/components/overview/hatch-thumb";
 import { LocalDateTime } from "@/components/local-date-time";
 import { createClient } from "@/lib/supabase/server";
+import { getReferenceOptions } from "@/lib/tasting-request-cache";
 import {
   eligibleForGlass,
   joinedAfterReveal,
@@ -197,9 +198,9 @@ export async function RecordGlass({
   // every revealed wine, since the footer's prev/next names need theirs too.
   const [{ data: countries }, { data: regions }, { data: grapes }, { data: typeDesignations }, referenceNames] =
     await Promise.all([
-      supabase.from("countries").select("id, name"),
-      supabase.from("regions").select("id, name"),
-      supabase.from("grapes").select("id, name"),
+      getReferenceOptions().then((r) => ({ data: r.countries })),
+      getReferenceOptions().then((r) => ({ data: r.regions })),
+      getReferenceOptions().then((r) => ({ data: r.grapes })),
       supabase
         .from("type_designations")
         .select("id, name")

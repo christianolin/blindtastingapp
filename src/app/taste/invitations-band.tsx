@@ -69,7 +69,7 @@ function toRow(row: ArchiveTasting): InvitationRowData {
     href: `/tastings/${row.id}`,
     // The host's avatar, or its initial; the phone rows draw none.
     thumb: (
-      <Avatar src={row.hostAvatarUrl} name={row.hostName} className="size-[34px] max-md:hidden" />
+      <Avatar src={row.hostAvatarUrl} name={row.hostName} className="size-[34px] max-md:hidden" renderWidth={34} />
     ),
     meta: (
       <>
