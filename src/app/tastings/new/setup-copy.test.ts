@@ -180,7 +180,7 @@ describe("readySummary with a bottle limit", () => {
   it("names the limit after everyone brings", () => {
     expect(
       readySummary({
-        setup: { ...base, wineSource: "PARTICIPANT_CONTRIBUTED", bottlesPerPerson: 1 },
+        setup: { ...base, wineSource: "PARTICIPANT_CONTRIBUTED", bottlesPerPerson: 1, bottlesExact: true },
         wineCount: 0,
         invitedCount: 0,
         dateText: null,
@@ -196,6 +196,15 @@ describe("readySummary with a bottle limit", () => {
         phone: true,
       }),
     ).toContain("up to 3 bottles each");
+    expect(
+      readySummary({
+        setup: { ...base, wineSource: "PARTICIPANT_CONTRIBUTED", bottlesPerPerson: 1, bottlesExact: false },
+        wineCount: 0,
+        invitedCount: 0,
+        dateText: null,
+        phone: true,
+      }),
+    ).toContain("up to 1 bottle each");
   });
 });
 
@@ -203,6 +212,11 @@ describe("buildSetupFormData's bottle limit", () => {
   it("sends the limit, blank for unlimited", () => {
     expect(buildSetupFormData({ ...base, bottlesPerPerson: 2 }).get("bottles_per_person")).toBe("2");
     expect(buildSetupFormData({ ...base, bottlesPerPerson: null }).get("bottles_per_person")).toBe("");
+  });
+  it("sends the exactly rule only with a limit", () => {
+    expect(buildSetupFormData({ ...base, bottlesPerPerson: 1, bottlesExact: true }).get("bottles_exact")).toBe("1");
+    expect(buildSetupFormData({ ...base, bottlesPerPerson: 1, bottlesExact: false }).get("bottles_exact")).toBe("");
+    expect(buildSetupFormData({ ...base, bottlesPerPerson: null, bottlesExact: true }).get("bottles_exact")).toBe("");
   });
 });
 

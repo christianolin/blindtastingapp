@@ -1785,11 +1785,25 @@ a raw subquery, regardless of which two tables look involved at a glance.
   "You've added your bottle" / "…your N bottles". The Overview's banner
   `canAddToFlight` does not know the limit (the server refuses there). Because
   you never guess your own bottles, unequal counts make totals incomparable:
-  the picker explains it under 2/3/Unlimited (`unequalBottlesHint`), and the
+  the picker explains it under every "up to N" and Unlimited
+  (`unequalBottlesHint`), and the
   Wines card (`unevenBottleCounts` over JOINED participants — before Start
   only people who brought something), StandingsPanel, `/results`, the record
   and the result (`unevenGlassCounts` over the competitors' `totalWines`
   denominators) show `unevenCountsNotice` when counts actually differ.
+  **Exactly vs up to** (owner, 2026-10-25; `20261025150000_tasting_bottles_exact.sql`):
+  for 1/2/3 the host also picks "Exactly N each" or "Up to N each"
+  (`tastings.bottles_exact` boolean NOT NULL default false = up to;
+  `tastings_bottles_exact_needs_limit` allows true only with a limit;
+  `bottleExactColumn` stores false for HOST_PROVIDES/Unlimited; editable
+  exactly like the number, until CLOSED). The cap trigger is the same for
+  both rules; "exactly" is NOT enforced in the database. The lobby line reads
+  "1 bottle each" (exact) vs "Up to 1 bottle each". Exact never blocks Start
+  (owner: "warn, but allow"): `exactBottlesStartWarning` names every JOINED
+  participant (host included, as "You") with fewer than N contributed glasses
+  ("Gustav still needs to add 1 bottle."), under Start in the lobby
+  (`StartBar`, pre-tap), in the create sheet's step 3
+  (`FlightSnapshot.bottlesShort`), and in `startTasting`'s returned warning.
 - **Superseded**: live updates during a tasting are no longer polling alone.
   `src/components/auto-refresh.tsx` (`router.refresh()` on an interval while
   the tab is visible; `router.refresh()` preserves client state, so an open

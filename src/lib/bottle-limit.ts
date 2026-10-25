@@ -28,10 +28,32 @@ export function bottleLimitOptionLabel(limit: BottleLimit): string {
   return limit === null ? "Unlimited" : String(limit);
 }
 
-/** The lobby's line, e.g. "1 bottle each"; null when unlimited. */
-export function bottleLimitEachLine(limit: BottleLimit): string | null {
+/** "Exactly N each" (true) or "Up to N each" (false): `tastings.bottles_exact`
+    (20261025150000). Unlimited has no rule, so a flag without a limit reads false. */
+export function parseBottleExact(raw: unknown): boolean {
+  return raw === true || raw === "1" || raw === "true" || raw === "on";
+}
+
+/** The value stored on the tasting: exact only for bring-your-own with a limit
+    (the tastings_bottles_exact_needs_limit check refuses it otherwise). */
+export function bottleExactColumn(wineSource: WineSourceMode, limit: BottleLimit, exact: boolean): boolean {
+  return wineSource === "PARTICIPANT_CONTRIBUTED" && limit !== null && exact;
+}
+
+/** The rule picker's two choices for a limit of N. */
+export function bottleRuleOptionLabel(limit: number, exact: boolean): string {
+  return exact ? `Exactly ${limit} each` : `Up to ${limit} each`;
+}
+
+function bottles(n: number): string {
+  return n === 1 ? "1 bottle" : `${n} bottles`;
+}
+
+/** The lobby's line: "1 bottle each" when exact, "Up to 1 bottle each"
+    otherwise; null when unlimited. */
+export function bottleLimitEachLine(limit: BottleLimit, exact: boolean): string | null {
   if (limit === null) return null;
-  return limit === 1 ? "1 bottle each" : `Up to ${limit} bottles each`;
+  return exact ? `${bottles(limit)} each` : `Up to ${bottles(limit)} each`;
 }
 
 /** True once `mine` contributor glasses reach the limit (or exceed a lowered one). */
@@ -77,15 +99,23 @@ export function bottleLimitSettingRefusal(input: {
   status: TastingStatus;
   before: BottleLimit;
   after: BottleLimit;
+  /** The exactly / up to rule; left out it is not compared. */
+  beforeExact?: boolean;
+  afterExact?: boolean;
 }): string | null {
-  if (input.status === "CLOSED" && input.before !== input.after) return BOTTLE_LIMIT_LOCKED_CLOSED;
+  if (input.status !== "CLOSED") return null;
+  if (input.before !== input.after) return BOTTLE_LIMIT_LOCKED_CLOSED;
+  if ((input.beforeExact ?? false) !== (input.afterExact ?? input.beforeExact ?? false)) {
+    return BOTTLE_LIMIT_LOCKED_CLOSED;
+  }
   return null;
 }
 
-/** Under the picker whenever the choice allows unequal counts (2, 3, Unlimited). */
-export function unequalBottlesHint(limit: BottleLimit): string | null {
-  if (limit === 1) return null;
-  return "You never guess your own bottles, so if people bring different numbers, total points aren't directly comparable. 1 bottle each keeps it fair.";
+/** Under the picker whenever the choice allows unequal counts: every "up to
+    N" (someone who brings nothing counts as uneven) and Unlimited. */
+export function unequalBottlesHint(limit: BottleLimit, exact: boolean): string | null {
+  if (limit !== null && exact) return null;
+  return "You never guess your own bottles, so if people bring different numbers, total points aren't directly comparable. The same number each keeps it fair.";
 }
 
 /**
@@ -140,4 +170,58 @@ export function viewerAtBottleLimit(
 ): boolean {
   if (tasting.wine_source !== "PARTICIPANT_CONTRIBUTED") return false;
   return atBottleLimit(parseBottleLimit(tasting.bottles_per_person), contributedCount(wines, participantId));
+}
+
+// ---------------------------------------------------------------------------
+// "Exactly N each": Start warns (never refuses) about anyone short
+// ---------------------------------------------------------------------------
+
+/** A JOINED participant, named for the Start warning; `you` is the viewer. */
+export type BottlePerson = { participantId: string; name: string; you: boolean };
+export type BottleShortfall = { name: string; you: boolean; missing: number };
+
+/**
+ * JOINED participants with fewer than N contributed glasses, in the order
+ * given, when the rule is "exactly N". Someone over a lowered limit is never
+ * short. Empty for "up to N" and Unlimited.
+ */
+export function bottleShortfalls(input: {
+  limit: BottleLimit;
+  exact: boolean;
+  people: readonly BottlePerson[];
+  wines: readonly ContributedGlass[];
+}): BottleShortfall[] {
+  const { limit, exact, people, wines } = input;
+  if (limit === null || !exact) return [];
+  return people.flatMap((p) => {
+    const missing = limit - contributedCount(wines, p.participantId);
+    return missing > 0 ? [{ name: p.name, you: p.you, missing }] : [];
+  });
+}
+
+/** "Gustav still needs to add 1 bottle." — several join with " · "; null when nobody is short. */
+export function shortBottlesWarning(shortfalls: readonly BottleShortfall[]): string | null {
+  if (shortfalls.length === 0) return null;
+  const lines = shortfalls.map((s) =>
+    s.you ? `You still need to add ${bottles(s.missing)}` : `${s.name} still needs to add ${bottles(s.missing)}`,
+  );
+  return `${lines.join(" · ")}.`;
+}
+
+/** The Start warning for a tasting row; null unless bring-your-own, exact, and someone is short. */
+export function exactBottlesStartWarning(input: {
+  tasting: { wine_source: WineSourceMode; bottles_per_person: number | null; bottles_exact: boolean };
+  people: readonly BottlePerson[];
+  wines: readonly ContributedGlass[];
+}): string | null {
+  const { tasting } = input;
+  if (tasting.wine_source !== "PARTICIPANT_CONTRIBUTED") return null;
+  return shortBottlesWarning(
+    bottleShortfalls({
+      limit: parseBottleLimit(tasting.bottles_per_person),
+      exact: tasting.bottles_exact,
+      people: input.people,
+      wines: input.wines,
+    }),
+  );
 }

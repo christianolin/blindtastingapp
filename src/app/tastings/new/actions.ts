@@ -19,8 +19,11 @@ import {
 } from "./setup-copy";
 import { normalisePlace, setTastingPlace } from "./place";
 import {
+  bottleExactColumn,
   bottleLimitColumn,
   bottleLimitSettingRefusal,
+  exactBottlesStartWarning,
+  parseBottleExact,
   parseBottleLimit,
   viewerAtBottleLimit,
   type BottleLimit,
@@ -57,6 +60,9 @@ export type TastingSetupFields = {
   /** Bring-your-own bottles per person (null = unlimited); undefined keeps
       what is stored. Changeable until CLOSED (`bottleLimitSettingRefusal`). */
   bottlesPerPerson?: BottleLimit;
+  /** With a limit: "exactly N each" (true) or "up to N each". Written only
+      together with `bottlesPerPerson`; Start warns about anyone short. */
+  bottlesExact?: boolean;
 };
 
 // The one validator both create and update run — same strings the form has
@@ -100,7 +106,10 @@ function setupColumns(f: TastingSetupFields) {
     leaderboard_reveal: f.leaderboardReveal,
     // Only bring-your-own carries a limit; the wines trigger ignores it otherwise.
     ...(f.bottlesPerPerson !== undefined
-      ? { bottles_per_person: bottleLimitColumn(f.wineSource, f.bottlesPerPerson) }
+      ? {
+          bottles_per_person: bottleLimitColumn(f.wineSource, f.bottlesPerPerson),
+          bottles_exact: bottleExactColumn(f.wineSource, f.bottlesPerPerson, f.bottlesExact ?? false),
+        }
       : {}),
     // The cover photo and the description: a caller that leaves either
     // undefined keeps whatever is stored — never silently wipe one it didn't
@@ -155,6 +164,7 @@ function fieldsFromFormData(formData: FormData): TastingSetupFields {
     imageUrl: String(formData.get("image_url") ?? "").trim() || null,
     place: String(formData.get("place") ?? ""),
     bottlesPerPerson: parseBottleLimit(formData.get("bottles_per_person")),
+    bottlesExact: parseBottleExact(formData.get("bottles_exact")),
   };
 }
 
@@ -282,7 +292,7 @@ async function requireHost(tastingId: string) {
   const { data: tasting } = await supabase
     .from("tastings")
     .select(
-      "id, host_id, status, name, reveal_mode, timing_mode, wine_source, sequential_guessing, leaderboard_reveal, async_reveal_policy, bottles_per_person",
+      "id, host_id, status, name, reveal_mode, timing_mode, wine_source, sequential_guessing, leaderboard_reveal, async_reveal_policy, bottles_per_person, bottles_exact",
     )
     .eq("id", tastingId)
     .maybeSingle();
@@ -348,6 +358,8 @@ export async function updateTastingSetup(
       status: tasting.status,
       before: parseBottleLimit(tasting.bottles_per_person),
       after: bottleLimitColumn(fields.wineSource, fields.bottlesPerPerson),
+      beforeExact: tasting.bottles_exact,
+      afterExact: bottleExactColumn(fields.wineSource, fields.bottlesPerPerson, fields.bottlesExact ?? false),
     });
     if (bottleRefusal) return { error: bottleRefusal };
   }
@@ -456,6 +468,9 @@ export type FlightSnapshot = {
   bottleLimit: BottleLimit;
   /** BYO: the caller already has that many bottles in the flight. */
   atLimit: boolean;
+  /** BYO "exactly N each": who is still short, for the line under Start;
+      null when nobody is (or the rule is "up to N"). Start is never refused. */
+  bottlesShort: string | null;
 };
 
 // An incomplete glass's title: "{producer name}, {wine name}", leaving out
@@ -481,7 +496,7 @@ export async function listFlight(
     await Promise.all([
       supabase
         .from("tastings")
-        .select("id, host_id, status, wine_source, reveal_mode, bottles_per_person")
+        .select("id, host_id, status, wine_source, reveal_mode, bottles_per_person, bottles_exact")
         .eq("id", tastingId)
         .maybeSingle(),
       supabase
@@ -695,5 +710,16 @@ export async function listFlight(
     hasStarted,
     bottleLimit: isByo ? parseBottleLimit(tasting.bottles_per_person) : null,
     atLimit: viewerAtBottleLimit(tasting, rows, myParticipantId),
+    bottlesShort: exactBottlesStartWarning({
+      tasting,
+      people: people
+        .filter((p) => p.status === "JOINED")
+        .map((p) => ({
+          participantId: p.id,
+          name: nameByParticipantId.get(p.id) ?? "Someone",
+          you: p.user_id === userId,
+        })),
+      wines: rows,
+    }),
   };
 }

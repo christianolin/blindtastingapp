@@ -1,5 +1,12 @@
 import { cn } from "@/lib/utils";
-import { getCurrentUser, getTastingRow } from "@/lib/tasting-request-cache";
+import {
+  getCurrentUser,
+  getParticipantNames,
+  getParticipantRows,
+  getTastingRow,
+  getWineRows,
+} from "@/lib/tasting-request-cache";
+import { exactBottlesStartWarning } from "@/lib/bottle-limit";
 import { START_CAPTION } from "@/lib/lobby-copy";
 import { HostControls } from "./host-controls";
 
@@ -29,6 +36,38 @@ export async function StartBar({
   if (!user || !tasting) return null;
   if (tasting.host_id !== user.id) return null;
 
+  // Bring-your-own "exactly N each": name who is still short under Start.
+  // A warning only — Start is never refused for it (owner, 2026-10-25).
+  let bottlesShort: string | null = null;
+  if (
+    tasting.status === "DRAFT" &&
+    tasting.wine_source === "PARTICIPANT_CONTRIBUTED" &&
+    tasting.bottles_exact &&
+    tasting.bottles_per_person !== null
+  ) {
+    const [participants, wines, names] = await Promise.all([
+      getParticipantRows(tastingId),
+      getWineRows(tastingId),
+      getParticipantNames(tastingId),
+    ]);
+    bottlesShort = exactBottlesStartWarning({
+      tasting,
+      people: participants
+        .filter((p) => p.status === "JOINED")
+        .map((p) => ({
+          participantId: p.id,
+          name: names.get(p.id) ?? "Someone",
+          you: p.user_id === user.id,
+        })),
+      wines,
+    });
+  }
+  const shortLine = bottlesShort ? (
+    <p role="status" className="text-sm font-semibold text-gold-dark">
+      {bottlesShort}
+    </p>
+  ) : null;
+
   const controls = (
     <HostControls
       tastingId={tastingId}
@@ -46,6 +85,7 @@ export async function StartBar({
       {/* Laptop: inline, below the Wines card. */}
       <div className={cn("hidden flex-col gap-2 lg:flex", GOLD_START)}>
         {controls}
+        {shortLine}
         {tasting.status === "DRAFT" ? (
           <p className="text-xs text-muted-foreground">{START_CAPTION}</p>
         ) : null}
@@ -63,6 +103,7 @@ export async function StartBar({
           )}
         >
           {controls}
+          {shortLine}
         </div>
       ) : null}
     </>

@@ -51,6 +51,7 @@ function fieldsOf(v: SetupValues): TastingSetupFields {
     timingMode: v.timingMode,
     wineSource: v.wineSource,
     bottlesPerPerson: v.bottlesPerPerson,
+    bottlesExact: v.bottlesExact,
     revealMode: v.revealMode,
     flow: v.flow,
     leaderboardReveal: v.leaderboardReveal,
@@ -557,9 +558,21 @@ export function NewTastingSheet({
             <TextButton className="max-md:order-2" disabled={saving} onClick={inviteLater}>
               Invite later
             </TextButton>
-            <GoldButton className="max-md:order-1" disabled={saving} onClick={() => void start()}>
-              {pendingLabel("Start the tasting")}
-            </GoldButton>
+            {/* Bring-your-own "exactly N each": who is still short, under
+                Start. A warning only — Start goes ahead (owner, 2026-10-25). */}
+            <span className="flex flex-col items-center gap-1 max-md:order-1 md:items-end">
+              <GoldButton disabled={saving} onClick={() => void start()}>
+                {pendingLabel("Start the tasting")}
+              </GoldButton>
+              {snapshot?.bottlesShort ? (
+                <span
+                  role="status"
+                  className="max-w-[40ch] text-center text-[11.5px] font-semibold leading-[1.5] text-gold-dark md:text-right"
+                >
+                  {snapshot.bottlesShort}
+                </span>
+              ) : null}
+            </span>
           </span>
         </>
       )}

@@ -35,6 +35,7 @@ import { PLACE_LABEL, PLACE_MAX, PLACE_PLACEHOLDER } from "./place";
 import {
   BOTTLE_LIMIT_OPTIONS,
   bottleLimitOptionLabel,
+  bottleRuleOptionLabel,
   parseBottleLimit,
   unequalBottlesHint,
 } from "@/lib/bottle-limit";
@@ -330,7 +331,9 @@ export function NewTastingForm({
               label="Bottles per person"
               value={value.bottlesPerPerson === null ? "none" : String(value.bottlesPerPerson)}
               onChange={(v) => set("bottlesPerPerson", parseBottleLimit(v))}
-              describedBy={unequalBottlesHint(value.bottlesPerPerson) ? bottlesHintId : undefined}
+              describedBy={
+                unequalBottlesHint(value.bottlesPerPerson, value.bottlesExact) ? bottlesHintId : undefined
+              }
               options={BOTTLE_LIMIT_OPTIONS.map((limit) => {
                 const key = limit === null ? "none" : String(limit);
                 return {
@@ -341,9 +344,28 @@ export function NewTastingForm({
                 };
               })}
             />
-            {unequalBottlesHint(value.bottlesPerPerson) ? (
+            {/* The rule for 1, 2 or 3 (Unlimited has none): exactly N each
+                (Start warns about anyone short, never refuses) or up to N.
+                The cap is the same either way. */}
+            {value.bottlesPerPerson !== null ? (
+              <Segmented<string>
+                label="How many each"
+                value={value.bottlesExact ? "exact" : "max"}
+                onChange={(v) => set("bottlesExact", v === "exact")}
+                describedBy={
+                  unequalBottlesHint(value.bottlesPerPerson, value.bottlesExact) ? bottlesHintId : undefined
+                }
+                options={[true, false].map((exact) => ({
+                  value: exact ? "exact" : "max",
+                  desktop: bottleRuleOptionLabel(value.bottlesPerPerson ?? 1, exact),
+                  phone: bottleRuleOptionLabel(value.bottlesPerPerson ?? 1, exact),
+                  disabled: closed && value.bottlesExact !== exact,
+                }))}
+              />
+            ) : null}
+            {unequalBottlesHint(value.bottlesPerPerson, value.bottlesExact) ? (
               <p id={bottlesHintId} className="text-[11.5px] leading-[1.5] text-muted-foreground">
-                {unequalBottlesHint(value.bottlesPerPerson)}
+                {unequalBottlesHint(value.bottlesPerPerson, value.bottlesExact)}
               </p>
             ) : null}
           </div>

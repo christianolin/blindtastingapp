@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import {
   getCurrentUser,
+  getParticipantNames,
   getParticipantRows,
   getTastingRow,
   getViewerParticipant,
@@ -152,20 +153,7 @@ export async function WinesCard({
   if (hasStarted && !showWinesWhileRunning) return null;
 
   const participantRows = await getParticipantRows(tastingId);
-  const userIds = participantRows.map((p) => p.user_id);
-  const { data: profiles } = await supabase
-    .from("profiles")
-    .select("id, display_name, email")
-    .in("id", userIds.length > 0 ? userIds : [""]);
-  const profileById = new Map((profiles ?? []).map((p) => [p.id, p]));
-  const nameByParticipantId = new Map(
-    participantRows.map((p) => [
-      p.id,
-      profileById.get(p.user_id)?.display_name ??
-        profileById.get(p.user_id)?.email ??
-        "Someone",
-    ]),
-  );
+  const nameByParticipantId = await getParticipantNames(tastingId);
   const joinedParticipants = participantRows.filter((p) => p.status === "JOINED");
   const wineLabel = makeWineLabeler(wines, tasting.wine_source, nameByParticipantId);
   const participantsWithoutWine = isByo
@@ -192,7 +180,7 @@ export async function WinesCard({
   const bottleLimit = isByo ? parseBottleLimit(tasting.bottles_per_person) : null;
   const atLimit = atBottleLimit(bottleLimit, contributedCount(wines, viewerParticipantId));
   const canAddWine = mayAdd && !atLimit;
-  const bottleLimitLine = bottleLimitEachLine(bottleLimit);
+  const bottleLimitLine = bottleLimitEachLine(bottleLimit, tasting.bottles_exact);
   // Uneven bottle counts skew totals: you never guess your own bottles.
   const unevenBottles =
     isByo &&
