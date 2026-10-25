@@ -13,7 +13,7 @@ import type {
   WsetNoteState,
 } from "@/lib/wset/types";
 import { NoteEditor } from "@/app/catalog/[wineId]/notes/note-editor";
-import type { WsetSheetHandle } from "@/components/wset/wset-sheet";
+import { WsetSheet, type WsetSheetHandle } from "@/components/wset/wset-sheet";
 
 type EditData = {
   wine: { colour: WineColour; style: WineStyle };
@@ -25,18 +25,25 @@ type EditData = {
 // Opens a saved note as the full WSET sheet — the very editor the note page
 // uses — so a taster can review AND edit it in place: from the Tasting notes
 // archive (/taste/notes) and from a bottle's "Show note" in the cellar. Data is
-// fetched on open by note id. Other people's notes can be readable too (the
-// "wset notes read" policy follows each author's sharing setting), so the
-// caller passes only the signed-in author's own notes: this is their editor.
-// NoteEditor owns saving.
+// fetched on open by note id. NoteEditor owns saving.
+//
+// `readOnly` opens someone else's note — every note is public (2026-10-25)
+// — in the very same sheet with nothing editable: no Save, no Delete, Close
+// exits at once, and the eyebrow names the author and the date. RLS decides
+// what loads: a note the reader may not see (an identity-less hidden-glass
+// note, a held one) comes back as "Couldn't load this note".
 export function NoteModal({
   noteId,
   wineId,
   onClose,
+  readOnly,
 }: {
   noteId: string;
   wineId: string;
   onClose: () => void;
+  /** Someone else's note: read it, never edit it. `byline` is
+      readNoteByline's "Gustav · Tasted 27 Sep 2026". */
+  readOnly?: { byline: string };
 }) {
   const supabase = useMemo(() => createClient(), []);
   const [data, setData] = useState<EditData | null | "loading">("loading");
@@ -103,7 +110,7 @@ export function NoteModal({
         showCloseButton={false}
         className="inset-0 flex max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-none sm:inset-auto sm:top-1/2 sm:left-1/2 sm:h-[92vh] sm:max-h-[92vh] sm:max-w-[1100px] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:gap-4 sm:rounded-[16px]"
       >
-        <DialogTitle className="sr-only">Tasting note</DialogTitle>
+        <DialogTitle className="sr-only">{readOnly ? `Tasting note · ${readOnly.byline}` : "Tasting note"}</DialogTitle>
         {data === "loading" ? (
           <p className="py-10 text-center text-sm text-muted-foreground">
             Loading note…
@@ -112,6 +119,18 @@ export function NoteModal({
           <p className="py-10 text-center text-sm text-muted-foreground">
             Couldn&apos;t load this note right now.
           </p>
+        ) : readOnly ? (
+          <WsetSheet
+            ref={sheetRef}
+            wine={data.wine}
+            title={data.title}
+            terms={data.terms}
+            initial={data.initial}
+            eyebrow={readOnly.byline}
+            onClose={onClose}
+            embedded
+            readOnly
+          />
         ) : (
           <NoteEditor
             wineId={wineId}

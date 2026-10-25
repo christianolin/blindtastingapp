@@ -3,11 +3,15 @@ import { describe, expect, it } from "vitest";
 import type { OthersNoteRow } from "../../../lib/notes/shared-notes-view";
 import { OthersNotes } from "./others-notes";
 
-// The first paint of "Notes from others" (sharing-defaults spec 2026-09-27 §7.2).
+// The first paint of "Tasting notes from others" (sharing-defaults spec
+// 2026-09-27 §7.2; every note public since 2026-10-25). A plain click on a
+// note opens it in the read-only WSET sheet (opensInSheet, tested in
+// shared-notes-view.test.ts); the link stays for a new tab.
 
 const row = (i: number): OthersNoteRow => ({
   id: `n${i}`,
   href: `/catalog/w1/notes/n${i}`,
+  wineId: "w1",
   tastedOn: "2026-09-20",
   dateLabel: "20 Sep 2026",
   badge: i === 0 ? "Blind" : null,
@@ -45,5 +49,14 @@ describe("OthersNotes", () => {
   it("says the list is cut when it was cut at the cap", () => {
     const html = renderToStaticMarkup(<OthersNotes rows={[row(0)]} capped />);
     expect(html).toContain("Showing the 50 most recent notes.");
+    expect(html).toContain(">1+</span>");
+  });
+
+  it("is headed 'Tasting notes from others' with the count, and is the rating card's link target", () => {
+    const html = renderToStaticMarkup(<OthersNotes rows={[row(0), row(1)]} capped={false} />);
+    expect(html).toContain('<section id="others-notes"');
+    expect(html).toMatch(/>Tasting notes from others<span[^>]*>2<\/span><\/h2>/);
+    // The sheet mounts only once a note is opened.
+    expect(html).not.toContain('role="dialog"');
   });
 });

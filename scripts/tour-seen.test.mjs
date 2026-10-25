@@ -1,7 +1,7 @@
 // First-run tour DB suite (spec docs/superpowers/specs/2026-09-25-first-run-tour-design.md
 // D1, §3): profiles.tour_seen_at is written by the signed-in person through the
-// client UPDATE grant (eleven columns since 20260927140000 added
-// notes_visibility) and "profiles update own" — never on someone
+// client UPDATE grant (ten columns: 20260927140000 added notes_visibility,
+// 20261025130000 revoked it) and "profiles update own" — never on someone
 // else's row, never by anon — and the grant did not widen past it. Every test
 // runs inside a transaction that is rolled back. Passes only once
 // 20260925010000_tour_seen is live; before that four tests fail (the column
@@ -105,7 +105,7 @@ test("anon cannot write tour_seen_at", async () => {
   });
 });
 
-test("the client UPDATE grant is exactly the eleven columns", async () => {
+test("the client UPDATE grant is exactly the ten columns (notes_visibility revoked 2026-10-25)", async () => {
   await withRollback(async () => {
     const r = await client.query(
       `select string_agg(format('%s:%s', a.attname, x.privilege_type), ','
@@ -116,7 +116,7 @@ test("the client UPDATE grant is exactly the eleven columns", async () => {
     assert.equal(
       r.rows[0].acl,
       "avatar_url:UPDATE,bio:UPDATE,cellar_visibility:UPDATE,display_name:UPDATE,favorite_wine_type:UPDATE," +
-        "last_seen_at:UPDATE,location:UPDATE,notes_visibility:UPDATE,phone:UPDATE,preferred_currency:UPDATE," +
+        "last_seen_at:UPDATE,location:UPDATE,phone:UPDATE,preferred_currency:UPDATE," +
         "tour_seen_at:UPDATE",
     );
   });

@@ -6,7 +6,6 @@ import {
   initialWrites,
   isSharingAudience,
   notSavedLine,
-  ownNotesLine,
   profileWriteSaved,
   writeAnswered,
   writeStarted,
@@ -65,14 +64,6 @@ describe("profileWriteSaved", () => {
   });
 });
 
-describe("ownNotesLine", () => {
-  it("tells the author who can see their notes", () => {
-    expect(ownNotesLine("PUBLIC")).toBe("Everyone can see these");
-    expect(ownNotesLine("FRIENDS")).toBe("Your friends can see these");
-    expect(ownNotesLine("PRIVATE")).toBe("Only you can see these");
-  });
-});
-
 describe("SHARING_COPY", () => {
   it("carries the spec's §7.6 strings and the settings anchor", () => {
     expect(SHARING_COPY).toEqual({
@@ -82,9 +73,9 @@ describe("SHARING_COPY", () => {
       cellarLabel: "Who can see your cellar",
       cellarHelp:
         "Your bottles and where you keep them. What you paid, where you bought them and your private notes stay yours.",
-      notesLabel: "Who can see your tasting notes",
+      notesLabel: "Your tasting notes",
       notesHelp:
-        "Applies to every note you write. A note on a wine in your own unrevealed flight stays hidden until the reveal.",
+        "Every tasting note is public: anyone signed in to Blindr can read it. A note on a wine in your own unrevealed flight stays hidden until the reveal.",
       cellarControlLabel: "Visible to",
     });
   });

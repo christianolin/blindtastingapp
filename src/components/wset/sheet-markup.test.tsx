@@ -230,3 +230,40 @@ describe("WSET note sheet markup (note page, Taste & Rate modal, training room)"
     ).toMatchFileSnapshot("./__snapshots__/markup/wset-training.html");
   });
 });
+
+describe("WSET note sheet, read only (someone else's note, every note public since 2026-10-25)", () => {
+  const html = renderToStaticMarkup(
+    <WsetSheet
+      wine={{ colour: "RED", style: "STILL" }}
+      title="Château Test 2015"
+      terms={TERMS}
+      initial={{ ...NOTE, tasterNotes: "Cassis and cedar." }}
+      eyebrow="Gustav · Tasted 26 Sep 2026"
+      onClose={noop}
+      embedded
+      readOnly
+    />,
+  );
+
+  it("names the author and date in the eyebrow, on phones too", () => {
+    expect(html).toMatch(/<span[^>]*class="[^"]*block truncate[^"]*"[^>]*>Gustav · Tasted 26 Sep 2026<\/span>/);
+    expect(html).not.toContain(">Tasting note</span>");
+  });
+
+  it("makes every section inert, keeps the free text read-only, and offers no Save or Delete", () => {
+    expect(html).toContain('<div inert="" class="contents">');
+    expect(html).toMatch(/<textarea[^>]*readOnly=""/i);
+    expect(html).toContain("Cassis and cedar.");
+    expect(html).not.toContain("Save note");
+    expect(html).not.toContain("More actions");
+    expect(html).toContain("Read only. Someone else&#x27;s note.");
+  });
+
+  it("an editable sheet carries no inert wrapper", () => {
+    const editable = renderToStaticMarkup(
+      <WsetSheet wine={{ colour: "RED", style: "STILL" }} title="x" terms={TERMS} initial={NOTE} onSave={noopSave} />,
+    );
+    expect(editable).not.toContain("inert");
+    expect(editable).toContain("Save note");
+  });
+});

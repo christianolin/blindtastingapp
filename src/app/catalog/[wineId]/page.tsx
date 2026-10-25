@@ -99,13 +99,15 @@ export default async function CatalogWinePage({
     supabase.rpc("catalog_wine_usage", { p_id: wineId }),
     getOwnLotsForWine(supabase, user.id, wineId),
     fetchWinePhotos(supabase, wineId, user.id),
-    // "Notes from others" (sharing-defaults spec §7.2): the policy decides
-    // whose notes come back; null on a failed read hides the section.
+    // "Tasting notes from others": every note is public (2026-10-25); the
+    // policy still keeps out identity-less and held notes (Rule 1). Null on
+    // a failed read hides the section.
     getOthersNotesForWine(supabase, wineId, user.id),
     heldRead,
   ]);
 
   const title = catalogWineTitle(wine);
+  const hasOthersNotes = Boolean(others && others.rows.length > 0);
   const grapes = formatBlend(blend);
 
   // The identity facts grid (CC-C2, spec §6.2 item 1): grape blend, wine
@@ -234,15 +236,29 @@ export default async function CatalogWinePage({
               </p>
             )}
             <div className="grid grid-cols-3 gap-3 border-t border-border pt-4">
-              <div>
-                <p className="font-heading text-lg font-semibold tabular-nums">
-                  {wine.noteCount}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  <span className="max-md:hidden">tasting notes</span>
-                  <span className="md:hidden">notes</span>
-                </p>
-              </div>
+              {/* With other people's notes on the page, the count jumps
+                  to them (#others-notes). */}
+              {hasOthersNotes ? (
+                <a href="#others-notes" className="group rounded-md">
+                  <p className="font-heading text-lg font-semibold tabular-nums text-primary">
+                    {wine.noteCount}
+                  </p>
+                  <p className="text-xs text-primary group-hover:underline">
+                    <span className="max-md:hidden">tasting notes</span>
+                    <span className="md:hidden">notes</span>
+                  </p>
+                </a>
+              ) : (
+                <div>
+                  <p className="font-heading text-lg font-semibold tabular-nums">
+                    {wine.noteCount}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    <span className="max-md:hidden">tasting notes</span>
+                    <span className="md:hidden">notes</span>
+                  </p>
+                </div>
+              )}
               <div>
                 <p className="font-heading text-lg font-semibold tabular-nums">
                   {guessStats?.appearances ?? 0}
@@ -306,6 +322,10 @@ export default async function CatalogWinePage({
           </p>
         </div>
       ) : null}
+
+      {/* Other people's notes, high on the page so they are easy to find
+          (owner, 2026-10-25); each opens read-only in the WSET sheet. */}
+      {others && hasOthersNotes ? <OthersNotes rows={others.rows} capped={others.capped} /> : null}
 
       {descriptors.length > 0 ? (
         <div>
@@ -385,9 +405,6 @@ export default async function CatalogWinePage({
         />
       </div>
 
-      {others && others.rows.length > 0 ? (
-        <OthersNotes rows={others.rows} capped={others.capped} />
-      ) : null}
     </div>
   );
 }

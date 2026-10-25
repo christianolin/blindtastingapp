@@ -1,7 +1,8 @@
-// The one vocabulary of the two sharing settings (sharing-defaults spec
-// 2026-09-27 S6, §7.1, §7.6): who can see your cellar and who can see your
-// tasting notes, each Everyone / Friends / Only me — the database's PUBLIC /
-// FRIENDS / PRIVATE. Pure: a type-only import, relative paths, so vitest
+// The one vocabulary of the sharing setting (sharing-defaults spec
+// 2026-09-27 S6, §7.1, §7.6): who can see your cellar, Everyone / Friends /
+// Only me — the database's PUBLIC / FRIENDS / PRIVATE. Tasting notes had the
+// same choice until 2026-10-25; every note is public now (owner), so only
+// their fixed copy remains here. Pure: a type-only import, relative paths, so vitest
 // loads it.
 import type { SharingAudience } from "../supabase/database.types";
 
@@ -90,18 +91,6 @@ export function writeAnswered(
   return { writes: next, settled: { value: next.confirmed, failed: next.latestSaved === false } };
 }
 
-/** The line under "Your tasting notes" on your own profile. */
-export function ownNotesLine(value: SharingAudience): string {
-  switch (value) {
-    case "PUBLIC":
-      return "Everyone can see these";
-    case "FRIENDS":
-      return "Your friends can see these";
-    case "PRIVATE":
-      return "Only you can see these";
-  }
-}
-
 /** Every fixed string of the settings surfaces (spec §7.6), owner-approved as drafted (C3). */
 export const SHARING_COPY = {
   cardTitle: "Sharing",
@@ -110,8 +99,9 @@ export const SHARING_COPY = {
   cellarLabel: "Who can see your cellar",
   cellarHelp:
     "Your bottles and where you keep them. What you paid, where you bought them and your private notes stay yours.",
-  notesLabel: "Who can see your tasting notes",
+  /** Not a setting since 2026-10-25: every note is public (owner). */
+  notesLabel: "Your tasting notes",
   notesHelp:
-    "Applies to every note you write. A note on a wine in your own unrevealed flight stays hidden until the reveal.",
+    "Every tasting note is public: anyone signed in to Blindr can read it. A note on a wine in your own unrevealed flight stays hidden until the reveal.",
   cellarControlLabel: "Visible to",
 } as const;

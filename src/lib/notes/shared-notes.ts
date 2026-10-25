@@ -1,7 +1,7 @@
 // The reads behind other people's notes (sharing-defaults spec 2026-09-27
 // S16, S19, §7.2, §7.3). Every read runs as the viewer, so the "wset notes
-// read" policy decides what comes back: the author's setting, the Rule 1
-// hold and the pour link, and the reader's own "catalog read". The shaping is
+// read" policy decides what comes back: every identified note (all public
+// since 2026-10-25) except one the Rule 1 hold or pour link hides, and the reader's own "catalog read". The shaping is
 // pure, in ./shared-notes-view.ts. A failed read returns null and the caller
 // hides the section: never a claim that someone has no notes.
 //

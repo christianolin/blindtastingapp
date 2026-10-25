@@ -13,6 +13,8 @@ import {
   contextBadge,
   noteHasContent,
   noteSummaryLine,
+  opensInSheet,
+  readNoteByline,
   orderNotes,
   scoreLine,
   scoreParts,
@@ -242,11 +244,12 @@ describe("badges, score and date lines", () => {
 
   it("carries the spec's fixed strings", () => {
     expect(SHARED_NOTES_COPY).toEqual({
-      othersHeading: "Notes from others",
+      othersHeading: "Tasting notes from others",
       profileHeading: "Tasting notes",
       profileHeadingOwn: "Your tasting notes",
       profileEmptyOwn: "No tasting notes yet.",
-      change: "Change",
+      ownPublicLine: "Everyone on Blindr can read your notes",
+      someTaster: "A taster",
       showFewer: "Show fewer",
       notScored: "Not scored",
       heldTag: "Hidden from others",
@@ -291,6 +294,7 @@ describe("toOthersNoteRows", () => {
       {
         id: "n1",
         href: "/catalog/w1/notes/n1",
+        wineId: "w1",
         tastedOn: "2026-09-20",
         dateLabel: "20 Sep 2026",
         badge: null,
@@ -337,6 +341,7 @@ describe("toProfileNoteRows", () => {
       {
         id: "n1",
         href: "/catalog/w1/notes/n1",
+        wineId: "w1",
         tastedOn: "2026-09-20",
         dateLabel: "20 Sep 2026",
         badge: "Blind",
@@ -361,5 +366,41 @@ describe("toProfileNoteRows", () => {
       new Set(),
     );
     expect(rows.map((r) => [r.id, r.held])).toEqual([["kept", false]]);
+  });
+});
+
+describe("the read-only note sheet", () => {
+  it("names the author and the tasting date in the sheet's eyebrow", () => {
+    expect(readNoteByline("Gustav", "2026-09-20")).toBe("Gustav · Tasted 20 Sep 2026");
+  });
+
+  it("falls back to a neutral name for an author with none", () => {
+    expect(readNoteByline("  ", "2026-09-20")).toBe("A taster · Tasted 20 Sep 2026");
+  });
+});
+
+describe("every note is public (2026-10-25)", () => {
+  it("heads the wine page's list as everyone's tasting notes", () => {
+    expect(SHARED_NOTES_COPY.othersHeading).toBe("Tasting notes from others");
+  });
+
+  it("tells you on your own profile that everyone can read your notes", () => {
+    expect(SHARED_NOTES_COPY.ownPublicLine).toBe("Everyone on Blindr can read your notes");
+  });
+});
+
+describe("opensInSheet", () => {
+  const click = { button: 0, metaKey: false, ctrlKey: false, shiftKey: false, altKey: false, defaultPrevented: false };
+
+  it("opens a plain left click in the WSET sheet", () => {
+    expect(opensInSheet(click)).toBe(true);
+  });
+
+  it("leaves a new-tab, new-window or download click to the link", () => {
+    for (const key of ["metaKey", "ctrlKey", "shiftKey", "altKey"] as const) {
+      expect(opensInSheet({ ...click, [key]: true })).toBe(false);
+    }
+    expect(opensInSheet({ ...click, button: 1 })).toBe(false);
+    expect(opensInSheet({ ...click, defaultPrevented: true })).toBe(false);
   });
 });

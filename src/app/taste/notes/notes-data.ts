@@ -1,8 +1,8 @@
 // Everything the Tasting notes archive (/taste/notes) reads: the signed-in
 // author's own notes with their wine, their tasting glass and its tasting's
 // name, and their aroma rows, shaped into NoteArchiveRow. Other people's
-// notes are readable too when their authors share them (the "wset notes read"
-// policy, sharing defaults), so the author filter here is what keeps this
+// identified notes are readable too (every note is public since 2026-10-25,
+// the "wset notes read" policy), so the author filter here is what keeps this
 // archive the author's own. Tasting names come through the author's own membership
 // under the wines / tastings read policies; a glass the author can no longer
 // read just loses its name. Not a server action: only the page calls it.

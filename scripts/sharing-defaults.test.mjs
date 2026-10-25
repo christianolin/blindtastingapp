@@ -277,10 +277,14 @@ async function myHeld(who, ids) {
 }
 
 // ---------------------------------------------------------------------------
-// 1. can_view_notes against can_view_cellar
+// 1. can_view_notes: every note public (20261025130000_public_notes.sql)
 // ---------------------------------------------------------------------------
+// Until 2026-10-25 can_view_notes answered exactly as can_view_cellar over
+// notes_visibility. The owner made every note public: it is true for every
+// signed-in viewer whatever the (no longer client-writable) column holds,
+// and still false for a deleted author.
 
-test("can_view_notes answers exactly as can_view_cellar for every audience and viewer; a deleted author is refused", async () => {
+test("can_view_notes is true for every viewer whatever notes_visibility holds; a deleted author is refused", async () => {
   await withRollback(async () => {
     const [owner, pal, oneWay, requester, stranger] = await freshProfiles(5);
     await befriend(owner, pal);
@@ -288,24 +292,13 @@ test("can_view_notes answers exactly as can_view_cellar for every audience and v
     await client.query("insert into friendships (user_id, friend_id) values ($1, $2)", [oneWay, owner]);
     await client.query("insert into friend_requests (requester_id, recipient_id) values ($1, $2)", [requester, owner]);
     const viewers = { self: owner, pal, oneWay, requester, stranger, nobody: null };
-    const expected = {
-      PUBLIC: { self: true, pal: true, oneWay: true, requester: true, stranger: true, nobody: true },
-      FRIENDS: { self: false, pal: true, oneWay: true, requester: false, stranger: false, nobody: false },
-      PRIVATE: { self: false, pal: false, oneWay: false, requester: false, stranger: false, nobody: false },
-    };
     for (const audience of ["PUBLIC", "FRIENDS", "PRIVATE"]) {
-      await asOwner();
-      await client.query("update profiles set cellar_visibility = $2, notes_visibility = $2 where id = $1", [
-        owner,
-        audience,
-      ]);
+      // Only the owner role can still store anything but PUBLIC here.
+      await setNotes(owner, audience);
       for (const [name, viewer] of Object.entries(viewers)) {
         await asUser(viewer);
-        const r = (
-          await client.query("select public.can_view_cellar($1) as cellar, public.can_view_notes($1) as notes", [owner])
-        ).rows[0];
-        assert.equal(r.notes, r.cellar, `${audience} / ${name}: the two helpers disagree`);
-        assert.equal(r.notes, expected[audience][name], `${audience} / ${name}`);
+        const r = (await client.query("select public.can_view_notes($1) as notes", [owner])).rows[0];
+        assert.equal(r.notes, true, `${audience} / ${name}`);
       }
     }
     await setNotes(owner, "PUBLIC");
@@ -366,7 +359,7 @@ test("the author reads every note of their own: identity-less, held, Only me, on
   });
 });
 
-test("others read a note by its author's setting; never identity-less, unidentified, or on a wine they cannot read; aromas follow", async () => {
+test("everyone reads an identified note whatever the stored setting; never identity-less, unidentified, or on a wine they cannot read; aromas follow", async () => {
   await withRollback(async () => {
     const r = await refs();
     const [author, friend, stranger, requester, creator] = await freshProfiles(5);
@@ -384,14 +377,13 @@ test("others read a note by its author's setting; never identity-less, unidentif
     for (const who of [friend, stranger, requester]) assert.equal(await sees(who, n), true, "Everyone: readable");
     assert.equal(await aromasSeenBy(stranger), 1, "Everyone: its aromas too");
 
-    await setNotes(author, "FRIENDS");
-    assert.equal(await sees(friend, n), true, "Friends: the accepted friend");
-    assert.equal(await sees(stranger, n), false, "Friends: not a stranger");
-    assert.equal(await sees(requester, n), false, "Friends: not a pending requester");
-    assert.equal(await aromasSeenBy(stranger), 0, "Friends: nor its aromas");
-
-    await setNotes(author, "PRIVATE");
-    for (const who of [friend, stranger, requester]) assert.equal(await sees(who, n), false, "Only me: nobody");
+    // Every note public (20261025130000): a leftover FRIENDS / PRIVATE value
+    // in the retired column hides nothing.
+    for (const audience of ["FRIENDS", "PRIVATE"]) {
+      await setNotes(author, audience);
+      for (const who of [friend, stranger, requester]) assert.equal(await sees(who, n), true, `${audience}: still readable`);
+      assert.equal(await aromasSeenBy(stranger), 1, `${audience}: its aromas too`);
+    }
     await setNotes(author, "PUBLIC");
 
     const { glass } = await flight({ host: creator, guests: [author, friend], wineId: wine });
@@ -434,7 +426,7 @@ test("others read a note by its author's setting; never identity-less, unidentif
 // 4. Figures others see
 // ---------------------------------------------------------------------------
 
-test("ratings, descriptors, structure and usage leave out an Only-me note and a held note for others, and include your own", async () => {
+test("ratings, descriptors, structure and usage count every note (a leftover Only-me value too), leave out a held note for others, and include your own", async () => {
   await withRollback(async () => {
     const r = await refs();
     const [a, b, c, stranger, guest] = await freshProfiles(5);
@@ -443,7 +435,7 @@ test("ratings, descriptors, structure and usage leave out an Only-me note and a 
     await setNotes(b, "PRIVATE");
     const nb = await note(b, wine, { quality_score: 60, acidity: "LOW" });
     await flight({ host: c, guests: [guest], wineId: wine });
-    const nc = await note(c, wine, { quality_score: 70, acidity: "MEDIUM" });
+    const nc = await note(c, wine, { quality_score: 90, acidity: "MEDIUM" });
     assert.equal((await holdsOf(nc)).length, 1, "c's note is held");
     await aroma(na, r.terms[0]);
     await aroma(nb, r.terms[1]);
@@ -466,15 +458,22 @@ test("ratings, descriptors, structure and usage leave out an Only-me note and a 
       return { avg: Number(ratings?.avg_score ?? NaN), count: ratings?.note_count ?? 0, terms, acidity: acidity?.n ?? 0 };
     };
 
-    assert.deepEqual(await figures(stranger), { avg: 90, count: 1, terms: [r.terms[0]], acidity: 1 });
+    // Every note public (20261025130000): b's leftover PRIVATE hides nothing;
+    // c's held note reaches only c.
+    assert.deepEqual(await figures(stranger), { avg: 75, count: 2, terms: [r.terms[0], r.terms[1]].sort(), acidity: 2 });
     assert.deepEqual(await figures(b), { avg: 75, count: 2, terms: [r.terms[0], r.terms[1]].sort(), acidity: 2 });
-    assert.deepEqual(await figures(c), { avg: 80, count: 2, terms: [r.terms[0], r.terms[2]].sort(), acidity: 2 });
+    assert.deepEqual(await figures(c), {
+      avg: 80,
+      count: 3,
+      terms: [r.terms[0], r.terms[1], r.terms[2]].sort(),
+      acidity: 3,
+    });
 
     await asUser(stranger);
     assert.equal(
       (await client.query("select note_count from public.catalog_wine_usage($1)", [wine])).rows[0].note_count,
       2,
-      "usage counts the Only-me note (a reference count) but not the held one",
+      "usage counts every note but the held one",
     );
     await asOwner();
     assert.equal(
@@ -984,7 +983,7 @@ test("service_role and the account scrub are not judged by the guard", async () 
 // 8. Grants and ACLs
 // ---------------------------------------------------------------------------
 
-test("the profiles client UPDATE grant is exactly the eleven columns", async () => {
+test("the profiles client UPDATE grant is exactly the ten columns (notes_visibility revoked 2026-10-25)", async () => {
   await withRollback(async () => {
     const r = await client.query(
       `select string_agg(format('%s:%s', a.attname, x.privilege_type), ','
@@ -995,7 +994,7 @@ test("the profiles client UPDATE grant is exactly the eleven columns", async () 
     assert.equal(
       r.rows[0].acl,
       "avatar_url:UPDATE,bio:UPDATE,cellar_visibility:UPDATE,display_name:UPDATE,favorite_wine_type:UPDATE," +
-        "last_seen_at:UPDATE,location:UPDATE,notes_visibility:UPDATE,phone:UPDATE,preferred_currency:UPDATE,tour_seen_at:UPDATE",
+        "last_seen_at:UPDATE,location:UPDATE,phone:UPDATE,preferred_currency:UPDATE,tour_seen_at:UPDATE",
     );
   });
 });

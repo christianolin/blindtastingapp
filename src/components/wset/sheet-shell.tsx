@@ -110,6 +110,7 @@ export function SheetBar({ embedded, children }: { embedded: boolean; children: 
     there is no ✕ and no Close. */
 export function SheetHeaderRow({
   eyebrow,
+  eyebrowOnPhone = false,
   title,
   titleRef,
   onClose,
@@ -117,6 +118,9 @@ export function SheetHeaderRow({
   trailing,
 }: {
   eyebrow: string;
+  /** Phones normally drop the eyebrow; a sheet whose eyebrow carries facts
+      (the read-only note: author and date) keeps it, truncated. */
+  eyebrowOnPhone?: boolean;
   title: string;
   /** Makes the title focusable (tabIndex -1) and hands it over: the training
       room moves keyboard focus there as a session opens. */
@@ -143,7 +147,7 @@ export function SheetHeaderRow({
         </button>
       ) : null}
       <div className="min-w-0 flex-1">
-        <Eyebrow size="sm" className="block max-sm:hidden">
+        <Eyebrow size="sm" className={eyebrowOnPhone ? "block truncate" : "block max-sm:hidden"}>
           {eyebrow}
         </Eyebrow>
         <p

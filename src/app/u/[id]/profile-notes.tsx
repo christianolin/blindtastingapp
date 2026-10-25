@@ -5,34 +5,43 @@ import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Eyebrow } from "@/components/overview/eyebrow";
 import { HatchThumb } from "@/components/overview/hatch-thumb";
+import { NoteModal } from "@/components/wset/note-modal";
 import {
   SHARED_NOTES_COPY,
   cappedFooter,
+  opensInSheet,
+  readNoteByline,
   showAllLabel,
   visibleNotes,
   type ProfileNoteRow,
 } from "@/lib/notes/shared-notes-view";
 
 /**
- * `/u/[id]`'s "Tasting notes" (sharing-defaults spec 2026-09-27 S3, §7.3):
- * the person's notes the viewer may read, newest first, each one link to the
- * note. On your own profile the heading says so, a line says who can see them
- * with a "Change" link to the Sharing card, held notes carry "Hidden from
- * others", and an empty list says so. On someone else's the page renders
- * nothing when there are no rows, so "private" and "none" look the same.
+ * `/u/[id]`'s "Tasting notes" (sharing-defaults spec 2026-09-27 S3, §7.3;
+ * every note public since 2026-10-25): the person's notes, newest first, each
+ * a link to the note. A plain click opens the note in the WSET sheet —
+ * read-only on someone else's profile, your own editor on yours. On your own
+ * profile the heading says so, a line says everyone can read them, held notes
+ * carry "Hidden from others" (Rule 1: a note on a wine in your own unrevealed
+ * flight), and an empty list says so. On someone else's the page renders
+ * nothing when there are no rows.
  */
 export function ProfileNotes({
   rows,
   capped,
   own,
+  authorName,
 }: {
   rows: ProfileNoteRow[];
   /** The list was cut at the cap (capNotes): say so under it. */
   capped: boolean;
-  /** Your own profile: who can see these, and where to change it. */
-  own: { line: string; changeHref: string } | null;
+  /** Your own profile. */
+  own: boolean;
+  /** The profile's display name, for the read-only sheet's eyebrow. */
+  authorName: string;
 }) {
   const [expanded, setExpanded] = useState(false);
+  const [open, setOpen] = useState<ProfileNoteRow | null>(null);
   const more = showAllLabel(rows.length);
   const footer = cappedFooter(capped);
 
@@ -42,18 +51,7 @@ export function ProfileNotes({
         <h2 id="profile-notes">
           <Eyebrow size="lg">{own ? SHARED_NOTES_COPY.profileHeadingOwn : SHARED_NOTES_COPY.profileHeading}</Eyebrow>
         </h2>
-        {own ? (
-          // One sentence that wraps as one; "Change" is a 44px tap target on touch.
-          <p className="flex flex-wrap items-center gap-x-1 text-sm text-muted-foreground">
-            <span>{own.line} ·</span>
-            <Link
-              href={own.changeHref}
-              className="inline-flex min-h-11 items-center font-medium text-primary hover:underline md:pointer-fine:min-h-0"
-            >
-              {SHARED_NOTES_COPY.change}
-            </Link>
-          </p>
-        ) : null}
+        {own ? <p className="text-sm text-muted-foreground">{SHARED_NOTES_COPY.ownPublicLine}</p> : null}
       </div>
 
       {rows.length === 0 ? (
@@ -64,6 +62,11 @@ export function ProfileNotes({
             <li key={row.id}>
               <Link
                 href={row.href}
+                onClick={(e) => {
+                  if (!opensInSheet(e)) return;
+                  e.preventDefault();
+                  setOpen(row);
+                }}
                 className="flex min-h-11 items-center gap-3 rounded-xl border border-border p-2.5 transition-colors hover:bg-muted/30"
               >
                 <HatchThumb src={row.imageUrl} width={32} height={44} />
@@ -105,6 +108,14 @@ export function ProfileNotes({
         </button>
       ) : null}
       {footer ? <p className="text-xs text-muted-foreground">{footer}</p> : null}
+      {open ? (
+        <NoteModal
+          noteId={open.id}
+          wineId={open.wineId}
+          readOnly={own ? undefined : { byline: readNoteByline(authorName, open.tastedOn) }}
+          onClose={() => setOpen(null)}
+        />
+      ) : null}
     </section>
   );
 }

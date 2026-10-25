@@ -15,29 +15,28 @@ const base: SharingNoticeInput = {
   cellarFlipped: true,
   notesShared: true,
   cellar: "PUBLIC",
-  notes: "PUBLIC",
   dismissedAt: null,
 };
 
 describe("sharingNoticeCopy", () => {
-  it("names both when both flags hold and both settings are still Everyone", () => {
+  it("names both when both flags hold and the cellar is still Everyone; only the cellar is a setting", () => {
     expect(sharingNoticeCopy(base)).toEqual({
       title: "Your cellar and tasting notes are now visible to everyone",
-      body: "Other Blindr members can now see the bottles in your cellar and the notes you write. You choose who sees each one in your settings.",
-      cta: "Change who can see them",
+      body: "Other Blindr members can now see the bottles in your cellar and read the notes you write. You choose who sees your cellar in your settings.",
+      cta: "Change who can see your cellar",
     });
   });
 
-  it("names only the notes when the cellar was not flipped", () => {
+  it("names only the notes when the cellar was not flipped, with no settings link (every note is public)", () => {
     expect(sharingNoticeCopy({ ...base, cellarFlipped: false })).toEqual({
       title: "Your tasting notes are now visible to everyone",
-      body: "Other Blindr members can now see the notes you write. You choose who sees them in your settings.",
-      cta: "Change who can see them",
+      body: "Other Blindr members can now read the notes you write. Every tasting note on Blindr is public.",
+      cta: null,
     });
   });
 
-  it("names only the cellar when the person already changed the notes setting", () => {
-    expect(sharingNoticeCopy({ ...base, notes: "FRIENDS" })).toEqual({
+  it("names only the cellar when no note was shared", () => {
+    expect(sharingNoticeCopy({ ...base, notesShared: false })).toEqual({
       title: "Your cellar is now visible to everyone",
       body: "Other Blindr members can now see the bottles in your cellar. You choose who sees it in your settings.",
       cta: "Change who can see it",
@@ -46,30 +45,24 @@ describe("sharingNoticeCopy", () => {
 
   it("is null once dismissed, whatever the flags and settings", () => {
     for (const cellar of AUDIENCES) {
-      for (const notes of AUDIENCES) {
-        expect(sharingNoticeCopy({ ...base, cellar, notes, dismissedAt: "2026-09-27T10:00:00Z" })).toBeNull();
-      }
+      expect(sharingNoticeCopy({ ...base, cellar, dismissedAt: "2026-09-27T10:00:00Z" })).toBeNull();
     }
   });
 
   it("is null when nothing it would say is still true", () => {
-    expect(sharingNoticeCopy({ ...base, cellar: "FRIENDS", notes: "PRIVATE" })).toBeNull();
-    expect(sharingNoticeCopy({ ...base, cellarFlipped: false, notes: "PRIVATE" })).toBeNull();
     expect(sharingNoticeCopy({ ...base, notesShared: false, cellar: "PRIVATE" })).toBeNull();
     expect(sharingNoticeCopy({ ...base, cellarFlipped: false, notesShared: false })).toBeNull();
   });
 
-  it("never mentions a setting the row does not hold, over every flag x setting combination", () => {
+  it("never mentions a cellar setting the row does not hold, over every flag x setting combination", () => {
     for (const cellarFlipped of [true, false]) {
       for (const notesShared of [true, false]) {
         for (const cellar of AUDIENCES) {
-          for (const notes of AUDIENCES) {
-            const copy = sharingNoticeCopy({ cellarFlipped, notesShared, cellar, notes, dismissedAt: null });
-            const saysCellar = copy?.title.includes("cellar") ?? false;
-            const saysNotes = copy?.title.includes("notes") ?? false;
-            expect(saysCellar).toBe(cellarFlipped && cellar === "PUBLIC");
-            expect(saysNotes).toBe(notesShared && notes === "PUBLIC");
-          }
+          const copy = sharingNoticeCopy({ cellarFlipped, notesShared, cellar, dismissedAt: null });
+          const saysCellar = copy?.title.includes("cellar") ?? false;
+          const saysNotes = copy?.title.includes("notes") ?? false;
+          expect(saysCellar).toBe(cellarFlipped && cellar === "PUBLIC");
+          expect(saysNotes).toBe(notesShared);
         }
       }
     }

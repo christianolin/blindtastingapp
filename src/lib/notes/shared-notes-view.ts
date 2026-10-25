@@ -10,11 +10,14 @@ import { DOSAGE_EMBED, catalogWineTitle } from "../wset/wine-title";
 
 /** The fixed strings of the three surfaces (spec §7.2-§7.4). */
 export const SHARED_NOTES_COPY = {
-  othersHeading: "Notes from others",
+  othersHeading: "Tasting notes from others",
   profileHeading: "Tasting notes",
   profileHeadingOwn: "Your tasting notes",
   profileEmptyOwn: "No tasting notes yet.",
-  change: "Change",
+  /** Under "Your tasting notes": every note is public (owner, 2026-10-25). */
+  ownPublicLine: "Everyone on Blindr can read your notes",
+  /** The read-only sheet's eyebrow for an author with no display name. */
+  someTaster: "A taster",
   showFewer: "Show fewer",
   notScored: "Not scored",
   heldTag: "Hidden from others",
@@ -171,6 +174,37 @@ export function tastedLine(tastedOn: string): string {
   return `Tasted ${dayMonthYear(tastedOn)}`;
 }
 
+/** What a click on a note row needs to know (a MouseEvent's fields). */
+export type RowClick = {
+  button: number;
+  metaKey: boolean;
+  ctrlKey: boolean;
+  shiftKey: boolean;
+  altKey: boolean;
+  defaultPrevented: boolean;
+};
+
+/** A note row is a real link to the note's page; a plain left click opens
+    the note in the WSET sheet instead, and every other click (new tab, new
+    window, download, middle button) is left to the browser. */
+export function opensInSheet(click: RowClick): boolean {
+  return (
+    click.button === 0 &&
+    !click.defaultPrevented &&
+    !click.metaKey &&
+    !click.ctrlKey &&
+    !click.shiftKey &&
+    !click.altKey
+  );
+}
+
+/** "Gustav · Tasted 27 Sep 2026": the read-only WSET sheet's eyebrow, so
+    someone else's note always says whose it is and when it was tasted. */
+export function readNoteByline(authorName: string, tastedOn: string): string {
+  const name = authorName.trim() || SHARED_NOTES_COPY.someTaster;
+  return `${name} · ${tastedLine(tastedOn)}`;
+}
+
 // --- Raw rows (PostgREST) -> display rows ---------------------------------
 
 type One<T> = T | T[] | null;
@@ -231,7 +265,10 @@ export type RawProfileNote = RawSharedNote & {
 
 export type SharedNoteRow = {
   id: string;
+  /** The note's own page (a deep link; a row opens the note in the sheet). */
   href: string;
+  /** The note's catalog wine, which the sheet loads alongside it. */
+  wineId: string;
   tastedOn: string;
   dateLabel: string;
   badge: string | null;
@@ -260,6 +297,7 @@ function sharedRow(raw: RawSharedNote, wineId: string): SharedNoteRow {
   return {
     id: raw.id,
     href: `/catalog/${wineId}/notes/${raw.id}`,
+    wineId,
     tastedOn: raw.tasted_on,
     dateLabel: dayMonthYear(raw.tasted_on),
     badge: contextBadge(raw.context_kind),

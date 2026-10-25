@@ -30,7 +30,6 @@ import { ProfileStatCards } from "./profile-stat-cards";
 import { ProfileTastings } from "./profile-tastings";
 import { ProfileNotes } from "./profile-notes";
 import { getProfileNotes } from "@/lib/notes/shared-notes";
-import { SHARING_COPY, ownNotesLine } from "@/lib/sharing/visibility";
 
 export default async function ProfilePage({
   params,
@@ -53,7 +52,7 @@ export default async function ProfilePage({
     supabase
       .from("profiles")
       .select(
-        "id, display_name, bio, avatar_url, location, created_at, deleted_at, notes_visibility",
+        "id, display_name, bio, avatar_url, location, created_at, deleted_at",
       )
       .eq("id", id)
       .maybeSingle(),
@@ -233,17 +232,14 @@ export default async function ProfilePage({
         )}
 
         {/* After the tastings, and outside the stats empty state: notes are
-            not guesses. Someone else's section hides when nothing is readable,
-            so "private" and "no notes" look the same. */}
+            not guesses. Every note is public; someone else's section hides
+            when they have none (or only held ones). */}
         {notes && (isOwnProfile || notes.rows.length > 0) ? (
           <ProfileNotes
             rows={notes.rows}
             capped={notes.capped}
-            own={
-              isOwnProfile
-                ? { line: ownNotesLine(profile.notes_visibility), changeHref: SHARING_COPY.settingsHref }
-                : null
-            }
+            own={isOwnProfile}
+            authorName={profile.display_name}
           />
         ) : null}
       </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Fragment,
   useCallback,
   useEffect,
   useEffectEvent,
@@ -111,10 +112,12 @@ export type WsetTriState = { value: boolean | null; onChange: (v: boolean | null
 
 // Save, or the footer action in its place. With `footerAction` the Save button
 // and its states are gone, so `onSave` is optional there and required anywhere
-// else — every existing caller still has to pass it.
+// else — every existing caller still has to pass it. `readOnly` (someone
+// else's note, opened to read) has neither: nothing on the sheet can change.
 type WsetSaveProps =
-  | { onSave: (state: WsetNoteState) => Promise<void>; footerAction?: undefined }
-  | { onSave?: (state: WsetNoteState) => Promise<void>; footerAction: WsetFooterAction };
+  | { onSave: (state: WsetNoteState) => Promise<void>; footerAction?: undefined; readOnly?: false }
+  | { onSave?: (state: WsetNoteState) => Promise<void>; footerAction: WsetFooterAction; readOnly?: false }
+  | { onSave?: undefined; footerAction?: undefined; readOnly: true };
 
 export function Row({
   label: rowLabel,
@@ -240,6 +243,15 @@ export function SectionCard({
   );
 }
 
+/** The read-only sheet's sections: inert, laid out as if the wrapper were not there. */
+function InertSections({ children }: { children: ReactNode }) {
+  return (
+    <div inert className="contents">
+      {children}
+    </div>
+  );
+}
+
 export function WsetSheet({
   wine,
   title,
@@ -258,6 +270,8 @@ export function WsetSheet({
   onClose,
   bubbles,
   fortified,
+  readOnly = false,
+  eyebrow,
 }: {
   /** Null colour/style is the hidden-glass case (blind-tasting B8) and the
       training room's unknown wine: the family is not known yet.
@@ -301,6 +315,9 @@ export function WsetSheet({
   bubbles?: WsetTriState;
   /** The alcohol row's display-only fourth stop, "fortified (15 %+)". */
   fortified?: WsetTriState;
+  /** The bar's eyebrow in place of "Tasting note" — the read-only sheet names
+      the author and the date there, and shows it on phones too. */
+  eyebrow?: string;
 } & WsetSaveProps) {
   const { lang } = useWsetLang();
   const L = labelsFor(lang);
@@ -327,6 +344,7 @@ export function WsetSheet({
   // yanking the whole dialog around.
   const { active: mobileSection, goTo: goToSection, step, scrollRef } = useSheetSteps(SECTION_ORDER, embedded);
   const [menuOpen, setMenuOpen] = useState(false);
+  const SectionsWrap = readOnly ? InertSections : Fragment;
   const dirty = useMemo(
     () => JSON.stringify(state) !== JSON.stringify(baseline),
     [state, baseline],
@@ -469,7 +487,8 @@ export function WsetSheet({
     <SheetFrame embedded={embedded}>
       <SheetBar embedded={embedded}>
         <SheetHeaderRow
-          eyebrow={t("tasting_note")}
+          eyebrow={eyebrow ?? t("tasting_note")}
+          eyebrowOnPhone={eyebrow !== undefined}
           title={title}
           titleRef={titleRef}
           onClose={closable ? discard : undefined}
@@ -563,6 +582,11 @@ export function WsetSheet({
           )
         }
       >
+        {/* Read only: every control is inert (no pointer, no focus, no keys)
+            while each row still prints its value; the tabs and the footer's
+            section step sit outside this wrapper and stay live. An editable
+            sheet gets a Fragment: its markup is unchanged. */}
+        <SectionsWrap>
         <SectionCard id="appearance" numeral="I" title={t("appearance")} rated={t("assessed_of", { done: prog.appearance[0], total: prog.appearance[1] })} className={cn(sectionScrollMt, mobileSection !== "appearance" && "hidden")}>
           <RowPair>
             <Row label={t("clarity")} value={valueLabel(state.clarity, L)}>
@@ -701,7 +725,8 @@ export function WsetSheet({
             <textarea
               value={state.tasterNotes}
               onChange={(e) => set("tasterNotes", e.target.value)}
-              placeholder={t("notes_placeholder")}
+              readOnly={readOnly}
+              placeholder={readOnly ? undefined : t("notes_placeholder")}
               style={{
                 width: "100%",
                 minHeight: 96,
@@ -717,6 +742,7 @@ export function WsetSheet({
             />
           </Row>
         </SectionCard>
+        </SectionsWrap>
       </SheetBody>
 
       <SheetFooter
@@ -734,14 +760,14 @@ export function WsetSheet({
           <SheetFooterProgress
             done={done}
             caption={t("of_total_assessed", { total })}
-            note={footerAction ? null : t("nothing_required")}
+            note={readOnly ? t("read_only_note") : footerAction ? null : t("nothing_required")}
           />
         }
       >
         {step ? (
           <SheetStepButton section={sectionName(step.id)} forward={step.forward} onClick={() => goToSection(step.id)} />
         ) : null}
-        {footerAction ? (
+        {readOnly ? null : footerAction ? (
           // The training room's "Your call →" in place of Save, at every
           // section (spec §3.3).
           <button

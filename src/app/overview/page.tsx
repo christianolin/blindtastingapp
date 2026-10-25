@@ -34,7 +34,7 @@ export default async function OverviewPage() {
   const [{ data: profile }, data, invitation, active, notice] = await Promise.all([
     supabase
       .from("profiles")
-      .select("display_name, avatar_url, cellar_visibility, notes_visibility")
+      .select("display_name, avatar_url, cellar_visibility")
       .eq("id", user.id)
       .maybeSingle(),
     getOverviewData(user.id),
@@ -62,7 +62,6 @@ export default async function OverviewPage() {
           cellarFlipped: notice.data.cellar_flipped,
           notesShared: notice.data.notes_shared,
           cellar: profile.cellar_visibility,
-          notes: profile.notes_visibility,
           dismissedAt: notice.data.dismissed_at,
         })
       : null;

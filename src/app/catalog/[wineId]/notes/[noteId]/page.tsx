@@ -25,8 +25,8 @@ export default async function EditNotePage({
     supabase.from("wset_notes").select("*").eq("id", noteId).maybeSingle(),
   ]);
   // The "wset notes read" policy decides who reads a note (sharing-defaults
-  // spec S8, S17): its author always; anyone else only an identified note
-  // whose author shares with them and that is not held. A note it hides gets
+  // spec S8, S17; every note public since 2026-10-25): its author always;
+  // anyone else any identified note that is not held (Rule 1). A note it hides gets
   // the same answer as one that does not exist.
   const mode = noteRouteMode({ wineFound: Boolean(wine), note, wineId, viewerId: user.id });
   if (mode === "not-found" || !wine || !note) notFound();

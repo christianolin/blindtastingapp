@@ -15,10 +15,12 @@ import {
 } from "@/lib/sharing/visibility";
 import { cn } from "@/lib/utils";
 
-export type SharingColumn = "cellar_visibility" | "notes_visibility";
+// Only the cellar: tasting notes lost their setting on 2026-10-25 (every note
+// is public, and the client grant on profiles.notes_visibility is revoked).
+export type SharingColumn = "cellar_visibility";
 
 /**
- * One sharing setting — who can see your cellar, or your tasting notes —
+ * The sharing setting — who can see your cellar —
  * as Everyone / Friends / Only me (sharing-defaults spec 2026-09-27 S6, S18,
  * §7.6). Writes the signed-in person's own profile row as the viewer, under
  * the column grant and "profiles update own". The select never claims a
@@ -69,7 +71,7 @@ export function VisibilitySelect({
     let saved = false;
     try {
       const supabase = createClient();
-      const values = column === "cellar_visibility" ? { cellar_visibility: next } : { notes_visibility: next };
+      const values = { [column]: next } as { cellar_visibility: SharingAudience };
       saved = profileWriteSaved(await supabase.from("profiles").update(values).eq("id", userId).select("id"));
     } catch {
       saved = false;

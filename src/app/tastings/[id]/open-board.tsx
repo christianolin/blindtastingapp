@@ -22,8 +22,8 @@ type Row = {
 // The group Taste & Rate board: nothing hidden. Every wine shows each
 // participant's score, its average and rater count, ranked by average. Scores
 // come from wset_notes joined on tasting_wine_id; the "wset notes read" policy
-// shows each participant only the scores their authors share with them (an
-// Only-me taster's score leaves the board) — no new tables. Anyone JOINED can rate any
+// shows every identified note (all public since 2026-10-25) except a held one
+// — no new tables. Anyone JOINED can rate any
 // wine at any time; not everyone has to rate everything.
 export function OpenBoard({
   tastingId,

@@ -148,9 +148,8 @@ export async function getLotSheet(
   }
 
   // 4. D7: the spread from the wine's own scored notes plus the viewer's
-  // friendships. "wset notes read" returns only the notes each author shares
-  // with this viewer (a held note never), so the spread follows every friend's
-  // own notes setting.
+  // friendships. "wset notes read" returns every identified note (all notes
+  // are public since 2026-10-25) except a held one (Rule 1).
   const { data: spreadData } = await supabase
     .from("wset_notes")
     .select("quality_score, author_id")

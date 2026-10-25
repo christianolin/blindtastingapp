@@ -25,7 +25,7 @@ export default async function EditProfilePage() {
   const [{ data: profile }, favourites, regionOptions] = await Promise.all([
     supabase
       .from("profiles")
-      .select("display_name, bio, avatar_url, location, phone, cellar_visibility, notes_visibility")
+      .select("display_name, bio, avatar_url, location, phone, cellar_visibility")
       .eq("id", user.id)
       .single(),
     getProfileFavourites(supabase, user.id),
@@ -60,9 +60,10 @@ export default async function EditProfilePage() {
           </CardContent>
         </Card>
 
-        {/* Sharing (sharing-defaults spec §7.6, S18): who can see your cellar
-            and your tasting notes. Each select saves on its own, like
-            /cellar's. Rendered only with the stored values in hand, so it
+        {/* Sharing (sharing-defaults spec §7.6, S18): who can see your
+            cellar, a select that saves on its own like /cellar's, and a plain
+            statement that tasting notes are public (no setting since
+            2026-10-25, owner: every note public). Rendered only with the stored values in hand, so it
             never shows a setting the row does not hold. #sharing is the
             Overview notice's and the profile's "Change" target. */}
         {profile ? (
@@ -78,13 +79,10 @@ export default async function EditProfilePage() {
                 label={SHARING_COPY.cellarLabel}
                 help={SHARING_COPY.cellarHelp}
               />
-              <VisibilitySelect
-                userId={user.id}
-                column="notes_visibility"
-                current={profile.notes_visibility}
-                label={SHARING_COPY.notesLabel}
-                help={SHARING_COPY.notesHelp}
-              />
+              <div className="flex flex-col gap-1.5">
+                <p className="text-sm font-medium">{SHARING_COPY.notesLabel}</p>
+                <p className="text-xs leading-relaxed text-muted-foreground">{SHARING_COPY.notesHelp}</p>
+              </div>
               <ScrollToHash id={SHARING_COPY.sectionId} />
             </CardContent>
           </Card>

@@ -15,7 +15,6 @@ const copy = sharingNoticeCopy({
   cellarFlipped: true,
   notesShared: true,
   cellar: "PUBLIC",
-  notes: "PUBLIC",
   dismissedAt: null,
 })!;
 
@@ -25,7 +24,14 @@ describe("SharingNotice", () => {
     expect(html).toContain(">Sharing</span>");
     expect(html).toContain(`>${copy.title}</h2>`);
     expect(html).toContain(`>${copy.body}</p>`);
-    expect(html).toMatch(/<a [^>]*href="\/profile\/edit#sharing"[^>]*>Change who can see them<\/a>/);
+    expect(html).toMatch(/<a [^>]*href="\/profile\/edit#sharing"[^>]*>Change who can see your cellar<\/a>/);
+    expect(html).toContain(">Got it</button>");
+  });
+
+  it("drops the settings link when there is nothing to change (the notes-only card)", () => {
+    const notesOnly = sharingNoticeCopy({ cellarFlipped: false, notesShared: true, cellar: "PRIVATE", dismissedAt: null })!;
+    const html = renderToStaticMarkup(<SharingNotice userId="u1" copy={notesOnly} />);
+    expect(html).not.toContain("/profile/edit#sharing");
     expect(html).toContain(">Got it</button>");
   });
 

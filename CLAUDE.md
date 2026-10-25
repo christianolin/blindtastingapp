@@ -573,11 +573,12 @@ a raw subquery, regardless of which two tables look involved at a glance.
   tasting CLOSED without ever starting keeps DRAFT visibility. Never go back
   to a bare `status <> 'DRAFT'` or `status = 'CLOSED'` test for "started" —
   that hands every candidate card of never-revealed glasses to the JOINED
-  guests. Client UPDATE on `profiles` is a column grant on eleven columns
+  guests. Client UPDATE on `profiles` is a column grant on ten columns
   (display_name, bio, avatar_url, location, phone, favorite_wine_type,
-  cellar_visibility, preferred_currency, last_seen_at, since 20260925010000
-  tour_seen_at — see "First-run tour" — and since 20260927140000
-  notes_visibility — see "Sharing defaults"); before it, any member
+  cellar_visibility, preferred_currency, last_seen_at, and since
+  20260925010000 tour_seen_at — see "First-run tour"; notes_visibility was
+  granted by 20260927140000 and revoked by 20261025130000 — see "Every
+  tasting note is public"); before it, any member
   could set their own `role` to ADMIN. Roles change only through
   `admin_set_user_role`. A link guard refuses new friendships or seats
   pointing at a deleted profile. Every people listing filters
@@ -588,7 +589,10 @@ a raw subquery, regardless of which two tables look involved at a glance.
   go-ahead: M1, app 1eee2b6, M2 — 34 cellars flipped, 36 notices; spec
   `docs/superpowers/specs/2026-09-27-sharing-defaults-design.md`; M1
   `20260927140000_sharing_defaults.sql`, then the app deploy, then M2
-  `20260927150000_sharing_defaults_flip.sql`). Cellars and tasting notes are
+  `20260927150000_sharing_defaults_flip.sql`). **Superseded for notes** by
+  "Every tasting note is public" (below): the notes setting is gone, only
+  the cellar setting remains; the text here is the 2026-09-27 design and its
+  Rule 1 machinery, which still stands. Cellars and tasting notes are
   visible to everyone unless the person changes it. Two settings share the
   `cellar_visibility` enum and one vocabulary, Everyone / Friends / Only me
   (`src/lib/sharing/visibility.ts`; one `VisibilitySelect` on `/profile/edit`'s
@@ -660,6 +664,36 @@ a raw subquery, regardless of which two tables look involved at a glance.
   tonight's bottle is now seen by every guest (O1, offered as a follow-up);
   a curator merge can move a note others see onto a wine in its author's
   unrevealed glass (R3); `get_app_stats().notes_created` counts every note.
+- **Every tasting note is public** (owner, 2026-10-25: "Everyones notes
+  should be public" — "All notes public, no choice", existing notes included,
+  no warning; migration `20261025130000_public_notes.sql`, applied only after
+  the app deploy that drops the picker). There is no notes setting:
+  `can_view_notes(author)` is just "the author's account is not deleted"
+  (still SECURITY DEFINER, same grants), every `profiles.notes_visibility`
+  is PUBLIC and the client UPDATE grant on it is revoked (the column stays
+  only because an older deploy still selected it; nothing reads it for
+  access — never wire it back up). "wset notes read" itself is unchanged and
+  keeps every Rule 1 clause: an identity-less note on a still-hidden glass
+  (and a training or unidentified-wine note) is readable by its author alone
+  — a hidden-glass note becomes public only when the reveal gives it an
+  identity; a held note stays held until its glass's reveal; a note on a
+  `blind_pending` wine reaches only readers of that wine. Writes stay
+  author-only. `/profile/edit`'s Sharing card keeps the cellar select and
+  states the notes rule (`SHARING_COPY.notesLabel`/`notesHelp`);
+  `VisibilitySelect` is cellar-only; `/overview`'s notice no longer offers to
+  change who reads notes (`sharingNoticeCopy`'s `cta` can be null). A wine's
+  page lists "Tasting notes from others" (with a count) high on the page,
+  right after "About this wine", and the rating card's "tasting notes" count
+  links to it (`#others-notes`). On the wine page and on `/u/[id]` a plain
+  click on a note row (`opensInSheet`) opens the FULL note in the WSET sheet
+  via `NoteModal`'s `readOnly` mode — `WsetSheet readOnly`: the sections are
+  wrapped `inert` (an editable sheet gets a Fragment, so its markup is
+  unchanged), no Save/Delete, Close exits at once, and the eyebrow
+  (`readNoteByline`, "Gustav · Tasted 27 Sep 2026") shows on phones too; your
+  own notes on your own profile open your editor instead. The row stays a
+  real link to `/catalog/[wineId]/notes/[noteId]` (the prose read view) for a
+  new tab. `scripts/sharing-defaults.test.mjs` / `tour-seen.test.mjs` were
+  updated to the public-notes expectations but not re-run (production).
 - The tasting-invite UI (`tastings/new/invite-field.tsx`) is NOT a
   comma/newline-separated textarea — participants are added one at a time
   (typed email + "Add", or picked from a friends combobox), rendered as

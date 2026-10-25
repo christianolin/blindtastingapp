@@ -50,13 +50,15 @@ export function SharingNotice({ userId, copy }: { userId: string; copy: SharingN
       </h2>
       <p className="text-sm text-muted-foreground">{copy.body}</p>
       <div className="flex flex-wrap items-center gap-2 pt-1">
-        <Link
-          href={SHARING_NOTICE.href}
-          onClick={remember}
-          className="inline-flex min-h-11 items-center rounded-[9px] border border-border bg-background px-4 text-[13px] font-semibold text-foreground transition-colors hover:bg-muted md:pointer-fine:min-h-9"
-        >
-          {copy.cta}
-        </Link>
+        {copy.cta ? (
+          <Link
+            href={SHARING_NOTICE.href}
+            onClick={remember}
+            className="inline-flex min-h-11 items-center rounded-[9px] border border-border bg-background px-4 text-[13px] font-semibold text-foreground transition-colors hover:bg-muted md:pointer-fine:min-h-9"
+          >
+            {copy.cta}
+          </Link>
+        ) : null}
         <button
           type="button"
           onClick={() => {
