@@ -95,7 +95,7 @@ begin
     into v_text
   from pg_attribute a
   where a.attrelid = 'public.tastings'::regclass and a.attname = 'bottles_per_person' and not a.attisdropped;
-  if v_text is distinct from 'smallint false false' then
+  if v_text is distinct from 'smallint f f' then
     raise exception 'tastings.bottles_per_person is not a nullable smallint without default: %', v_text;
   end if;
   if exists (select 1 from public.tastings where bottles_per_person is not null) then
