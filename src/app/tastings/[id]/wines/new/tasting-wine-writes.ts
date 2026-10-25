@@ -14,6 +14,13 @@ import {
   TASTING_CLOSED,
 } from "@/lib/flight-glass-rules";
 import { flightWineBornHidden } from "@/lib/wine-identity/catalog-payload";
+import {
+  atBottleLimit,
+  bottleLimitRefusal,
+  friendlyBottleLimitError,
+  parseBottleLimit,
+  type BottleLimit,
+} from "@/lib/bottle-limit";
 import { emptyDraft, missingWineFields, normaliseDraft } from "@/lib/wine-identity/complete";
 import {
   draftFromAnswerKey,
@@ -64,6 +71,8 @@ type TastingAdder = {
     wineSource: WineSourceMode;
   };
   contributorParticipantId: string | null;
+  /** Bring-your-own bottles per person (null = unlimited); maps the trigger's error. */
+  bottlesPerPerson: BottleLimit;
 };
 
 type WineAnswerInsert = Database["public"]["Tables"]["wine_answers"]["Insert"];
@@ -165,7 +174,7 @@ export async function resolveTastingAdder(
   if (!UUID.test(tastingId)) return { error: TASTING_NOT_FOUND };
   const { data: tasting, error } = await supabase
     .from("tastings")
-    .select("id, name, status, reveal_mode, wine_source, host_id")
+    .select("id, name, status, reveal_mode, wine_source, host_id, bottles_per_person")
     .eq("id", tastingId)
     .maybeSingle();
   if (error) return { error: error.message };
@@ -188,6 +197,20 @@ export async function resolveTastingAdder(
     if (participantError) return { error: participantError.message };
     if (!participant || participant.status !== "JOINED") return { error: JOIN_TO_ADD };
     contributorParticipantId = participant.id;
+    // Bottles per person: refuse up front with friendly copy. The database
+    // (wines_bottles_per_person_limit) is the real floor; this only spares a
+    // catalog write that the glass insert would then refuse.
+    const limit = parseBottleLimit(tasting.bottles_per_person);
+    if (limit !== null) {
+      const { count, error: countError } = await supabase
+        .from("wines")
+        .select("id", { count: "exact", head: true })
+        .eq("tasting_id", tastingId)
+        .eq("contributor_participant_id", participant.id)
+        .eq("added_by_host", false);
+      if (countError) return { error: countError.message };
+      if (atBottleLimit(limit, count ?? 0)) return { error: bottleLimitRefusal(limit) };
+    }
   } else if (tasting.host_id !== userId) {
     return { error: HOST_ONLY };
   }
@@ -201,6 +224,10 @@ export async function resolveTastingAdder(
       wineSource: tasting.wine_source,
     },
     contributorParticipantId,
+    bottlesPerPerson:
+      tasting.wine_source === "PARTICIPANT_CONTRIBUTED"
+        ? parseBottleLimit(tasting.bottles_per_person)
+        : null,
   };
 }
 
@@ -235,7 +262,13 @@ async function insertGlassRow(
     })
     .select("id")
     .single();
-  if (error || !wine) return { error: error?.message ?? "Could not add the wine." };
+  if (error || !wine) {
+    return {
+      error: error
+        ? friendlyBottleLimitError(error.message, adder.bottlesPerPerson)
+        : "Could not add the wine.",
+    };
+  }
   return { wineId: wine.id, position };
 }
 

@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { rankLabel, rankRows } from "@/lib/stats-math";
 import { getTastingLeaderboard } from "@/lib/tasting-leaderboard";
+import { unevenCountsNotice, unevenGlassCounts } from "@/lib/bottle-limit";
 import { createClient } from "@/lib/supabase/server";
 import {
   getCurrentUser,
@@ -68,6 +69,9 @@ export async function StandingsPanel({ tastingId }: { tastingId: string }) {
     return true;
   });
   const ranked = rankRows(competitors, (r) => r.total);
+  // Bring-your-own with uneven glass counts (you never guess your own).
+  const unevenGlasses =
+    !hostProvides && unevenGlassCounts(competitors.map((r) => r.totalWines));
   const maxTotal = Math.max(1, ...competitors.map((r) => r.total));
 
   // Crown/medals only once the tasting is finished — during play the ranking
@@ -195,6 +199,11 @@ export async function StandingsPanel({ tastingId }: { tastingId: string }) {
             })}
           </ol>
         )}
+        {unevenGlasses ? (
+          <p role="note" className="mt-2 px-2 text-xs leading-[1.5] text-muted-foreground">
+            {unevenCountsNotice({ pointToCounts: true })}
+          </p>
+        ) : null}
 
         {organizer || waiting.length > 0 ? (
           <div className="mt-3 flex flex-col gap-3 border-t border-border/60 pt-3">

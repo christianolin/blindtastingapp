@@ -42,6 +42,7 @@ import {
 import { getSemiBlindRevealedPicks } from "@/lib/semi-blind-data";
 import { ordinal, rankRows } from "@/lib/stats-math";
 import { getTastingLeaderboard } from "@/lib/tasting-leaderboard";
+import { unevenCountsNotice, unevenGlassCounts } from "@/lib/bottle-limit";
 import { RecordActionsBar } from "./record-actions-bar";
 import { RecordGlass } from "./record-glass";
 
@@ -420,6 +421,10 @@ export async function RecordView({
   const isRecent = finishedRecently(tasting.finished_at);
   const hostedBy = isHost ? "you hosted" : `${hostDisplayName} hosted`;
   const tasterWord = competitors.length === 1 ? "taster" : "tasters";
+  // Bring-your-own with uneven glass counts: totals aren't directly comparable.
+  const unevenGlasses =
+    tasting.wine_source === "PARTICIPANT_CONTRIBUTED" &&
+    unevenGlassCounts(competitors.map((r) => r.totalWines));
 
   // ── Pattern sentence (RECORD-11) ────────────────────────────────────────────
 
@@ -534,6 +539,11 @@ export async function RecordView({
           ) : null}
         </div>
       </div>
+      {unevenGlasses ? (
+        <p role="note" className="-mt-3 text-xs leading-[1.5] text-muted-foreground">
+          {unevenCountsNotice({ pointToCounts: false })}
+        </p>
+      ) : null}
 
       <Card className="overflow-hidden py-0">
         <CardHeader className="border-b border-border/70 py-4">

@@ -10,6 +10,16 @@ import { lookupAppellationAndProducerNames } from "@/lib/reference-lookup";
 import { semiBlindAddRefusal, glassEditRefusal } from "@/lib/flight-glass-rules";
 import { makeWineLabeler } from "@/lib/wine-label";
 import { winesCaption } from "@/lib/lobby-copy";
+import {
+  atBottleLimit,
+  atLimitLine,
+  bottleLimitEachLine,
+  contributedCount,
+  contributionCounts,
+  parseBottleLimit,
+  unevenBottleCounts,
+  unevenCountsNotice,
+} from "@/lib/bottle-limit";
 import { parseStoredDraft } from "@/lib/wine-identity/from-sources";
 import { flightRowNeeds, toIncompleteGlasses } from "@/lib/wine-identity/incomplete";
 import { describeMissing } from "@/lib/wine-identity/describe";
@@ -170,13 +180,29 @@ export async function WinesCard({
   // is fixed at Start (Q7).
   const myStatus =
     participantRows.find((p) => p.id === viewerParticipantId)?.status ?? null;
-  const canAddWine =
+  const mayAdd =
     tasting.status !== "CLOSED" &&
     (tasting.wine_source === "HOST_PROVIDES" ? isHost : myStatus === "JOINED") &&
     !semiBlindAddRefusal({
       revealMode: tasting.reveal_mode,
       tastingStatus: tasting.status,
     });
+  // Bottles per person (bring-your-own only): at the limit, the add action
+  // gives way to "You've added your bottle". The database refuses the add too.
+  const bottleLimit = isByo ? parseBottleLimit(tasting.bottles_per_person) : null;
+  const atLimit = atBottleLimit(bottleLimit, contributedCount(wines, viewerParticipantId));
+  const canAddWine = mayAdd && !atLimit;
+  const bottleLimitLine = bottleLimitEachLine(bottleLimit);
+  // Uneven bottle counts skew totals: you never guess your own bottles.
+  const unevenBottles =
+    isByo &&
+    unevenBottleCounts(
+      contributionCounts(
+        wines,
+        joinedParticipants.map((p) => p.id),
+      ),
+      { started: hasStarted },
+    );
 
   // The adder's two lines on their own glasses (spec §C.5 A1; D10, §C.9).
   // Only the viewer's own ids are read: nobody sees a hidden glass they did
@@ -368,6 +394,8 @@ export async function WinesCard({
   };
   const addWineButton = canAddWine ? (
     <AddToFlightButton destination={flightDestination} />
+  ) : mayAdd && atLimit && bottleLimit !== null ? (
+    <span className="text-[12.5px] font-normal text-muted-foreground">{atLimitLine(bottleLimit)}</span>
   ) : null;
 
   return (
@@ -383,6 +411,9 @@ export async function WinesCard({
               <span className="hidden lg:inline">{winesCaption(wineCount, { phone: false })}</span>
               <span className="lg:hidden">{winesCaption(wineCount, { phone: true })}</span>
             </span>
+          ) : null}
+          {bottleLimitLine ? (
+            <span className="text-[12px] font-normal text-muted-foreground">{bottleLimitLine}</span>
           ) : null}
           {addWineButton ? <span className="ml-auto">{addWineButton}</span> : null}
         </CardTitle>
@@ -406,6 +437,11 @@ export async function WinesCard({
             />
           </div>
         )}
+        {unevenBottles ? (
+          <p role="note" className="mt-3 text-xs leading-[1.5] text-muted-foreground">
+            {unevenCountsNotice({ pointToCounts: false })}
+          </p>
+        ) : null}
       </CardContent>
     </Card>
   );

@@ -12,6 +12,7 @@ import { RecordView } from "../record/record-view";
 import { getSemiBlindRevealedPicks, type SemiBlindRevealedPick } from "@/lib/semi-blind-data";
 import { rankLabel, rankRows } from "@/lib/stats-math";
 import { getTastingLeaderboard, type LeaderboardRow } from "@/lib/tasting-leaderboard";
+import { unevenCountsNotice, unevenGlassCounts } from "@/lib/bottle-limit";
 import { makeGlassLabeler } from "@/lib/wine-label";
 import { cn } from "@/lib/utils";
 import { CountryFlag } from "@/components/country-flag";
@@ -244,6 +245,9 @@ export default async function ResultsPage({
     }),
     (r) => r.total,
   );
+  // Bring-your-own with uneven glass counts (you never guess your own).
+  const unevenGlasses =
+    !hostProvides && unevenGlassCounts(standings.map(({ row }) => row.totalWines));
   // This page only ever renders for a still-running tasting now (CLOSED
   // returns the record above), so its "Completed"/"Final" wording — kept
   // while this same component also covered a finished tasting, before
@@ -454,6 +458,11 @@ export default async function ResultsPage({
                 ))}
               </ol>
             )}
+            {unevenGlasses ? (
+              <p role="note" className="mt-2 text-xs leading-[1.5] text-muted-foreground">
+                {unevenCountsNotice({ pointToCounts: isSemiBlind })}
+              </p>
+            ) : null}
           </CardContent>
         </Card>
       ) : null}

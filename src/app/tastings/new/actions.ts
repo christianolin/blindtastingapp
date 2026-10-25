@@ -18,6 +18,13 @@ import {
   type LockedSetup,
 } from "./setup-copy";
 import { normalisePlace, setTastingPlace } from "./place";
+import {
+  bottleLimitColumn,
+  bottleLimitSettingRefusal,
+  parseBottleLimit,
+  viewerAtBottleLimit,
+  type BottleLimit,
+} from "@/lib/bottle-limit";
 import { makeWineLabeler } from "@/lib/wine-label";
 import { lookupAppellationAndProducerNames } from "@/lib/reference-lookup";
 import type { FlightWine } from "@/app/tastings/[id]/wine-flight-list";
@@ -47,6 +54,9 @@ export type TastingSetupFields = {
   imageUrl?: string | null;
   /** The tasting's private place (B12) — raw, normalised by `normalisePlace`. */
   place?: string;
+  /** Bring-your-own bottles per person (null = unlimited); undefined keeps
+      what is stored. Changeable until CLOSED (`bottleLimitSettingRefusal`). */
+  bottlesPerPerson?: BottleLimit;
 };
 
 // The one validator both create and update run — same strings the form has
@@ -88,6 +98,10 @@ function setupColumns(f: TastingSetupFields) {
     // pointer needs it too, not just blind.
     sequential_guessing: f.revealMode !== "OPEN" && f.timingMode === "LIVE" && f.flow === "GUIDED",
     leaderboard_reveal: f.leaderboardReveal,
+    // Only bring-your-own carries a limit; the wines trigger ignores it otherwise.
+    ...(f.bottlesPerPerson !== undefined
+      ? { bottles_per_person: bottleLimitColumn(f.wineSource, f.bottlesPerPerson) }
+      : {}),
     // The cover photo and the description: a caller that leaves either
     // undefined keeps whatever is stored — never silently wipe one it didn't
     // send (this sheet has no description field yet; S4d's settings sheet,
@@ -140,6 +154,7 @@ function fieldsFromFormData(formData: FormData): TastingSetupFields {
     description: String(formData.get("description") ?? "").trim() || null,
     imageUrl: String(formData.get("image_url") ?? "").trim() || null,
     place: String(formData.get("place") ?? ""),
+    bottlesPerPerson: parseBottleLimit(formData.get("bottles_per_person")),
   };
 }
 
@@ -267,7 +282,7 @@ async function requireHost(tastingId: string) {
   const { data: tasting } = await supabase
     .from("tastings")
     .select(
-      "id, host_id, status, name, reveal_mode, timing_mode, wine_source, sequential_guessing, leaderboard_reveal, async_reveal_policy",
+      "id, host_id, status, name, reveal_mode, timing_mode, wine_source, sequential_guessing, leaderboard_reveal, async_reveal_policy, bottles_per_person",
     )
     .eq("id", tastingId)
     .maybeSingle();
@@ -328,6 +343,14 @@ export async function updateTastingSetup(
   };
   const refusal = settingsChangeRefusal({ status: tasting.status, wineCount, before, after });
   if (refusal) return { error: refusal };
+  if (fields.bottlesPerPerson !== undefined) {
+    const bottleRefusal = bottleLimitSettingRefusal({
+      status: tasting.status,
+      before: parseBottleLimit(tasting.bottles_per_person),
+      after: bottleLimitColumn(fields.wineSource, fields.bottlesPerPerson),
+    });
+    if (bottleRefusal) return { error: bottleRefusal };
+  }
 
   const { error: updateError } = await supabase
     .from("tastings")
@@ -429,6 +452,10 @@ export type FlightSnapshot = {
   /** BYO: JOINED participants who have not added a bottle yet, by name. */
   waitingFor: string[];
   hasStarted: boolean;
+  /** BYO: bottles per person (null = unlimited). */
+  bottleLimit: BottleLimit;
+  /** BYO: the caller already has that many bottles in the flight. */
+  atLimit: boolean;
 };
 
 // An incomplete glass's title: "{producer name}, {wine name}", leaving out
@@ -454,7 +481,7 @@ export async function listFlight(
     await Promise.all([
       supabase
         .from("tastings")
-        .select("id, host_id, status, wine_source, reveal_mode")
+        .select("id, host_id, status, wine_source, reveal_mode, bottles_per_person")
         .eq("id", tastingId)
         .maybeSingle(),
       supabase
@@ -661,5 +688,12 @@ export async function listFlight(
         .map((p) => nameByParticipantId.get(p.id) ?? "Someone")
     : [];
 
-  return { wines: flight, waitingFor, hasStarted };
+  const myParticipantId = people.find((p) => p.user_id === userId)?.id ?? null;
+  return {
+    wines: flight,
+    waitingFor,
+    hasStarted,
+    bottleLimit: isByo ? parseBottleLimit(tasting.bottles_per_person) : null,
+    atLimit: viewerAtBottleLimit(tasting, rows, myParticipantId),
+  };
 }

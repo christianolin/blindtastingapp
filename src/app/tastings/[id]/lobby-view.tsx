@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { getCurrentUser, getTastingRow, getViewerParticipant, getWineRows } from "@/lib/tasting-request-cache";
 import { semiBlindAddRefusal } from "@/lib/flight-glass-rules";
+import { viewerAtBottleLimit } from "@/lib/bottle-limit";
 import { TastingScanRegistrar } from "@/components/tasting-scan-registrar";
 import { createClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
@@ -45,7 +46,9 @@ export async function LobbyView({
     !semiBlindAddRefusal({
       revealMode: tasting.reveal_mode,
       tastingStatus: tasting.status,
-    });
+    }) &&
+    // Bottles per person: at the limit the viewer may not add another.
+    !viewerAtBottleLimit(tasting, wines, viewer?.id);
 
   const flightDestination: FlightDestination = {
     kind: "flight",

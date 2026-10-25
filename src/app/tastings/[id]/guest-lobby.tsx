@@ -14,6 +14,7 @@ import { LocalDateTime } from "@/components/local-date-time";
 import { AutoRefresh } from "@/components/auto-refresh";
 import { TastingScanRegistrar } from "@/components/tasting-scan-registrar";
 import { semiBlindAddRefusal } from "@/lib/flight-glass-rules";
+import { viewerAtBottleLimit } from "@/lib/bottle-limit";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser, getTastingRow, getWineRows } from "@/lib/tasting-request-cache";
@@ -211,7 +212,9 @@ export async function GuestLobby({
     !semiBlindAddRefusal({
       revealMode: tasting.reveal_mode,
       tastingStatus: tasting.status,
-    });
+    }) &&
+    // Bottles per person: at the limit the viewer may not add another.
+    !viewerAtBottleLimit(tasting, wines, rows.find((p) => p.user_id === user.id)?.id);
   const flightDestination: FlightDestination = {
     kind: "flight",
     tastingId,

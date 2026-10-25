@@ -49,6 +49,7 @@ function fieldsOf(v: SetupValues): TastingSetupFields {
     name: v.name,
     timingMode: v.timingMode,
     wineSource: v.wineSource,
+    bottlesPerPerson: v.bottlesPerPerson,
     revealMode: v.revealMode,
     flow: v.flow,
     leaderboardReveal: v.leaderboardReveal,

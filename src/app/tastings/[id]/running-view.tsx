@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AutoRefresh } from "@/components/auto-refresh";
 import { cn } from "@/lib/utils";
 import { semiBlindAddRefusal } from "@/lib/flight-glass-rules";
+import { viewerAtBottleLimit } from "@/lib/bottle-limit";
 import { createClient } from "@/lib/supabase/server";
 import {
   getCurrentUser,
@@ -113,7 +114,9 @@ export async function RunningView({
     !semiBlindAddRefusal({
       revealMode: tasting.reveal_mode,
       tastingStatus: tasting.status,
-    });
+    }) &&
+    // Bottles per person: at the limit the viewer may not add another.
+    !viewerAtBottleLimit(tasting, wines, viewer?.id);
   const flightDestination: FlightDestination = {
     kind: "flight",
     tastingId,

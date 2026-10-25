@@ -38,6 +38,7 @@ import {
 import { rankRows } from "@/lib/stats-math";
 import type { RevealMode } from "@/lib/supabase/database.types";
 import { getTastingLeaderboard } from "@/lib/tasting-leaderboard";
+import { unevenGlassCounts } from "@/lib/bottle-limit";
 
 // The result's data (S12, S12b; spec §11.3 items 8-10; refinement 18, 27).
 // Everything a viewer needs to render is resolved and formatted HERE, on the
@@ -62,6 +63,9 @@ export type TastingResultView = {
   placing: { ordinal: string; line: string } | null;
   hosted: { title: string; line: string } | null;
   table: { rank: number; tied: boolean; name: string; total: number; isViewer: boolean }[];
+  /** Bring-your-own competitors had different numbers of glasses to guess
+      (you never guess your own), so totals aren't directly comparable. */
+  unevenGlasses: boolean;
   bestGlass: { score: string; name: string } | null;
   strongest: { title: string; detail: string; caption: string } | null;
   agreedLeast: string | null;
@@ -439,6 +443,10 @@ export async function getTastingResult(tastingId: string): Promise<TastingResult
     placing,
     hosted,
     table,
+    unevenGlasses:
+      table.length > 0 &&
+      tasting.wine_source === "PARTICIPANT_CONTRIBUTED" &&
+      unevenGlassCounts(competitors.map((r) => r.totalWines)),
     bestGlass,
     strongest,
     agreedLeast,

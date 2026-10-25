@@ -176,6 +176,36 @@ describe("guided pacing for LIVE semi-blind (B6 pour pointer)", () => {
   });
 });
 
+describe("readySummary with a bottle limit", () => {
+  it("names the limit after everyone brings", () => {
+    expect(
+      readySummary({
+        setup: { ...base, wineSource: "PARTICIPANT_CONTRIBUTED", bottlesPerPerson: 1 },
+        wineCount: 0,
+        invitedCount: 0,
+        dateText: null,
+        phone: true,
+      }),
+    ).toEqual(["Blind", "live", "guided", "everyone brings", "1 bottle each", "0 wines so far", "no date", "0 invited"]);
+    expect(
+      readySummary({
+        setup: { ...base, wineSource: "PARTICIPANT_CONTRIBUTED", bottlesPerPerson: 3 },
+        wineCount: 0,
+        invitedCount: 0,
+        dateText: null,
+        phone: true,
+      }),
+    ).toContain("up to 3 bottles each");
+  });
+});
+
+describe("buildSetupFormData's bottle limit", () => {
+  it("sends the limit, blank for unlimited", () => {
+    expect(buildSetupFormData({ ...base, bottlesPerPerson: 2 }).get("bottles_per_person")).toBe("2");
+    expect(buildSetupFormData({ ...base, bottlesPerPerson: null }).get("bottles_per_person")).toBe("");
+  });
+});
+
 describe("readySummary with a place and bring-your-own (B1 step 3)", () => {
   it("restates every choice", () => {
     expect(

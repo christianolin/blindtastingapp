@@ -17,6 +17,7 @@ import { addToFlight, searchAddWine } from "@/components/add-wine/actions";
 import { ConsumeCheckbox } from "@/components/add-wine/cellar-view";
 import { flattenSearchGroups, type DesktopRow } from "@/components/add-wine/desktop-format";
 import { RowActionButton } from "@/components/add-wine/desktop-view";
+import { atLimitLine } from "@/lib/bottle-limit";
 import { sheetMatrix } from "@/components/add-wine/matrix";
 import { useCanScan } from "@/components/add-wine/use-can-scan";
 import type {
@@ -146,6 +147,8 @@ export function FlightStep({
   const [dragDy, setDragDy] = useState(0);
 
   const isByo = wineSource === "PARTICIPANT_CONTRIBUTED";
+  // Bottles per person: the caller is a contributor already at the limit.
+  const atLimit = isByo && snapshot?.atLimit === true;
   const nextPosition = rows.length + 1;
 
   // One destination for the sheet, the inline adds and the result rows' label,
@@ -351,7 +354,16 @@ export function FlightStep({
 
   return (
     <div className="flex flex-col gap-[14px]">
-      {/* Search row + shortcut chips */}
+      {/* Search row + shortcut chips. Bottles per person: at the limit they
+          give way to one line (the server and the database refuse too). */}
+      {atLimit && snapshot?.bottleLimit ? (
+        <p
+          role="status"
+          className="rounded-[10px] border border-border bg-card p-[12px_14px] text-[13px] text-muted-foreground"
+        >
+          {atLimitLine(snapshot.bottleLimit)}
+        </p>
+      ) : (
       <div className="relative flex flex-col">
         <div
           className={cn(
@@ -477,6 +489,7 @@ export function FlightStep({
           </div>
         ) : null}
       </div>
+      )}
 
       {error ? (
         <p role="alert" className="text-[12.5px] text-destructive">
@@ -631,6 +644,7 @@ export function FlightStep({
 
       {/* Paste a list (spec §2.3 item 7): a secondary text button opens the
           panel inline — not a nested dialog. */}
+      {!atLimit ? (
       <div className="flex flex-col gap-[8px]">
         <button
           type="button"
@@ -643,6 +657,7 @@ export function FlightStep({
           <PasteListPanel destination={destination} onAdded={sheetAdded} />
         ) : null}
       </div>
+      ) : null}
     </div>
   );
 }

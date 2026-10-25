@@ -15,6 +15,7 @@ import {
   shareText,
 } from "@/lib/result-copy";
 import type { TastingResultView } from "@/lib/tasting-result";
+import { unevenCountsNotice } from "@/lib/bottle-limit";
 
 // S12 (phone) / S12b (laptop): the result screen a CLOSED tasting shows until
 // dismissed (B5; spec §11.3 items 8-10). Purely presentational — every
@@ -162,6 +163,11 @@ export function ResultView({
                 <StandingsRow key={row.name + row.rank} row={row} />
               ))}
             </div>
+          ) : null}
+          {data.unevenGlasses ? (
+            <p role="note" className="text-xs leading-[1.5] text-muted-foreground">
+              {unevenCountsNotice({ pointToCounts: false })}
+            </p>
           ) : null}
 
           <div className="mt-2 flex flex-wrap gap-3">

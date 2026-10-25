@@ -1676,9 +1676,10 @@ a raw subquery, regardless of which two tables look involved at a glance.
   Eligible guessers for a wine = JOINED participants minus that wine's
   contributor minus the host when wine_source is HOST_PROVIDES (the host set
   the answers, so they don't guess).
-- Bring-your-own (PARTICIPANT_CONTRIBUTED) wines: a participant may bring any
-  number of bottles (including zero) — no one-per-person cap (removed from
-  addWine and the lobby). Wines are labelled by contributor via the shared
+- Bring-your-own (PARTICIPANT_CONTRIBUTED) wines: by default a participant may
+  bring any number of bottles (including zero) — the old hard one-per-person
+  cap stays removed; an optional host setting (bottles per person, below) can
+  cap it. Wines are labelled by contributor via the shared
   `src/lib/wine-label.ts` `makeWineLabeler` ("Gustav's wine", or "Gustav's
   wine #2" when someone brought several); use it anywhere a wine needs a title
   (play, results, lobby). The leaderboard "wine X/Y" denominator is
@@ -1723,9 +1724,38 @@ a raw subquery, regardless of which two tables look involved at a glance.
   (`record/record-view.tsx`) is the sole CLOSED board now (BT-R3): its own
   "Glass by glass" rows replace the old board's wine-chip navigator,
   `WinesCard` and `PlayExperience` for a finished tasting.
-- Bring-your-own has NO one-wine-per-person cap in either the add-wine action
-  OR the add-wine page (`wines/new/page.tsx` — the page-level guard was a
-  separate spot that also had to be removed); people can add 0, 1, or many.
+- Bring-your-own has NO hard-coded one-wine-per-person cap in either the
+  add-wine action OR the add-wine page (`wines/new/page.tsx` — the page-level
+  guard was a separate spot that also had to be removed); people can add 0, 1,
+  or many — unless the host sets a limit:
+- **Bottles per person** (owner request 2026-10-25; migration
+  `20261025120000_tasting_bottles_per_person.sql`, pure rules and copy in
+  `src/lib/bottle-limit.ts`). A bring-your-own tasting's
+  `tastings.bottles_per_person` (smallint 1-3, null = Unlimited, the default,
+  so older tastings are unchanged) is picked as "Bottles per person: 1 · 2 · 3
+  · Unlimited" in the create sheet's step 1 (hidden for HOST_PROVIDES) and in
+  Tasting settings, where it stays changeable after Start until the tasting is
+  CLOSED (`bottleLimitSettingRefusal`; `tastings_lock_setup_after_start` must
+  never list it). The host writes it through "tastings update host" like any
+  setup column; `setupColumns` stores null for HOST_PROVIDES. Lowering it never
+  removes a bottle, only blocks new ones. The floor is the
+  `wines_bottles_per_person_limit` BEFORE INSERT trigger on `wines` (SECURITY
+  DEFINER, row lock on the tasting + a per-contributor advisory lock): a glass
+  with a contributor is refused (23514, "bottle limit reached: …") once that
+  contributor has that many `added_by_host = false` glasses in the tasting;
+  host-added glasses are never counted. `resolveTastingAdder` refuses first
+  with friendly copy, and `insertGlassRow` maps the trigger's message
+  (`friendlyBottleLimitError`). At the limit, the lobby's Wines card, the
+  running/guest views' `canAddWine` (scan registrar, `?addWine=`) and the
+  create sheet's flight step (`FlightSnapshot.atLimit`) swap the add action for
+  "You've added your bottle" / "…your N bottles". The Overview's banner
+  `canAddToFlight` does not know the limit (the server refuses there). Because
+  you never guess your own bottles, unequal counts make totals incomparable:
+  the picker explains it under 2/3/Unlimited (`unequalBottlesHint`), and the
+  Wines card (`unevenBottleCounts` over JOINED participants — before Start
+  only people who brought something), StandingsPanel, `/results`, the record
+  and the result (`unevenGlassCounts` over the competitors' `totalWines`
+  denominators) show `unevenCountsNotice` when counts actually differ.
 - **Superseded**: live updates during a tasting are no longer polling alone.
   `src/components/auto-refresh.tsx` (`router.refresh()` on an interval while
   the tab is visible; `router.refresh()` preserves client state, so an open

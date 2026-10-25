@@ -32,6 +32,12 @@ import {
   type SetupValues,
 } from "./setup-copy";
 import { PLACE_LABEL, PLACE_MAX, PLACE_PLACEHOLDER } from "./place";
+import {
+  BOTTLE_LIMIT_OPTIONS,
+  bottleLimitOptionLabel,
+  parseBottleLimit,
+  unequalBottlesHint,
+} from "@/lib/bottle-limit";
 
 const FLOW_ITEMS = {
   GUIDED: "Guided",
@@ -97,6 +103,7 @@ export function NewTastingForm({
   const photoLabelId = useId();
   const sourceHintId = useId();
   const placeId = useId();
+  const bottlesHintId = useId();
   const nameRef = useRef<HTMLInputElement>(null);
   const [rulesOpen, setRulesOpen] = useState(false);
   // Functional updates: the cover photo's URL arrives from an async upload,
@@ -116,6 +123,8 @@ export function NewTastingForm({
   // (spec §3.3 item 14, SETTINGS_LOCKED_AFTER_START) — name, description,
   // photo, time and place stay editable regardless.
   const locked = settingsMode && status !== undefined && status !== "DRAFT";
+  // Bottles per person stays changeable after Start, until the tasting ends.
+  const closed = settingsMode && status === "CLOSED";
   const suggestions = nameSuggestions({
     today: new Date(),
     scheduledLocal: value.scheduledLocal,
@@ -297,7 +306,7 @@ export function NewTastingForm({
               },
               {
                 value: "PARTICIPANT_CONTRIBUTED",
-                desktop: "Everyone brings one",
+                desktop: "Everyone brings wine",
                 phone: "Everyone brings",
                 disabled:
                   (locked || sourceLocked) && value.wineSource !== "PARTICIPANT_CONTRIBUTED",
@@ -309,6 +318,35 @@ export function NewTastingForm({
           <p id={sourceHintId} className="text-[11.5px] leading-[1.5] text-muted-foreground">
             {WINE_SOURCE_LOCKED}
           </p>
+        ) : null}
+        {/* Bottles per person (bring-your-own only). Changeable until the
+            tasting is CLOSED; lowering it never removes a bottle. */}
+        {value.wineSource === "PARTICIPANT_CONTRIBUTED" ? (
+          <div className="flex flex-col gap-1.5">
+            <span className="text-[12px] text-muted-foreground md:text-[12.5px]">
+              Bottles per person
+            </span>
+            <Segmented<string>
+              label="Bottles per person"
+              value={value.bottlesPerPerson === null ? "none" : String(value.bottlesPerPerson)}
+              onChange={(v) => set("bottlesPerPerson", parseBottleLimit(v))}
+              describedBy={unequalBottlesHint(value.bottlesPerPerson) ? bottlesHintId : undefined}
+              options={BOTTLE_LIMIT_OPTIONS.map((limit) => {
+                const key = limit === null ? "none" : String(limit);
+                return {
+                  value: key,
+                  desktop: bottleLimitOptionLabel(limit),
+                  phone: bottleLimitOptionLabel(limit),
+                  disabled: closed && value.bottlesPerPerson !== limit,
+                };
+              })}
+            />
+            {unequalBottlesHint(value.bottlesPerPerson) ? (
+              <p id={bottlesHintId} className="text-[11.5px] leading-[1.5] text-muted-foreground">
+                {unequalBottlesHint(value.bottlesPerPerson)}
+              </p>
+            ) : null}
+          </div>
         ) : null}
         <label className="flex min-h-11 items-center gap-[9px] rounded-[10px] border border-input bg-card p-[11px_13px] md:gap-[10px]">
           <Calendar className="size-4 shrink-0 text-muted-foreground max-md:hidden" aria-hidden />

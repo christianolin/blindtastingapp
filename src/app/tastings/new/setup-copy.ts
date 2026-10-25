@@ -6,6 +6,7 @@ import type {
   WineLeaderboardReveal,
   WineSourceMode,
 } from "@/lib/supabase/database.types";
+import { bottleLimitEachLine, type BottleLimit } from "@/lib/bottle-limit";
 
 // Pure helpers for the create-tasting sheet: the step-1 values, the FormData
 // the (unchanged) action reads, and the summary copy the rules card and the
@@ -19,6 +20,8 @@ export type SetupValues = {
   revealMode: RevealMode;
   timingMode: TimingMode;
   wineSource: WineSourceMode;
+  /** Bring-your-own only: bottles each participant may add; null = unlimited. */
+  bottlesPerPerson: BottleLimit;
   /** datetime-local value ("YYYY-MM-DDTHH:mm") or "". */
   scheduledLocal: string;
   flow: FlowChoice;
@@ -37,6 +40,7 @@ export function defaultSetup(revealMode: RevealMode): SetupValues {
     revealMode,
     timingMode: "LIVE",
     wineSource: "HOST_PROVIDES",
+    bottlesPerPerson: null,
     scheduledLocal: "",
     flow: "GUIDED",
     leaderboardReveal: "PER_ATTRIBUTE",
@@ -73,6 +77,7 @@ export function buildSetupFormData(v: SetupValues): FormData {
   fd.set("reveal_mode", v.revealMode);
   fd.set("timing_mode", v.timingMode);
   fd.set("wine_source", v.wineSource);
+  fd.set("bottles_per_person", v.bottlesPerPerson === null ? "" : String(v.bottlesPerPerson));
   fd.set("flow", v.flow);
   fd.set("leaderboard_reveal", v.leaderboardReveal);
   fd.set("async_reveal_policy", v.asyncRevealPolicy);
@@ -199,6 +204,8 @@ export function readySummary({
   }
   if (setup.wineSource === "PARTICIPANT_CONTRIBUTED") {
     parts.push("everyone brings");
+    const each = bottleLimitEachLine(setup.bottlesPerPerson);
+    if (each) parts.push(each.charAt(0).toLowerCase() + each.slice(1));
   }
   parts.push(`${wineCount} ${wineCount === 1 ? "wine" : "wines"} so far`, dateText ?? "no date");
   if (place) parts.push(place);
