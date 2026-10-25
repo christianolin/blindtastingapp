@@ -69,6 +69,28 @@ export const getViewerParticipant = cache(async (tastingId: string) => {
   return rows.find((p) => p.user_id === user.id) ?? null;
 });
 
+/**
+ * Every participant's display name (display_name, else email, else
+ * "Someone"), keyed by participant id — one profiles read shared by the Wines
+ * card and the Start bar's "exactly N each" warning in the same render.
+ */
+export const getParticipantNames = cache(async (tastingId: string) => {
+  const participantRows = await getParticipantRows(tastingId);
+  const userIds = participantRows.map((p) => p.user_id);
+  const supabase = await createClient();
+  const { data: profiles } = await supabase
+    .from("profiles")
+    .select("id, display_name, email")
+    .in("id", userIds.length > 0 ? userIds : [""]);
+  const profileById = new Map((profiles ?? []).map((p) => [p.id, p]));
+  return new Map(
+    participantRows.map((p) => [
+      p.id,
+      profileById.get(p.user_id)?.display_name ?? profileById.get(p.user_id)?.email ?? "Someone",
+    ]),
+  );
+});
+
 // `added_by_host` is M6's pinned adder flag, so every view can follow
 // is_wine_adder's rule for "whose glass is this" (BT-V3 A-18).
 export const getWineRows = cache(async (tastingId: string) => {

@@ -6,7 +6,7 @@ import type { TastingStatus } from "@/lib/supabase/database.types";
 import { getTastingPlace } from "@/app/tastings/new/place";
 import { isoToLocal, type SetupValues } from "@/app/tastings/new/setup-copy";
 import type { UnrevealedGlass } from "@/lib/tasting-lifecycle-copy";
-import { parseBottleLimit } from "@/lib/bottle-limit";
+import { parseBottleExact, parseBottleLimit } from "@/lib/bottle-limit";
 
 // The Tasting settings sheet's one load (spec §3.3 items 13–14, S4d): every
 // field TastingSettingsSheet needs on first open, in one round trip. Split
@@ -48,7 +48,7 @@ export async function getTastingSettings(
   const { data: tasting } = await supabase
     .from("tastings")
     .select(
-      "id, host_id, status, name, description, image_url, scheduled_at, reveal_mode, timing_mode, wine_source, sequential_guessing, leaderboard_reveal, async_reveal_policy, bottles_per_person",
+      "id, host_id, status, name, description, image_url, scheduled_at, reveal_mode, timing_mode, wine_source, sequential_guessing, leaderboard_reveal, async_reveal_policy, bottles_per_person, bottles_exact",
     )
     .eq("id", tastingId)
     .maybeSingle();
@@ -115,6 +115,7 @@ export async function getTastingSettings(
     timingMode: tasting.timing_mode,
     wineSource: tasting.wine_source,
     bottlesPerPerson: parseBottleLimit(tasting.bottles_per_person),
+    bottlesExact: parseBottleExact(tasting.bottles_exact),
     scheduledLocal: isoToLocal(tasting.scheduled_at),
     // Reconstructed the same way tastings/new/actions.ts's private
     // lockedFlowFromRow does: the column only means something while

@@ -22,6 +22,8 @@ export type SetupValues = {
   wineSource: WineSourceMode;
   /** Bring-your-own only: bottles each participant may add; null = unlimited. */
   bottlesPerPerson: BottleLimit;
+  /** With a limit: everyone brings exactly that many (true) or up to it. */
+  bottlesExact: boolean;
   /** datetime-local value ("YYYY-MM-DDTHH:mm") or "". */
   scheduledLocal: string;
   flow: FlowChoice;
@@ -41,6 +43,7 @@ export function defaultSetup(revealMode: RevealMode): SetupValues {
     timingMode: "LIVE",
     wineSource: "HOST_PROVIDES",
     bottlesPerPerson: null,
+    bottlesExact: false,
     scheduledLocal: "",
     flow: "GUIDED",
     leaderboardReveal: "PER_ATTRIBUTE",
@@ -78,6 +81,7 @@ export function buildSetupFormData(v: SetupValues): FormData {
   fd.set("timing_mode", v.timingMode);
   fd.set("wine_source", v.wineSource);
   fd.set("bottles_per_person", v.bottlesPerPerson === null ? "" : String(v.bottlesPerPerson));
+  fd.set("bottles_exact", v.bottlesPerPerson !== null && v.bottlesExact ? "1" : "");
   fd.set("flow", v.flow);
   fd.set("leaderboard_reveal", v.leaderboardReveal);
   fd.set("async_reveal_policy", v.asyncRevealPolicy);
@@ -204,7 +208,7 @@ export function readySummary({
   }
   if (setup.wineSource === "PARTICIPANT_CONTRIBUTED") {
     parts.push("everyone brings");
-    const each = bottleLimitEachLine(setup.bottlesPerPerson);
+    const each = bottleLimitEachLine(setup.bottlesPerPerson, setup.bottlesExact);
     if (each) parts.push(each.charAt(0).toLowerCase() + each.slice(1));
   }
   parts.push(`${wineCount} ${wineCount === 1 ? "wine" : "wines"} so far`, dateText ?? "no date");

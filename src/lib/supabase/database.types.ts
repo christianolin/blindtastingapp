@@ -673,6 +673,9 @@ export type Database = {
           // 20261025120000: bring-your-own cap per participant (1-3); null =
           // unlimited. A BEFORE INSERT trigger on wines enforces it.
           bottles_per_person: number | null;
+          // 20261025150000: true = exactly bottles_per_person each (Start warns
+          // about anyone short; the cap trigger is the same); only with a limit.
+          bottles_exact: boolean;
           sequential_guessing: boolean;
           leaderboard_reveal: WineLeaderboardReveal;
           created_at: string;
@@ -707,6 +710,7 @@ export type Database = {
           scheduled_at?: string | null;
           async_reveal_policy?: AsyncRevealPolicy;
           bottles_per_person?: number | null;
+          bottles_exact?: boolean;
           sequential_guessing?: boolean;
           leaderboard_reveal?: WineLeaderboardReveal;
           created_at?: string;

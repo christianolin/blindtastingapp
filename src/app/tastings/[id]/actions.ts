@@ -6,6 +6,7 @@ import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { startWarning } from "@/lib/wine-identity/incomplete";
+import { exactBottlesStartWarning } from "@/lib/bottle-limit";
 import { listIncompleteGlasses } from "@/lib/wine-identity/server/incomplete-glasses";
 import { INVITES_CLOSE_WHEN_ENDED } from "@/lib/lobby-copy";
 import { glassRemoveRefusal } from "@/lib/flight-glass-rules";
@@ -39,11 +40,58 @@ async function assertHost(
 ) {
   const { data: tasting } = await supabase
     .from("tastings")
-    .select("id, host_id, status, reveal_mode, timing_mode, wine_source")
+    .select("id, host_id, status, reveal_mode, timing_mode, wine_source, bottles_per_person, bottles_exact")
     .eq("id", tastingId)
     .maybeSingle();
   if (!tasting || tasting.host_id !== userId) return null;
   return tasting;
+}
+
+// The Start warning for a bring-your-own "exactly N each" tasting: JOINED
+// participants with fewer than N contributed glasses, by name. A failed read
+// just leaves the warning out; it never blocks Start.
+async function exactBottlesWarning(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  tasting: NonNullable<Awaited<ReturnType<typeof assertHost>>>,
+  userId: string,
+): Promise<string | null> {
+  if (
+    tasting.wine_source !== "PARTICIPANT_CONTRIBUTED" ||
+    !tasting.bottles_exact ||
+    tasting.bottles_per_person === null
+  ) {
+    return null;
+  }
+  const [{ data: participants }, { data: wines }] = await Promise.all([
+    supabase
+      .from("tasting_participants")
+      .select("id, user_id, status")
+      .eq("tasting_id", tasting.id)
+      .eq("status", "JOINED"),
+    supabase
+      .from("wines")
+      .select("contributor_participant_id, added_by_host")
+      .eq("tasting_id", tasting.id),
+  ]);
+  if (!participants || !wines) return null;
+  const userIds = participants.map((p) => p.user_id);
+  const { data: profiles } = await supabase
+    .from("profiles")
+    .select("id, display_name, email")
+    .in("id", userIds.length > 0 ? userIds : [""]);
+  const profileById = new Map((profiles ?? []).map((p) => [p.id, p]));
+  return exactBottlesStartWarning({
+    tasting,
+    people: participants.map((p) => ({
+      participantId: p.id,
+      name:
+        profileById.get(p.user_id)?.display_name ??
+        profileById.get(p.user_id)?.email ??
+        "Someone",
+      you: p.user_id === userId,
+    })),
+    wines,
+  });
 }
 
 // Host presses "Start" — moves DRAFT → IN_PROGRESS so guessing opens (spec
@@ -72,6 +120,9 @@ export async function startTasting(
   } catch (e) {
     return { error: e instanceof Error ? e.message : String(e) };
   }
+  // Bring-your-own "exactly N each": name who is still short. A warning
+  // only — the owner chose "warn, but allow Start" (2026-10-25).
+  const bottlesWarning = await exactBottlesWarning(supabase, tasting, user.id);
 
   const { data: started, error } = await supabase
     .from("tastings")
@@ -87,7 +138,9 @@ export async function startTasting(
   // Pour every glass whose adder asked to take their bottle out of the cellar
   // (D11). The RPC never pours a glass twice; each glass it couldn't draw down
   // is named.
-  const warnings = incompleteWarning ? [incompleteWarning] : [];
+  const warnings = [incompleteWarning, bottlesWarning].filter(
+    (w): w is string => Boolean(w),
+  );
   const { data: pours, error: pourError } = await supabase.rpc(
     "draw_down_flight_cellar_lots",
     { p_tasting_id: tastingId },
